@@ -2,10 +2,13 @@ import argparse
 from pathlib import Path
 
 def main():
-    parser = argparse.ArgumentParser(description='This command checks whether or not files in the given list exist in the operating system.')
-    parser.add_argument('input_file', help='input file containing the list of file paths')
+    parser = argparse.ArgumentParser(description='This command '
+        'checks whether or not files in the given list exist in '
+        'the operating system.')
+    parser.add_argument('input_file', help='input file containing '
+        'the list of file paths')
     parser.add_argument('column_header', help='column header')
-    parser.add_argument('--delimiter', default=',', 
+    parser.add_argument('--delimiter', default=',',
         help="column delimiter (default: ',')")
     args = parser.parse_args()
     with open(args.input_file) as f:
