@@ -1,5 +1,5 @@
 import argparse
-from common import VCFResult, read_vcf, merge_vcfs, write_vcf
+from VCFResult import VCFResult
 
 def main():
     parser = argparse.ArgumentParser(description='This command merges '
@@ -11,11 +11,11 @@ def main():
     parser.add_argument('--subfield', help='FORMAT subfields',
         nargs='+')
     args = parser.parse_args()
-    vcf_list = [read_vcf(x) for x in args.input_vcf]
+    vcf_list = [VCFResult.read(x) for x in args.input_vcf]
     merged_vcf = VCFResult()
     for vcf in vcf_list:
-        merged_vcf = merge_vcfs(merged_vcf, vcf, args.subfield)
-    write_vcf(merged_vcf, args.output_vcf)
+        merged_vcf = merged_vcf.merge(vcf, args.subfield)
+    merged_vcf.write(args.output_vcf)
 
 if __name__ == '__main__':
     main()
