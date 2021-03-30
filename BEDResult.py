@@ -2,6 +2,12 @@ class BEDResult():
     def __init__(self):
         self.data = []
 
+    def write(self, bed_path):
+        """Write the BEDResult to a file."""
+        with open(bed_path, 'w') as f:
+            for fields in self.data:
+                f.write('\t'.join(fields) + '\n')
+
     def intersect(self, other):
         """Return a BEDResult consisting of intersections."""
         def overlap(a, b):

@@ -41,3 +41,18 @@ optional arguments:
                         FORMAT subfields
 
 ```
+
+## intersect_beds.py
+
+```
+usage: intersect_beds.py [-h] input_bed [input_bed ...] output_bed
+
+This command computes intersections between multiple BED files.
+
+positional arguments:
+  input_bed   input BED files
+  output_bed  output BED file
+
+optional arguments:
+  -h, --help  show this help message and exit
+```
