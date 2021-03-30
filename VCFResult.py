@@ -21,18 +21,16 @@ class VCFResult():
                 f.write('\t'.join(fields) + '\n')
 
     def merge(self, other, subfields=None):
-        """Return merged VCF result."""
+        """Return a merged VCFResult."""
         vcf1 = VCFResult.strip(self, subfields)
         vcf2 = VCFResult.strip(other, subfields)
         vcf3 = VCFResult()
         vcf3.head = vcf1.head + vcf2.head[9:]
-
         missing = './.'
         record, fields = next(iter(vcf2.data.items()))
         n = len(fields[8].split(':'))
         for i in range(1, n):
             missing += ':.'
-
         for record, fields in vcf1.data.items():
             if record in vcf2.data:
                 vcf3.data[record] = fields
@@ -67,6 +65,7 @@ class VCFResult():
 
     @classmethod
     def strip(cls, vcf_result, subfields=None):
+        """Return a stripped VCFResult."""
         vcf_result2 = cls()
         vcf_result2.head = copy.deepcopy(vcf_result.head)
         for record, fields in vcf_result.data.items():
