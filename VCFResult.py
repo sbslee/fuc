@@ -36,10 +36,32 @@ class VCFResult():
                     n += 1
             print(name, n)
 
+    def strip(self, subfields=None):
+        """Return a stripped VCFResult."""
+        vcf_result = self.__class__()
+        vcf_result.head = copy.deepcopy(self.head)
+        for record, fields in self.data.items():
+            fields[2] = '.'
+            fields[6] = '.'
+            fields[7] = '.'
+            if subfields is None:
+                _subfields = ['GT']
+            else:
+                _subfields = ['GT'] + subfields
+            index_list = []
+            for subfield in _subfields:
+                i = fields[8].split(':').index(subfield)
+                index_list.append(i)
+            fields[8] = ':'.join(_subfields)
+            fields[9:] = [':'.join([x.split(':')[i] for i in index_list])
+                for x in fields[9:]]
+            vcf_result.data[record] = fields
+        return vcf_result
+
     def merge(self, other, subfields=None):
         """Return a merged VCFResult."""
-        vcf1 = VCFResult.strip(self, subfields)
-        vcf2 = VCFResult.strip(other, subfields)
+        vcf1 = self.strip(subfields=subfields)
+        vcf2 = other.strip(subfields=subfields)
         vcf3 = VCFResult()
         vcf3.head = vcf1.head + vcf2.head[9:]
         missing = './.'
@@ -61,6 +83,67 @@ class VCFResult():
                 vcf3.data[record] = fields
         return vcf3
 
+    def add_dp(self):
+        """Return a new VCFResult with the DP subfield."""
+        vcf_result = self.__class__()
+        vcf_result.head = copy.deepcopy(self.head)
+        def func(x, i):
+            ad = x.split(':')[i].split(',')
+            dp = 0
+            for depth in ad:
+                if depth == '.':
+                    return f'{x}:.'
+                dp += int(depth)
+            return f'{x}:{dp}'
+        for record, fields in self.data.items():
+            i = fields[8].split(':').index('AD')
+            fields[9:] = [func(x, i) for x in fields[9:]]
+            fields[8] += ':DP'
+            vcf_result.data[record] = fields
+        return vcf_result
+
+    def filter_dp(self, threshold=200):
+        """Return a new VCFResult filtered based on the DP subfield."""
+        vcf_result = self.__class__()
+        vcf_result.head = copy.deepcopy(self.head)
+        def func(x, i):
+            l = x.split(':')
+            dp = l[i]
+            if dp == '.' or int(dp) < threshold:
+                return './.' + ':.' * (len(l)-1)
+            return x
+        for record, fields in self.data.items():
+            i = fields[8].split(':').index('DP')
+            fields[9:] = [func(x, i) for x in fields[9:]]
+            vcf_result.data[record] = fields
+        return vcf_result
+
+    def filter_af(self, threshold=0.1):
+        """Return a new VCFResult filtered based on the AF subfield."""
+        vcf_result = self.__class__()
+        vcf_result.head = copy.deepcopy(self.head)
+        def func(x, i):
+            l = x.split(':')
+            af = l[i]
+            if af == '.' or float(af) < threshold:
+                return './.' + ':.' * (len(l)-1)
+            return x
+        for record, fields in self.data.items():
+            i = fields[8].split(':').index('AF')
+            fields[9:] = [func(x, i) for x in fields[9:]]
+            vcf_result.data[record] = fields
+        return vcf_result
+
+    def remove_empty(self):
+        """Return a new VCFResult after removing empty records."""
+        vcf_result = self.__class__()
+        vcf_result.head = copy.deepcopy(self.head)
+        for record, fields in self.data.items():
+            if all(['.' in x.split(':')[0] for x in fields[9:]]):
+                continue
+            vcf_result.data[record] = fields
+        return vcf_result
+
     @classmethod
     def read(cls, vcf_path):
         """Create a VCFResult from a file."""
@@ -78,26 +161,3 @@ class VCFResult():
                         fields[3], fields[4])
                     vcf_result.data[record] = fields
         return vcf_result
-
-    @classmethod
-    def strip(cls, vcf_result, subfields=None):
-        """Return a stripped VCFResult."""
-        vcf_result2 = cls()
-        vcf_result2.head = copy.deepcopy(vcf_result.head)
-        for record, fields in vcf_result.data.items():
-            fields[2] = '.'
-            fields[6] = '.'
-            fields[7] = '.'
-            if subfields is None:
-                _subfields = ['GT']
-            else:
-                _subfields = ['GT'] + subfields
-            index_list = []
-            for subfield in _subfields:
-                i = fields[8].split(':').index(subfield)
-                index_list.append(i)
-            fields[8] = ':'.join(_subfields)
-            fields[9:] = [':'.join([x.split(':')[i] for i in index_list])
-                for x in fields[9:]]
-            vcf_result2.data[record] = fields
-        return vcf_result2
