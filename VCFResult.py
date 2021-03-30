@@ -8,6 +8,11 @@ class VCFResult():
         self.data = {}
 
     @property
+    def samples(self):
+        """Return a list of sample IDs."""
+        return self.head[9:]
+
+    @property
     def shape(self):
         """Return a tuple representing the dimensionality of the VCFResult."""
         return (len(self.head[9:]), len(self.data))
@@ -19,6 +24,17 @@ class VCFResult():
             f.write('\t'.join(self.head) + '\n')
             for record, fields in self.data.items():
                 f.write('\t'.join(fields) + '\n')
+
+    def describe(self):
+        """Generate descriptive statistics."""
+        print('Samples:')
+        print('Name', 'VariantCount')
+        for i, name in enumerate(self.samples):
+            n = 0
+            for record, fields in self.data.items():
+                if '1' in fields[i+9].split(':')[0]:
+                    n += 1
+            print(name, n)
 
     def merge(self, other, subfields=None):
         """Return a merged VCFResult."""
