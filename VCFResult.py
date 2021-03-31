@@ -149,7 +149,7 @@ class VCFResult():
             vcf_result.data[record] = fields
         return vcf_result
 
-    def update(self, other, names):
+    def update(self, other, names, missing=False):
         """Copy data from another VCFResult.
 
         This method will copy requested data from another VCFResult for
@@ -163,6 +163,8 @@ class VCFResult():
             Target VCFResult.
         names : list
             List of VCF headers.
+        missing : boolean, optional
+            If True, only fields with the missing value will be updated.
 
         Returns
         -------
@@ -178,7 +180,11 @@ class VCFResult():
             if record in other.data:
                 fields2 = other.data[record]
                 for i in indicies:
-                    fields1[i] = fields2[i]
+                    if missing:
+                        if fields1[i] == '.':
+                            fields1[i] = fields2[i]
+                    else:
+                        fields1[i] = fields2[i]
             vcf_result.data[record] = fields1
         return vcf_result
 
@@ -186,6 +192,7 @@ class VCFResult():
         """Apply the given function and return a new VCFResult."""
         i = VCF_HEADERS.index(name)
         vcf_result = self.__class__()
+        vcf_result.head = copy.deepcopy(self.head)
         for record, fields in self.data.items():
             fields[i] = func(fields[i])
             vcf_result.data[record] = fields
