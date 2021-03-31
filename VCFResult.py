@@ -1,10 +1,15 @@
 import copy
 
+VCF_HEADERS = (
+    '#CHROM', 'POS', 'ID',
+    'REF', 'ALT', 'QUAL',
+    'FILTER', 'INFO', 'FORMAT'
+)
+
 class VCFResult():
     def __init__(self):
         self.meta = []
-        self.head = ['#CHROM', 'POS', 'ID', 'REF', 'ALT',
-                     'QUAL', 'FILTER', 'INFO', 'FORMAT']
+        self.head = VCF_HEADERS
         self.data = {}
 
     @property
@@ -142,6 +147,39 @@ class VCFResult():
             if all(['.' in x.split(':')[0] for x in fields[9:]]):
                 continue
             vcf_result.data[record] = fields
+        return vcf_result
+
+    def update(self, other, names):
+        """Copy data from another VCFResult.
+
+        This method will copy requested data from another VCFResult for
+        overlapping records. You can only request data from the following
+        VCF headers: ID, QUAL, FILTER, INFO, and FORMAT. Any other
+        requested VCF headers will be ignored.
+
+        Parameters
+        ----------
+        other : VCFResult
+            Target VCFResult.
+        names : list
+            List of VCF headers.
+
+        Returns
+        -------
+        vcf_result : VCFResult
+            Updated VCFResult.
+        """
+        vcf_result = self.__class__()
+        vcf_result.head = copy.deepcopy(self.head)
+        targets = ['ID', 'QUAL', 'FILTER', 'INFO', 'FORMAT']
+        names = [x for x in names if x in targets]
+        indicies = [VCF_HEADERS.index(x) for x in names]
+        for record, fields1 in self.data.items():
+            if record in other.data:
+                fields2 = other.data[record]
+                for i in indicies:
+                    fields1[i] = fields2[i]
+            vcf_result.data[record] = fields1
         return vcf_result
 
     @classmethod
