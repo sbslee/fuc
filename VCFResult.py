@@ -182,6 +182,15 @@ class VCFResult():
             vcf_result.data[record] = fields1
         return vcf_result
 
+    def apply(self, name, func):
+        """Apply the given function and return a new VCFResult."""
+        i = VCF_HEADERS.index(name)
+        vcf_result = self.__class__()
+        for record, fields in self.data.items():
+            fields[i] = func(fields[i])
+            vcf_result.data[record] = fields
+        return vcf_result
+
     @classmethod
     def read(cls, vcf_path):
         """Create a VCFResult from a file."""
