@@ -1,5 +1,37 @@
 # fuc
-Frequently used commands
+This repository is my attempt to wrap some of the most frequently used commands in the field of bioinformatics with pure Python 3 code, only using standard libraries. That means there is no installation for external packages, not even the popular ones like `numpy` and `pandas`. The motivation for not relying on external packages is quite simple: I just got tired of managing different Python environments for doing simple things.
+
+You can use Python scripts in this repository for both command line interface (CLI) and application programming interface (API). Note that I'm not calling this repository as a Python package as it's merely a collection of Python scripts. In other words, there is no installation (i.e. no `setup.py`). Just clone this repository and you are good to go. This repository not being a package gives me the flexibility to be as creative as I want. However, this may change in the future.
+
+Your contributions (e.g. feature ideas, pull requests) are most welcome.
+
+Author: Seung-been "Steven" Lee
+Email: sbstevenlee@gmail.com
+License: MIT License
+
+# Usage
+
+To clone this repository:
+
+```
+$ git clone https://github.com/sbslee/fuc
+```
+
+To run a command from the `fuc` repository (e.g. `check_files.py `):
+
+```
+$ python3 path/to/fuc/check_files.py input_file column_header
+```
+
+To access the `fuc` API (e.g. `VCFResult.py`):
+
+```
+import sys
+sys.path.append('/path/to/fuc')
+from VCFResult import VCFResult
+```
+
+# CLI
 
 ## check_files.py
 
@@ -56,3 +88,13 @@ positional arguments:
 optional arguments:
   -h, --help  show this help message and exit
 ```
+
+# API
+
+## VCFResult.py
+
+The `VCFResult` module provides a suite of tools to work with VCF files.
+
+## BEDResult.py
+
+The `BEDResult` module provides a suite of tools to work with BED files.
