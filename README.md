@@ -17,13 +17,13 @@ To clone this repository:
 $ git clone https://github.com/sbslee/fuc
 ```
 
-To run a command from the `fuc` repository (e.g. `check_files.py `):
+To run a command from the `fuc` repository (e.g. `check_files.py`):
 
 ```
 $ python3 path/to/fuc/check_files.py input_file column_header
 ```
 
-To access the `fuc` API (e.g. `VCFResult.py`):
+To access a module from the `fuc` repository (e.g. `VCFResult.py`):
 
 ```
 import sys
