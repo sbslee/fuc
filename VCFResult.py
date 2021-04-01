@@ -22,12 +22,16 @@ class VCFResult():
         """Return a tuple representing the dimensionality of the VCFResult."""
         return (len(self.head[9:]), len(self.data))
 
+    def get_data(self):
+        """Return a copy of the data which can be modified safely."""
+        return copy.deepcopy(self.data)
+
     def write(self, vcf_path):
         """Write the VCFResult to a file."""
         with open(vcf_path, 'w') as f:
             f.write(''.join(self.meta))
             f.write('\t'.join(self.head) + '\n')
-            for record, fields in self.data.items():
+            for record, fields in self.get_data().items():
                 f.write('\t'.join(fields) + '\n')
 
     def describe(self):
@@ -36,7 +40,7 @@ class VCFResult():
         print('Name', 'VariantCount')
         for i, name in enumerate(self.samples):
             n = 0
-            for record, fields in self.data.items():
+            for record, fields in self.get_data().items():
                 if '1' in fields[i+9].split(':')[0]:
                     n += 1
             print(name, n)
@@ -45,7 +49,7 @@ class VCFResult():
         """Return a stripped VCFResult."""
         vcf_result = self.__class__()
         vcf_result.head = copy.deepcopy(self.head)
-        for record, fields in self.data.items():
+        for record, fields in self.get_data().items():
             fields[2] = '.'
             fields[6] = '.'
             fields[7] = '.'
@@ -100,7 +104,7 @@ class VCFResult():
                     return f'{x}:.'
                 dp += int(depth)
             return f'{x}:{dp}'
-        for record, fields in self.data.items():
+        for record, fields in self.get_data().items():
             i = fields[8].split(':').index('AD')
             fields[9:] = [func(x, i) for x in fields[9:]]
             fields[8] += ':DP'
@@ -117,7 +121,7 @@ class VCFResult():
             if dp == '.' or int(dp) < threshold:
                 return './.' + ':.' * (len(l)-1)
             return x
-        for record, fields in self.data.items():
+        for record, fields in self.get_data().items():
             i = fields[8].split(':').index('DP')
             fields[9:] = [func(x, i) for x in fields[9:]]
             vcf_result.data[record] = fields
@@ -133,7 +137,7 @@ class VCFResult():
             if af == '.' or float(af) < threshold:
                 return './.' + ':.' * (len(l)-1)
             return x
-        for record, fields in self.data.items():
+        for record, fields in self.get_data().items():
             i = fields[8].split(':').index('AF')
             fields[9:] = [func(x, i) for x in fields[9:]]
             vcf_result.data[record] = fields
@@ -143,7 +147,7 @@ class VCFResult():
         """Return a new VCFResult after removing empty records."""
         vcf_result = self.__class__()
         vcf_result.head = copy.deepcopy(self.head)
-        for record, fields in self.data.items():
+        for record, fields in self.get_data().items():
             if all(['.' in x.split(':')[0] for x in fields[9:]]):
                 continue
             vcf_result.data[record] = fields
@@ -176,7 +180,7 @@ class VCFResult():
         targets = ['ID', 'QUAL', 'FILTER', 'INFO', 'FORMAT']
         names = [x for x in names if x in targets]
         indicies = [VCF_HEADERS.index(x) for x in names]
-        for record, fields1 in self.data.items():
+        for record, fields1 in self.get_data().items():
             if record in other.data:
                 fields2 = other.data[record]
                 for i in indicies:
@@ -193,7 +197,7 @@ class VCFResult():
         i = VCF_HEADERS.index(name)
         vcf_result = self.__class__()
         vcf_result.head = copy.deepcopy(self.head)
-        for record, fields in self.data.items():
+        for record, fields in self.get_data().items():
             fields[i] = func(fields[i])
             vcf_result.data[record] = fields
         return vcf_result
