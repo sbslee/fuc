@@ -5,8 +5,8 @@ You can use Python scripts in this repository for both command line interface (C
 
 Your contributions (e.g. feature ideas, pull requests) are most welcome.
 
-Author: Seung-been "Steven" Lee
-Email: sbstevenlee@gmail.com
+Author: Seung-been "Steven" Lee<br/>
+Email: sbstevenlee@gmail.com<br/>
 License: MIT License
 
 # Usage
