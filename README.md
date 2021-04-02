@@ -129,6 +129,10 @@ optional arguments:
 
 # API
 
+## DataFrame.py
+
+The `DataFrame` module provides a suite of tools to work with text files.
+
 ## VCFResult.py
 
 The `VCFResult` module provides a suite of tools to work with VCF files.
