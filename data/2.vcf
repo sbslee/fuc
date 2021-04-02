@@ -1,0 +1,6 @@
+##fileformat=VCFv4.2
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	Daniel
+chr1	100	.	A	T	.	.	.	GT	1/1
+chr1	101	.	G	T	.	.	.	GT	0/1
+chr2	1055	.	T	G	.	.	.	GT	1/1
+chr2	5594	.	T	G	.	.	.	GT	1/1

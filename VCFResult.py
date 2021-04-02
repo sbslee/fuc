@@ -20,7 +20,7 @@ class VCFResult():
     @property
     def shape(self):
         """Return a tuple representing the dimensionality of the VCFResult."""
-        return (len(self.head[9:]), len(self.data))
+        return (len(self.data), len(self.head[9:]))
 
     def get_data(self):
         """Return a copy of the data which can be modified safely."""
@@ -82,13 +82,13 @@ class VCFResult():
             if record in vcf2.data:
                 vcf3.data[record] = fields
             else:
-                fields = fields + [missing] * vcf2.shape[0]
+                fields = fields + [missing] * vcf2.shape[1]
                 vcf3.data[record] = fields
         for record, fields in vcf2.data.items():
             if record in vcf3.data:
                 vcf3.data[record] += fields[9:]
             else:
-                fields = fields[:9] + [missing] * vcf1.shape[0] + fields[9:]
+                fields = fields[:9] + [missing] * vcf1.shape[1] + fields[9:]
                 vcf3.data[record] = fields
         return vcf3
 
@@ -200,6 +200,22 @@ class VCFResult():
         for record, fields in self.get_data().items():
             fields[i] = func(fields[i])
             vcf_result.data[record] = fields
+        return vcf_result
+
+    def filter_bed(self, bed_result):
+        """Filter the VCFResult by the BEDResult."""
+        vcf_result = self.__class__()
+        vcf_result.head = copy.deepcopy(self.head)
+        for record, fields1 in self.get_data().items():
+            chrom1 = fields1[0]
+            pos = int(fields1[1])
+            for fields2 in bed_result.get_data():
+                chrom2 = fields2[0]
+                start = int(fields2[1])
+                end = int(fields2[2])
+                if chrom1 == chrom2 and start <= pos <= end:
+                    vcf_result.data[record] = fields1
+                    break
         return vcf_result
 
     @classmethod
