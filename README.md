@@ -71,7 +71,6 @@ optional arguments:
   -h, --help            show this help message and exit
   --subfield SUBFIELD [SUBFIELD ...]
                         FORMAT subfields
-
 ```
 
 ## summarize_bed.py
