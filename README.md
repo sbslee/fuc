@@ -74,9 +74,25 @@ optional arguments:
 
 ```
 
+## summarize_bed.py
+
+```
+$ python3 summarize_bed.py -h
+usage: summarize_bed.py [-h] bed_file
+
+This command computes summary statstics for a BED file.
+
+positional arguments:
+  bed_file    input BED file
+
+optional arguments:
+  -h, --help  show this help message and exit
+```
+
 ## intersect_beds.py
 
 ```
+$ python3 intersect_beds.py -h
 usage: intersect_beds.py [-h] input_bed [input_bed ...] output_bed
 
 This command computes intersections between multiple BED files.

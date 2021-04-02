@@ -5,6 +5,11 @@ class BEDResult():
         self.head = []
         self.data = []
 
+    @property
+    def shape(self):
+        """Return the size of the VCFResult."""
+        return len(self.data)
+
     def get_data(self):
         return copy.deepcopy(self.data)
 
