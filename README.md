@@ -78,15 +78,20 @@ optional arguments:
 
 ```
 $ python3 summarize_bed.py -h
-usage: summarize_bed.py [-h] bed_file
+usage: summarize_bed.py [-h] [--bases BASES] [--decimals DECIMALS] bed_file
 
-This command computes summary statstics for a BED file.
+This command computes summary statstics of the given BED file. This includes
+the total numbers of probes and covered base pairs for each chromosome. By
+default, covered base paris are displayed in bp, but if you prefer you can,
+for example, use '--bases 1000' to display base pairs in kb.
 
 positional arguments:
-  bed_file    input BED file
+  bed_file             input BED file
 
 optional arguments:
-  -h, --help  show this help message and exit
+  -h, --help           show this help message and exit
+  --bases BASES        number used to divide the bases (default: 1)
+  --decimals DECIMALS  maximum number of decimals (default: 10)
 ```
 
 ## intersect_beds.py
