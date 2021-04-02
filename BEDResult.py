@@ -1,15 +1,37 @@
+import copy
+
 class BEDResult():
     def __init__(self):
+        self.head = []
         self.data = []
+
+    def get_data(self):
+        return copy.deepcopy(self.data)
 
     def write(self, bed_path):
         """Write the BEDResult to a file."""
         with open(bed_path, 'w') as f:
-            for fields in self.data:
+            f.write(''.join(self.head))
+            for fields in self.get_data():
                 f.write('\t'.join(fields) + '\n')
 
     def intersect(self, other):
-        """Return a BEDResult consisting of intersections."""
+        """Return a BEDResult consisting of intersections.
+
+        This method will compute intersections between multiple BED files.
+        Header lines and optional BED fields in the other BEDResult will be
+        ignored.
+
+        Parameters
+        ----------
+        other : BEDResult
+            Other BEDResult.
+
+        Returns
+        -------
+        bed_result: BEDResult
+            Updated BEDResult.
+        """
         def overlap(a, b):
             if b[0] <= a[0] <= b[1]:
                 start = a[0]
@@ -25,7 +47,8 @@ class BEDResult():
                 return None
             return (start, end)
         bed_result = self.__class__()
-        for r1 in self.data:
+        bed_result.head = copy.deepcopy(self.head)
+        for r1 in self.get_data():
             a = (int(r1[1]), int(r1[2]))
             for r2 in other.data:
                 b = (int(r2[1]), int(r2[2]))
@@ -43,5 +66,8 @@ class BEDResult():
         with open(bed_path) as f:
             for line in f:
                 fields = line.strip().split('\t')
+                if len(fields) < 3:
+                    bed_result.head = line
+                    continue
                 bed_result.data.append(fields)
         return bed_result
