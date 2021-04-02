@@ -1,5 +1,5 @@
 # fuc
-This repository is my attempt to wrap some of the most frequently used commands in the field of bioinformatics with pure Python 3 code, only using standard libraries. That means there is no installation for external packages, not even the popular ones like `numpy` and `pandas`. The motivation for not relying on external packages is quite simple: I just got tired of managing different Python environments for doing simple things.
+This repository is my attempt to wrap some of the most frequently used commands in the field of bioinformatics with pure Python 3 code, only using standard libraries. That means no installation for external packages, not even the popular ones like `numpy` and `pandas`. The motivation for not relying on external packages is quite simple: I just got tired of managing different Python environments for doing simple things.
 
 You can use Python scripts in this repository for both command line interface (CLI) and application programming interface (API). Note that I'm not calling this repository as a Python package as it's merely a collection of Python scripts. In other words, there is no installation (i.e. no `setup.py`). Just clone this repository and you are good to go. This repository not being a package gives me the flexibility to be as creative as I want. However, this may change in the future.
 
@@ -50,6 +50,24 @@ optional arguments:
   -h, --help            show this help message and exit
   --delimiter DELIMITER
                         column delimiter (default: ',')
+```
+
+## merge_files.py
+
+```
+$ python3 merge_files.py -h
+usage: merge_files.py [-h] left_file right_file output_file on
+
+This command will merge two text files on a shared column.
+
+positional arguments:
+  left_file    left file
+  right_file   right file
+  output_file  merged file
+  on           column name to join on
+
+optional arguments:
+  -h, --help   show this help message and exit
 ```
 
 ## merge_vcfs.py

@@ -1,0 +1,5 @@
+Name	Age	Sex
+Steven	30	Male
+John	25	Male
+Rachel	41	Female
+Sarah	28	Female

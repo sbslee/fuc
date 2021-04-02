@@ -11,6 +11,7 @@ class BEDResult():
         return len(self.data)
 
     def get_data(self):
+        """Return a copy of the data which can be modified safely."""
         return copy.deepcopy(self.data)
 
     def write(self, bed_path):

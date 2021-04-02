@@ -1,0 +1,7 @@
+Name	Age	Sex	City	HasPet	Sex
+Steven	30	Male	Seattle, WA	Yes	Male
+John	25	Male	.	.	.
+Rachel	41	Female	.	.	.
+Sarah	28	Female	St. Louis, MO	No	Female
+Jake	.	.	Boston, MA	Yes	Male
+Nina	.	.	Boston, MA	No	Female
