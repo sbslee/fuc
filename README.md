@@ -56,18 +56,27 @@ optional arguments:
 
 ```
 $ python3 merge_files.py -h
-usage: merge_files.py [-h] left_file right_file output_file on
+usage: merge_files.py [-h] [--left_delimiter LEFT_DELIMITER]
+                      [--right_delimiter RIGHT_DELIMITER]
+                      [--output_delimiter OUTPUT_DELIMITER]
+                      left_file right_file output_file on
 
 This command will merge two text files on a shared column.
 
 positional arguments:
-  left_file    left file
-  right_file   right file
-  output_file  merged file
-  on           column name to join on
+  left_file             left file
+  right_file            right file
+  output_file           merged file
+  on                    column name to join on
 
 optional arguments:
-  -h, --help   show this help message and exit
+  -h, --help            show this help message and exit
+  --left_delimiter LEFT_DELIMITER
+                        delimiter for the left file (default: '\t')
+  --right_delimiter RIGHT_DELIMITER
+                        delimiter for the right file (default: '\t')
+  --output_delimiter OUTPUT_DELIMITER
+                        delimiter for the output file (default: '\t')
 ```
 
 ## merge_vcfs.py
