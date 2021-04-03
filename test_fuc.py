@@ -25,6 +25,11 @@ class TestVCFResult(unittest.TestCase):
         vcf3 = vcf1.merge(vcf2)
         self.assertEqual(vcf3.shape, (7, 5))
 
+    def test_compare(self):
+        vcf = VCFResult.read(f'{FUC_DIR}/data/1.vcf')
+        result = vcf.compare('Steven', 'Sarah')
+        self.assertEqual(result, (0, 1, 0, 4))
+
 class TestBEDResult(unittest.TestCase):
 
     def test_intersect(self):

@@ -22,6 +22,9 @@ class VCFResult():
         """Return a tuple representing the dimensionality of the VCFResult."""
         return (len(self.data), len(self.head[9:]))
 
+    def get_index(self, name):
+        return self.head.index(name)
+
     def get_data(self):
         """Return a copy of the data which can be modified safely."""
         return copy.deepcopy(self.data)
@@ -217,6 +220,31 @@ class VCFResult():
                     vcf_result.data[record] = fields1
                     break
         return vcf_result
+
+    def compare(self, n1, n2):
+        """Compare two samples within the BEDResult."""
+        i1 = self.get_index(n1)
+        i2 = self.get_index(n2)
+        tp = 0
+        fp = 0
+        fn = 0
+        tn = 0
+        def has_var(x):
+            return x.split(':')[0].replace('/', '').replace(
+                '.', '').replace('0', '')
+        for record, fields in self.get_data().items():
+            a = has_var(fields[i1])
+            b = has_var(fields[i2])
+            if a and b:
+                tp += 1
+            elif a and not b:
+                fp += 1
+            elif not a and b:
+                fn += 1
+            else:
+                tn += 1
+        result = (tp, fp, fn, tn)
+        return result
 
     @classmethod
     def read(cls, vcf_path):
