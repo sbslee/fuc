@@ -136,6 +136,23 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
+## count_reads.py
+
+```
+$ python3 count_reads.py -h
+usage: count_reads.py [-h] fastq_file
+
+This command will count sequence reads from a FASTQ file (both zipped and
+unzipped).
+
+positional arguments:
+  fastq_file  input FASTQ file
+
+optional arguments:
+  -h, --help  show this help message and exit
+
+```
+
 # API
 
 ## DataFrame.py
