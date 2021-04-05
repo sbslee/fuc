@@ -7,7 +7,7 @@ def main():
     parser.add_argument('left_file', help='left file')
     parser.add_argument('right_file', help='right file')
     parser.add_argument('output_file', help='merged file')
-    parser.add_argument('on', help='column name to join on', nargs='+')
+    parser.add_argument('on', help='column names to join on', nargs='+')
     parser.add_argument('--left_delimiter', default='\t',
         help="delimiter for the left file (default: '\\t')")
     parser.add_argument('--right_delimiter', default='\t',
