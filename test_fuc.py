@@ -3,6 +3,7 @@ import pathlib
 
 from VCFResult import VCFResult
 from BEDResult import BEDResult
+from FASTQResult import FASTQResult
 from DataFrame import DataFrame
 
 FUC_DIR = pathlib.Path(__file__).parent.absolute()
@@ -40,13 +41,19 @@ class TestBEDResult(unittest.TestCase):
         self.assertEqual(bed3.head, bed4.head)
         self.assertEqual(bed3.data, bed4.data)
 
+class TestFASTQResult(unittest.TestCase):
+
+    def test_shape(self):
+        fastq = FASTQResult.read(f'{FUC_DIR}/data/1.fastq')
+        self.assertEqual(fastq.shape, 3)
+
 class TestDataFrame(unittest.TestCase):
 
     def test_merge(self):
         df1 = DataFrame.read(f'{FUC_DIR}/data/left.txt')
         df2 = DataFrame.read(f'{FUC_DIR}/data/right.txt')
         df3 = DataFrame.read(f'{FUC_DIR}/data/merged.txt')
-        df4 = df1.merge(df2, 'Name')
+        df4 = df1.merge(df2, ['Name'])
         self.assertEqual(df3.head, df4.head)
         self.assertEqual(df3.data, df4.data)
 
