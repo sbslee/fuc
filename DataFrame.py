@@ -10,6 +10,10 @@ class DataFrame():
         """Return a tuple representing the dimensionality of the DataFrame."""
         return (len(self.data), len(self.head))
 
+    def get_index(self, name):
+        """Return the column index."""
+        return self.head.index(name)
+
     def get_data(self):
         """Return a copy of the data which can be modified safely."""
         return copy.deepcopy(self.data)
@@ -25,13 +29,13 @@ class DataFrame():
         """Return a merged DataFrame."""
         df = DataFrame()
         df.head = self.head + other.head
-        on1 = self.head.index(on)
-        on2 = other.head.index(on)
+        on1 = [self.get_index(x) for x in on]
+        on2 = [other.get_index(x) for x in on]
         other_indicies = []
         for f1 in self.get_data():
             match_found = False
             for i, f2 in enumerate(other.get_data()):
-                if f1[on1] == f2[on2]:
+                if [f1[x] for x in on1] == [f2[x] for x in on2]:
                     f1 += f2
                     match_found = True
                     other_indicies.append(i)
@@ -43,11 +47,19 @@ class DataFrame():
             if i not in other_indicies:
                 f1 = [missing] * self.shape[1]
                 f2 = other.get_data()[i]
-                f1[on1] = f2[on2]
+                for j in range(len(on1)):
+                    f1[on1[j]] = f2[on2[j]]
                 df.data.append(f1+f2)
-        del df.head[self.shape[1] + on2]
+
+        # Delete the redundant headers.
+        for i in sorted(on2, reverse=True):
+            del df.head[self.shape[1] + i]
+
+        # Delete the redundant data.
         for fields in df.data:
-            del fields[self.shape[1] + on2]
+            for i in sorted(on2, reverse=True):
+                del fields[self.shape[1] + i]
+
         return df
 
     @classmethod

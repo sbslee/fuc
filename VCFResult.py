@@ -23,6 +23,7 @@ class VCFResult():
         return (len(self.data), len(self.head[9:]))
 
     def get_index(self, name):
+        """Return the sample index."""
         return self.head.index(name)
 
     def get_data(self):
