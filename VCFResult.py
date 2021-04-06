@@ -1,4 +1,5 @@
 import copy
+import gzip
 
 VCF_HEADERS = (
     '#CHROM', 'POS', 'ID',
@@ -251,16 +252,20 @@ class VCFResult():
     def read(cls, vcf_path):
         """Create a VCFResult from a file."""
         vcf_result = cls()
-        with open(vcf_path) as f:
-            for line in f:
-                if line.startswith('##'):
-                    vcf_result.meta.append(line)
-                elif line.startswith('#CHROM'):
-                    fields = line.strip().split('\t')
-                    vcf_result.head = fields
-                else:
-                    fields = line.strip().split('\t')
-                    record = '{}:{}:{}:{}'.format(fields[0], fields[1],
-                        fields[3], fields[4])
-                    vcf_result.data[record] = fields
+        if vcf_path.endswith('.gz'):
+            f = gzip.open(vcf_path, 'rb')
+        else:
+            f = open(vcf_path)
+        for line in f:
+            if line.startswith('##'):
+                vcf_result.meta.append(line)
+            elif line.startswith('#CHROM'):
+                fields = line.strip().split('\t')
+                vcf_result.head = fields
+            else:
+                fields = line.strip().split('\t')
+                record = '{}:{}:{}:{}'.format(fields[0], fields[1],
+                    fields[3], fields[4])
+                vcf_result.data[record] = fields
+        f.close()
         return vcf_result
