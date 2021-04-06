@@ -4,7 +4,7 @@ from VCFResult import VCFResult
 def main():
     parser = argparse.ArgumentParser(description='This command merges '
         'multiple VCF files (both zipped and unzipped). By default, only '
-        "GT subfield of FORMAT field is included. Use '--subfield'"
+        "GT subfield of FORMAT field is included. Use '--subfield' "
         'to include additional subfields such as AD and DP.')
     parser.add_argument('input_vcf', help='input VCF files', nargs='+')
     parser.add_argument('output_vcf', help='output VCF file')

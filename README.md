@@ -87,7 +87,7 @@ usage: merge_vcfs.py [-h] [--subfield SUBFIELD [SUBFIELD ...]]
                      input_vcf [input_vcf ...] output_vcf
 
 This command merges multiple VCF files (both zipped and unzipped). By default,
-only GT subfield of FORMAT field is included. Use '--subfield'to include
+only GT subfield of FORMAT field is included. Use '--subfield' to include
 additional subfields such as AD and DP.
 
 positional arguments:
