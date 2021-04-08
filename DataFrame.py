@@ -21,13 +21,11 @@ class DataFrame():
         return self.head.index(name)
 
     def get_col(self, i):
-        """Return the column."""
-        c = []
-        for fields in self.get_data():
-            c.append(fields[i])
-        return c
+        """Return the column as a list."""
+        return [x[i] for x in self.get_data()]
 
     def summarize_col(self, i):
+        """Return summary of the column."""
         col = self.get_col(i)
         if self.dtypes[i] == 'categorical':
             results = dict(Counter(col))
@@ -77,16 +75,13 @@ class DataFrame():
                 for j in range(len(on1)):
                     f1[on1[j]] = f2[on2[j]]
                 df.data.append(f1+f2)
-
         # Delete the redundant headers.
         for i in sorted(on2, reverse=True):
             del df.head[self.shape[1] + i]
-
-        # Delete the redundant data.
+        # Delete the redundant columns.
         for fields in df.data:
             for i in sorted(on2, reverse=True):
                 del fields[self.shape[1] + i]
-
         return df
 
     @classmethod
