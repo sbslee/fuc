@@ -1,9 +1,15 @@
 import copy
+import statistics
+import math
+from collections import Counter
+
+from common import is_numeric
 
 class DataFrame():
     def __init__(self):
         self.head = []
         self.data = []
+        self.dtypes = []
 
     @property
     def shape(self):
@@ -13,6 +19,27 @@ class DataFrame():
     def get_index(self, name):
         """Return the column index."""
         return self.head.index(name)
+
+    def get_col(self, i):
+        """Return the column."""
+        c = []
+        for fields in self.get_data():
+            c.append(fields[i])
+        return c
+
+    def summarize_col(self, i):
+        col = self.get_col(i)
+        if self.dtypes[i] == 'categorical':
+            results = dict(Counter(col))
+        else:
+            col = [float(x) for x in col]
+            mean = statistics.mean(col)
+            results = dict(mean=mean)
+        return results
+
+    def get_head(self):
+        """Return a copy of the headers which can be modified safely."""
+        return copy.deepcopy(self.head)
 
     def get_data(self):
         """Return a copy of the data which can be modified safely."""
@@ -72,4 +99,12 @@ class DataFrame():
             for line in f:
                 fields = line.strip().split(delimiter)
                 df.data.append(fields)
+        for i in range(df.shape[1]):
+            l = []
+            for fields in df.get_data():
+                l.append(fields[i])
+            if all([is_numeric(x) for x in l]):
+                df.dtypes.append('numeric')
+            else:
+                df.dtypes.append('categorical')
         return df

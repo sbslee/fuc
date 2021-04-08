@@ -46,6 +46,28 @@ optional arguments:
                         delimiter for the output file (default: '\t')
 ```
 
+## summarize_table.py
+
+```
+usage: summarize_table.py [-h] [--delimiter DELIMITER]
+                          [--columns COLUMNS [COLUMNS ...]]
+                          [--exclude_columns]
+                          table_file
+
+This command will output a summary of the input text file.
+
+positional arguments:
+  table_file            input table file
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --delimiter DELIMITER
+                        delimiter for the table (default: '\t')
+  --columns COLUMNS [COLUMNS ...]
+                        specify which columns to summarize
+  --exclude_columns     use this tag to exclude specified columns
+```
+
 ## merge_vcfs.py
 
 ```
