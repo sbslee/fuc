@@ -33,10 +33,11 @@ class DataFrame():
             col = [float(x) for x in col]
             maximum = max(col)
             minimum = min(col)
-            mean = '{:.2f}'.format(statistics.mean(col))
-            median = '{:.2f}'.format(statistics.median(col))
+            mean = '{:.4f}'.format(statistics.mean(col))
+            median = statistics.median(col)
+            records = len(col)
             results = dict(mean=mean, median=median, maximum=maximum,
-                minimum=minimum)
+                minimum=minimum, records=records)
         return results
 
     def get_head(self):
@@ -68,7 +69,7 @@ class DataFrame():
             df.head = [self.head[i]]
             for fields in self.get_data():
                 df.data.append([fields[i]])
-            df.dtypes = [self.head[i]]
+            df.dtypes = [self.dtypes[i]]
         else:
             indicies = [self.get_index(x) for x in cols]
             df.head = list(itemgetter(*indicies)(self.head))

@@ -17,8 +17,16 @@ def is_numeric(s):
         except ValueError:
             return False
 
+def parse_condition(condition):
+    """Parse one condition in the SQLite WHERE clause."""
+    k = condition.split(' IN ')[0][1:-1]
+    v = re.findall("'([^']*)'", condition.split(' IN ')[1])
+    return {k: v}
+
 def parse_where(where):
     """Parse the SQLite WHERE clause."""
-    key = where.split(' IN ')[0][1:-1]
-    values = re.findall("'([^']*)'", where.split(' IN ')[1])
-    return key, values
+    conditions = where.split(' AND ')
+    results = {}
+    for condition in conditions:
+        results = {**results, **parse_condition(condition)}
+    return results

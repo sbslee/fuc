@@ -24,12 +24,14 @@ def main():
         help='use this tag to exclude specified rows')
     args = parser.parse_args()
     df = DataFrame.read(args.table_file, delimiter=args.delimiter)
+    # Filter the rows.
+    if args.rows:
+        conditions = parse_where(args.rows)
+        for k, v in conditions.items():
+            df = df.filter_rows(k, v, args.exclude_rows)
     # Filter the columns.
     if args.columns:
         df = df.filter_columns(args.columns, args.exclude_columns)
-    # Filter the rows.
-    if args.rows:
-        df = df.filter_rows(*parse_where(args.rows), args.exclude_rows)
     # Summarize the columns.
     for i in range(df.shape[1]):
         print('#', df.head[i], f'({df.dtypes[i]})')
