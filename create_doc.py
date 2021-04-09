@@ -21,7 +21,7 @@ for command in commands:
     args = ['python3', f'{fuc_dir()}/{command}', '-h']
     result = subprocess.run(args, capture_output=True, text=True, check=True)
     with open(cli_file, 'a') as f:
-        f.write(f'## {command}\n')
+        f.write(f'## {command} <a name="{command}"></a>\n')
         f.write('\n')
         f.write('```\n')
         f.write(result.stdout)
