@@ -36,8 +36,8 @@ class DataFrame():
             mean = '{:.4f}'.format(statistics.mean(col))
             median = statistics.median(col)
             records = len(col)
-            results = dict(mean=mean, median=median, maximum=maximum,
-                minimum=minimum, records=records)
+            results = dict(minimum=minimum, maximum=maximum, mean=mean,
+                median=median, records=records)
         return results
 
     def get_head(self):
