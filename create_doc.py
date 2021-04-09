@@ -14,7 +14,7 @@ with open(cli_file, 'w') as f:
     f.write('## Table of contents\n')
     f.write('\n')
     for command in commands:
-        f.write(f'* [{command}]\n')
+        f.write(f'* [{command}](#{command}) \n')
     f.write('\n')
 
 for command in commands:
