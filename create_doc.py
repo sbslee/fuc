@@ -9,7 +9,7 @@ commands = ['check_files.py', 'merge_files.py', 'summarize_file.py',
 cli_file = f'{fuc_dir()}/doc/CLI.md'
 
 with open(cli_file, 'w') as f:
-    f.write('# API\n')
+    f.write('# CLI\n')
     f.write('\n')
     f.write('## Table of contents\n')
     f.write('\n')
