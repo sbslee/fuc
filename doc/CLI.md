@@ -51,7 +51,9 @@ usage: summarize_file.py [-h] [--delimiter DELIMITER]
                          [--columns COLUMNS [COLUMNS ...]] [--exclude_columns]
                          table_file
 
-This command will output a summary of the input text file.
+This command will output a summary of the input text file. This includes
+counts of unique records for each column, similar to the
+`pandas.DataFrame.count` method.
 
 positional arguments:
   table_file            input table file
