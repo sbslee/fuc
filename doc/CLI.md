@@ -1,5 +1,15 @@
 # API
 
+## Table of contents
+
+* [check_files.py]
+* [merge_files.py]
+* [summarize_file.py]
+* [merge_vcfs.py]
+* [summarize_bed.py]
+* [intersect_beds.py]
+* [count_reads.py]
+
 ## check_files.py
 
 ```
