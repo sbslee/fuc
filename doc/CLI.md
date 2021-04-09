@@ -10,7 +10,7 @@
 * [intersect_beds.py](#intersect_beds.py) 
 * [count_reads.py](#count_reads.py) 
 
-## check_files.py
+## check_files.py <a name="check_files.py"></a>
 
 ```
 usage: check_files.py [-h] [--delimiter DELIMITER] input_file column_header
@@ -28,7 +28,7 @@ optional arguments:
                         column delimiter (default: ',')
 ```
 
-## merge_files.py
+## merge_files.py <a name="merge_files.py"></a>
 
 ```
 usage: merge_files.py [-h] [--left_delimiter LEFT_DELIMITER]
@@ -54,7 +54,7 @@ optional arguments:
                         delimiter for the output file (default: '\t')
 ```
 
-## summarize_file.py
+## summarize_file.py <a name="summarize_file.py"></a>
 
 ```
 usage: summarize_file.py [-h] [--delimiter DELIMITER]
@@ -82,7 +82,7 @@ optional arguments:
   --exclude_rows        use this tag to exclude specified rows
 ```
 
-## merge_vcfs.py
+## merge_vcfs.py <a name="merge_vcfs.py"></a>
 
 ```
 usage: merge_vcfs.py [-h] [--subfield SUBFIELD [SUBFIELD ...]]
@@ -102,7 +102,7 @@ optional arguments:
                         FORMAT subfields
 ```
 
-## summarize_bed.py
+## summarize_bed.py <a name="summarize_bed.py"></a>
 
 ```
 usage: summarize_bed.py [-h] [--bases BASES] [--decimals DECIMALS] bed_file
@@ -121,7 +121,7 @@ optional arguments:
   --decimals DECIMALS  maximum number of decimals (default: 10)
 ```
 
-## intersect_beds.py
+## intersect_beds.py <a name="intersect_beds.py"></a>
 
 ```
 usage: intersect_beds.py [-h] input_bed [input_bed ...] output_bed
@@ -136,7 +136,7 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-## count_reads.py
+## count_reads.py <a name="count_reads.py"></a>
 
 ```
 usage: count_reads.py [-h] fastq_file
