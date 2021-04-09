@@ -31,8 +31,12 @@ class DataFrame():
             results = dict(Counter(col))
         else:
             col = [float(x) for x in col]
-            mean = statistics.mean(col)
-            results = dict(mean=mean)
+            maximum = max(col)
+            minimum = min(col)
+            mean = '{:.2f}'.format(statistics.mean(col))
+            median = '{:.2f}'.format(statistics.median(col))
+            results = dict(mean=mean, median=median, maximum=maximum,
+                minimum=minimum)
         return results
 
     def get_head(self):

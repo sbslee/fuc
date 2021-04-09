@@ -53,8 +53,10 @@ usage: summarize_file.py [-h] [--delimiter DELIMITER]
                          table_file
 
 This command will output a summary of the input text file. For each column, it
-will return counts of unique records for categorical data and various summary
-statistics for numeric data.
+will return the counts of unique records for categorical data and the summary
+statistics (minimum, maximum, mean, and median) for numeric data. You can use
+'--columns' to specify which columns should be displayed. Additionally, you
+can use '--rows' to filter for rows that meet certain criteria.
 
 positional arguments:
   table_file            input table file
