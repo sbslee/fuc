@@ -5,6 +5,7 @@
 * [check_files.py](#check_files.py) 
 * [merge_files.py](#merge_files.py) 
 * [summarize_file.py](#summarize_file.py) 
+* [summarize_column.py](#summarize_column.py) 
 * [merge_vcfs.py](#merge_vcfs.py) 
 * [summarize_bed.py](#summarize_bed.py) 
 * [intersect_beds.py](#intersect_beds.py) 
@@ -79,6 +80,37 @@ optional arguments:
   --columns COLUMNS [COLUMNS ...]
                         specify which columns to summarize
   --exclude_columns     use this tag to exclude specified columns
+  --rows ROWS           SQLite WHERE clause specifying which rows to summarize
+  --exclude_rows        use this tag to exclude specified rows
+```
+
+## summarize_column.py <a name="summarize_column.py"></a>
+
+```
+usage: summarize_column.py [-h] [--group_col GROUP_COL]
+                           [--delimiter DELIMITER]
+                           [--skiprows SKIPROWS [SKIPROWS ...]] [--rows ROWS]
+                           [--exclude_rows]
+                           table_file target_col
+
+This command will output a summary table for the target column in the input
+text file. The target column must be categorical. You can also use '--
+group_col' to group the observations by another categorical column. For
+filtering, you can use '--rows' to express SQLite WHERE clause which will
+select rows that meet certain criteria.
+
+positional arguments:
+  table_file            input table file
+  target_col            target column
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --group_col GROUP_COL
+                        column to group by
+  --delimiter DELIMITER
+                        delimiter for the table (default: '\t')
+  --skiprows SKIPROWS [SKIPROWS ...]
+                        line numbers to skip
   --rows ROWS           SQLite WHERE clause specifying which rows to summarize
   --exclude_rows        use this tag to exclude specified rows
 ```

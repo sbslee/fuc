@@ -3,8 +3,8 @@ import subprocess
 from common import fuc_dir
 
 commands = ['check_files.py', 'merge_files.py', 'summarize_file.py',
-            'merge_vcfs.py', 'summarize_bed.py', 'intersect_beds.py',
-            'count_reads.py']
+            'summarize_column.py', 'merge_vcfs.py', 'summarize_bed.py',
+            'intersect_beds.py', 'count_reads.py']
 
 cli_file = f'{fuc_dir()}/doc/CLI.md'
 
