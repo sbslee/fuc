@@ -24,6 +24,10 @@ class DataFrame():
         """Return the column as a list."""
         return [x[i] for x in self.get_data()]
 
+    def get_unique(self, i):
+        """Return unique values of the column."""
+        return list(dict.fromkeys(self.get_col(i)))
+
     def summarize_col(self, i):
         """Return summary of the column."""
         col = self.get_col(i)
@@ -126,7 +130,7 @@ class DataFrame():
         return df
 
     @classmethod
-    def read(cls, file_path, delimiter='\t', header=True):
+    def read(cls, file_path, delimiter='\t', header=True, skiprows=None):
         """Create a DataFrame from a file."""
         df = cls()
         with open(file_path, encoding='utf-8-sig') as f:
@@ -135,6 +139,14 @@ class DataFrame():
             for line in f:
                 fields = line.strip().split(delimiter)
                 df.data.append(fields)
+        # If provided, remove the specified rows.
+        if isinstance(skiprows, list):
+            pass
+        else:
+            skiprows = []
+        for i in sorted(skiprows, reverse=True):
+            del df.data[i]
+        # Get the data type for each column.
         for i in range(df.shape[1]):
             l = []
             for fields in df.get_data():
