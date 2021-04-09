@@ -2,13 +2,13 @@
 
 ## Table of contents
 
-* [check_files.py]
-* [merge_files.py]
-* [summarize_file.py]
-* [merge_vcfs.py]
-* [summarize_bed.py]
-* [intersect_beds.py]
-* [count_reads.py]
+* [check_files.py](#check_files.py) 
+* [merge_files.py](#merge_files.py) 
+* [summarize_file.py](#summarize_file.py) 
+* [merge_vcfs.py](#merge_vcfs.py) 
+* [summarize_bed.py](#summarize_bed.py) 
+* [intersect_beds.py](#intersect_beds.py) 
+* [count_reads.py](#count_reads.py) 
 
 ## check_files.py
 
