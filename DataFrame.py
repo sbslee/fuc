@@ -1,7 +1,7 @@
 import copy
 import statistics
-import math
 from collections import Counter
+from operator import itemgetter
 
 from common import is_numeric
 
@@ -50,6 +50,42 @@ class DataFrame():
             for fields in self.get_data():
                 f.write(delimiter.join(fields) + '\n')
 
+    def filter_columns(self, headers, exclude=False):
+        """Return a new table after filtering the columns."""
+        # Get the final columns to be included.
+        if exclude:
+            cols = [x for x in self.get_head() if x not in headers]
+        else:
+            cols = [x for x in self.get_head() if x in headers]
+        # Create a filtered table.
+        df = self.__class__()
+        if len(cols) == 1:
+            i = self.get_index(cols[0])
+            df.head = [self.head[i]]
+            for fields in self.get_data():
+                df.data.append([fields[i]])
+            df.dtypes = [self.head[i]]
+        else:
+            indicies = [self.get_index(x) for x in cols]
+            df.head = list(itemgetter(*indicies)(self.head))
+            for fields in self.get_data():
+                df.data.append(list(itemgetter(*indicies)(fields)))
+            df.dtypes = list(itemgetter(*indicies)(self.dtypes))
+        return df
+
+    def filter_rows(self, key, values, exclude=False):
+        """Return a new table after filtering the rows."""
+        df = self.__class__()
+        df.head = copy.deepcopy(self.head)
+        df.data = copy.deepcopy(self.data)
+        df.dtypes = copy.deepcopy(self.dtypes)
+        i = self.get_index(key)
+        if exclude:
+            df.data = [x for x in df.data if x[i] not in values]
+        else:
+            df.data = [x for x in df.data if x[i] in values]
+        return df
+
     def merge(self, other, on, missing='.'):
         """Return a merged DataFrame."""
         df = DataFrame()
@@ -88,7 +124,7 @@ class DataFrame():
     def read(cls, file_path, delimiter='\t', header=True):
         """Create a DataFrame from a file."""
         df = cls()
-        with open(file_path) as f:
+        with open(file_path, encoding='utf-8-sig') as f:
             if header:
                 df.head = next(f).strip().split(delimiter)
             for line in f:

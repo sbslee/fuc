@@ -1,11 +1,13 @@
 import argparse
+
 from DataFrame import DataFrame
+from common import parse_where
 
 def main():
     parser = argparse.ArgumentParser(description='This command will '
-        'output a summary of the input text file. This includes '
-        'counts of unique records for each column, similar to '
-        'the `pandas.DataFrame.count` method.')
+        'output a summary of the input text file. For each column, '
+        'it will return counts of unique records for categorical data '
+        'and various summary statistics for numeric data.')
     parser.add_argument('table_file', help='input table file')
     parser.add_argument('--delimiter', default='\t',
         help="delimiter for the table (default: '\\t')")
@@ -13,17 +15,20 @@ def main():
         help='specify which columns to summarize')
     parser.add_argument('--exclude_columns', action='store_true',
         help='use this tag to exclude specified columns')
+    parser.add_argument('--rows', help='SQLite WHERE clause specifying '
+        'which rows to summarize')
+    parser.add_argument('--exclude_rows', action='store_true',
+        help='use this tag to exclude specified rows')
     args = parser.parse_args()
     df = DataFrame.read(args.table_file, delimiter=args.delimiter)
-
-    if args.columns and args.exclude_columns:
-        target_cols = [x for x in df.get_head() if x not in args.columns]
-    elif args.columns and not args.exclude_columns:
-        target_cols = [x for x in df.get_head() if x in args.columns]
-    else:
-        target_cols = df.get_head()
-
-    for i in [df.get_index(x) for x in target_cols]:
+    # Filter the columns.
+    if args.columns:
+        df = df.filter_columns(args.columns, args.exclude_columns)
+    # Filter the rows.
+    if args.rows:
+        df = df.filter_rows(*parse_where(args.rows), args.exclude_rows)
+    # Summarize the columns.
+    for i in range(df.shape[1]):
         print('#', df.head[i], f'({df.dtypes[i]})')
         results = df.summarize_col(i)
         keys = list(results)

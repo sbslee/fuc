@@ -49,11 +49,12 @@ optional arguments:
 ```
 usage: summarize_file.py [-h] [--delimiter DELIMITER]
                          [--columns COLUMNS [COLUMNS ...]] [--exclude_columns]
+                         [--rows ROWS] [--exclude_rows]
                          table_file
 
-This command will output a summary of the input text file. This includes
-counts of unique records for each column, similar to the
-`pandas.DataFrame.count` method.
+This command will output a summary of the input text file. For each column, it
+will return counts of unique records for categorical data and various summary
+statistics for numeric data.
 
 positional arguments:
   table_file            input table file
@@ -65,6 +66,8 @@ optional arguments:
   --columns COLUMNS [COLUMNS ...]
                         specify which columns to summarize
   --exclude_columns     use this tag to exclude specified columns
+  --rows ROWS           SQLite WHERE clause specifying which rows to summarize
+  --exclude_rows        use this tag to exclude specified rows
 ```
 
 ## merge_vcfs.py
