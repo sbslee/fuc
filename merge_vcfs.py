@@ -1,5 +1,5 @@
 import argparse
-from VCFResult import VCFResult
+from api.VCFResult import VCFResult
 
 def main():
     parser = argparse.ArgumentParser(description='This command merges '

@@ -1,10 +1,11 @@
 import subprocess
 
-from common import fuc_dir
+from api.common import fuc_dir
 
 commands = ['check_files.py', 'merge_files.py', 'summarize_file.py',
             'summarize_column.py', 'merge_vcfs.py', 'summarize_bed.py',
-            'intersect_beds.py', 'count_reads.py']
+            'intersect_beds.py', 'count_fastq_reads.py',
+            'compute_fastq_read_lengths.py']
 
 cli_file = f'{fuc_dir()}/doc/CLI.md'
 

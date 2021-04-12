@@ -1,7 +1,7 @@
 import argparse
 
-from DataFrame import DataFrame
-from common import parse_where
+from api.DataFrame import DataFrame
+from api.common import parse_where
 
 def main():
     parser = argparse.ArgumentParser(description='This command will '

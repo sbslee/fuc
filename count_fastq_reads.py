@@ -1,5 +1,5 @@
 import argparse
-from FASTQResult import FASTQResult
+from api.FASTQResult import FASTQResult
 
 def main():
     parser = argparse.ArgumentParser(description='This command will count '
@@ -7,7 +7,7 @@ def main():
     parser.add_argument('fastq_file', help='input FASTQ file')
     args = parser.parse_args()
     fastq_result = FASTQResult.read(args.fastq_file)
-    print('Read count:', fastq_result.shape, sep='\t')
+    print(fastq_result.shape)
 
 if __name__ == '__main__':
     main()

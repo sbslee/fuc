@@ -1,3 +1,4 @@
+import copy
 import gzip
 
 class FASTQResult():
@@ -8,6 +9,20 @@ class FASTQResult():
     def shape(self):
         """Return the size of the FASTQResult."""
         return len(self.data)
+
+    def get_data(self):
+        """Return a copy of the data which can be modified safely."""
+        return copy.deepcopy(self.data)
+
+    def get_read_length(self):
+        """Return a dictionary of read lengths and their counts."""
+        lengths = {}
+        for fields in self.get_data():
+            length = len(fields[1])
+            if length not in lengths:
+                lengths[length] = 0
+            lengths[length] += 1
+        return lengths
 
     @classmethod
     def read(cls, fastq_path):

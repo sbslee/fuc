@@ -1,5 +1,5 @@
 import argparse
-from BEDResult import BEDResult
+from api.BEDResult import BEDResult
 
 def main():
     parser = argparse.ArgumentParser(description='This command computes '

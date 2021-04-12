@@ -3,7 +3,7 @@ import statistics
 from collections import Counter
 from operator import itemgetter
 
-from common import is_numeric
+from .common import is_numeric
 
 class DataFrame():
     def __init__(self):

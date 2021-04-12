@@ -9,7 +9,8 @@
 * [merge_vcfs.py](#merge_vcfs.py) 
 * [summarize_bed.py](#summarize_bed.py) 
 * [intersect_beds.py](#intersect_beds.py) 
-* [count_reads.py](#count_reads.py) 
+* [count_fastq_reads.py](#count_fastq_reads.py) 
+* [compute_fastq_read_lengths.py](#compute_fastq_read_lengths.py) 
 
 ## check_files.py <a name="check_files.py"></a>
 
@@ -169,13 +170,28 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-## count_reads.py <a name="count_reads.py"></a>
+## count_fastq_reads.py <a name="count_fastq_reads.py"></a>
 
 ```
-usage: count_reads.py [-h] fastq_file
+usage: count_fastq_reads.py [-h] fastq_file
 
 This command will count sequence reads from a FASTQ file (both zipped and
 unzipped).
+
+positional arguments:
+  fastq_file  input FASTQ file
+
+optional arguments:
+  -h, --help  show this help message and exit
+```
+
+## compute_fastq_read_lengths.py <a name="compute_fastq_read_lengths.py"></a>
+
+```
+usage: compute_fastq_read_lengths.py [-h] fastq_file
+
+This command will compute the distribution of sequence read lengths for a
+FASTQ file (both zipped and unzipped).
 
 positional arguments:
   fastq_file  input FASTQ file
