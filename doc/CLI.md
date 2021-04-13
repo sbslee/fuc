@@ -44,7 +44,7 @@ positional arguments:
 optional arguments:
   -h, --help           show this help message and exit
   --bases BASES        number used to divide the bases (default: 1)
-  --decimals DECIMALS  maximum number of decimals (default: 10)
+  --decimals DECIMALS  maximum number of decimals (default: 0)
 ```
 
 ## fastq_compute_read_lengths <a name="fastq_compute_read_lengths"></a>

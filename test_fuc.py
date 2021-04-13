@@ -1,11 +1,11 @@
 import unittest
 
-from api.common import fuc_dir
+from fuc.api.common import fuc_dir
 
-from api.VCFResult import VCFResult
-from api.BEDResult import BEDResult
-from api.FASTQResult import FASTQResult
-from api.DataFrame import DataFrame
+from fuc.api.VCFResult import VCFResult
+from fuc.api.BEDResult import BEDResult
+from fuc.api.FASTQResult import FASTQResult
+from fuc.api.DataFrame import DataFrame
 
 class TestVCFResult(unittest.TestCase):
 
