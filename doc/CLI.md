@@ -7,6 +7,7 @@
 * [fastq_compute_read_lengths](#fastq_compute_read_lengths) 
 * [fastq_count_reads](#fastq_count_reads) 
 * [table_check_files](#table_check_files) 
+* [table_compare_files](#table_compare_files) 
 * [table_merge_files](#table_merge_files) 
 * [table_summarize_column](#table_summarize_column) 
 * [table_summarize_file](#table_summarize_file) 
@@ -94,6 +95,21 @@ optional arguments:
   -h, --help            show this help message and exit
   --delimiter DELIMITER
                         column delimiter (default: ',')
+```
+
+## table_compare_files <a name="table_compare_files"></a>
+
+```
+usage: fuc table_compare_files [-h] file1 file2
+
+This command will compare two files.
+
+positional arguments:
+  file1       first file
+  file2       second file
+
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
 ## table_merge_files <a name="table_merge_files"></a>

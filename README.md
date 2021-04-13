@@ -27,6 +27,8 @@ positional arguments:
                         compute read lengths in FASTQ
     fastq_count_reads   count sequence reads in FASTQ
     table_check_files   check whether files exist
+    table_compare_files
+                        compare two files
     table_merge_files   merge two text files
     table_summarize_column
                         summarize a table column
