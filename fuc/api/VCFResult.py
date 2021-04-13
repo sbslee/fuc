@@ -224,7 +224,20 @@ class VCFResult():
         return vcf_result
 
     def compare(self, n1, n2):
-        """Compare two samples within the BEDResult."""
+        """Compare two samples within the BEDResult.
+
+        Parameters
+        ----------
+        n1 : string
+            Test sample.
+        n2 : string
+            Truth sample.
+
+        Returns
+        -------
+        result : tuple
+            Comparison result (tp, fp, fn, and tn).
+        """
         i1 = self.get_index(n1)
         i2 = self.get_index(n2)
         tp = 0
@@ -247,6 +260,16 @@ class VCFResult():
                 tn += 1
         result = (tp, fp, fn, tn)
         return result
+
+    def multiallelic_sites(self):
+        """Return the indicies of multiallelic sites."""
+        indicies = []
+        n = 0
+        for record, fields in self.get_data().items():
+            if len(fields[4].split(',')) > 1:
+                indicies.append(n)
+            n += 1
+        return indicies
 
     @classmethod
     def read(cls, vcf_path):

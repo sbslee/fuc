@@ -10,25 +10,29 @@ from fuc.api.DataFrame import DataFrame
 class TestVCFResult(unittest.TestCase):
 
     def test_shape(self):
-        vcf = VCFResult.read(f'{fuc_dir()}/data/1.vcf')
+        vcf = VCFResult.read(f'{fuc_dir()}/data/vcf/1.vcf')
         self.assertEqual(vcf.shape, (5, 4))
 
     def test_filter_bed(self):
-        vcf1 = VCFResult.read(f'{fuc_dir()}/data/1.vcf')
+        vcf1 = VCFResult.read(f'{fuc_dir()}/data/vcf/1.vcf')
         bed = BEDResult.read(f'{fuc_dir()}/data/bed/1.bed')
         vcf2 = vcf1.filter_bed(bed)
         self.assertEqual(vcf2.shape, (3, 4))
 
     def test_merge(self):
-        vcf1 = VCFResult.read(f'{fuc_dir()}/data/1.vcf')
-        vcf2 = VCFResult.read(f'{fuc_dir()}/data/2.vcf')
+        vcf1 = VCFResult.read(f'{fuc_dir()}/data/vcf/1.vcf')
+        vcf2 = VCFResult.read(f'{fuc_dir()}/data/vcf/2.vcf')
         vcf3 = vcf1.merge(vcf2)
         self.assertEqual(vcf3.shape, (7, 5))
 
     def test_compare(self):
-        vcf = VCFResult.read(f'{fuc_dir()}/data/1.vcf')
+        vcf = VCFResult.read(f'{fuc_dir()}/data/vcf/1.vcf')
         result = vcf.compare('Steven', 'Sarah')
-        self.assertEqual(result, (0, 1, 0, 4))
+        self.assertEqual(result, (0, 1, 1, 3))
+
+    def test_multiallelic_sites(self):
+        vcf = VCFResult.read(f'{fuc_dir()}/data/vcf/1.vcf')
+        self.assertEqual(vcf.multiallelic_sites(), [3])
 
 class TestBEDResult(unittest.TestCase):
 
