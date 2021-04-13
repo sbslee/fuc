@@ -57,12 +57,17 @@ class BEDResult():
         for r1 in self.get_data():
             a = (int(r1[1]), int(r1[2]))
             for r2 in other.data:
+                if r1[0] != r2[0]:
+                    continue
                 b = (int(r2[1]), int(r2[2]))
                 overlap_result = overlap(a, b)
                 if overlap_result is not None:
-                    r1[1] = str(overlap_result[0])
-                    r1[2] = str(overlap_result[1])
-                    bed_result.data.append(r1)
+                    r3 = []
+                    r3.append(r1[0])
+                    r3.append(str(overlap_result[0]))
+                    r3.append(str(overlap_result[1]))
+                    r3 += r1[3:]
+                    bed_result.data.append(r3)
         return bed_result
 
     @classmethod
