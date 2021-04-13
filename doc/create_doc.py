@@ -1,11 +1,7 @@
 import subprocess
 
-from api.common import fuc_dir
-
-commands = ['check_files.py', 'merge_files.py', 'summarize_file.py',
-            'summarize_column.py', 'merge_vcfs.py', 'summarize_bed.py',
-            'intersect_beds.py', 'count_fastq_reads.py',
-            'compute_fastq_read_lengths.py']
+from fuc.api.common import fuc_dir
+from fuc.cli import commands
 
 cli_file = f'{fuc_dir()}/doc/CLI.md'
 
@@ -19,7 +15,7 @@ with open(cli_file, 'w') as f:
     f.write('\n')
 
 for command in commands:
-    args = ['python3', f'{fuc_dir()}/{command}', '-h']
+    args = ['fuc', command, '-h']
     result = subprocess.run(args, capture_output=True, text=True, check=True)
     with open(cli_file, 'a') as f:
         f.write(f'## {command} <a name="{command}"></a>\n')

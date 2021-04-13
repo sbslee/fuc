@@ -2,22 +2,88 @@
 
 ## Table of contents
 
-* [check_files.py](#check_files.py) 
-* [merge_files.py](#merge_files.py) 
-* [summarize_file.py](#summarize_file.py) 
-* [summarize_column.py](#summarize_column.py) 
-* [merge_vcfs.py](#merge_vcfs.py) 
-* [summarize_bed.py](#summarize_bed.py) 
-* [intersect_beds.py](#intersect_beds.py) 
-* [count_fastq_reads.py](#count_fastq_reads.py) 
-* [compute_fastq_read_lengths.py](#compute_fastq_read_lengths.py) 
+* [bed_intersect_files](#bed_intersect_files) 
+* [bed_summarize_file](#bed_summarize_file) 
+* [fastq_compute_read_lengths](#fastq_compute_read_lengths) 
+* [fastq_count_reads](#fastq_count_reads) 
+* [table_check_files](#table_check_files) 
+* [table_merge_files](#table_merge_files) 
+* [table_summarize_column](#table_summarize_column) 
+* [table_summarize_file](#table_summarize_file) 
+* [vcf_merge_files](#vcf_merge_files) 
 
-## check_files.py <a name="check_files.py"></a>
+## bed_intersect_files <a name="bed_intersect_files"></a>
 
 ```
-usage: check_files.py [-h] [--delimiter DELIMITER] input_file column_header
+usage: fuc bed_intersect_files [-h] input_bed [input_bed ...] output_bed
 
-This command checks whether or not files in the given list exist in the
+This command will compute intersections beween multiple BED files.
+
+positional arguments:
+  input_bed   input BED files
+  output_bed  output BED file
+
+optional arguments:
+  -h, --help  show this help message and exit
+```
+
+## bed_summarize_file <a name="bed_summarize_file"></a>
+
+```
+usage: fuc bed_summarize_file [-h] [--bases BASES] [--decimals DECIMALS]
+                              bed_file
+
+This command computes summary statstics of the given BED file. This includes
+the total numbers of probes and covered base pairs for each chromosome. By
+default, covered base paris are displayed in bp, but if you prefer you can,
+for example, use '--bases 1000' to display base pairs in kb.
+
+positional arguments:
+  bed_file             input BED file
+
+optional arguments:
+  -h, --help           show this help message and exit
+  --bases BASES        number used to divide the bases (default: 1)
+  --decimals DECIMALS  maximum number of decimals (default: 10)
+```
+
+## fastq_compute_read_lengths <a name="fastq_compute_read_lengths"></a>
+
+```
+usage: fuc fastq_compute_read_lengths [-h] fastq_file
+
+This command will compute the distribution of sequence read lengths for a
+FASTQ file (both zipped and unqzipped).
+
+positional arguments:
+  fastq_file  input FASTQ file
+
+optional arguments:
+  -h, --help  show this help message and exit
+```
+
+## fastq_count_reads <a name="fastq_count_reads"></a>
+
+```
+usage: fuc fastq_count_reads [-h] fastq_file
+
+This command will count sequence reads from a FASTQ file (both zipped and
+unzipped).
+
+positional arguments:
+  fastq_file  input FASTQ file
+
+optional arguments:
+  -h, --help  show this help message and exit
+```
+
+## table_check_files <a name="table_check_files"></a>
+
+```
+usage: fuc table_check_files [-h] [--delimiter DELIMITER]
+                             input_file column_header
+
+This command will checks whether or not files in the given list exist inthe
 operating system.
 
 positional arguments:
@@ -30,15 +96,15 @@ optional arguments:
                         column delimiter (default: ',')
 ```
 
-## merge_files.py <a name="merge_files.py"></a>
+## table_merge_files <a name="table_merge_files"></a>
 
 ```
-usage: merge_files.py [-h] [--left_delimiter LEFT_DELIMITER]
-                      [--right_delimiter RIGHT_DELIMITER]
-                      [--output_delimiter OUTPUT_DELIMITER]
-                      left_file right_file output_file on [on ...]
+usage: fuc table_merge_files [-h] [--left_delimiter LEFT_DELIMITER]
+                             [--right_delimiter RIGHT_DELIMITER]
+                             [--output_delimiter OUTPUT_DELIMITER]
+                             left_file right_file output_file on [on ...]
 
-This command will merge two text files on a shared column.
+This command will merge two text files using one or more shared columns.
 
 positional arguments:
   left_file             left file
@@ -56,43 +122,14 @@ optional arguments:
                         delimiter for the output file (default: '\t')
 ```
 
-## summarize_file.py <a name="summarize_file.py"></a>
+## table_summarize_column <a name="table_summarize_column"></a>
 
 ```
-usage: summarize_file.py [-h] [--delimiter DELIMITER]
-                         [--columns COLUMNS [COLUMNS ...]] [--exclude_columns]
-                         [--rows ROWS] [--exclude_rows]
-                         table_file
-
-This command will output a summary of the input text file. For each column, it
-will return the counts of unique records for categorical data and the summary
-statistics (minimum, maximum, mean, and median) for numeric data. You can use
-'--columns' to specify which columns should be displayed. For filtering, you
-can use '--rows' to express SQLite WHERE clause which will select rows that
-meet certain criteria.
-
-positional arguments:
-  table_file            input table file
-
-optional arguments:
-  -h, --help            show this help message and exit
-  --delimiter DELIMITER
-                        delimiter for the table (default: '\t')
-  --columns COLUMNS [COLUMNS ...]
-                        specify which columns to summarize
-  --exclude_columns     use this tag to exclude specified columns
-  --rows ROWS           SQLite WHERE clause specifying which rows to summarize
-  --exclude_rows        use this tag to exclude specified rows
-```
-
-## summarize_column.py <a name="summarize_column.py"></a>
-
-```
-usage: summarize_column.py [-h] [--group_col GROUP_COL]
-                           [--delimiter DELIMITER]
-                           [--skiprows SKIPROWS [SKIPROWS ...]] [--rows ROWS]
-                           [--exclude_rows]
-                           table_file target_col
+usage: fuc table_summarize_column [-h] [--group_col GROUP_COL]
+                                  [--delimiter DELIMITER]
+                                  [--skiprows SKIPROWS [SKIPROWS ...]]
+                                  [--rows ROWS] [--exclude_rows]
+                                  table_file target_col
 
 This command will output a summary table for the target column in the input
 text file. The target column must be categorical. You can also use '--
@@ -116,11 +153,41 @@ optional arguments:
   --exclude_rows        use this tag to exclude specified rows
 ```
 
-## merge_vcfs.py <a name="merge_vcfs.py"></a>
+## table_summarize_file <a name="table_summarize_file"></a>
 
 ```
-usage: merge_vcfs.py [-h] [--subfield SUBFIELD [SUBFIELD ...]]
-                     input_vcf [input_vcf ...] output_vcf
+usage: fuc table_summarize_file [-h] [--delimiter DELIMITER]
+                                [--columns COLUMNS [COLUMNS ...]]
+                                [--exclude_columns] [--rows ROWS]
+                                [--exclude_rows]
+                                table_file
+
+This command will output a summary of the input text file. For each column, it
+will return the counts of unique records for categorical data and the summary
+statistics (minimum, maximum, mean, and median) for numeric data. You can use
+'--columns' to specify which columns should be displayed. For filtering, you
+can use '--rows' to express SQLite WHERE clause which will select rows that
+meet certain criteria.
+
+positional arguments:
+  table_file            input table file
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --delimiter DELIMITER
+                        delimiter for the table (default: '\t')
+  --columns COLUMNS [COLUMNS ...]
+                        specify which columns to summarize
+  --exclude_columns     use this tag to exclude specified columns
+  --rows ROWS           SQLite WHERE clause specifying which rows to summarize
+  --exclude_rows        use this tag to exclude specified rows
+```
+
+## vcf_merge_files <a name="vcf_merge_files"></a>
+
+```
+usage: fuc vcf_merge_files [-h] [--subfield SUBFIELD [SUBFIELD ...]]
+                           input_vcf [input_vcf ...] output_vcf
 
 This command merges multiple VCF files (both zipped and unzipped). By default,
 only GT subfield of FORMAT field is included. Use '--subfield' to include
@@ -134,69 +201,5 @@ optional arguments:
   -h, --help            show this help message and exit
   --subfield SUBFIELD [SUBFIELD ...]
                         FORMAT subfields
-```
-
-## summarize_bed.py <a name="summarize_bed.py"></a>
-
-```
-usage: summarize_bed.py [-h] [--bases BASES] [--decimals DECIMALS] bed_file
-
-This command computes summary statstics of the given BED file. This includes
-the total numbers of probes and covered base pairs for each chromosome. By
-default, covered base paris are displayed in bp, but if you prefer you can,
-for example, use '--bases 1000' to display base pairs in kb.
-
-positional arguments:
-  bed_file             input BED file
-
-optional arguments:
-  -h, --help           show this help message and exit
-  --bases BASES        number used to divide the bases (default: 1)
-  --decimals DECIMALS  maximum number of decimals (default: 10)
-```
-
-## intersect_beds.py <a name="intersect_beds.py"></a>
-
-```
-usage: intersect_beds.py [-h] input_bed [input_bed ...] output_bed
-
-This command computes intersections between multiple BED files.
-
-positional arguments:
-  input_bed   input BED files
-  output_bed  output BED file
-
-optional arguments:
-  -h, --help  show this help message and exit
-```
-
-## count_fastq_reads.py <a name="count_fastq_reads.py"></a>
-
-```
-usage: count_fastq_reads.py [-h] fastq_file
-
-This command will count sequence reads from a FASTQ file (both zipped and
-unzipped).
-
-positional arguments:
-  fastq_file  input FASTQ file
-
-optional arguments:
-  -h, --help  show this help message and exit
-```
-
-## compute_fastq_read_lengths.py <a name="compute_fastq_read_lengths.py"></a>
-
-```
-usage: compute_fastq_read_lengths.py [-h] fastq_file
-
-This command will compute the distribution of sequence read lengths for a
-FASTQ file (both zipped and unzipped).
-
-positional arguments:
-  fastq_file  input FASTQ file
-
-optional arguments:
-  -h, --help  show this help message and exit
 ```
 

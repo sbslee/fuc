@@ -7,7 +7,7 @@ def get_script_name(script):
 
 def fuc_dir():
     """Return the path to the fuc directory."""
-    return pathlib.Path(__file__).parent.parent.absolute()
+    return pathlib.Path(__file__).parent.parent.parent.absolute()
 
 def is_numeric(s):
     """Return True if the string is numeric."""
