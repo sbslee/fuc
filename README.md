@@ -15,6 +15,7 @@ $ pip install .
 For getting help:
 
 ```
+$ fuc -h
 usage: fuc [-h] [-v] COMMAND ...
 
 positional arguments:
