@@ -35,6 +35,7 @@ with open(readme_file, 'w') as f:
     f.write('For getting help:\n')
     f.write('\n')
     f.write('```\n')
+    f.write('$ fuc -h\n')
     args = ['fuc', '-h']
     result = subprocess.run(args, capture_output=True, text=True, check=True)
     f.write(result.stdout)
