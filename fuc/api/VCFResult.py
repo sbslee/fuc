@@ -1,11 +1,11 @@
 import copy
 import gzip
 
-VCF_HEADERS = (
+VCF_HEADERS = [
     '#CHROM', 'POS', 'ID',
     'REF', 'ALT', 'QUAL',
     'FILTER', 'INFO', 'FORMAT'
-)
+]
 
 class VCFResult():
     def __init__(self):
