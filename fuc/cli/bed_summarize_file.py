@@ -1,19 +1,23 @@
-import argparse
-from api.BEDResult import BEDResult
+from fuc.api.common import get_script_name
+from fuc.api.BEDResult import BEDResult
 
-def main():
-    parser = argparse.ArgumentParser(description='This command computes '
-        'summary statstics of the given BED file. This includes the total '
-        'numbers of probes and covered base pairs for each chromosome. '
-        'By default, covered base paris are displayed in bp, but if you '
-        "prefer you can, for example, use '--bases 1000' to display base "
-        'pairs in kb.')
+def create_parser(subparsers):
+    parser = subparsers.add_parser(
+        get_script_name(__file__),
+        help='count probes and covered bases in BED',
+        description='This command computes summary statstics of the given '
+            'BED file. This includes the total numbers of probes and '
+            'covered base pairs for each chromosome. By default, covered '
+            'base paris are displayed in bp, but if you prefer you can, '
+            "for example, use '--bases 1000' to display base pairs in kb."
+    )
     parser.add_argument('bed_file', help='input BED file')
     parser.add_argument('--bases', type=int, default=1, help='number used '
         'to divide the bases (default: 1)')
     parser.add_argument('--decimals', type=int, default=10, help='maximum '
         'number of decimals (default: 10)')
-    args = parser.parse_args()
+
+def main(args):
     bed_result = BEDResult.read(args.bed_file)
     chrom_dict = {}
     total = [0, 0]
@@ -37,6 +41,3 @@ def main():
     probes = total[0]
     bases = f'{total[1]/args.bases:.{args.decimals}f}'
     print('Total', probes, bases, sep='\t')
-
-if __name__ == '__main__':
-    main()

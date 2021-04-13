@@ -1,17 +1,19 @@
-import argparse
+from fuc.api.common import get_script_name, parse_where
+from fuc.api.DataFrame import DataFrame
 
-from api.DataFrame import DataFrame
-from api.common import parse_where
-
-def main():
-    parser = argparse.ArgumentParser(description='This command will '
-        'output a summary of the input text file. For each column, '
-        'it will return the counts of unique records for categorical data '
-        'and the summary statistics (minimum, maximum, mean, and median) '
-        "for numeric data. You can use '--columns' to specify which "
-        "columns should be displayed. For filtering, you can use '--rows' "
-        'to express SQLite WHERE clause which will select rows that '
-        'meet certain criteria.')
+def create_parser(subparsers):
+    parser = subparsers.add_parser(
+        get_script_name(__file__),
+        help='summarize text file',
+        description='This command will output a summary of the input text '
+            'file. For each column, it will return the counts of unique '
+            'records for categorical data and the summary statistics '
+            '(minimum, maximum, mean, and median) for numeric data. '
+            "You can use '--columns' to specify which columns should be "
+            "displayed. For filtering, you can use '--rows' to express "
+            'SQLite WHERE clause which will select rows that meet '
+            'certain criteria.'
+    )
     parser.add_argument('table_file', help='input table file')
     parser.add_argument('--delimiter', default='\t',
         help="delimiter for the table (default: '\\t')")
@@ -23,7 +25,8 @@ def main():
         'which rows to summarize')
     parser.add_argument('--exclude_rows', action='store_true',
         help='use this tag to exclude specified rows')
-    args = parser.parse_args()
+
+def main(args):
     df = DataFrame.read(args.table_file, delimiter=args.delimiter)
     # Filter the rows.
     if args.rows:
@@ -49,6 +52,3 @@ def main():
             for k, v in results.items():
                 print(k, v, sep='\t')
         print()
-
-if __name__ == '__main__':
-    main()

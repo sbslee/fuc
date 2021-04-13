@@ -1,6 +1,10 @@
 import pathlib
 import re
 
+def get_script_name(script):
+    """Return the script name."""
+    return pathlib.Path(script).stem
+
 def fuc_dir():
     """Return the path to the fuc directory."""
     return pathlib.Path(__file__).parent.parent.absolute()

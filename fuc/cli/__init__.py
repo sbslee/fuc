@@ -1,7 +1,9 @@
-from . import count_fastq_reads
-from . import compute_fastq_read_lengths
+from importlib import import_module
+from pathlib import Path
 
-commands = {
-    'count_fastq_reads': count_fastq_reads,
-    'compute_fastq_read_lengths': compute_fastq_read_lengths,
-}
+commands = {}
+
+for f in sorted(Path(__file__).parent.glob('*.py')):
+    if '__' in f.stem:
+        continue
+    commands[f.stem] = import_module(f'.{f.stem}', __package__)

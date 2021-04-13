@@ -1,8 +1,9 @@
+from fuc.api.common import get_script_name
 from fuc.api.FASTQResult import FASTQResult
 
 def create_parser(subparsers):
     parser = subparsers.add_parser(
-        'compute_fastq_read_lengths',
+        get_script_name(__file__),
         help='compute read lengths in FASTQ',
         description='This command will compute the distribution of sequence '
                     'read lengths for a FASTQ file (both zipped and '
