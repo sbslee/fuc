@@ -261,6 +261,21 @@ class VCFResult():
         result = (tp, fp, fn, tn)
         return result
 
+    def reset_samples(self, samples):
+        """Reset the sample list."""
+        vcf_result = self.__class__()
+        indicies = []
+        for sample in samples:
+            indicies.append(self.get_index(sample))
+        for i in indicies:
+            vcf_result.head.append(self.head[i])
+        for record, fields1 in self.get_data().items():
+            fields2 = fields1[:9]
+            for i in indicies:
+                fields2.append(fields1[i])
+            vcf_result.data[record] = fields2
+        return vcf_result
+
     def multiallelic_sites(self):
         """Return the indicies of multiallelic sites."""
         indicies = []

@@ -34,6 +34,11 @@ class TestVCFResult(unittest.TestCase):
         vcf = VCFResult.read(f'{fuc_dir()}/data/vcf/1.vcf')
         self.assertEqual(vcf.multiallelic_sites(), [3])
 
+    def test_reset_samples(self):
+        vcf = VCFResult.read(f'{fuc_dir()}/data/vcf/1.vcf')
+        vcf = vcf.reset_samples(['Sarah', 'John'])
+        self.assertEqual(vcf.samples, ['Sarah', 'John'])
+
 class TestBEDResult(unittest.TestCase):
 
     def test_intersect(self):
