@@ -14,8 +14,8 @@ def create_parser(subparsers):
     parser.add_argument('bed_file', help='input BED file')
     parser.add_argument('--bases', type=int, default=1, help='number used '
         'to divide the bases (default: 1)')
-    parser.add_argument('--decimals', type=int, default=10, help='maximum '
-        'number of decimals (default: 10)')
+    parser.add_argument('--decimals', type=int, default=0, help='maximum '
+        'number of decimals (default: 0)')
 
 def main(args):
     bed_result = BEDResult.read(args.bed_file)
