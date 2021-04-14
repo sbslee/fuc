@@ -1,11 +1,9 @@
 import copy
 import gzip
+from .BEDResult import BEDResult
 
-VCF_HEADERS = [
-    '#CHROM', 'POS', 'ID',
-    'REF', 'ALT', 'QUAL',
-    'FILTER', 'INFO', 'FORMAT'
-]
+VCF_HEADERS = ['#CHROM', 'POS', 'ID', 'REF', 'ALT',
+               'QUAL', 'FILTER', 'INFO', 'FORMAT']
 
 class VCFResult():
     def __init__(self):
@@ -38,6 +36,13 @@ class VCFResult():
             f.write('\t'.join(self.head) + '\n')
             for record, fields in self.get_data().items():
                 f.write('\t'.join(fields) + '\n')
+
+    def to_string(self):
+        """Render a VCFResult to a console-friendly tabular output."""
+        print(''.join(self.meta))
+        print('\t'.join(self.head) + '\n')
+        for record, fields in self.get_data().items():
+            print('\t'.join(fields) + '\n')
 
     def describe(self):
         """Generate descriptive statistics."""
@@ -207,8 +212,23 @@ class VCFResult():
             vcf_result.data[record] = fields
         return vcf_result
 
-    def filter_bed(self, bed_result):
-        """Filter the VCFResult by the BEDResult."""
+    def filter_bed(self, bed):
+        """Filter the VCFResult by the BEDResult.
+
+        Parameters
+        ----------
+        bed : BEDResult or string
+            BEDResult or a path to the BED file.
+
+        Returns
+        -------
+        vcf_result : VCFResult
+            Filtered VCFResilt.
+        """
+        if isinstance(bed, BEDResult):
+            bed_result = bed
+        else:
+            bed_result = BEDResult.read(bed)
         vcf_result = self.__class__()
         vcf_result.head = copy.deepcopy(self.head)
         for record, fields1 in self.get_data().items():
@@ -228,18 +248,18 @@ class VCFResult():
 
         Parameters
         ----------
-        n1 : string
-            Test sample.
-        n2 : string
-            Truth sample.
+        n1 : string or int
+            Test sample or its index in the header row.
+        n2 : string or int
+            Truth sample or its index in the header row.
 
         Returns
         -------
         result : tuple
             Comparison result (tp, fp, fn, and tn).
         """
-        i1 = self.get_index(n1)
-        i2 = self.get_index(n2)
+        i1 = self.get_index(n1) if isinstance(n1, str) else n1 + 9
+        i2 = self.get_index(n2) if isinstance(n2, str) else n2 + 9
         tp = 0
         fp = 0
         fn = 0
