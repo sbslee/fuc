@@ -10,7 +10,7 @@ VCF_HEADERS = [
 class VCFResult():
     def __init__(self):
         self.meta = []
-        self.head = VCF_HEADERS
+        self.head = copy.deepcopy(VCF_HEADERS)
         self.data = {}
 
     @property

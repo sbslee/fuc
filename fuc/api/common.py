@@ -1,5 +1,6 @@
 import pathlib
 import re
+from difflib import SequenceMatcher
 
 def get_script_name(script):
     """Return the script name."""
@@ -34,3 +35,18 @@ def parse_where(where):
     for condition in conditions:
         results = {**results, **parse_condition(condition)}
     return results
+
+def get_similarity(a, b):
+    """Return a value from 0 to 1 representing how similar two strings are."""
+    return SequenceMatcher(None, a, b).ratio()
+
+def is_similar(a, b, threshold=0.9):
+    """Return True if the similarity is equal to or greater than threshold."""
+    return get_similarity(a, b) >= threshold
+
+def get_most_similar(a, l):
+    """Return the most similar string in a list."""
+    s = [get_similarity(a, x) for x in l]
+    m = max(s)
+    i = [i for i, x in enumerate(s) if x == m][0]
+    return l[i]
