@@ -4,7 +4,7 @@ from copy import deepcopy
 
 from .BEDResult import BEDResult
 
-def hasvar(x):
+def has_var(x):
     """Return if the GT field has a variant (e.g. 0/1)."""
     return x.split(':')[0].replace('/', '').replace('.', '').replace('0', '')
 
@@ -37,7 +37,7 @@ class VcfRecord:
     @classmethod
     def from_list(cls, l):
         """Create a VcfRecord from a list of strings."""
-        l[1] = int(l[1]) # POS
+        l[1] = int(l[1])       # POS
         l[4] = l[4].split(',') # ALT
         l[6] = l[6].split(';') # FILTER
         l[7] = l[7].split(';') # INFO
@@ -92,7 +92,7 @@ class VcfFrame:
             i = self.index(name)
             n = 0
             for r in self.data:
-                if hasvar(r.gt[i]):
+                if has_var(r.gt[i]):
                     n += 1
             print(name, n, sep='\t')
 
@@ -227,9 +227,6 @@ class VcfFrame:
         fp = 0
         fn = 0
         tn = 0
-        def has_var(x):
-            return x.split(':')[0].replace('/', '').replace(
-                '.', '').replace('0', '')
         for r in self.data:
             a = has_var(r.gt[i1])
             b = has_var(r.gt[i2])
