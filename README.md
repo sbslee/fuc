@@ -25,8 +25,8 @@ positional arguments:
     dfmerge      [TABLE] merge two text files
     dfsum        [TABLE] summarize a text file
     dfsumcol     [TABLE] summarize a column in a text file
-    fuccheckf    [FUC] check whether files exist
     fuccompf     [FUC] compare any two files
+    fucexist     [FUC] check whether files/dirs exist
     qfcount      [FASTQ] count sequence reads in a FASTQ file
     qfreadlen    [FASTQ] compute read lengths for a FASTQ file
     vfmerge      [VCF] merge two or more VCF files

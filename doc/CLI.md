@@ -7,8 +7,8 @@
 * [dfmerge](#dfmerge) 
 * [dfsum](#dfsum) 
 * [dfsumcol](#dfsumcol) 
-* [fuccheckf](#fuccheckf) 
 * [fuccompf](#fuccompf) 
+* [fucexist](#fucexist) 
 * [qfcount](#qfcount) 
 * [qfreadlen](#qfreadlen) 
 * [vfmerge](#vfmerge) 
@@ -132,24 +132,6 @@ optional arguments:
   --exclude_rows        use this tag to exclude specified rows
 ```
 
-## fuccheckf <a name="fuccheckf"></a>
-
-```
-usage: fuc fuccheckf [-h] [--delimiter DELIMITER] input_file column_header
-
-This command will checks whether or not files in the given list exist inthe
-operating system.
-
-positional arguments:
-  input_file            input file containing the list of file paths
-  column_header         column header
-
-optional arguments:
-  -h, --help            show this help message and exit
-  --delimiter DELIMITER
-                        column delimiter (default: ',')
-```
-
 ## fuccompf <a name="fuccompf"></a>
 
 ```
@@ -160,6 +142,20 @@ This command will compare two files.
 positional arguments:
   file1       first file
   file2       second file
+
+optional arguments:
+  -h, --help  show this help message and exit
+```
+
+## fucexist <a name="fucexist"></a>
+
+```
+usage: fuc fucexist [-h] [paths [paths ...]]
+
+This command will check whether files/dirs exist.
+
+positional arguments:
+  paths       file/dir paths (default: stdin)
 
 optional arguments:
   -h, --help  show this help message and exit
