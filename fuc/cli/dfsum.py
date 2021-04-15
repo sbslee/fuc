@@ -4,7 +4,7 @@ from fuc.api.DataFrame import DataFrame
 def create_parser(subparsers):
     parser = subparsers.add_parser(
         get_script_name(__file__),
-        help='summarize text file',
+        help='[TABLE] summarize a text file',
         description='This command will output a summary of the input text '
             'file. For each column, it will return the counts of unique '
             'records for categorical data and the summary statistics '

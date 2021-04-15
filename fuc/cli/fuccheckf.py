@@ -4,7 +4,7 @@ from pathlib import Path
 def create_parser(subparsers):
     parser = subparsers.add_parser(
         get_script_name(__file__),
-        help='check whether files exist',
+        help='[FUC] check whether files exist',
         description='This command will checks whether or not files in the '
             'given list exist inthe operating system.'
     )

@@ -19,26 +19,21 @@ $ fuc -h
 usage: fuc [-h] [-v] COMMAND ...
 
 positional arguments:
-  COMMAND               name of the command
-    bed_intersect_files
-                        find intersection between BED files
-    bed_summarize_file  count probes and covered bases in BED
-    fastq_compute_read_lengths
-                        compute read lengths in FASTQ
-    fastq_count_reads   count sequence reads in FASTQ
-    table_check_files   check whether files exist
-    table_compare_files
-                        compare two files
-    table_merge_files   merge two text files
-    table_summarize_column
-                        summarize a table column
-    table_summarize_file
-                        summarize text file
-    vcf_merge_files     merge multiple VCF files
+  COMMAND        name of the command
+    bfintxn      [BED] find intersection of two or more BED files
+    bfsum        [BED] summarize a BED file
+    dfmerge      [TABLE] merge two text files
+    dfsum        [TABLE] summarize a text file
+    dfsumcol     [TABLE] summarize a column in a text file
+    fuccheckf    [FUC] check whether files exist
+    fuccompf     [FUC] compare any two files
+    qfcount      [FASTQ] count sequence reads in a FASTQ file
+    qfreadlen    [FASTQ] compute read lengths for a FASTQ file
+    vfmerge      [VCF] merge two or more VCF files
 
 optional arguments:
-  -h, --help            show this help message and exit
-  -v, --version         show the version number and exit
+  -h, --help     show this help message and exit
+  -v, --version  show the version number and exit
 ```
 
 Your contributions (e.g. feature ideas, pull requests) are most welcome.

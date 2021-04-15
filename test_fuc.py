@@ -3,7 +3,7 @@ import unittest
 from fuc.api.common import fuc_dir
 from fuc.api.VcfFrame import VcfFrame
 from fuc.api.BedFrame import BedFrame
-from fuc.api.FASTQResult import FASTQResult
+from fuc.api.FastqFrame import FastqFrame
 from fuc.api.DataFrame import DataFrame
 
 class TestVcfFrame(unittest.TestCase):
@@ -48,11 +48,11 @@ class TestBedFrame(unittest.TestCase):
         self.assertEqual(bf3.meta, bf4.meta)
         self.assertEqual(bf3.data, bf4.data)
 
-class TestFASTQResult(unittest.TestCase):
+class TestFastqFrame(unittest.TestCase):
 
     def test_shape(self):
-        fastq = FASTQResult.read(f'{fuc_dir()}/data/1.fastq')
-        self.assertEqual(fastq.shape, 3)
+        qf = FastqFrame.from_file(f'{fuc_dir()}/data/fastq/1.fastq')
+        self.assertEqual(qf.shape, 3)
 
 class TestDataFrame(unittest.TestCase):
 

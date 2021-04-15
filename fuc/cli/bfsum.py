@@ -1,10 +1,10 @@
 from fuc.api.common import get_script_name
-from fuc.api.BEDResult import BEDResult
+from fuc.api.BedFrame import BedFrame
 
 def create_parser(subparsers):
     parser = subparsers.add_parser(
         get_script_name(__file__),
-        help='count probes and covered bases in BED',
+        help='[BED] summarize a BED file',
         description='This command computes summary statstics of the given '
             'BED file. This includes the total numbers of probes and '
             'covered base pairs for each chromosome. By default, covered '
@@ -18,7 +18,7 @@ def create_parser(subparsers):
         'number of decimals (default: 0)')
 
 def main(args):
-    bed_result = BEDResult.read(args.bed_file)
+    bed_result = BedFrame.from_file(args.bed_file)
     chrom_dict = {}
     total = [0, 0]
     for fields in bed_result.get_data():

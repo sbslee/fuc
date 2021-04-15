@@ -4,7 +4,7 @@ from fuc.api.VcfFrame import VcfFrame
 def create_parser(subparsers):
     parser = subparsers.add_parser(
         get_script_name(__file__),
-        help='merge VCF files',
+        help='[VCF] merge two or more VCF files',
         description='This command will merge multiple VCF files (both zipped '
                     'and unzipped). By default, only the GT subfield of '
                     'the FORMAT field will be included in the merged VCF. '

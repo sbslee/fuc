@@ -4,7 +4,7 @@ from fuc.api.DataFrame import DataFrame
 def create_parser(subparsers):
     parser = subparsers.add_parser(
         get_script_name(__file__),
-        help='merge two text files',
+        help='[TABLE] merge two text files',
         description='This command will merge two text files using one '
                     'or more shared columns.'
     )

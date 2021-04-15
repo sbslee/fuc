@@ -4,7 +4,7 @@ import filecmp
 def create_parser(subparsers):
     parser = subparsers.add_parser(
         get_script_name(__file__),
-        help='compare two files',
+        help='[FUC] compare any two files',
         description='This command will compare two files.'
     )
     parser.add_argument('file1', help='first file')

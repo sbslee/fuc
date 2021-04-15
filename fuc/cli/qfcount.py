@@ -1,10 +1,10 @@
 from fuc.api.common import get_script_name
-from fuc.api.FASTQResult import FASTQResult
+from fuc.api.FastqFrame import FastqFrame
 
 def create_parser(subparsers):
     parser = subparsers.add_parser(
         get_script_name(__file__),
-        help='count sequence reads in FASTQ',
+        help='[FASTQ] count sequence reads in a FASTQ file',
         description='This command will count sequence reads from a FASTQ '
                     'file (both zipped and unzipped).'
     )
@@ -12,5 +12,5 @@ def create_parser(subparsers):
     return parser
 
 def main(args):
-    fastq_result = FASTQResult.read(args.fastq_file)
+    fastq_result = FastqFrame.from_file(args.fastq_file)
     print(fastq_result.shape)

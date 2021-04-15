@@ -8,7 +8,7 @@ The `DataFrame` module provides a suite of tools to work with text files.
 
 The `VcfFrame` module provides a suite of tools to work with VCF files.
 
-## BEDResult.py
+## BedFrame.py
 
 The `BEDResult` module provides a suite of tools to work with BED files.
 

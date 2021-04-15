@@ -4,7 +4,7 @@ from fuc.api.DataFrame import DataFrame
 def create_parser(subparsers):
     parser = subparsers.add_parser(
         get_script_name(__file__),
-        help='summarize a table column',
+        help='[TABLE] summarize a column in a text file',
         description='This command will output a summary table for the '
             'target column in the input text file. The target column must '
             "be categorical. You can also use '--group_col' to group the "
