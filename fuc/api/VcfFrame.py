@@ -2,7 +2,7 @@ from typing import List
 from dataclasses import dataclass
 from copy import deepcopy
 
-from .BEDResult import BEDResult
+from .BedFrame import BedFrame
 
 def has_var(x):
     """Return if the GT field has a variant (e.g. 0/1)."""
@@ -11,16 +11,16 @@ def has_var(x):
 @dataclass(eq=False)
 class VcfRecord:
     """Class for storing the information of single VCF record."""
-    chrom : str
-    pos : int
-    id : str
-    ref : str
-    alt : List[str]
-    qual : str
-    filter : List[str]
-    info : List[str]
-    format : List[str]
-    gt : List[str]
+    chrom  : str       # CHROM
+    pos    : int       # POS
+    id     : str       # ID
+    ref    : str       # REF
+    alt    : List[str] # ALT
+    qual   : str       # QUAL
+    filter : List[str] # FILTER
+    info   : List[str] # INFO
+    format : List[str] # FORMAT
+    gt     : List[str]
 
     def __eq__(self, other):
         """Test whether two VcfRecords are equal."""
@@ -42,8 +42,8 @@ class VcfRecord:
         l[6] = l[6].split(';') # FILTER
         l[7] = l[7].split(';') # INFO
         l[8] = l[8].split(':') # FORMAT
-        vf = cls(*l[:9], l[9:])
-        return vf
+        r = cls(*l[:9], l[9:])
+        return r
 
 @dataclass
 class VcfFrame:
@@ -120,7 +120,8 @@ class VcfFrame:
     def to_file(self, file_path):
         """Write the VcfFrame to a file."""
         with open(file_path, 'w') as f:
-            f.write('\n'.join(self.meta))
+            if self.meta:
+                f.write('\n'.join(self.meta) + '\n')
             f.write('\t'.join(self.head) + '\n')
             for r in self.data:
                 f.write('\t'.join(r.to_list()) + '\n')
@@ -344,28 +345,25 @@ class VcfFrame:
 
         Parameters
         ----------
-        bed : BEDResult or string
-            BEDResult or path to a BED file.
+        bed : BedFrame or string
+            BedFrame or path to a BED file.
 
         Returns
         -------
         vf : VcfFrame
             Filtered VcfFrame.
         """
-        if isinstance(bed, BEDResult):
-            bed_result = bed
+        if isinstance(bed, BedFrame):
+            bf = bed
         else:
-            bed_result = BEDResult.read(bed)
+            bf = BedFrame.from_file(bed)
         meta = self.vmeta
         head = self.vhead
         data = []
-        for r in self.vdata:
-            for fields in bed_result.get_data():
-                chrom = fields[0]
-                start = int(fields[1])
-                end = int(fields[2])
-                if r.chrom == chrom and start <= r.pos <= end:
-                    data.append(r)
+        for r1 in self.vdata:
+            for r2 in bf.data:
+                if r1.chrom == r2.chrom and r2.start <= r1.pos <= r2.end:
+                    data.append(r1)
                     break
         vf = self.__class__(meta, head, data)
         return vf
@@ -407,7 +405,7 @@ class VcfFrame:
                     v1 = getattr(r1, query_field)
                     v2 = getattr(r2, query_field)
                     if missing_only:
-                        if v1 == '.' or v1 = ['.']:
+                        if v1 == '.' or v1 == ['.']:
                             setattr(r1, query_field, v2)
                     else:
                         setattr(r1, query_field, v2)

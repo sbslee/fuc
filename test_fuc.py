@@ -2,7 +2,7 @@ import unittest
 
 from fuc.api.common import fuc_dir
 from fuc.api.VcfFrame import VcfFrame
-from fuc.api.BEDResult import BEDResult
+from fuc.api.BedFrame import BedFrame
 from fuc.api.FASTQResult import FASTQResult
 from fuc.api.DataFrame import DataFrame
 
@@ -14,7 +14,7 @@ class TestVcfFrame(unittest.TestCase):
 
     def test_filter_bed(self):
         vf = VcfFrame.from_file(f'{fuc_dir()}/data/vcf/1.vcf')
-        bed = BEDResult.read(f'{fuc_dir()}/data/bed/1.bed')
+        bed = BedFrame.from_file(f'{fuc_dir()}/data/bed/1.bed')
         vf = vf.filter_bed(bed)
         self.assertEqual(vf.shape, (3, 4))
 
@@ -38,15 +38,15 @@ class TestVcfFrame(unittest.TestCase):
         vf = vf.reset_samples(['Sarah', 'John'])
         self.assertEqual(vf.samples, ['Sarah', 'John'])
 
-class TestBEDResult(unittest.TestCase):
+class TestBedFrame(unittest.TestCase):
 
     def test_intersect(self):
-        bed1 = BEDResult.read(f'{fuc_dir()}/data/bed/1.bed')
-        bed2 = BEDResult.read(f'{fuc_dir()}/data/bed/2.bed')
-        bed3 = BEDResult.read(f'{fuc_dir()}/data/bed/3.bed')
-        bed4 = bed1.intersect(bed2)
-        self.assertEqual(bed3.head, bed4.head)
-        self.assertEqual(bed3.data, bed4.data)
+        bf1 = BedFrame.from_file(f'{fuc_dir()}/data/bed/1.bed')
+        bf2 = BedFrame.from_file(f'{fuc_dir()}/data/bed/2.bed')
+        bf3 = BedFrame.from_file(f'{fuc_dir()}/data/bed/3.bed')
+        bf4 = bf1.intersect(bf2)
+        self.assertEqual(bf3.meta, bf4.meta)
+        self.assertEqual(bf3.data, bf4.data)
 
 class TestFASTQResult(unittest.TestCase):
 
