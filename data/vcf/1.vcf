@@ -1,7 +1,7 @@
 ##fileformat=VCFv4.2
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	Steven	John	Rachel	Sarah
-chr1	100	.	A	T	.	.	.	GT	0/1	0/1	0/1	0/0
-chr1	101	.	G	T	.	.	.	GT	./.	0/1	0/1	0/0
-chr1	270	.	G	GA	.	.	.	GT	./.	0/1	0/1	0/0
-chr1	605	.	C	A,T	.	.	.	GT	0/0	0/1	0/1	0/2
-chr1	820	.	AT	A	.	.	.	GT	0/0	0/1	0/1	0/0
+chr1	100	.	A	T	.	.	.	GT:DP	0/1:31	0/1:24	0/1:16	0/0:32
+chr1	101	.	G	T	.	.	.	GT:DP	./.:.	0/1:27	0/1:15	0/0:36
+chr1	270	.	G	GA	.	.	.	GT:DP	./.:.	0/1:30	0/1:15	0/0:34
+chr1	605	.	C	A,T	.	.	.	GT:DP	0/0:30	0/1:24	0/1:14	0/2:30
+chr1	820	.	AT	A	.	.	.	GT:DP	0/0:24	0/1:22	0/1:17	0/0:29

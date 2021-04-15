@@ -7,7 +7,7 @@ class BEDResult():
 
     @property
     def shape(self):
-        """Return the size of the VCFResult."""
+        """Return the size of the BEDResult."""
         return len(self.data)
 
     def get_data(self):

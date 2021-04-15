@@ -1,43 +1,42 @@
 import unittest
 
 from fuc.api.common import fuc_dir
-
-from fuc.api.VCFResult import VCFResult
+from fuc.api.VcfFrame import VcfFrame
 from fuc.api.BEDResult import BEDResult
 from fuc.api.FASTQResult import FASTQResult
 from fuc.api.DataFrame import DataFrame
 
-class TestVCFResult(unittest.TestCase):
+class TestVcfFrame(unittest.TestCase):
 
     def test_shape(self):
-        vcf = VCFResult.read(f'{fuc_dir()}/data/vcf/1.vcf')
-        self.assertEqual(vcf.shape, (5, 4))
+        vf = VcfFrame.from_file(f'{fuc_dir()}/data/vcf/1.vcf')
+        self.assertEqual(vf.shape, (5, 4))
 
     def test_filter_bed(self):
-        vcf1 = VCFResult.read(f'{fuc_dir()}/data/vcf/1.vcf')
+        vf = VcfFrame.from_file(f'{fuc_dir()}/data/vcf/1.vcf')
         bed = BEDResult.read(f'{fuc_dir()}/data/bed/1.bed')
-        vcf2 = vcf1.filter_bed(bed)
-        self.assertEqual(vcf2.shape, (3, 4))
+        vf = vf.filter_bed(bed)
+        self.assertEqual(vf.shape, (3, 4))
 
     def test_merge(self):
-        vcf1 = VCFResult.read(f'{fuc_dir()}/data/vcf/1.vcf')
-        vcf2 = VCFResult.read(f'{fuc_dir()}/data/vcf/2.vcf')
-        vcf3 = vcf1.merge(vcf2)
-        self.assertEqual(vcf3.shape, (7, 5))
+        vf1 = VcfFrame.from_file(f'{fuc_dir()}/data/vcf/1.vcf')
+        vf2 = VcfFrame.from_file(f'{fuc_dir()}/data/vcf/2.vcf')
+        vf3 = vf1.merge(vf2)
+        vf3.to_file('test.vcf')
+        self.assertEqual(vf3.shape, (7, 5))
 
     def test_compare(self):
-        vcf = VCFResult.read(f'{fuc_dir()}/data/vcf/1.vcf')
-        result = vcf.compare('Steven', 'Sarah')
-        self.assertEqual(result, (0, 1, 1, 3))
+        vf = VcfFrame.from_file(f'{fuc_dir()}/data/vcf/1.vcf')
+        self.assertEqual(vf.compare('Steven', 'Sarah'), (0, 1, 1, 3))
 
     def test_multiallelic_sites(self):
-        vcf = VCFResult.read(f'{fuc_dir()}/data/vcf/1.vcf')
-        self.assertEqual(vcf.multiallelic_sites(), [3])
+        vf = VcfFrame.from_file(f'{fuc_dir()}/data/vcf/1.vcf')
+        self.assertEqual(vf.multiallelic_sites(), [3])
 
     def test_reset_samples(self):
-        vcf = VCFResult.read(f'{fuc_dir()}/data/vcf/1.vcf')
-        vcf = vcf.reset_samples(['Sarah', 'John'])
-        self.assertEqual(vcf.samples, ['Sarah', 'John'])
+        vf = VcfFrame.from_file(f'{fuc_dir()}/data/vcf/1.vcf')
+        vf = vf.reset_samples(['Sarah', 'John'])
+        self.assertEqual(vf.samples, ['Sarah', 'John'])
 
 class TestBEDResult(unittest.TestCase):
 

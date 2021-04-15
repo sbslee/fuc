@@ -4,9 +4,9 @@
 
 The `DataFrame` module provides a suite of tools to work with text files.
 
-## VCFResult.py
+## VcfFrame.py
 
-The `VCFResult` module provides a suite of tools to work with VCF files.
+The `VcfFrame` module provides a suite of tools to work with VCF files.
 
 ## BEDResult.py
 
