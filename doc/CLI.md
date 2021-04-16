@@ -2,18 +2,64 @@
 
 ## Table of contents
 
-* [bfintxn](#bfintxn) 
-* [bfsum](#bfsum) 
-* [dfmerge](#dfmerge) 
-* [dfsum](#dfsum) 
-* [dfsumcol](#dfsumcol) 
-* [fuccompf](#fuccompf) 
-* [fucexist](#fucexist) 
-* [qfcount](#qfcount) 
-* [qfreadlen](#qfreadlen) 
-* [vfmerge](#vfmerge) 
+* [Introduction](#Introduction)
+* [Commands](#Commands)
+	* [bfintxn](#bfintxn) 
+	* [bfsum](#bfsum) 
+	* [dfmerge](#dfmerge) 
+	* [dfsum](#dfsum) 
+	* [dfsumcol](#dfsumcol) 
+	* [fuccompf](#fuccompf) 
+	* [fucexist](#fucexist) 
+	* [qfcount](#qfcount) 
+	* [qfreadlen](#qfreadlen) 
+	* [vfmerge](#vfmerge) 
 
-## bfintxn <a name="bfintxn"></a>
+## Introduction <a name="Introduction"></a>
+
+For getting help on CLI:
+
+```
+$ fuc -h
+usage: fuc [-h] [-v] COMMAND ...
+
+positional arguments:
+  COMMAND        name of the command
+    bfintxn      [BED] find intersection of two or more BED files
+    bfsum        [BED] summarize a BED file
+    dfmerge      [TABLE] merge two text files
+    dfsum        [TABLE] summarize a text file
+    dfsumcol     [TABLE] summarize a column in a text file
+    fuccompf     [FUC] compare two files
+    fucexist     [FUC] check whether files/dirs exist
+    qfcount      [FASTQ] count sequence reads in a FASTQ file
+    qfreadlen    [FASTQ] compute read lengths for a FASTQ file
+    vfmerge      [VCF] merge two or more VCF files
+
+optional arguments:
+  -h, --help     show this help message and exit
+  -v, --version  show the version number and exit
+```
+
+For getting help on a specific command (e.g. `qfcount`):
+
+```
+$ fuc qfcount -h
+usage: fuc qfcount [-h] fastq_file
+
+This command will count sequence reads in a FASTQ file (both zipped and
+unzipped).
+
+positional arguments:
+  fastq_file  input FASTQ file
+
+optional arguments:
+  -h, --help  show this help message and exit
+```
+
+## Commands <a name="Commands"></a>
+
+### bfintxn <a name="bfintxn"></a>
 
 ```
 usage: fuc bfintxn [-h] input_bed [input_bed ...] output_bed
@@ -28,7 +74,7 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-## bfsum <a name="bfsum"></a>
+### bfsum <a name="bfsum"></a>
 
 ```
 usage: fuc bfsum [-h] [--bases BASES] [--decimals DECIMALS] bed_file
@@ -47,7 +93,7 @@ optional arguments:
   --decimals DECIMALS  maximum number of decimals (default: 0)
 ```
 
-## dfmerge <a name="dfmerge"></a>
+### dfmerge <a name="dfmerge"></a>
 
 ```
 usage: fuc dfmerge [-h] [--left_delimiter LEFT_DELIMITER]
@@ -73,7 +119,7 @@ optional arguments:
                         delimiter for the output file (default: '\t')
 ```
 
-## dfsum <a name="dfsum"></a>
+### dfsum <a name="dfsum"></a>
 
 ```
 usage: fuc dfsum [-h] [--delimiter DELIMITER]
@@ -102,7 +148,7 @@ optional arguments:
   --exclude_rows        use this tag to exclude specified rows
 ```
 
-## dfsumcol <a name="dfsumcol"></a>
+### dfsumcol <a name="dfsumcol"></a>
 
 ```
 usage: fuc dfsumcol [-h] [--group_col GROUP_COL] [--delimiter DELIMITER]
@@ -132,7 +178,7 @@ optional arguments:
   --exclude_rows        use this tag to exclude specified rows
 ```
 
-## fuccompf <a name="fuccompf"></a>
+### fuccompf <a name="fuccompf"></a>
 
 ```
 usage: fuc fuccompf [-h] file1 file2
@@ -147,7 +193,7 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-## fucexist <a name="fucexist"></a>
+### fucexist <a name="fucexist"></a>
 
 ```
 usage: fuc fucexist [-h] [paths [paths ...]]
@@ -161,7 +207,7 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-## qfcount <a name="qfcount"></a>
+### qfcount <a name="qfcount"></a>
 
 ```
 usage: fuc qfcount [-h] fastq_file
@@ -176,7 +222,7 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-## qfreadlen <a name="qfreadlen"></a>
+### qfreadlen <a name="qfreadlen"></a>
 
 ```
 usage: fuc qfreadlen [-h] fastq_file
@@ -191,7 +237,7 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-## vfmerge <a name="vfmerge"></a>
+### vfmerge <a name="vfmerge"></a>
 
 ```
 usage: fuc vfmerge [-h]

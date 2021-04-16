@@ -11,6 +11,8 @@ readme_file = f'{fuc_dir()}/README.md'
 cli_file = f'{fuc_dir()}/doc/CLI.md'
 api_file = f'{fuc_dir()}/doc/API.md'
 
+# -- README.md ---------------------------------------------------------------
+
 with open(readme_file, 'w') as f:
     f.write('# README\n')
     f.write('\n')
@@ -88,25 +90,53 @@ with open(readme_file, 'w') as f:
     f.write(result)
     f.write('```\n')
 
+# -- CLI.md ------------------------------------------------------------------
+
 with open(cli_file, 'w') as f:
     f.write('# CLI\n')
     f.write('\n')
     f.write('## Table of contents\n')
     f.write('\n')
+    f.write('* [Introduction](#Introduction)\n')
+    f.write('* [Commands](#Commands)\n')
     for command in commands:
-        f.write(f'* [{command}](#{command}) \n')
+        f.write(f'\t* [{command}](#{command}) \n')
     f.write('\n')
-
-for command in commands:
-    args = ['fuc', command, '-h']
+    f.write('## Introduction <a name="Introduction"></a>\n')
+    f.write('\n')
+    f.write('For getting help on CLI:\n')
+    f.write('\n')
+    f.write('```\n')
+    f.write('$ fuc -h\n')
+    args = ['fuc', '-h']
     result = subprocess.run(args, capture_output=True, text=True, check=True)
-    with open(cli_file, 'a') as f:
-        f.write(f'## {command} <a name="{command}"></a>\n')
+    f.write(result.stdout)
+    f.write('```\n')
+    f.write('\n')
+    example = 'qfcount'
+    f.write(f'For getting help on a specific command (e.g. `{example}`):\n')
+    f.write('\n')
+    f.write('```\n')
+    f.write(f'$ fuc {example} -h\n')
+    args = ['fuc', example, '-h']
+    result = subprocess.run(args, capture_output=True, text=True, check=True)
+    f.write(result.stdout)
+    f.write('```\n')
+    f.write('\n')
+    f.write('## Commands <a name="Commands"></a>\n')
+    f.write('\n')
+    for command in commands:
+        args = ['fuc', command, '-h']
+        result = subprocess.run(args, capture_output=True,
+            text=True, check=True)
+        f.write(f'### {command} <a name="{command}"></a>\n')
         f.write('\n')
         f.write('```\n')
         f.write(result.stdout)
         f.write('```\n')
         f.write('\n')
+
+# -- API.md ------------------------------------------------------------------
 
 with open(api_file, 'w') as f:
     f.write('# API\n')
