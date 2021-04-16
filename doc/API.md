@@ -14,7 +14,11 @@
 Python Library Documentation: module fuc.api.BedFrame in fuc.api
 
 NAME
-    fuc.api.BedFrame - The BedFrame module is designed for working with BED files.
+    fuc.api.BedFrame
+
+DESCRIPTION
+    The BedFrame module is designed for working with BED files. For example,
+    it can be used to find the intersection between multiple BED files.
 
 CLASSES
     builtins.object
@@ -167,7 +171,12 @@ FILE
 Python Library Documentation: module fuc.api.DataFrame in fuc.api
 
 NAME
-    fuc.api.DataFrame - The DataFrame module is designed for working with table-like text files.
+    fuc.api.DataFrame
+
+DESCRIPTION
+    The DataFrame module is designed for working with table-like text files.
+    It provides many useful methods for manipulating tables such as merging and
+    filtering.
 
 CLASSES
     builtins.object
