@@ -6,6 +6,7 @@ and unzipped).
 from typing import List
 from dataclasses import dataclass, field
 from copy import deepcopy
+import gzip
 
 from .BedFrame import BedFrame
 
@@ -103,7 +104,7 @@ class VcfFrame:
         head = []
         data = []
         if file_path.endswith('.gz'):
-            f = gzip.open(file_path, 'rb')
+            f = gzip.open(file_path, 'rt')
         else:
             f = open(file_path)
         for line in f:
