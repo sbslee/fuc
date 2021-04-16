@@ -1,3 +1,8 @@
+"""
+The VcfFrame module is designed for working with VCF files (both zipped
+and unzipped).
+"""
+
 from typing import List
 from dataclasses import dataclass
 from copy import deepcopy

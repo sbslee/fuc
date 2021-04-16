@@ -1,3 +1,8 @@
+"""
+The common module is used by other fuc modules such as VcfFrame and
+BedFrame. It also provides many useful methods.
+"""
+
 import pathlib
 import re
 from difflib import SequenceMatcher

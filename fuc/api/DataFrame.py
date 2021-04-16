@@ -1,3 +1,7 @@
+"""
+The DataFrame module is designed for working with table-like text files.
+"""
+
 import copy
 import statistics
 from collections import Counter

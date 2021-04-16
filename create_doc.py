@@ -4,11 +4,14 @@ import pydoc
 from fuc.api.common import fuc_dir
 from fuc.cli import commands
 from fuc import VcfFrame
+import fuc
 
 readme_file = f'{fuc_dir()}/README.md'
 
 with open(readme_file, 'w') as f:
     f.write('# README\n')
+    f.write('\n')
+    f.write('## Introduction\n')
     f.write('\n')
     f.write('The `fuc` package is my attempt to wrap some of the most '
             'frequently used commands in the field of bioinformatics with '
@@ -32,6 +35,8 @@ with open(readme_file, 'w') as f:
     f.write('Author: Seung-been "Steven" Lee<br/>\n')
     f.write('Email: sbstevenlee@gmail.com<br/>\n')
     f.write('License: MIT License\n')
+    f.write('\n')
+    f.write('## Getting Started\n')
     f.write('\n')
     f.write('To install `fuc`, enter the following in your terminal:\n')
     f.write('\n')
@@ -60,7 +65,17 @@ with open(readme_file, 'w') as f:
     f.write(result.stdout)
     f.write('```\n')
     f.write('\n')
-    f.write('For getting help on API (e.g. `VcfFrame`):\n')
+    f.write('Below is the list of modules available in API:\n')
+    f.write('\n')
+    modules = [x for x in dir(fuc)
+               if x not in ['api', 'cli'] and '__' not in x]
+    for module in modules:
+        description = pydoc.getdoc(getattr(fuc, module))
+        f.write(f'**{module}**\n')
+        f.write(f'\t{description}\n')
+        f.write('\n')
+    f.write('\n')
+    f.write('For getting help on a specific module (e.g. `VcfFrame`):\n')
     f.write('\n')
     f.write('```\n')
     f.write('from fuc import VcfFrame\n')

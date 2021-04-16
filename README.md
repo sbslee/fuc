@@ -1,5 +1,7 @@
 # README
 
+## Introduction
+
 The `fuc` package is my attempt to wrap some of the most frequently used commands in the field of bioinformatics with pure Python 3 code, only using standard libraries. That means no installation for external Python packages, not even the popular ones like `numpy` and `pandas`. This also includes many famous bioinformatics tools such as `samtools` and `bedtools`. The motivation for not relying on external packages or programs is quite simple: I just got tired of managing different Python environments for doing simple things.
 
 You can use `fuc` for both command line interface (CLI) and application programming interface (API). Click [here](doc/CLI.md) to see the CLI documentation and [here](doc/API.md) to see the API documentation.
@@ -9,6 +11,8 @@ Your contributions (e.g. feature ideas, pull requests) are most welcome.
 Author: Seung-been "Steven" Lee<br/>
 Email: sbstevenlee@gmail.com<br/>
 License: MIT License
+
+## Getting Started
 
 To install `fuc`, enter the following in your terminal:
 
@@ -58,7 +62,28 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-For getting help on API (e.g. `VcfFrame`):
+Below is the list of modules available in API:
+
+**BedFrame**
+	The BedFrame module is designed for working with BED files.
+
+**DataFrame**
+	The DataFrame module is designed for working with table-like text files.
+
+**FastqFrame**
+	The FastqFrame module is designed for working with FASTQ files (both zipped
+and unzipped).
+
+**VcfFrame**
+	The VcfFrame module is designed for working with VCF files (both zipped
+and unzipped).
+
+**common**
+	The common module is used by other fuc modules such as VcfFrame and
+BedFrame. It also provides many useful methods.
+
+
+For getting help on a specific module (e.g. `VcfFrame`):
 
 ```
 from fuc import VcfFrame
@@ -72,6 +97,10 @@ Python Library Documentation: module fuc.api.VcfFrame in fuc.api
 
 NAME
     fuc.api.VcfFrame
+
+DESCRIPTION
+    The VcfFrame module is designed for working with VCF files (both zipped
+    and unzipped).
 
 CLASSES
     builtins.object

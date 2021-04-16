@@ -1,3 +1,7 @@
+"""
+The BedFrame module is designed for working with BED files.
+"""
+
 from dataclasses import dataclass
 from typing import Optional, List
 from copy import deepcopy

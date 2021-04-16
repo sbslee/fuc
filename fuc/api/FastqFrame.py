@@ -1,3 +1,8 @@
+"""
+The FastqFrame module is designed for working with FASTQ files (both zipped
+and unzipped).
+"""
+
 from dataclasses import dataclass
 from typing import List
 from copy import deepcopy
