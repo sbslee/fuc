@@ -71,9 +71,8 @@ with open(readme_file, 'w') as f:
                if x not in ['api', 'cli'] and '__' not in x]
     for module in modules:
         description = pydoc.getdoc(getattr(fuc, module))
-        f.write(f'**{module}**\n')
-        f.write(f'\t{description}\n')
-        f.write('\n')
+        f.write(f'- {module}\n')
+        f.write(f'\t - {description}\n')
     f.write('\n')
     f.write('For getting help on a specific module (e.g. `VcfFrame`):\n')
     f.write('\n')

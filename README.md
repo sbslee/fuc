@@ -64,24 +64,19 @@ optional arguments:
 
 Below is the list of modules available in API:
 
-**BedFrame**
-	The BedFrame module is designed for working with BED files.
-
-**DataFrame**
-	The DataFrame module is designed for working with table-like text files.
-
-**FastqFrame**
-	The FastqFrame module is designed for working with FASTQ files (both zipped
+- BedFrame
+	 - The BedFrame module is designed for working with BED files.
+- DataFrame
+	 - The DataFrame module is designed for working with table-like text files.
+- FastqFrame
+	 - The FastqFrame module is designed for working with FASTQ files (both zipped
 and unzipped).
-
-**VcfFrame**
-	The VcfFrame module is designed for working with VCF files (both zipped
+- VcfFrame
+	 - The VcfFrame module is designed for working with VCF files (both zipped
 and unzipped).
-
-**common**
-	The common module is used by other fuc modules such as VcfFrame and
+- common
+	 - The common module is used by other fuc modules such as VcfFrame and
 BedFrame. It also provides many useful methods.
-
 
 For getting help on a specific module (e.g. `VcfFrame`):
 
