@@ -122,6 +122,8 @@ CLASSES
      |  __eq__(self, other)
      |      Test whether two BedRecords are equal.
      |  
+     |  __hash__(self)
+     |  
      |  __init__(self, chrom: str, start: int, end: int, name: Union[str, NoneType] = None, score: Union[int, NoneType] = None, strand: Union[str, NoneType] = None, tstart: Union[int, NoneType] = None, tend: Union[int, NoneType] = None, itemrgb: Union[List[int], NoneType] = None, bcount: Union[int, NoneType] = None, bsizes: Union[List[int], NoneType] = None, bstarts: Union[List[int], NoneType] = None) -> None
      |  
      |  __repr__(self)
@@ -152,8 +154,6 @@ CLASSES
      |  __dataclass_fields__ = {'bcount': Field(name='bcount',type=typing.Unio...
      |  
      |  __dataclass_params__ = _DataclassParams(init=True,repr=True,eq=True,or...
-     |  
-     |  __hash__ = None
      |  
      |  bcount = None
      |  
@@ -338,6 +338,8 @@ CLASSES
      |  
      |  __eq__(self, other)
      |  
+     |  __hash__(self)
+     |  
      |  __init__(self, id: str, seq: str, ext: str, qual: str) -> None
      |  
      |  __repr__(self)
@@ -359,8 +361,6 @@ CLASSES
      |  __dataclass_fields__ = {'ext': Field(name='ext',type=<class 'str'>,def...
      |  
      |  __dataclass_params__ = _DataclassParams(init=True,repr=True,eq=True,or...
-     |  
-     |  __hash__ = None
 
 DATA
     List = typing.List
@@ -565,6 +565,8 @@ CLASSES
      |  
      |  __eq__(self, other)
      |  
+     |  __hash__(self)
+     |  
      |  __init__(self, chrom: str, pos: int, id: str, ref: str, alt: List[str], qual: str, filter: List[str], info: List[str], format: List[str], gt: List[str]) -> None
      |  
      |  __repr__(self)
@@ -595,8 +597,6 @@ CLASSES
      |  __dataclass_fields__ = {'alt': Field(name='alt',type=typing.List[str],...
      |  
      |  __dataclass_params__ = _DataclassParams(init=True,repr=True,eq=True,or...
-     |  
-     |  __hash__ = None
 
 FUNCTIONS
     has_var(x)
