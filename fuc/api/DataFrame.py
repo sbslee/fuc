@@ -1,5 +1,7 @@
 """
 The DataFrame module is designed for working with table-like text files.
+It provides many useful methods for manipulating tables such as merging and
+filtering.
 """
 
 import copy
