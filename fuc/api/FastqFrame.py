@@ -8,7 +8,7 @@ from typing import List
 from copy import deepcopy
 import gzip
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class FastqRecord:
     id   : str = field(compare=False)
     seq  : str = field(compare=True)

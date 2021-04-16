@@ -14,7 +14,7 @@ def has_var(x):
     """Return if the GT field has a variant (e.g. 0/1)."""
     return x.split(':')[0].replace('/', '').replace('.', '').replace('0', '')
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class VcfRecord:
     """Class for storing the information of single VCF record."""
     chrom  : str = field(compare=True)        # CHROM

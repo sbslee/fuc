@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from typing import Optional, List
 from copy import deepcopy
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class BedRecord:
     """Class for storing the information of single BED record.
 
