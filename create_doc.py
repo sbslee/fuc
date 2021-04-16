@@ -1,7 +1,9 @@
 import subprocess
+import pydoc
 
 from fuc.api.common import fuc_dir
 from fuc.cli import commands
+from fuc import VcfFrame
 
 readme_file = f'{fuc_dir()}/README.md'
 
@@ -32,13 +34,37 @@ with open(readme_file, 'w') as f:
     f.write('$ pip install .\n')
     f.write('```\n')
     f.write('\n')
-    f.write('For getting help:\n')
+    f.write('For getting help on CLI:\n')
     f.write('\n')
     f.write('```\n')
     f.write('$ fuc -h\n')
     args = ['fuc', '-h']
     result = subprocess.run(args, capture_output=True, text=True, check=True)
     f.write(result.stdout)
+    f.write('```\n')
+    f.write('\n')
+    example = 'qfcount'
+    f.write(f'For getting help on a specific command (e.g. `{example}`):\n')
+    f.write('\n')
+    f.write('```\n')
+    f.write(f'$ fuc {example} -h\n')
+    args = ['fuc', example, '-h']
+    result = subprocess.run(args, capture_output=True, text=True, check=True)
+    f.write(result.stdout)
+    f.write('```\n')
+    f.write('\n')
+    f.write('For getting help on API (e.g. `VcfFrame`):\n')
+    f.write('\n')
+    f.write('```\n')
+    f.write('from fuc import VcfFrame\n')
+    f.write('help(VcfFrame)\n')
+    f.write('```\n')
+    f.write('\n')
+    f.write('To give:\n')
+    f.write('\n')
+    f.write('```\n')
+    result = pydoc.render_doc(VcfFrame, renderer=pydoc.plaintext)
+    f.write(result)
     f.write('```\n')
     f.write('\n')
     f.write('Your contributions (e.g. feature ideas, pull requests) '

@@ -166,7 +166,7 @@ optional arguments:
 ```
 usage: fuc qfcount [-h] fastq_file
 
-This command will count sequence reads from a FASTQ file (both zipped and
+This command will count sequence reads in a FASTQ file (both zipped and
 unzipped).
 
 positional arguments:
