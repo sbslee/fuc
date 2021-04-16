@@ -3,20 +3,17 @@ The FastqFrame module is designed for working with FASTQ files (both zipped
 and unzipped).
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List
 from copy import deepcopy
+import gzip
 
-@dataclass(eq=False)
+@dataclass
 class FastqRecord:
-    id   : str
-    seq  : str
-    ext  : str
-    qual : str
-
-    def __eq__(self, other):
-        """Test whether two FastqRecords are equal."""
-        return self.seq == other.seq
+    id   : str = field(compare=False)
+    seq  : str = field(compare=True)
+    ext  : str = field(compare=False)
+    qual : str = field(compare=False)
 
 @dataclass
 class FastqFrame:

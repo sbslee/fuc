@@ -4,7 +4,7 @@ and unzipped).
 """
 
 from typing import List
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from copy import deepcopy
 
 from .BedFrame import BedFrame
@@ -13,24 +13,19 @@ def has_var(x):
     """Return if the GT field has a variant (e.g. 0/1)."""
     return x.split(':')[0].replace('/', '').replace('.', '').replace('0', '')
 
-@dataclass(eq=False)
+@dataclass
 class VcfRecord:
     """Class for storing the information of single VCF record."""
-    chrom  : str       # CHROM
-    pos    : int       # POS
-    id     : str       # ID
-    ref    : str       # REF
-    alt    : List[str] # ALT
-    qual   : str       # QUAL
-    filter : List[str] # FILTER
-    info   : List[str] # INFO
-    format : List[str] # FORMAT
-    gt     : List[str]
-
-    def __eq__(self, other):
-        """Test whether two VcfRecords are equal."""
-        return (self.chrom, self.pos, self.ref, self.alt) == (
-            other.chrom, other.pos, other.ref, other.alt)
+    chrom  : str = field(compare=True)        # CHROM
+    pos    : int = field(compare=True)        # POS
+    id     : str = field(compare=False)       # ID
+    ref    : str = field(compare=True)        # REF
+    alt    : List[str] = field(compare=True)  # ALT
+    qual   : str = field(compare=False)       # QUAL
+    filter : List[str] = field(compare=False) # FILTER
+    info   : List[str] = field(compare=False) # INFO
+    format : List[str] = field(compare=False) # FORMAT
+    gt     : List[str] = field(compare=False)
 
     def to_list(self):
         """Convert the VcfRecord to a list of strings."""

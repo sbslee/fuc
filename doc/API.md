@@ -100,6 +100,23 @@ CLASSES
      |  
      |  Class for storing the information of single BED record.
      |  
+     |  This class strictly sticks to the BED format described in the UCSC
+     |  Genome Browser (https://genome.ucsc.edu/FAQ/FAQformat.html).
+     |  
+     |  BED lines have three required fields and nine additional optional fields:
+     |       1. chrom (required) - The name of the chromosome.
+     |       2. chromStart (required) - The starting position of the feature.
+     |       3. chromEnd (required) - The ending position of the feature.
+     |       4. name (optional) - Defines the name of the BED line.
+     |       5. score (optional) - A score between 0 and 1000 for color density.
+     |       6. strand (optional) - Either "." (=no strand) or "+" or "-".
+     |       7. thickStart (optional) - The starting position for thick drawing.
+     |       8. thickEnd (optional) - The ending position for thick drawing.
+     |       9. itemRgb (optional) - An RGB value (e.g. 255,0,0).
+     |      10. blockCount (optional) - The number of blocks (exons).
+     |      11. blockSizes (optional) - A comma-separated list of the block sizes.
+     |      12. blockStarts (optional) - A comma-separated list of block starts.
+     |  
      |  Methods defined here:
      |  
      |  __eq__(self, other)
@@ -134,7 +151,7 @@ CLASSES
      |  
      |  __dataclass_fields__ = {'bcount': Field(name='bcount',type=typing.Unio...
      |  
-     |  __dataclass_params__ = _DataclassParams(init=True,repr=True,eq=False,o...
+     |  __dataclass_params__ = _DataclassParams(init=True,repr=True,eq=True,or...
      |  
      |  __hash__ = None
      |  
@@ -320,7 +337,6 @@ CLASSES
      |  Methods defined here:
      |  
      |  __eq__(self, other)
-     |      Test whether two FastqRecords are equal.
      |  
      |  __init__(self, id: str, seq: str, ext: str, qual: str) -> None
      |  
@@ -342,7 +358,7 @@ CLASSES
      |  
      |  __dataclass_fields__ = {'ext': Field(name='ext',type=<class 'str'>,def...
      |  
-     |  __dataclass_params__ = _DataclassParams(init=True,repr=True,eq=False,o...
+     |  __dataclass_params__ = _DataclassParams(init=True,repr=True,eq=True,or...
      |  
      |  __hash__ = None
 
@@ -548,7 +564,6 @@ CLASSES
      |  Methods defined here:
      |  
      |  __eq__(self, other)
-     |      Test whether two VcfRecords are equal.
      |  
      |  __init__(self, chrom: str, pos: int, id: str, ref: str, alt: List[str], qual: str, filter: List[str], info: List[str], format: List[str], gt: List[str]) -> None
      |  
@@ -579,7 +594,7 @@ CLASSES
      |  
      |  __dataclass_fields__ = {'alt': Field(name='alt',type=typing.List[str],...
      |  
-     |  __dataclass_params__ = _DataclassParams(init=True,repr=True,eq=False,o...
+     |  __dataclass_params__ = _DataclassParams(init=True,repr=True,eq=True,or...
      |  
      |  __hash__ = None
 

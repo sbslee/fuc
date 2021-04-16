@@ -271,7 +271,6 @@ CLASSES
      |  Methods defined here:
      |  
      |  __eq__(self, other)
-     |      Test whether two VcfRecords are equal.
      |  
      |  __init__(self, chrom: str, pos: int, id: str, ref: str, alt: List[str], qual: str, filter: List[str], info: List[str], format: List[str], gt: List[str]) -> None
      |  
@@ -302,7 +301,7 @@ CLASSES
      |  
      |  __dataclass_fields__ = {'alt': Field(name='alt',type=typing.List[str],...
      |  
-     |  __dataclass_params__ = _DataclassParams(init=True,repr=True,eq=False,o...
+     |  __dataclass_params__ = _DataclassParams(init=True,repr=True,eq=True,or...
      |  
      |  __hash__ = None
 

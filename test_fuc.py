@@ -22,7 +22,6 @@ class TestVcfFrame(unittest.TestCase):
         vf1 = VcfFrame.from_file(f'{fuc_dir()}/data/vcf/1.vcf')
         vf2 = VcfFrame.from_file(f'{fuc_dir()}/data/vcf/2.vcf')
         vf3 = vf1.merge(vf2)
-        vf3.to_file('test.vcf')
         self.assertEqual(vf3.shape, (7, 5))
 
     def test_compare(self):

@@ -11,7 +11,7 @@ from operator import itemgetter
 
 from .common import is_numeric
 
-class DataFrame():
+class DataFrame:
     def __init__(self):
         self.head = []
         self.data = []

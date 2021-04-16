@@ -3,25 +3,43 @@ The BedFrame module is designed for working with BED files. For example,
 it can be used to find the intersection between multiple BED files.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional, List
 from copy import deepcopy
 
-@dataclass(eq=False)
+@dataclass
 class BedRecord:
-    """Class for storing the information of single BED record."""
-    chrom   : str                        # chrom
-    start   : int                        # chromStart
-    end     : int                        # chromEnd
-    name    : Optional[str] = None       # name
-    score   : Optional[int] = None       # score
-    strand  : Optional[str] = None       # strand
-    tstart  : Optional[int] = None       # thickStart
-    tend    : Optional[int] = None       # thickEnd
-    itemrgb : Optional[List[int]] = None # itemRgb
-    bcount  : Optional[int] = None       # blockCount
-    bsizes  : Optional[List[int]] = None # blockSizes
-    bstarts : Optional[List[int]] = None # blockStarts
+    """Class for storing the information of single BED record.
+
+    This class strictly sticks to the BED format described in the UCSC
+    Genome Browser (https://genome.ucsc.edu/FAQ/FAQformat.html).
+
+    BED lines have three required fields and nine additional optional fields:
+         1. chrom (required) - The name of the chromosome.
+         2. chromStart (required) - The starting position of the feature.
+         3. chromEnd (required) - The ending position of the feature.
+         4. name (optional) - Defines the name of the BED line.
+         5. score (optional) - A score between 0 and 1000 for color density.
+         6. strand (optional) - Either "." (=no strand) or "+" or "-".
+         7. thickStart (optional) - The starting position for thick drawing.
+         8. thickEnd (optional) - The ending position for thick drawing.
+         9. itemRgb (optional) - An RGB value (e.g. 255,0,0).
+        10. blockCount (optional) - The number of blocks (exons).
+        11. blockSizes (optional) - A comma-separated list of the block sizes.
+        12. blockStarts (optional) - A comma-separated list of block starts.
+    """
+    chrom   : str  = field(compare=True)
+    start   : int  = field(compare=True)
+    end     : int  = field(compare=True)
+    name    : Optional[str] = field(default=None, compare=False)
+    score   : Optional[int] = field(default=None, compare=False)
+    strand  : Optional[str] = field(default=None, compare=False)
+    tstart  : Optional[int] = field(default=None, compare=False)
+    tend    : Optional[int] = field(default=None, compare=False)
+    itemrgb : Optional[List[int]] = field(default=None, compare=False)
+    bcount  : Optional[int] = field(default=None, compare=False)
+    bsizes  : Optional[List[int]] = field(default=None, compare=False)
+    bstarts : Optional[List[int]] = field(default=None, compare=False)
 
     def __eq__(self, other):
         """Test whether two BedRecords are equal."""
