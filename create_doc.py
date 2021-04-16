@@ -26,6 +26,13 @@ with open(readme_file, 'w') as f:
             '[here](doc/CLI.md) to see the CLI documentation and '
             '[here](doc/API.md) to see the API documentation.\n')
     f.write('\n')
+    f.write('Your contributions (e.g. feature ideas, pull requests) '
+            'are most welcome.\n')
+    f.write('\n')
+    f.write('Author: Seung-been "Steven" Lee<br/>\n')
+    f.write('Email: sbstevenlee@gmail.com<br/>\n')
+    f.write('License: MIT License\n')
+    f.write('\n')
     f.write('To install `fuc`, enter the following in your terminal:\n')
     f.write('\n')
     f.write('```\n')
@@ -66,14 +73,6 @@ with open(readme_file, 'w') as f:
     result = pydoc.render_doc(VcfFrame, renderer=pydoc.plaintext)
     f.write(result)
     f.write('```\n')
-    f.write('\n')
-    f.write('Your contributions (e.g. feature ideas, pull requests) '
-            'are most welcome.\n')
-    f.write('\n')
-    f.write('Author: Seung-been "Steven" Lee<br/>\n')
-    f.write('Email: sbstevenlee@gmail.com<br/>\n')
-    f.write('License: MIT License\n')
-    f.write('\n')
 
 cli_file = f'{fuc_dir()}/doc/CLI.md'
 
