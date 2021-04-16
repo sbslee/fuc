@@ -12,7 +12,7 @@
 	* [fuccompf](#fuccompf) 
 	* [fucexist](#fucexist) 
 	* [qfcount](#qfcount) 
-	* [qfreadlen](#qfreadlen) 
+	* [qfsum](#qfsum) 
 	* [vfmerge](#vfmerge) 
 
 ## Introduction <a name="Introduction"></a>
@@ -33,7 +33,7 @@ positional arguments:
     fuccompf     [FUC] compare two files
     fucexist     [FUC] check whether files/dirs exist
     qfcount      [FASTQ] count sequence reads in a FASTQ file
-    qfreadlen    [FASTQ] compute read lengths for a FASTQ file
+    qfsum        [FASTQ] summarize a FASTQ file
     vfmerge      [VCF] merge two or more VCF files
 
 optional arguments:
@@ -223,13 +223,15 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-### qfreadlen <a name="qfreadlen"></a>
+### qfsum <a name="qfsum"></a>
 
 ```
-usage: fuc qfreadlen [-h] fastq_file
+usage: fuc qfsum [-h] fastq_file
 
-This command will compute the distribution of sequence read lengths for a
-FASTQ file (both zipped and unqzipped).
+This command will output a summary of the input FASTQ file (both zipped and
+unqzipped). The summary includes the total number of sequence reads, the
+distribution of read lengths, and the numbers of unique and duplicate
+sequences.
 
 positional arguments:
   fastq_file  input FASTQ file

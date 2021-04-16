@@ -51,7 +51,7 @@ class TestFastqFrame(unittest.TestCase):
 
     def test_shape(self):
         qf = FastqFrame.from_file(f'{fuc_dir()}/data/fastq/1.fastq')
-        self.assertEqual(qf.shape, 3)
+        self.assertEqual(qf.shape, 4)
 
 class TestDataFrame(unittest.TestCase):
 

@@ -33,7 +33,7 @@ class FastqFrame:
     def from_file(cls, file_path):
         """Create a FastqFrame from a file."""
         if file_path.endswith('.gz'):
-            f = gzip.open(file_path, 'rb')
+            f = gzip.open(file_path, 'rt')
         else:
             f = open(file_path)
         fields = []

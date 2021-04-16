@@ -38,7 +38,7 @@ positional arguments:
     fuccompf     [FUC] compare two files
     fucexist     [FUC] check whether files/dirs exist
     qfcount      [FASTQ] count sequence reads in a FASTQ file
-    qfreadlen    [FASTQ] compute read lengths for a FASTQ file
+    qfsum        [FASTQ] summarize a FASTQ file
     vfmerge      [VCF] merge two or more VCF files
 
 optional arguments:
