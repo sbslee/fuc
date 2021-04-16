@@ -14,12 +14,12 @@ def create_parser(subparsers):
 
 def main(args):
     qf = FastqFrame.from_file(args.fastq_file)
-    print(f'# Total: {qf.shape}')
+    print(f'# Total: {qf.shape:,}')
     unique = len(set(qf.data))
     duplicate = qf.shape - unique
-    print(f'# Unique: {unique}')
-    print(f'# Duplicate: {duplicate}')
+    print(f'# Unique: {unique:,}')
+    print(f'# Duplicate: {duplicate:,}')
     lengths = qf.readlen()
     print('# Read length and count:')
     for length in sorted(lengths):
-        print(length, lengths[length], sep='\t')
+        print(length, f'{lengths[length]:,}', sep='\t')
