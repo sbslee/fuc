@@ -198,7 +198,8 @@ optional arguments:
 ```
 usage: fuc fucexist [-h] [paths [paths ...]]
 
-This command will check whether files/dirs exist.
+This command will check whether files/dirs exist. It will look for stdin if
+there are no arguments (e.g. $ cat files.list | fuc fucexist).
 
 positional arguments:
   paths       file/dir paths (default: stdin)

@@ -6,7 +6,9 @@ def create_parser(subparsers):
     parser = subparsers.add_parser(
         get_script_name(__file__),
         help='[FUC] check whether files/dirs exist',
-        description='This command will check whether files/dirs exist.'
+        description='This command will check whether files/dirs exist. '
+                    'It will look for stdin if there are no arguments (e.g. '
+                    f"$ cat files.list | fuc {get_script_name(__file__)})."
     )
     parser.add_argument('paths', nargs='*',
         help='file/dir paths (default: stdin)')
