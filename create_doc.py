@@ -6,7 +6,10 @@ from fuc.cli import commands
 from fuc import VcfFrame
 import fuc
 
+modules = [x for x in dir(fuc) if x not in ['api', 'cli'] and '__' not in x]
 readme_file = f'{fuc_dir()}/README.md'
+cli_file = f'{fuc_dir()}/doc/CLI.md'
+api_file = f'{fuc_dir()}/doc/API.md'
 
 with open(readme_file, 'w') as f:
     f.write('# README\n')
@@ -67,8 +70,6 @@ with open(readme_file, 'w') as f:
     f.write('\n')
     f.write('Below is the list of modules available in API:\n')
     f.write('\n')
-    modules = [x for x in dir(fuc)
-               if x not in ['api', 'cli'] and '__' not in x]
     for module in modules:
         description = pydoc.getdoc(getattr(fuc, module)).replace('\n', ' ')
         f.write(f'- **{module}** : {description}\n')
@@ -87,8 +88,6 @@ with open(readme_file, 'w') as f:
     f.write(result)
     f.write('```\n')
 
-cli_file = f'{fuc_dir()}/doc/CLI.md'
-
 with open(cli_file, 'w') as f:
     f.write('# CLI\n')
     f.write('\n')
@@ -106,5 +105,22 @@ for command in commands:
         f.write('\n')
         f.write('```\n')
         f.write(result.stdout)
+        f.write('```\n')
+        f.write('\n')
+
+with open(api_file, 'w') as f:
+    f.write('# API\n')
+    f.write('\n')
+    f.write('## Table of contents\n')
+    f.write('\n')
+    for module in modules:
+        f.write(f'* [{module}](#{module}) \n')
+    f.write('\n')
+    for module in modules:
+        f.write(f'## {module} <a name="{module}"></a>\n')
+        f.write('\n')
+        f.write('```\n')
+        doc = pydoc.render_doc(getattr(fuc, module), renderer=pydoc.plaintext)
+        f.write(f'{doc}')
         f.write('```\n')
         f.write('\n')
