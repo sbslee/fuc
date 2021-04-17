@@ -10,22 +10,39 @@ import gzip
 
 from .BedFrame import BedFrame
 
-def has_var(x):
+def _has_var(x):
     """Return if the GT field has a variant (e.g. 0/1)."""
     return x.split(':')[0].replace('/', '').replace('.', '').replace('0', '')
 
 @dataclass(unsafe_hash=True)
 class VcfRecord:
-    """Class for storing the information of single VCF record."""
-    chrom  : str = field(compare=True)        # CHROM
-    pos    : int = field(compare=True)        # POS
-    id     : str = field(compare=False)       # ID
-    ref    : str = field(compare=True)        # REF
-    alt    : List[str] = field(compare=True)  # ALT
-    qual   : str = field(compare=False)       # QUAL
-    filter : List[str] = field(compare=False) # FILTER
-    info   : List[str] = field(compare=False) # INFO
-    format : List[str] = field(compare=False) # FORMAT
+    """Class for storing the information of single VCF record.
+
+    This class strictly sticks to the standard Variant Call Format
+    specification (https://samtools.github.io/hts-specs/VCFv4.3.pdf).
+
+    VCF lines have nine required fields for storing variant data and
+    variable-length fields for storing sample genotype data. In all cases,
+    missing values are specified with a dot ('.'). The required fields are:
+        1. CHROM - An identifier from the reference genome.
+        2. POS - The 1-based reference position.
+        3. ID - Semicolon-separated list of unique identifiers.
+        4. REF - Reference base(s).
+        5. ALT - Comma-separated list of alternate non-reference alleles.
+        6. QUAL - Phred-scaled quality score for the assertion made in ALT.
+        7. FILTER - PASS or a semicolon-separated list of filters that fail.
+        8. INFO - Semicolon-separated series of additional information fields.
+        9. FORMAT - Colon-separated series of genotype fields.
+    """
+    chrom  : str = field(compare=True)
+    pos    : int = field(compare=True)
+    id     : str = field(compare=False)
+    ref    : str = field(compare=True)
+    alt    : List[str] = field(compare=True)
+    qual   : str = field(compare=False)
+    filter : List[str] = field(compare=False)
+    info   : List[str] = field(compare=False)
+    format : List[str] = field(compare=False)
     gt     : List[str] = field(compare=False)
 
     def to_list(self):
@@ -93,7 +110,7 @@ class VcfFrame:
             i = self.index(name)
             n = 0
             for r in self.data:
-                if has_var(r.gt[i]):
+                if _has_var(r.gt[i]):
                     n += 1
             print(name, n, sep='\t')
 
@@ -230,8 +247,8 @@ class VcfFrame:
         fn = 0
         tn = 0
         for r in self.data:
-            a = has_var(r.gt[i1])
-            b = has_var(r.gt[i2])
+            a = _has_var(r.gt[i1])
+            b = _has_var(r.gt[i2])
             if a and b:
                 tp += 1
             elif a and not b:

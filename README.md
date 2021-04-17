@@ -268,6 +268,22 @@ CLASSES
      |  
      |  Class for storing the information of single VCF record.
      |  
+     |  This class strictly sticks to the standard Variant Call Format
+     |  specification (https://samtools.github.io/hts-specs/VCFv4.3.pdf).
+     |  
+     |  VCF lines have nine required fields for storing variant data and
+     |  variable-length fields for storing sample genotype data. In all cases,
+     |  missing values are specified with a dot ('.'). The required fields are:
+     |      1. CHROM - An identifier from the reference genome.
+     |      2. POS - The 1-based reference position.
+     |      3. ID - Semicolon-separated list of unique identifiers.
+     |      4. REF - Reference base(s).
+     |      5. ALT - Comma-separated list of alternate non-reference alleles.
+     |      6. QUAL - Phred-scaled quality score for the assertion made in ALT.
+     |      7. FILTER - PASS or a semicolon-separated list of filters that fail.
+     |      8. INFO - Semicolon-separated series of additional information fields.
+     |      9. FORMAT - Colon-separated series of genotype fields.
+     |  
      |  Methods defined here:
      |  
      |  __eq__(self, other)
@@ -304,10 +320,6 @@ CLASSES
      |  __dataclass_fields__ = {'alt': Field(name='alt',type=typing.List[str],...
      |  
      |  __dataclass_params__ = _DataclassParams(init=True,repr=True,eq=True,or...
-
-FUNCTIONS
-    has_var(x)
-        Return if the GT field has a variant (e.g. 0/1).
 
 DATA
     List = typing.List
