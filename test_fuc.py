@@ -35,7 +35,7 @@ class TestBedFrame(unittest.TestCase):
         bf3 = BedFrame.from_file(f'{fuc_dir()}/data/bed/3.bed')
         bf4 = bf1.intersect(bf2)
         self.assertEqual(bf3.meta, bf4.meta)
-        self.assertEqual(bf3.data, bf4.data)
+        self.assertEqual(bf3.data.to_string(), bf4.data.to_string())
 
 class TestFastqFrame(unittest.TestCase):
 
