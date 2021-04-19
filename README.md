@@ -71,8 +71,7 @@ optional arguments:
 
 Below is the list of modules available in API:
 
-- **BedFrame** : 
-- **BedFrameOLD** : The BedFrame module is designed for working with BED files. For example, it can be used to find the intersection between multiple BED files.
+- **BedFrame** : The BedFrame module is designed for working with BED files. For example, it can be used to find the intersection between multiple BED files.
 - **FastqFrame** : The FastqFrame module is designed for working with FASTQ files (both zipped and unzipped).
 - **VcfFrame** : The VcfFrame module is designed for working with VCF files (both zipped and unzipped).
 - **VcfFrameOLD** : The VcfFrame module is designed for working with VCF files (both zipped and unzipped).
@@ -106,10 +105,38 @@ CLASSES
      |  
      |  Class for storing VCF data.
      |  
+     |  This class strictly sticks to the standard Variant Call Format
+     |  specification (https://samtools.github.io/hts-specs/VCFv4.3.pdf).
+     |  
+     |  VCF lines have nine required fields for storing variant data and
+     |  variable-length fields for storing sample genotype data. In all cases,
+     |  missing values are specified with a dot ('.'). The required fields are:
+     |      1. CHROM - An identifier from the reference genome.
+     |      2. POS - The 1-based reference position.
+     |      3. ID - Semicolon-separated list of unique identifiers.
+     |      4. REF - Reference base(s).
+     |      5. ALT - Comma-separated list of alternate non-reference alleles.
+     |      6. QUAL - Phred-scaled quality score for the assertion made in ALT.
+     |      7. FILTER - PASS or a semicolon-separated list of filters that fail.
+     |      8. INFO - Semicolon-separated series of additional information fields.
+     |      9. FORMAT - Colon-separated series of genotype fields.
+     |  
      |  Methods defined here:
      |  
      |  __init__(self, meta, data)
      |      Initialize self.  See help(type(self)) for accurate signature.
+     |  
+     |  add_dp(self)
+     |      Compute and add the DP subfield of the FORMAT field.
+     |  
+     |  filter_af(self, threshold=0.1)
+     |      Filter rows based on the AF subfield of the FORMAT field.
+     |  
+     |  filter_dp(self, threshold=200)
+     |      Filter rows based on the DP subfield of the FORMAT field.
+     |  
+     |  filter_empty(self)
+     |      Filter out rows that have no genotype calls.
      |  
      |  merge(self, other, how='inner', format='GT')
      |      Merge with the other VcfFrame.
@@ -152,6 +179,12 @@ CLASSES
      |  
      |  from_file(file_path) from builtins.type
      |      Create a VcfFrame from a VCF file.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Readonly properties defined here:
+     |  
+     |  samples
+     |      Return a list of the sample IDs.
      |  
      |  ----------------------------------------------------------------------
      |  Data descriptors defined here:

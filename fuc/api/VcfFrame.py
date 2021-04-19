@@ -178,7 +178,7 @@ class VcfFrame:
         return vf
 
     def filter_empty(self):
-        """Filter out rows that have no genotypes."""
+        """Filter out rows that have no genotype calls."""
         def func(r):
             return not all(r.iloc[9:].apply(lambda x: '.' in x.split(':')[0]))
         i = self.data.apply(func, axis=1)
