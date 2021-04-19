@@ -8,7 +8,6 @@
 	* [bfsum](#bfsum) 
 	* [dfmerge](#dfmerge) 
 	* [dfsum](#dfsum) 
-	* [dfsumcol](#dfsumcol) 
 	* [fuccompf](#fuccompf) 
 	* [fucexist](#fucexist) 
 	* [qfcount](#qfcount) 
@@ -29,7 +28,6 @@ positional arguments:
     bfsum        [BED] summarize a BED file
     dfmerge      [TABLE] merge two text files
     dfsum        [TABLE] summarize a text file
-    dfsumcol     [TABLE] summarize a column in a text file
     fuccompf     [FUC] compare two files
     fucexist     [FUC] check whether files/dirs exist
     qfcount      [FASTQ] count sequence reads in a FASTQ file
@@ -96,86 +94,46 @@ optional arguments:
 ### dfmerge <a name="dfmerge"></a>
 
 ```
-usage: fuc dfmerge [-h] [--left_delimiter LEFT_DELIMITER]
-                   [--right_delimiter RIGHT_DELIMITER]
-                   [--output_delimiter OUTPUT_DELIMITER]
-                   left_file right_file output_file on [on ...]
+usage: fuc dfmerge [-h] [--how TEXT] [--on TEXT [TEXT ...]]
+                   [--left_delimiter TEXT] [--right_delimiter TEXT]
+                   [--output_delimiter TEXT]
+                   left_file right_file output_file
 
-This command will merge two text files using one or more shared columns.
+This command will merge two text files using one or more shared columns. This
+essentially wraps the `pandas.DataFrame.merge` method.
 
 positional arguments:
   left_file             left file
   right_file            right file
-  output_file           merged file
-  on                    column names to join on
+  output_file           output file
 
 optional arguments:
   -h, --help            show this help message and exit
-  --left_delimiter LEFT_DELIMITER
-                        delimiter for the left file (default: '\t')
-  --right_delimiter RIGHT_DELIMITER
-                        delimiter for the right file (default: '\t')
-  --output_delimiter OUTPUT_DELIMITER
-                        delimiter for the output file (default: '\t')
+  --how TEXT            type of merge to be performed ['left', 'right',
+                        'outer', 'inner', 'cross'] (default: 'inner')
+  --on TEXT [TEXT ...]  column names to join on
+  --left_delimiter TEXT
+                        left delimiter (default: '\t')
+  --right_delimiter TEXT
+                        right delimiter (default: '\t')
+  --output_delimiter TEXT
+                        output delimiter (default: '\t')
 ```
 
 ### dfsum <a name="dfsum"></a>
 
 ```
-usage: fuc dfsum [-h] [--delimiter DELIMITER]
-                 [--columns COLUMNS [COLUMNS ...]] [--exclude_columns]
-                 [--rows ROWS] [--exclude_rows]
-                 table_file
+usage: fuc dfsum [-h] [--delimiter TEXT] text_file
 
-This command will output a summary of the input text file. For each column, it
-will return the counts of unique records for categorical data and the summary
-statistics (minimum, maximum, mean, and median) for numeric data. You can use
-'--columns' to specify which columns should be displayed. For filtering, you
-can use '--rows' to express SQLite WHERE clause which will select rows that
-meet certain criteria.
+This command will summarize a text file. This essentially wraps the
+`pandas.DataFrame.describe` method.
 
 positional arguments:
-  table_file            input table file
+  text_file         text file
 
 optional arguments:
-  -h, --help            show this help message and exit
-  --delimiter DELIMITER
-                        delimiter for the table (default: '\t')
-  --columns COLUMNS [COLUMNS ...]
-                        specify which columns to summarize
-  --exclude_columns     use this tag to exclude specified columns
-  --rows ROWS           SQLite WHERE clause specifying which rows to summarize
-  --exclude_rows        use this tag to exclude specified rows
-```
-
-### dfsumcol <a name="dfsumcol"></a>
-
-```
-usage: fuc dfsumcol [-h] [--group_col GROUP_COL] [--delimiter DELIMITER]
-                    [--skiprows SKIPROWS [SKIPROWS ...]] [--rows ROWS]
-                    [--exclude_rows]
-                    table_file target_col
-
-This command will output a summary table for the target column in the input
-text file. The target column must be categorical. You can also use '--
-group_col' to group the observations by another categorical column. For
-filtering, you can use '--rows' to express SQLite WHERE clause which will
-select rows that meet certain criteria.
-
-positional arguments:
-  table_file            input table file
-  target_col            target column
-
-optional arguments:
-  -h, --help            show this help message and exit
-  --group_col GROUP_COL
-                        column to group by
-  --delimiter DELIMITER
-                        delimiter for the table (default: '\t')
-  --skiprows SKIPROWS [SKIPROWS ...]
-                        line numbers to skip
-  --rows ROWS           SQLite WHERE clause specifying which rows to summarize
-  --exclude_rows        use this tag to exclude specified rows
+  -h, --help        show this help message and exit
+  --delimiter TEXT  delimiter (default: '\t')
 ```
 
 ### fuccompf <a name="fuccompf"></a>

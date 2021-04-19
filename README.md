@@ -15,6 +15,7 @@ License: MIT License
 ## Requirements
 
 ```
+numpy
 pandas
 ```
 
@@ -40,7 +41,6 @@ positional arguments:
     bfsum        [BED] summarize a BED file
     dfmerge      [TABLE] merge two text files
     dfsum        [TABLE] summarize a text file
-    dfsumcol     [TABLE] summarize a column in a text file
     fuccompf     [FUC] compare two files
     fucexist     [FUC] check whether files/dirs exist
     qfcount      [FASTQ] count sequence reads in a FASTQ file
@@ -71,7 +71,6 @@ optional arguments:
 Below is the list of modules available in API:
 
 - **BedFrame** : The BedFrame module is designed for working with BED files. For example, it can be used to find the intersection between multiple BED files.
-- **DataFrame** : The DataFrame module is designed for working with table-like text files. It provides many useful methods for manipulating tables such as merging and filtering.
 - **FastqFrame** : The FastqFrame module is designed for working with FASTQ files (both zipped and unzipped).
 - **VcfFrame** : The VcfFrame module is designed for working with VCF files (both zipped and unzipped).
 - **common** : The common module is used by other fuc modules such as VcfFrame and BedFrame. It also provides many useful methods.

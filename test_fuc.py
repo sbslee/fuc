@@ -4,7 +4,6 @@ from fuc.api.common import fuc_dir
 from fuc.api.VcfFrame import VcfFrame
 from fuc.api.BedFrame import BedFrame
 from fuc.api.FastqFrame import FastqFrame
-from fuc.api.DataFrame import DataFrame
 
 class TestVcfFrame(unittest.TestCase):
 
@@ -52,21 +51,6 @@ class TestFastqFrame(unittest.TestCase):
     def test_shape(self):
         qf = FastqFrame.from_file(f'{fuc_dir()}/data/fastq/1.fastq')
         self.assertEqual(qf.shape, 4)
-
-class TestDataFrame(unittest.TestCase):
-
-    def test_merge(self):
-        df1 = DataFrame.read(f'{fuc_dir()}/data/left.txt')
-        df2 = DataFrame.read(f'{fuc_dir()}/data/right.txt')
-        df3 = DataFrame.read(f'{fuc_dir()}/data/merged.txt')
-        df4 = df1.merge(df2, ['Name'])
-        self.assertEqual(df3.head, df4.head)
-        self.assertEqual(df3.data, df4.data)
-
-    def test_get_col(self):
-        df = DataFrame.read(f'{fuc_dir()}/data/left.txt')
-        col = df.get_col(1)
-        self.assertEqual(col, ['30', '25', '41', '28'])
 
 if __name__ == '__main__':
     unittest.main()

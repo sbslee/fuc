@@ -3,7 +3,6 @@
 ## Table of contents
 
 * [BedFrame](#BedFrame) 
-* [DataFrame](#DataFrame) 
 * [FastqFrame](#FastqFrame) 
 * [VcfFrame](#VcfFrame) 
 * [common](#common) 
@@ -179,85 +178,6 @@ DATA
 
 FILE
     /Users/sbslee/Desktop/fuc/fuc/api/BedFrame.py
-
-```
-
-## DataFrame <a name="DataFrame"></a>
-
-```
-Python Library Documentation: module fuc.api.DataFrame in fuc.api
-
-NAME
-    fuc.api.DataFrame
-
-DESCRIPTION
-    The DataFrame module is designed for working with table-like text files.
-    It provides many useful methods for manipulating tables such as merging and
-    filtering.
-
-CLASSES
-    builtins.object
-        DataFrame
-    
-    class DataFrame(builtins.object)
-     |  Methods defined here:
-     |  
-     |  __init__(self)
-     |      Initialize self.  See help(type(self)) for accurate signature.
-     |  
-     |  filter_columns(self, headers, exclude=False)
-     |      Return a new table after filtering the columns.
-     |  
-     |  filter_rows(self, key, values, exclude=False)
-     |      Return a new table after filtering the rows.
-     |  
-     |  get_col(self, i)
-     |      Return the column as a list.
-     |  
-     |  get_data(self)
-     |      Return a copy of the data which can be modified safely.
-     |  
-     |  get_head(self)
-     |      Return a copy of the headers which can be modified safely.
-     |  
-     |  get_index(self, name)
-     |      Return the column index.
-     |  
-     |  get_unique(self, i)
-     |      Return unique values of the column.
-     |  
-     |  merge(self, other, on, missing='.')
-     |      Return a merged DataFrame.
-     |  
-     |  summarize_col(self, i)
-     |      Return summary of the column.
-     |  
-     |  write(self, file_path, delimiter='\t')
-     |      Write the DataFrame to a file.
-     |  
-     |  ----------------------------------------------------------------------
-     |  Class methods defined here:
-     |  
-     |  read(file_path, delimiter='\t', header=True, skiprows=None) from builtins.type
-     |      Create a DataFrame from a file.
-     |  
-     |  ----------------------------------------------------------------------
-     |  Readonly properties defined here:
-     |  
-     |  shape
-     |      Return a tuple representing the dimensionality of the DataFrame.
-     |  
-     |  ----------------------------------------------------------------------
-     |  Data descriptors defined here:
-     |  
-     |  __dict__
-     |      dictionary for instance variables (if defined)
-     |  
-     |  __weakref__
-     |      list of weak references to the object (if defined)
-
-FILE
-    /Users/sbslee/Desktop/fuc/fuc/api/DataFrame.py
 
 ```
 

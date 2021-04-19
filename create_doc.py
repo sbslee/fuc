@@ -37,6 +37,7 @@ with open(readme_file, 'w') as f:
     f.write('## Requirements\n')
     f.write('\n')
     f.write('```\n')
+    f.write('numpy\n')
     f.write('pandas\n')
     f.write('```\n')
     f.write('\n')
