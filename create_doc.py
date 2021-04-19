@@ -19,15 +19,8 @@ with open(readme_file, 'w') as f:
     f.write('## Introduction\n')
     f.write('\n')
     f.write('The `fuc` package is my attempt to wrap some of the most '
-            'frequently used commands in the field of bioinformatics with '
-            'pure Python 3 code, only using standard libraries. That means '
-            'no installation for external Python packages, not even the '
-            'popular ones like `numpy` and `pandas`. This also includes '
-            'many famous bioinformatics tools such as `samtools` and '
-            '`bedtools`. The motivation for not relying on external '
-            'packages or programs is quite simple: I just got tired of '
-            'managing different Python environments for doing simple '
-            'things.\n')
+            'frequently used commands in the field of bioinformatics '
+            'into a single place.\n')
     f.write('\n')
     f.write('You can use `fuc` for both command line interface (CLI) '
             'and application programming interface (API). Click '
@@ -40,6 +33,12 @@ with open(readme_file, 'w') as f:
     f.write('Author: Seung-been "Steven" Lee<br/>\n')
     f.write('Email: sbstevenlee@gmail.com<br/>\n')
     f.write('License: MIT License\n')
+    f.write('\n')
+    f.write('## Requirements\n')
+    f.write('\n')
+    f.write('```\n')
+    f.write('pandas\n')
+    f.write('```\n')
     f.write('\n')
     f.write('## Getting Started\n')
     f.write('\n')
