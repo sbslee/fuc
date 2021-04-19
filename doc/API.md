@@ -3,8 +3,10 @@
 ## Table of contents
 
 * [BedFrame](#BedFrame) 
+* [BedFrameOLD](#BedFrameOLD) 
 * [FastqFrame](#FastqFrame) 
 * [VcfFrame](#VcfFrame) 
+* [VcfFrameOLD](#VcfFrameOLD) 
 * [common](#common) 
 
 ## BedFrame <a name="BedFrame"></a>
@@ -14,6 +16,58 @@ Python Library Documentation: module fuc.api.BedFrame in fuc.api
 
 NAME
     fuc.api.BedFrame
+
+CLASSES
+    builtins.object
+        BedFrame
+    
+    class BedFrame(builtins.object)
+     |  BedFrame(meta, data)
+     |  
+     |  Class for storing BED data.
+     |  
+     |  Methods defined here:
+     |  
+     |  __init__(self, meta, data)
+     |      Initialize self.  See help(type(self)) for accurate signature.
+     |  
+     |  intersect(self, other)
+     |      Find intersection between the BedFrames.
+     |  
+     |  to_file(self, file_path)
+     |      Write the BedFrame to a BED file.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Class methods defined here:
+     |  
+     |  from_file(file_path) from builtins.type
+     |      Create a BedFrame from a BED file.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data descriptors defined here:
+     |  
+     |  __dict__
+     |      dictionary for instance variables (if defined)
+     |  
+     |  __weakref__
+     |      list of weak references to the object (if defined)
+
+DATA
+    BF_HEADERS = ['chrom', 'chromStart', 'chromEnd', 'name', 'score', 'str...
+    PR_HEADERS = ['Chromosome', 'Start', 'End', 'Name', 'Score', 'Strand',...
+
+FILE
+    /Users/sbslee/Desktop/fuc/fuc/api/BedFrame.py
+
+```
+
+## BedFrameOLD <a name="BedFrameOLD"></a>
+
+```
+Python Library Documentation: module fuc.api.BedFrameOLD in fuc.api
+
+NAME
+    fuc.api.BedFrameOLD
 
 DESCRIPTION
     The BedFrame module is designed for working with BED files. For example,
@@ -25,7 +79,7 @@ CLASSES
         BedRecord
     
     class BedFrame(builtins.object)
-     |  BedFrame(meta: List[str], data: List[fuc.api.BedFrame.BedRecord]) -> None
+     |  BedFrame(meta: List[str], data: List[fuc.api.BedFrameOLD.BedRecord]) -> None
      |  
      |  Class for storing the information of single BED file.
      |  
@@ -33,7 +87,7 @@ CLASSES
      |  
      |  __eq__(self, other)
      |  
-     |  __init__(self, meta: List[str], data: List[fuc.api.BedFrame.BedRecord]) -> None
+     |  __init__(self, meta: List[str], data: List[fuc.api.BedFrameOLD.BedRecord]) -> None
      |  
      |  __repr__(self)
      |  
@@ -86,7 +140,7 @@ CLASSES
      |  ----------------------------------------------------------------------
      |  Data and other attributes defined here:
      |  
-     |  __annotations__ = {'data': typing.List[fuc.api.BedFrame.BedRecord], 'm...
+     |  __annotations__ = {'data': typing.List[fuc.api.BedFrameOLD.BedRecord],...
      |  
      |  __dataclass_fields__ = {'data': Field(name='data',type=typing.List[fuc...
      |  
@@ -95,7 +149,7 @@ CLASSES
      |  __hash__ = None
     
     class BedRecord(builtins.object)
-     |  BedRecord(chrom: str, start: int, end: int, name: Union[str, NoneType] = None, score: Union[int, NoneType] = None, strand: Union[str, NoneType] = None, tstart: Union[int, NoneType] = None, tend: Union[int, NoneType] = None, itemrgb: Union[List[int], NoneType] = None, bcount: Union[int, NoneType] = None, bsizes: Union[List[int], NoneType] = None, bstarts: Union[List[int], NoneType] = None) -> None
+     |  BedRecord(chrom: str, start: int, end: int, name: Optional[str] = None, score: Optional[int] = None, strand: Optional[str] = None, tstart: Optional[int] = None, tend: Optional[int] = None, itemrgb: Optional[List[int]] = None, bcount: Optional[int] = None, bsizes: Optional[List[int]] = None, bstarts: Optional[List[int]] = None) -> None
      |  
      |  Class for storing the information of single BED record.
      |  
@@ -123,7 +177,7 @@ CLASSES
      |  
      |  __hash__(self)
      |  
-     |  __init__(self, chrom: str, start: int, end: int, name: Union[str, NoneType] = None, score: Union[int, NoneType] = None, strand: Union[str, NoneType] = None, tstart: Union[int, NoneType] = None, tend: Union[int, NoneType] = None, itemrgb: Union[List[int], NoneType] = None, bcount: Union[int, NoneType] = None, bsizes: Union[List[int], NoneType] = None, bstarts: Union[List[int], NoneType] = None) -> None
+     |  __init__(self, chrom: str, start: int, end: int, name: Optional[str] = None, score: Optional[int] = None, strand: Optional[str] = None, tstart: Optional[int] = None, tend: Optional[int] = None, itemrgb: Optional[List[int]] = None, bcount: Optional[int] = None, bsizes: Optional[List[int]] = None, bstarts: Optional[List[int]] = None) -> None
      |  
      |  __repr__(self)
      |  
@@ -148,9 +202,9 @@ CLASSES
      |  ----------------------------------------------------------------------
      |  Data and other attributes defined here:
      |  
-     |  __annotations__ = {'bcount': typing.Union[int, NoneType], 'bsizes': ty...
+     |  __annotations__ = {'bcount': typing.Optional[int], 'bsizes': typing.Op...
      |  
-     |  __dataclass_fields__ = {'bcount': Field(name='bcount',type=typing.Unio...
+     |  __dataclass_fields__ = {'bcount': Field(name='bcount',type=typing.Opti...
      |  
      |  __dataclass_params__ = _DataclassParams(init=True,repr=True,eq=True,or...
      |  
@@ -174,10 +228,15 @@ CLASSES
 
 DATA
     List = typing.List
+        A generic version of list.
+    
     Optional = typing.Optional
+        Optional type.
+        
+        Optional[X] is equivalent to Union[X, None].
 
 FILE
-    /Users/sbslee/Desktop/fuc/fuc/api/BedFrame.py
+    /Users/sbslee/Desktop/fuc/fuc/api/BedFrameOLD.py
 
 ```
 
@@ -284,6 +343,7 @@ CLASSES
 
 DATA
     List = typing.List
+        A generic version of list.
 
 FILE
     /Users/sbslee/Desktop/fuc/fuc/api/FastqFrame.py
@@ -305,18 +365,100 @@ DESCRIPTION
 CLASSES
     builtins.object
         VcfFrame
+    
+    class VcfFrame(builtins.object)
+     |  VcfFrame(meta, data)
+     |  
+     |  Class for storing VCF data.
+     |  
+     |  Methods defined here:
+     |  
+     |  __init__(self, meta, data)
+     |      Initialize self.  See help(type(self)) for accurate signature.
+     |  
+     |  merge(self, other, how='inner', format='GT')
+     |      Merge with the other VcfFrame.
+     |      
+     |      This method essentially wraps the `pandas.DataFrame.merge` method.
+     |      
+     |      Parameters
+     |      ----------
+     |      other : VcfFrame
+     |          Other VcfFrame.
+     |      how : str, default: 'inner'
+     |          Type of merge to be performed. ['left', 'right', 'outer',
+     |          'inner', 'cross']
+     |      format : str, default: 'GT'
+     |          FORMAT subfields to be retained (e.g. 'GT:AD:DP').
+     |      
+     |      Returns
+     |      -------
+     |      vf : VcfFrame
+     |          Merged VcfFrame.
+     |  
+     |  strip(self, format='GT')
+     |      Remove unnecessary data from the VcfFrame.
+     |      
+     |      Parameters
+     |      ----------
+     |      format : str, default: 'GT'
+     |          FORMAT subfields to be retained (e.g. 'GT:AD:DP').
+     |      
+     |      Returns
+     |      -------
+     |      vf : VcfFrame
+     |          Stripped VcfFrame.
+     |  
+     |  to_file(self, file_path)
+     |      Write the VcfFrame to a VCF file.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Class methods defined here:
+     |  
+     |  from_file(file_path) from builtins.type
+     |      Create a VcfFrame from a VCF file.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data descriptors defined here:
+     |  
+     |  __dict__
+     |      dictionary for instance variables (if defined)
+     |  
+     |  __weakref__
+     |      list of weak references to the object (if defined)
+
+FILE
+    /Users/sbslee/Desktop/fuc/fuc/api/VcfFrame.py
+
+```
+
+## VcfFrameOLD <a name="VcfFrameOLD"></a>
+
+```
+Python Library Documentation: module fuc.api.VcfFrameOLD in fuc.api
+
+NAME
+    fuc.api.VcfFrameOLD
+
+DESCRIPTION
+    The VcfFrame module is designed for working with VCF files (both zipped
+    and unzipped).
+
+CLASSES
+    builtins.object
+        VcfFrame
         VcfRecord
     
     class VcfFrame(builtins.object)
-     |  VcfFrame(meta: List[str], head: List[str], data: List[fuc.api.VcfFrame.VcfRecord]) -> None
+     |  VcfFrame(meta: List[str], head: List[str], data: List[fuc.api.VcfFrameOLD.VcfRecord]) -> None
      |  
-     |  VcfFrame(meta: List[str], head: List[str], data: List[fuc.api.VcfFrame.VcfRecord])
+     |  VcfFrame(meta: List[str], head: List[str], data: List[fuc.api.VcfFrameOLD.VcfRecord])
      |  
      |  Methods defined here:
      |  
      |  __eq__(self, other)
      |  
-     |  __init__(self, meta: List[str], head: List[str], data: List[fuc.api.VcfFrame.VcfRecord]) -> None
+     |  __init__(self, meta: List[str], head: List[str], data: List[fuc.api.VcfFrameOLD.VcfRecord]) -> None
      |  
      |  __repr__(self)
      |  
@@ -468,7 +610,7 @@ CLASSES
      |  
      |  HEADERS = ['#CHROM', 'POS', 'ID', 'REF', 'ALT', 'QUAL', 'FILTER', 'INF...
      |  
-     |  __annotations__ = {'data': typing.List[fuc.api.VcfFrame.VcfRecord], 'h...
+     |  __annotations__ = {'data': typing.List[fuc.api.VcfFrameOLD.VcfRecord],...
      |  
      |  __dataclass_fields__ = {'data': Field(name='data',type=typing.List[fuc...
      |  
@@ -536,9 +678,10 @@ CLASSES
 
 DATA
     List = typing.List
+        A generic version of list.
 
 FILE
-    /Users/sbslee/Desktop/fuc/fuc/api/VcfFrame.py
+    /Users/sbslee/Desktop/fuc/fuc/api/VcfFrameOLD.py
 
 ```
 

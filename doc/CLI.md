@@ -154,7 +154,7 @@ optional arguments:
 ### fucexist <a name="fucexist"></a>
 
 ```
-usage: fuc fucexist [-h] [paths [paths ...]]
+usage: fuc fucexist [-h] [paths ...]
 
 This command will check whether files/dirs exist. It will look for stdin if
 there are no arguments (e.g. $ cat files.list | fuc fucexist).

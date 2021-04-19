@@ -16,7 +16,8 @@ def create_parser(subparsers):
     parser.add_argument('output_file', help='output file')
     parser.add_argument('--how', metavar='TEXT', choices=CHOICES,
         help=f"type of merge to be performed {CHOICES} (default: 'inner')")
-    parser.add_argument('--on', metavar='TEXT', help='column names to join on', nargs='+')
+    parser.add_argument('--on', metavar='TEXT', nargs='+',
+        help='column names to join on')
     parser.add_argument('--left_delimiter', metavar='TEXT', default='\t',
         help="left delimiter (default: '\\t')")
     parser.add_argument('--right_delimiter', metavar='TEXT', default='\t',

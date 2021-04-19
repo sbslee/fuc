@@ -18,9 +18,9 @@ with open(readme_file, 'w') as f:
     f.write('\n')
     f.write('## Introduction\n')
     f.write('\n')
-    f.write('The `fuc` package is my attempt to wrap some of the most '
+    f.write('The main goal of the `fuc` package is to wrap some of the most '
             'frequently used commands in the field of bioinformatics '
-            'into a single place.\n')
+            'into one place.\n')
     f.write('\n')
     f.write('You can use `fuc` for both command line interface (CLI) '
             'and application programming interface (API). Click '
@@ -39,6 +39,7 @@ with open(readme_file, 'w') as f:
     f.write('```\n')
     f.write('numpy\n')
     f.write('pandas\n')
+    f.write('pyranges\n')
     f.write('```\n')
     f.write('\n')
     f.write('## Getting Started\n')
