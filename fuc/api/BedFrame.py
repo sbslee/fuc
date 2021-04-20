@@ -68,7 +68,7 @@ class BedFrame:
         s = ''
         if self.meta:
             s += '\n'.join(self.meta) + '\n'
-        s += self.gr.df.to_string(header=False, index=False)
+        s += self.gr.df.to_csv(header=False, index=False, sep='\t')
         return s
 
     def intersect(self, other):

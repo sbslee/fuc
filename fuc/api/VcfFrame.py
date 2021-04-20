@@ -72,7 +72,7 @@ class VcfFrame:
         s = ''
         if self.meta:
             s += '\n'.join(self.meta) + '\n'
-        s += self.df.to_string(index=False)
+        s += self.df.to_csv(index=False, sep='\t')
         return s
 
     def strip(self, format='GT'):
