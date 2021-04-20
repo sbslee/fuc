@@ -273,3 +273,48 @@ class VcfFrame:
         df = self.df[self.df.columns[:9].to_list() + names]
         vf = self.__class__(deepcopy(self.meta), df)
         return vf
+
+    def update(self, other, headers=None, missing=True):
+        """Copy data from the other VcfFrame.
+
+        This method will copy and paste data from the other VcfFrame for
+        overlapping records. By default, the following VCF headers are
+        used: ID, QUAL, FILTER, and, INFO.
+
+        Parameters
+        ----------
+        other : VcfFrame
+            Other VcfFrame.
+        headers : list, optional
+            List of VCF headers to exclude.
+        missing : bool, default: True
+            If True, only fields with the missing value ('.') will be updated.
+
+        Returns
+        -------
+        vf : VcfFrame
+            Updated VcfFrame.
+        """
+        targets = ['ID', 'QUAL', 'FILTER', 'INFO']
+        if headers is not None:
+            for header in headers:
+                targets.remove(header)
+        def func(r1):
+            r2 = other.df[(other.df['#CHROM'] == r1['#CHROM']) &
+                          (other.df['POS'] == r1['POS']) &
+                          (other.df['REF'] == r1['REF']) &
+                          (other.df['ALT'] == r1['ALT'])]
+            if r2.empty:
+                return r1
+            for target in targets:
+                if missing:
+                    if r1[target] == '.':
+                        r1[target] = r2.iloc[0][target]
+                    else:
+                        pass
+                else:
+                    r1[target] = r2.iloc[0][target]
+            return r1
+        df = self.df.apply(func, axis=1)
+        vf = self.__class__(deepcopy(self.meta), df)
+        return vf
