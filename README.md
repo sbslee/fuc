@@ -82,7 +82,7 @@ Below is the list of modules available in API:
 - **BedFrame** : The BedFrame module is designed for working with BED files. For example, it can be used to find the intersection between multiple BED files.
 - **FastqFrame** : The FastqFrame module is designed for working with FASTQ files (both zipped and unzipped).
 - **VcfFrame** : The VcfFrame module is designed for working with VCF files (both zipped and unzipped).
-- **common** : The common module is used by other fuc modules such as VcfFrame and BedFrame. It also provides many useful methods.
+- **common** : The common module is used by other `fuc` modules such as VcfFrame and BedFrame. It also provides many useful methods.
 
 For getting help on a specific module (e.g. `VcfFrame`):
 
