@@ -47,7 +47,7 @@ with open(readme_file, 'w') as f:
     f.write('```\n')
     f.write('from fuc.api.VcfFrame import VcfFrame\n')
     f.write("vf = VcfFrame.from_file('original.vcf')\n")
-    f.write("filtered_vf = vf.filter_bed('1.bed')\n")
+    f.write("filtered_vf = vf.filter_bed('targets.bed')\n")
     f.write("filtered_vf.to_file('filtered.vcf')\n")
     f.write('```\n')
     f.write('\n')

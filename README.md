@@ -25,7 +25,7 @@ To filter a VCF file based on a BED file using API:
 ```
 from fuc.api.VcfFrame import VcfFrame
 vf = VcfFrame.from_file('original.vcf')
-filtered_vf = vf.filter_bed('1.bed')
+filtered_vf = vf.filter_bed('targets.bed')
 filtered_vf.to_file('filtered.vcf')
 ```
 
