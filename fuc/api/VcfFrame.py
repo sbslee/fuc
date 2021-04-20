@@ -319,7 +319,7 @@ class VcfFrame:
         vf = self.__class__(deepcopy(self.meta), df)
         return vf
 
-    def parse_snpeff(self, i):
+    def parse_snpeff(self, idx, sep=' | '):
         """Parse SnpEff annotations.
 
         SnpEff provides the following functional annotations:
@@ -343,8 +343,10 @@ class VcfFrame:
 
         Parameters
         ----------
-        i : int
-            Annotation index.
+        i : list
+            List of annotation indicies.
+        sep : str, default: ' | '
+            Separator for joining requested annotations.
 
         Returns
         -------
@@ -355,7 +357,8 @@ class VcfFrame:
             ann = [x for x in r['INFO'].split(';') if 'ANN=' in x]
             if not ann:
                 return '.'
-            ann = ann[0].replace('ANN=', '').split('|')[i]
+            ann = ann[0].replace('ANN=', '').split('|')
+            ann = sep.join([ann[i] for i in idx])
             return ann
         s = self.df.apply(func, axis=1)
         return s
