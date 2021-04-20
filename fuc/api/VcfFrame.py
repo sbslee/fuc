@@ -21,15 +21,16 @@ class VcfFrame:
     VCF lines have nine required fields for storing variant data and
     variable-length fields for storing sample genotype data. In all cases,
     missing values are specified with a dot ('.'). The required fields are:
-        1. CHROM - An identifier from the reference genome.
-        2. POS - The 1-based reference position.
-        3. ID - Semicolon-separated list of unique identifiers.
-        4. REF - Reference base(s).
-        5. ALT - Comma-separated list of alternate non-reference alleles.
-        6. QUAL - Phred-scaled quality score for the assertion made in ALT.
-        7. FILTER - PASS or a semicolon-separated list of filters that fail.
-        8. INFO - Semicolon-separated series of additional information fields.
-        9. FORMAT - Colon-separated series of genotype fields.
+
+    1. CHROM - An identifier from the reference genome.
+    2. POS - The 1-based reference position.
+    3. ID - Semicolon-separated list of unique identifiers.
+    4. REF - Reference base(s).
+    5. ALT - Comma-separated list of alternate non-reference alleles.
+    6. QUAL - Phred-scaled quality score for the assertion made in ALT.
+    7. FILTER - PASS or a semicolon-separated list of filters that fail.
+    8. INFO - Semicolon-separated series of additional information fields.
+    9. FORMAT - Colon-separated series of genotype fields.
     """
     def __init__(self, meta, df):
         self.meta = meta
@@ -323,23 +324,24 @@ class VcfFrame:
         """Parse SnpEff annotations.
 
         SnpEff provides the following functional annotations:
-             1. Allele
-             2. Annotation
-             3. Annotation_Impact
-             4. Gene_Name
-             5. Gene_ID
-             6. Feature_Type
-             7. Feature_ID
-             8. Transcript_BioType
-             9. Rank
-            10. HGVS.c
-            11. HGVS.p
-            12. cDNA.pos / cDNA.length
-            13. CDS.pos / CDS.length
-            14. AA.pos / AA.length
-            15. Distance
-            16. ERRORS / WARNINGS
-            17. INFO
+
+        1. Allele
+        2. Annotation
+        3. Annotation_Impact
+        4. Gene_Name
+        5. Gene_ID
+        6. Feature_Type
+        7. Feature_ID
+        8. Transcript_BioType
+        9. Rank
+        10. HGVS.c
+        11. HGVS.p
+        12. cDNA.pos / cDNA.length
+        13. CDS.pos / CDS.length
+        14. AA.pos / AA.length
+        15. Distance
+        16. ERRORS / WARNINGS
+        17. INFO
 
         Parameters
         ----------
