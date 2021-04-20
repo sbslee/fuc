@@ -39,20 +39,26 @@ optional arguments:
   -v, --version  show the version number and exit
 ```
 
-For getting help on a specific command (e.g. `qfcount`):
+For getting help on a specific command (e.g. `vfmerge`):
 
 ```
-$ fuc qfcount -h
-usage: fuc qfcount [-h] fastq_file
+$ fuc vfmerge -h
+usage: fuc vfmerge [-h] [--how TEXT] [--format TEXT] vcf_files [vcf_files ...]
 
-This command will count sequence reads in a FASTQ file (both zipped and
-unzipped).
+This command will merge multiple VCF files (both zipped and unzipped). By
+default, only the GT subfield of the FORMAT field will be included in the
+merged VCF. Use '--format' to include additional FORMAT subfields such as AD
+and DP.
 
 positional arguments:
-  fastq_file  input FASTQ file
+  vcf_files      VCF files
 
 optional arguments:
-  -h, --help  show this help message and exit
+  -h, --help     show this help message and exit
+  --how TEXT     type of merge to be performed ['left', 'right', 'outer',
+                 'inner', 'cross'] (default: 'inner')
+  --format TEXT  FORMAT subfields to be retained (e.g. 'GT:AD:DP') (default:
+                 'GT')
 ```
 
 ## Commands <a name="Commands"></a>
@@ -75,7 +81,7 @@ optional arguments:
 ### bfsum <a name="bfsum"></a>
 
 ```
-usage: fuc bfsum [-h] [--bases BASES] [--decimals DECIMALS] bed_file
+usage: fuc bfsum [-h] [--bases INTEGER] [--decimals INTEGER] bed_file
 
 This command will compute summary statstics of the BED file. This includes the
 total numbers of probes and covered base pairs for each chromosome. By
@@ -83,12 +89,12 @@ default, covered base paris are displayed in bp, but if you prefer you can,
 for example, use '--bases 1000' to display base pairs in kb.
 
 positional arguments:
-  bed_file             input BED file
+  bed_file            input BED file
 
 optional arguments:
-  -h, --help           show this help message and exit
-  --bases BASES        number used to divide the bases (default: 1)
-  --decimals DECIMALS  maximum number of decimals (default: 0)
+  -h, --help          show this help message and exit
+  --bases INTEGER     number used to divide the bases (default: 1)
+  --decimals INTEGER  maximum number of decimals (default: 0)
 ```
 
 ### dfmerge <a name="dfmerge"></a>
