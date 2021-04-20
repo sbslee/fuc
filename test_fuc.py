@@ -26,7 +26,10 @@ class TestVcfFrame(unittest.TestCase):
     def test_filter_multiallelic(self):
         vf = VcfFrame.from_file(f'{fuc_dir()}/data/vcf/1.vcf')
         vf = vf.filter_multiallelic()
-        print(vf.df)
+
+    def test_reset_samples(self):
+        vf = VcfFrame.from_file(f'{fuc_dir()}/data/vcf/1.vcf')
+        vf = vf.reset_samples(['Sarah', 'John'])
 
 class TestBedFrame(unittest.TestCase):
 

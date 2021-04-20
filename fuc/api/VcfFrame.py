@@ -265,3 +265,9 @@ class VcfFrame:
         tn = d['tn'] if 'tn' in d else 0
         result = (tp, fp, fn, tn)
         return result
+
+    def reset_samples(self, names):
+        """Reset the sample list."""
+        df = self.df[self.df.columns[:9].to_list() + names]
+        vf = self.__class__(deepcopy(self.meta), df)
+        return vf
