@@ -318,3 +318,44 @@ class VcfFrame:
         df = self.df.apply(func, axis=1)
         vf = self.__class__(deepcopy(self.meta), df)
         return vf
+
+    def parse_snpeff(self, i):
+        """Parse SnpEff annotations.
+
+        SnpEff provides the following functional annotations:
+             1. Allele
+             2. Annotation
+             3. Annotation_Impact
+             4. Gene_Name
+             5. Gene_ID
+             6. Feature_Type
+             7. Feature_ID
+             8. Transcript_BioType
+             9. Rank
+            10. HGVS.c
+            11. HGVS.p
+            12. cDNA.pos / cDNA.length
+            13. CDS.pos / CDS.length
+            14. AA.pos / AA.length
+            15. Distance
+            16. ERRORS / WARNINGS
+            17. INFO
+
+        Parameters
+        ----------
+        i : int
+            Annotation index.
+
+        Returns
+        -------
+        s : pandas.Series
+            Parsed annotations.
+        """
+        def func(r):
+            ann = [x for x in r['INFO'].split(';') if 'ANN=' in x]
+            if not ann:
+                return '.'
+            ann = ann[0].replace('ANN=', '').split('|')[i]
+            return ann
+        s = self.df.apply(func, axis=1)
+        return s
