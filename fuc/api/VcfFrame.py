@@ -195,7 +195,16 @@ class VcfFrame:
         def func(r):
             return not all(r.iloc[9:].apply(lambda x: '.' in x.split(':')[0]))
         i = self.df.apply(func, axis=1)
-        df = self.df[i]
+        df = self.df[i].reset_index(drop=True)
+        vf = self.__class__(deepcopy(self.meta), df)
+        return vf
+
+    def filter_multiallelic(self):
+        """Filter out rows that have multiple alternative alleles."""
+        def func(r):
+            return not ',' in r['ALT']
+        i = self.df.apply(func, axis=1)
+        df = self.df[i].reset_index(drop=True)
         vf = self.__class__(deepcopy(self.meta), df)
         return vf
 

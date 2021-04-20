@@ -277,6 +277,9 @@ CLASSES
      |  filter_empty(self)
      |      Filter out rows that have no genotype calls.
      |  
+     |  filter_multiallelic(self)
+     |      Filter out rows that have multiple alternative alleles.
+     |  
      |  merge(self, other, how='inner', format='GT')
      |      Merge with the other VcfFrame.
      |      
