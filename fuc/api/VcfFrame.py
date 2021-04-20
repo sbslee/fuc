@@ -130,7 +130,7 @@ class VcfFrame:
         df['FORMAT'] = format
         def func(r):
             n = len(r['FORMAT'].split(':'))
-            x = '/'.join(['.' for x in r.iloc[9:].dropna()[0].split('/')])
+            x = './.'
             for i in range(1, n):
                 x += ':.'
             r = r.fillna(x)
@@ -181,7 +181,7 @@ class VcfFrame:
             def infunc(x):
                 l = x.split(':')
                 af = l[i]
-                if af == '.' or float(dp) < threshold:
+                if af == '.' or float(af) < threshold:
                     return './.' + ':.' * (len(l)-1)
                 return x
             r.iloc[9:] = r.iloc[9:].apply(infunc)
@@ -237,16 +237,18 @@ class VcfFrame:
 
         Parameters
         ----------
-        n1 : str
-            Test sample.
-        n2 : str
-            Truth sample.
+        n1 : str or int
+            Name of index of the test sample.
+        n2 : str or int
+            Name of index of the truth sample.
 
         Returns
         -------
         result : tuple
             Comparison result (tp, fp, fn, tn).
         """
+        n1 = n1 if isinstance(n1, str) else self.samples[n1]
+        n2 = n2 if isinstance(n2, str) else self.samples[n2]
         def func(r):
             a = _has_var(r[n1])
             b = _has_var(r[n2])
