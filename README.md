@@ -12,6 +12,19 @@ Author: Seung-been "Steven" Lee<br/>
 Email: sbstevenlee@gmail.com<br/>
 License: MIT License
 
+## Examples
+
+To merge VCF files with CLI:
+
+```
+$ fuc vfmerge 1.vcf 2.vcf 3.vcf > merged.vcf
+```
+
+To filter a VCF file based on a BED file using API:
+
+```
+from fuc.api.VcfFrame import VcfFramevf = VcfFrame.from_file('original.vcf')filtered_vf = vf.filter_bed('1.bed')filtered_vf.to_file('filtered.vcf')```
+
 ## Required Packages
 
 The following packages are required to run `fuc`:
