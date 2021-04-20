@@ -63,7 +63,7 @@ with open(readme_file, 'w') as f:
     f.write(result.stdout)
     f.write('```\n')
     f.write('\n')
-    example = 'qfcount'
+    example = 'vfmerge'
     f.write(f'For getting help on a specific command (e.g. `{example}`):\n')
     f.write('\n')
     f.write('```\n')

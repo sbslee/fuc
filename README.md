@@ -55,20 +55,26 @@ optional arguments:
   -v, --version  show the version number and exit
 ```
 
-For getting help on a specific command (e.g. `qfcount`):
+For getting help on a specific command (e.g. `vfmerge`):
 
 ```
-$ fuc qfcount -h
-usage: fuc qfcount [-h] fastq_file
+$ fuc vfmerge -h
+usage: fuc vfmerge [-h] [--how TEXT] [--format TEXT] vcf_files [vcf_files ...]
 
-This command will count sequence reads in a FASTQ file (both zipped and
-unzipped).
+This command will merge multiple VCF files (both zipped and unzipped). By
+default, only the GT subfield of the FORMAT field will be included in the
+merged VCF. Use '--format' to include additional FORMAT subfields such as AD
+and DP.
 
 positional arguments:
-  fastq_file  input FASTQ file
+  vcf_files      VCF files
 
 optional arguments:
-  -h, --help  show this help message and exit
+  -h, --help     show this help message and exit
+  --how TEXT     type of merge to be performed ['left', 'right', 'outer',
+                 'inner', 'cross'] (default: 'inner')
+  --format TEXT  FORMAT subfields to be retained (e.g. 'GT:AD:DP') (default:
+                 'GT')
 ```
 
 Below is the list of modules available in API:
