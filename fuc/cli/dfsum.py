@@ -5,7 +5,7 @@ def create_parser(subparsers):
     parser = subparsers.add_parser(
         get_script_name(__file__),
         help='[TABLE] summarize a text file',
-        description='This command will summarize a text file. This '
+        description='This command will summarize a text file. It '
                     'essentially wraps the `pandas.DataFrame.describe` '
                     'method.'
     )

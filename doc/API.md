@@ -5,7 +5,6 @@
 * [BedFrame](#BedFrame) 
 * [FastqFrame](#FastqFrame) 
 * [VcfFrame](#VcfFrame) 
-* [VcfFrameOLD](#VcfFrameOLD) 
 * [common](#common) 
 
 ## BedFrame <a name="BedFrame"></a>
@@ -25,12 +24,12 @@ CLASSES
         BedFrame
     
     class BedFrame(builtins.object)
-     |  BedFrame(meta, data)
+     |  BedFrame(meta, gr)
      |  
      |  Class for storing BED data.
      |  
-     |  This class strictly sticks to the BED format described in the UCSC
-     |  Genome Browser (https://genome.ucsc.edu/FAQ/FAQformat.html).
+     |  This class is essentially a wrapper for the `pyranges` package
+     |  (https://github.com/biocore-ntnu/pyranges).
      |  
      |  BED lines have three required fields and nine additional optional fields:
      |       1. chrom (required) - The name of the chromosome.
@@ -46,9 +45,12 @@ CLASSES
      |      11. blockSizes (optional) - A comma-separated list of the block sizes.
      |      12. blockStarts (optional) - A comma-separated list of block starts.
      |  
+     |  For more information about the BED format, visit the UCSC Genome Browser
+     |  FAQ (https://genome.ucsc.edu/FAQ/FAQformat.html).
+     |  
      |  Methods defined here:
      |  
-     |  __init__(self, meta, data)
+     |  __init__(self, meta, gr)
      |      Initialize self.  See help(type(self)) for accurate signature.
      |  
      |  intersect(self, other)
@@ -56,6 +58,9 @@ CLASSES
      |  
      |  to_file(self, file_path)
      |      Write the BedFrame to a BED file.
+     |  
+     |  to_string(self)
+     |      Render the BedFrame to a console-friendly tabular output.
      |  
      |  ----------------------------------------------------------------------
      |  Class methods defined here:
@@ -73,8 +78,7 @@ CLASSES
      |      list of weak references to the object (if defined)
 
 DATA
-    BF_HEADERS = ['chrom', 'chromStart', 'chromEnd', 'name', 'score', 'str...
-    PR_HEADERS = ['Chromosome', 'Start', 'End', 'Name', 'Score', 'Strand',...
+    HEADERS = ['Chromosome', 'Start', 'End', 'Name', 'Score', 'Strand', 'T...
 
 FILE
     /Users/sbslee/Desktop/fuc/fuc/api/BedFrame.py
@@ -208,7 +212,7 @@ CLASSES
         VcfFrame
     
     class VcfFrame(builtins.object)
-     |  VcfFrame(meta, data)
+     |  VcfFrame(meta, df)
      |  
      |  Class for storing VCF data.
      |  
@@ -230,14 +234,42 @@ CLASSES
      |  
      |  Methods defined here:
      |  
-     |  __init__(self, meta, data)
+     |  __init__(self, meta, df)
      |      Initialize self.  See help(type(self)) for accurate signature.
      |  
      |  add_dp(self)
      |      Compute and add the DP subfield of the FORMAT field.
      |  
+     |  compare(self, n1, n2)
+     |      Compare two samples within the VcfFrame.
+     |      
+     |      Parameters
+     |      ----------
+     |      n1 : str
+     |          Test sample.
+     |      n2 : str
+     |          Truth sample.
+     |      
+     |      Returns
+     |      -------
+     |      result : tuple
+     |          Comparison result (tp, fp, fn, tn).
+     |  
      |  filter_af(self, threshold=0.1)
      |      Filter rows based on the AF subfield of the FORMAT field.
+     |  
+     |  filter_bed(self, bed)
+     |      Filter rows based on BED data.
+     |      
+     |      Parameters
+     |      ----------
+     |      bed : BedFrame or str
+     |          BedFrame or path to a BED file.
+     |      
+     |      Returns
+     |      -------
+     |      vf : VcfFrame
+     |          Filtered VcfFrame.
      |  
      |  filter_dp(self, threshold=200)
      |      Filter rows based on the DP subfield of the FORMAT field.
@@ -281,6 +313,9 @@ CLASSES
      |  to_file(self, file_path)
      |      Write the VcfFrame to a VCF file.
      |  
+     |  to_string(self)
+     |      Render the VcfFrame to a console-friendly tabular output.
+     |  
      |  ----------------------------------------------------------------------
      |  Class methods defined here:
      |  
@@ -304,259 +339,6 @@ CLASSES
 
 FILE
     /Users/sbslee/Desktop/fuc/fuc/api/VcfFrame.py
-
-```
-
-## VcfFrameOLD <a name="VcfFrameOLD"></a>
-
-```
-Python Library Documentation: module fuc.api.VcfFrameOLD in fuc.api
-
-NAME
-    fuc.api.VcfFrameOLD
-
-DESCRIPTION
-    The VcfFrame module is designed for working with VCF files (both zipped
-    and unzipped).
-
-CLASSES
-    builtins.object
-        VcfFrame
-        VcfRecord
-    
-    class VcfFrame(builtins.object)
-     |  VcfFrame(meta: List[str], head: List[str], data: List[fuc.api.VcfFrameOLD.VcfRecord]) -> None
-     |  
-     |  VcfFrame(meta: List[str], head: List[str], data: List[fuc.api.VcfFrameOLD.VcfRecord])
-     |  
-     |  Methods defined here:
-     |  
-     |  __eq__(self, other)
-     |  
-     |  __init__(self, meta: List[str], head: List[str], data: List[fuc.api.VcfFrameOLD.VcfRecord]) -> None
-     |  
-     |  __repr__(self)
-     |  
-     |  add_dp(self)
-     |      Compute and add the DP subfield of the FORMAT field.
-     |  
-     |  compare(self, n1, n2)
-     |      Compare two samples within the VcfFrame.
-     |      
-     |      Parameters
-     |      ----------
-     |      n1 : string or int
-     |          Test sample or its index in the header row.
-     |      n2 : string or int
-     |          Truth sample or its index in the header row.
-     |      
-     |      Returns
-     |      -------
-     |      result : tuple
-     |          Comparison result (tp, fp, fn, and tn).
-     |  
-     |  describe(self)
-     |      Generate descriptive statistics.
-     |  
-     |  filter_af(self, threshold=0.1)
-     |      Filter based on the AF subfield of the FORMAT field.
-     |  
-     |  filter_bed(self, bed)
-     |      Filter VcfRecords in the VcfFrame using BED data.
-     |      
-     |      Parameters
-     |      ----------
-     |      bed : BedFrame or string
-     |          BedFrame or path to a BED file.
-     |      
-     |      Returns
-     |      -------
-     |      vf : VcfFrame
-     |          Filtered VcfFrame.
-     |  
-     |  filter_dp(self, threshold=200)
-     |      Filter based on the DP subfield of the FORMAT field.
-     |  
-     |  filter_empty(self)
-     |      Filter out VcfRecords that are empty.
-     |  
-     |  index(self, name)
-     |      Return the sample index.
-     |  
-     |  merge(self, other, format_subfields=None)
-     |      Merge with the other VcfFrame.
-     |      
-     |      Parameters
-     |      ----------
-     |      other : VcfFrame
-     |          Other VcfFrame.
-     |      format_subfields : list, optional
-     |          Additional FORMAT subfields (e.g. DP and AD) to be retained
-     |          other than GT, which is included as default.
-     |      
-     |      Returns
-     |      -------
-     |      vf : VcfFrame
-     |          Stripped VcfFrame.
-     |  
-     |  multiallelic_sites(self)
-     |      Return the indicies of multiallelic sites.
-     |  
-     |  reset_samples(self, samples)
-     |      Reset the sample list.
-     |  
-     |  strip(self, format_subfields=None)
-     |      Remove unnecessary data from the VcfFrame.
-     |      
-     |      Parameters
-     |      ----------
-     |      format_subfields : list, optional
-     |          Additional FORMAT subfields (e.g. DP and AD) to be retained
-     |          other than GT, which is included as default.
-     |      
-     |      Returns
-     |      -------
-     |      vf : VcfFrame
-     |          Stripped VcfFrame.
-     |  
-     |  to_file(self, file_path)
-     |      Write the VcfFrame to a file.
-     |  
-     |  to_string(self)
-     |      Render the VcfFrame to a console-friendly tabular output.
-     |  
-     |  update(self, other, query_fields, missing_only=False)
-     |      Copy data from another VcfFrame.
-     |      
-     |      This method will copy requested data from another VcfFrame for
-     |      overlapping records. You can only request data from the following
-     |      VCF headers: ID, QUAL, FILTER, INFO, and FORMAT. Any other
-     |      requested VCF headers will be ignored.
-     |      
-     |      Parameters
-     |      ----------
-     |      other : VcfFrame
-     |          Target VcfFrame.
-     |      names : list
-     |          List of VCF headers.
-     |      missing_only : boolean, optional
-     |          If True, only fields with the missing value will be updated.
-     |      
-     |      Returns
-     |      -------
-     |      vcf_result : VcfFrame
-     |          Updated VcfFrame.
-     |  
-     |  ----------------------------------------------------------------------
-     |  Class methods defined here:
-     |  
-     |  from_file(file_path) from builtins.type
-     |      Create a VcfFrame from a file.
-     |  
-     |  ----------------------------------------------------------------------
-     |  Readonly properties defined here:
-     |  
-     |  samples
-     |      Return a list of the sample IDs.
-     |  
-     |  shape
-     |      Return a tuple representing the dimensionality of the VcfFrame.
-     |  
-     |  vdata
-     |      Return a view (copy) of the data.
-     |  
-     |  vhead
-     |      Return a view (copy) of the headers.
-     |  
-     |  vmeta
-     |      Return a view (copy) of the metadata.
-     |  
-     |  ----------------------------------------------------------------------
-     |  Data descriptors defined here:
-     |  
-     |  __dict__
-     |      dictionary for instance variables (if defined)
-     |  
-     |  __weakref__
-     |      list of weak references to the object (if defined)
-     |  
-     |  ----------------------------------------------------------------------
-     |  Data and other attributes defined here:
-     |  
-     |  HEADERS = ['#CHROM', 'POS', 'ID', 'REF', 'ALT', 'QUAL', 'FILTER', 'INF...
-     |  
-     |  __annotations__ = {'data': typing.List[fuc.api.VcfFrameOLD.VcfRecord],...
-     |  
-     |  __dataclass_fields__ = {'data': Field(name='data',type=typing.List[fuc...
-     |  
-     |  __dataclass_params__ = _DataclassParams(init=True,repr=True,eq=True,or...
-     |  
-     |  __hash__ = None
-    
-    class VcfRecord(builtins.object)
-     |  VcfRecord(chrom: str, pos: int, id: str, ref: str, alt: List[str], qual: str, filter: List[str], info: List[str], format: List[str], gt: List[str]) -> None
-     |  
-     |  Class for storing the information of single VCF record.
-     |  
-     |  This class strictly sticks to the standard Variant Call Format
-     |  specification (https://samtools.github.io/hts-specs/VCFv4.3.pdf).
-     |  
-     |  VCF lines have nine required fields for storing variant data and
-     |  variable-length fields for storing sample genotype data. In all cases,
-     |  missing values are specified with a dot ('.'). The required fields are:
-     |      1. CHROM - An identifier from the reference genome.
-     |      2. POS - The 1-based reference position.
-     |      3. ID - Semicolon-separated list of unique identifiers.
-     |      4. REF - Reference base(s).
-     |      5. ALT - Comma-separated list of alternate non-reference alleles.
-     |      6. QUAL - Phred-scaled quality score for the assertion made in ALT.
-     |      7. FILTER - PASS or a semicolon-separated list of filters that fail.
-     |      8. INFO - Semicolon-separated series of additional information fields.
-     |      9. FORMAT - Colon-separated series of genotype fields.
-     |  
-     |  Methods defined here:
-     |  
-     |  __eq__(self, other)
-     |  
-     |  __hash__(self)
-     |  
-     |  __init__(self, chrom: str, pos: int, id: str, ref: str, alt: List[str], qual: str, filter: List[str], info: List[str], format: List[str], gt: List[str]) -> None
-     |  
-     |  __repr__(self)
-     |  
-     |  to_list(self)
-     |      Convert the VcfRecord to a list of strings.
-     |  
-     |  ----------------------------------------------------------------------
-     |  Class methods defined here:
-     |  
-     |  from_list(l) from builtins.type
-     |      Create a VcfRecord from a list of strings.
-     |  
-     |  ----------------------------------------------------------------------
-     |  Data descriptors defined here:
-     |  
-     |  __dict__
-     |      dictionary for instance variables (if defined)
-     |  
-     |  __weakref__
-     |      list of weak references to the object (if defined)
-     |  
-     |  ----------------------------------------------------------------------
-     |  Data and other attributes defined here:
-     |  
-     |  __annotations__ = {'alt': typing.List[str], 'chrom': <class 'str'>, 'f...
-     |  
-     |  __dataclass_fields__ = {'alt': Field(name='alt',type=typing.List[str],...
-     |  
-     |  __dataclass_params__ = _DataclassParams(init=True,repr=True,eq=True,or...
-
-DATA
-    List = typing.List
-        A generic version of list.
-
-FILE
-    /Users/sbslee/Desktop/fuc/fuc/api/VcfFrameOLD.py
 
 ```
 

@@ -5,7 +5,7 @@ def create_parser(subparsers):
     parser = subparsers.add_parser(
         get_script_name(__file__),
         help='[BED] summarize a BED file',
-        description='This command computes summary statstics of the given '
+        description='This command will compute summary statstics of the '
             'BED file. This includes the total numbers of probes and '
             'covered base pairs for each chromosome. By default, covered '
             'base paris are displayed in bp, but if you prefer you can, '
@@ -18,13 +18,13 @@ def create_parser(subparsers):
         'number of decimals (default: 0)')
 
 def main(args):
-    bed_result = BedFrame.from_file(args.bed_file)
+    bf = BedFrame.from_file(args.bed_file)
     chrom_dict = {}
     total = [0, 0]
-    for fields in bed_result.get_data():
-        chrom = fields[0]
-        start = int(fields[1])
-        end = int(fields[2])
+    for i, r in bf.gr.df.iterrows():
+        chrom = r['Chromosome']
+        start = r['Start']
+        end = r['End']
         bases = end - start
         if chrom not in chrom_dict:
             chrom_dict[chrom] = [0, 0]

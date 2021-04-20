@@ -12,7 +12,9 @@ Author: Seung-been "Steven" Lee<br/>
 Email: sbstevenlee@gmail.com<br/>
 License: MIT License
 
-## Requirements
+## Required Packages
+
+The following packages are required to run `fuc`:
 
 ```
 numpy
@@ -74,7 +76,6 @@ Below is the list of modules available in API:
 - **BedFrame** : The BedFrame module is designed for working with BED files. For example, it can be used to find the intersection between multiple BED files.
 - **FastqFrame** : The FastqFrame module is designed for working with FASTQ files (both zipped and unzipped).
 - **VcfFrame** : The VcfFrame module is designed for working with VCF files (both zipped and unzipped).
-- **VcfFrameOLD** : The VcfFrame module is designed for working with VCF files (both zipped and unzipped).
 - **common** : The common module is used by other fuc modules such as VcfFrame and BedFrame. It also provides many useful methods.
 
 For getting help on a specific module (e.g. `VcfFrame`):
@@ -101,7 +102,7 @@ CLASSES
         VcfFrame
     
     class VcfFrame(builtins.object)
-     |  VcfFrame(meta, data)
+     |  VcfFrame(meta, df)
      |  
      |  Class for storing VCF data.
      |  
@@ -123,14 +124,42 @@ CLASSES
      |  
      |  Methods defined here:
      |  
-     |  __init__(self, meta, data)
+     |  __init__(self, meta, df)
      |      Initialize self.  See help(type(self)) for accurate signature.
      |  
      |  add_dp(self)
      |      Compute and add the DP subfield of the FORMAT field.
      |  
+     |  compare(self, n1, n2)
+     |      Compare two samples within the VcfFrame.
+     |      
+     |      Parameters
+     |      ----------
+     |      n1 : str
+     |          Test sample.
+     |      n2 : str
+     |          Truth sample.
+     |      
+     |      Returns
+     |      -------
+     |      result : tuple
+     |          Comparison result (tp, fp, fn, tn).
+     |  
      |  filter_af(self, threshold=0.1)
      |      Filter rows based on the AF subfield of the FORMAT field.
+     |  
+     |  filter_bed(self, bed)
+     |      Filter rows based on BED data.
+     |      
+     |      Parameters
+     |      ----------
+     |      bed : BedFrame or str
+     |          BedFrame or path to a BED file.
+     |      
+     |      Returns
+     |      -------
+     |      vf : VcfFrame
+     |          Filtered VcfFrame.
      |  
      |  filter_dp(self, threshold=200)
      |      Filter rows based on the DP subfield of the FORMAT field.
@@ -173,6 +202,9 @@ CLASSES
      |  
      |  to_file(self, file_path)
      |      Write the VcfFrame to a VCF file.
+     |  
+     |  to_string(self)
+     |      Render the VcfFrame to a console-friendly tabular output.
      |  
      |  ----------------------------------------------------------------------
      |  Class methods defined here:

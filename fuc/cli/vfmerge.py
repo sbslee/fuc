@@ -1,6 +1,8 @@
 from fuc.api.common import get_script_name
 from fuc.api.VcfFrame import VcfFrame
 
+CHOICES = ['left', 'right', 'outer', 'inner', 'cross']
+
 def create_parser(subparsers):
     parser = subparsers.add_parser(
         get_script_name(__file__),
@@ -8,17 +10,21 @@ def create_parser(subparsers):
         description='This command will merge multiple VCF files (both zipped '
                     'and unzipped). By default, only the GT subfield of '
                     'the FORMAT field will be included in the merged VCF. '
-                    "Use '--format_subfields' to include additional FORMAT "
+                    "Use '--format' to include additional FORMAT "
                     'subfields such as AD and DP.'
     )
-    parser.add_argument('input_vcf', help='input VCF files', nargs='+')
-    parser.add_argument('--format_subfields', help='FORMAT subfields',
-        nargs='+')
+    parser.add_argument('vcf_files', help='VCF files', nargs='+')
+    parser.add_argument('--how', metavar='TEXT', choices=CHOICES,
+         default='inner', help=f'type of merge to be performed {CHOICES} '
+        "(default: 'inner')")
+    parser.add_argument('--format', metavar='TEXT', default='GT',
+        help="FORMAT subfields to be retained (e.g. 'GT:AD:DP') "
+        "(default: 'GT')"
+    )
 
 def main(args):
-    vcf_list = [VcfFrame.from_file(x) for x in args.input_vcf]
-    merged_vcf = vcf_list[0]
-    for vcf in vcf_list[1:]:
-        merged_vcf = merged_vcf.merge(vcf,
-            format_subfields=args.format_subfields)
-    print(merged_vcf.to_string())
+    vfs = [VcfFrame.from_file(x) for x in args.vcf_files]
+    merged_vf = vfs[0]
+    for vf in vfs[1:]:
+        merged_vf = merged_vf.merge(vf, format=args.format, how=args.how)
+    print(merged_vf.to_string())

@@ -6,14 +6,14 @@ def create_parser(subparsers):
         get_script_name(__file__),
         help='[BED] find intersection of two or more BED files',
         description='This command will compute intersections beween '
-            'multiple BED files.'
+            'multiple BED files. It essentially wraps the '
+            '`pyranges.PyRanges.intersect` method.'
     )
-    parser.add_argument('input_bed', help='input BED files', nargs='+')
-    parser.add_argument('output_bed', help='output BED file')
+    parser.add_argument('bed_files', help='BED files', nargs='+')
 
 def main(args):
-    bed_list = [BedFrame.from_read(x) for x in args.input_bed]
-    final_bed = bed_list[0]
-    for bed in bed_list[1:]:
-        final_bed = final_bed.intersect(bed)
-    final_bed.write(args.output_bed)
+    bfs = [BedFrame.from_file(x) for x in args.bed_files]
+    final_bf = bfs[0]
+    for bf in bfs[1:]:
+        final_bf = final_bf.intersect(bf)
+    print(final_bf.to_string())

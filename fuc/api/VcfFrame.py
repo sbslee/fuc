@@ -6,6 +6,11 @@ and unzipped).
 import pandas as pd
 import gzip
 from copy import deepcopy
+from .BedFrame import BedFrame
+
+def _has_var(x):
+    """Return True if the GT field has a variant (e.g. 0/1)."""
+    return x.split(':')[0].replace('/', '').replace('.', '').replace('0', '')
 
 class VcfFrame:
     """Class for storing VCF data.
@@ -26,14 +31,14 @@ class VcfFrame:
         8. INFO - Semicolon-separated series of additional information fields.
         9. FORMAT - Colon-separated series of genotype fields.
     """
-    def __init__(self, meta, data):
+    def __init__(self, meta, df):
         self.meta = meta
-        self.data = data
+        self.df = df
 
     @property
     def samples(self):
         """Return a list of the sample IDs."""
-        return self.data.columns[9:].to_list()
+        return self.df.columns[9:].to_list()
 
     @classmethod
     def from_file(cls, file_path):
@@ -50,8 +55,8 @@ class VcfFrame:
                 skip_rows += 1
             else:
                 break
-        data = pd.read_table(file_path, skiprows=skip_rows)
-        vf = cls(meta, data)
+        df = pd.read_table(file_path, skiprows=skip_rows)
+        vf = cls(meta, df)
         f.close()
         return vf
 
@@ -60,7 +65,15 @@ class VcfFrame:
         with open(file_path, 'w') as f:
             if self.meta:
                 f.write('\n'.join(self.meta) + '\n')
-            self.data.to_csv(f, sep='\t', index=False)
+            self.df.to_csv(f, sep='\t', index=False)
+
+    def to_string(self):
+        """Render the VcfFrame to a console-friendly tabular output."""
+        s = ''
+        if self.meta:
+            s += '\n'.join(self.meta) + '\n'
+        s += self.df.to_string(index=False)
+        return s
 
     def strip(self, format='GT'):
         """Remove unnecessary data from the VcfFrame.
@@ -80,11 +93,11 @@ class VcfFrame:
             infunc = lambda x: ':'.join([x.split(':')[i] for i in idx])
             r.iloc[9:] = r.iloc[9:].apply(infunc)
             return r
-        data = self.data.copy()
-        data[['ID', 'QUAL', 'FILTER', 'INFO']] = '.'
-        data = data.apply(outfunc, axis=1)
-        data['FORMAT'] = format
-        vf = self.__class__([], data)
+        df = self.df.copy()
+        df[['ID', 'QUAL', 'FILTER', 'INFO']] = '.'
+        df = df.apply(outfunc, axis=1)
+        df['FORMAT'] = format
+        vf = self.__class__([], df)
         return vf
 
     def merge(self, other, how='inner', format='GT'):
@@ -111,10 +124,10 @@ class VcfFrame:
         vf2 = other.strip(format=format)
         dropped = ['ID', 'QUAL', 'FILTER', 'INFO', 'FORMAT']
         shared = ['#CHROM', 'POS', 'REF', 'ALT']
-        data = vf1.data.merge(vf2.data.drop(columns=dropped),
+        df = vf1.df.merge(vf2.df.drop(columns=dropped),
             on=shared, how=how)
-        data[dropped] = data[dropped].fillna('.')
-        data['FORMAT'] = format
+        df[dropped] = df[dropped].fillna('.')
+        df['FORMAT'] = format
         def func(r):
             n = len(r['FORMAT'].split(':'))
             x = '/'.join(['.' for x in r.iloc[9:].dropna()[0].split('/')])
@@ -122,8 +135,8 @@ class VcfFrame:
                 x += ':.'
             r = r.fillna(x)
             return r
-        data = data.apply(func, axis=1)
-        vf3 = self.__class__([], data)
+        df = df.apply(func, axis=1)
+        vf3 = self.__class__([], df)
         return vf3
 
     def add_dp(self):
@@ -141,8 +154,8 @@ class VcfFrame:
             r.iloc[9:] = r.iloc[9:].apply(infunc)
             r['FORMAT'] += ':DP'
             return r
-        data = self.data.apply(outfunc, axis=1)
-        vf = self.__class__(deepcopy(self.meta), data)
+        df = self.df.apply(outfunc, axis=1)
+        vf = self.__class__(deepcopy(self.meta), df)
         return vf
 
     def filter_dp(self, threshold=200):
@@ -157,8 +170,8 @@ class VcfFrame:
                 return x
             r.iloc[9:] = r.iloc[9:].apply(infunc)
             return r
-        data = self.data.apply(outfunc, axis=1)
-        vf = self.__class__(deepcopy(self.meta), data)
+        df = self.df.apply(outfunc, axis=1)
+        vf = self.__class__(deepcopy(self.meta), df)
         return vf
 
     def filter_af(self, threshold=0.1):
@@ -173,15 +186,73 @@ class VcfFrame:
                 return x
             r.iloc[9:] = r.iloc[9:].apply(infunc)
             return r
-        data = self.data.apply(outfunc, axis=1)
-        vf = self.__class__(deepcopy(self.meta), data)
+        df = self.df.apply(outfunc, axis=1)
+        vf = self.__class__(deepcopy(self.meta), df)
         return vf
 
     def filter_empty(self):
         """Filter out rows that have no genotype calls."""
         def func(r):
             return not all(r.iloc[9:].apply(lambda x: '.' in x.split(':')[0]))
-        i = self.data.apply(func, axis=1)
-        data = self.data[i]
-        vf = self.__class__(deepcopy(self.meta), data)
+        i = self.df.apply(func, axis=1)
+        df = self.df[i]
+        vf = self.__class__(deepcopy(self.meta), df)
         return vf
+
+    def filter_bed(self, bed):
+        """Filter rows based on BED data.
+
+        Parameters
+        ----------
+        bed : BedFrame or str
+            BedFrame or path to a BED file.
+
+        Returns
+        -------
+        vf : VcfFrame
+            Filtered VcfFrame.
+        """
+        if isinstance(bed, BedFrame):
+            bf = bed
+        else:
+            bf = BedFrame.from_file(bed)
+        def func(r):
+            return not bf.gr[r['#CHROM'], r['POS']:r['POS']+1].empty
+        i = self.df.apply(func, axis=1)
+        df = self.df[i]
+        vf = self.__class__(deepcopy(self.meta), df)
+        return vf
+
+    def compare(self, n1, n2):
+        """Compare two samples within the VcfFrame.
+
+        Parameters
+        ----------
+        n1 : str
+            Test sample.
+        n2 : str
+            Truth sample.
+
+        Returns
+        -------
+        result : tuple
+            Comparison result (tp, fp, fn, tn).
+        """
+        def func(r):
+            a = _has_var(r[n1])
+            b = _has_var(r[n2])
+            if a and b:
+                return 'tp'
+            elif a and not b:
+                return 'fp'
+            elif not a and b:
+                return 'fn'
+            else:
+                return 'tn'
+        d = self.df.apply(func, axis=1).value_counts().to_dict()
+        tp = d['tp'] if 'tp' in d else 0
+        fp = d['fp'] if 'fp' in d else 0
+        fn = d['fn'] if 'fn' in d else 0
+        tn = d['tn'] if 'tn' in d else 0
+        result = (tp, fp, fn, tn)
+        return result

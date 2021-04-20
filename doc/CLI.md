@@ -60,13 +60,13 @@ optional arguments:
 ### bfintxn <a name="bfintxn"></a>
 
 ```
-usage: fuc bfintxn [-h] input_bed [input_bed ...] output_bed
+usage: fuc bfintxn [-h] bed_files [bed_files ...]
 
-This command will compute intersections beween multiple BED files.
+This command will compute intersections beween multiple BED files. It
+essentially wraps the `pyranges.PyRanges.intersect` method.
 
 positional arguments:
-  input_bed   input BED files
-  output_bed  output BED file
+  bed_files   BED files
 
 optional arguments:
   -h, --help  show this help message and exit
@@ -77,8 +77,8 @@ optional arguments:
 ```
 usage: fuc bfsum [-h] [--bases BASES] [--decimals DECIMALS] bed_file
 
-This command computes summary statstics of the given BED file. This includes
-the total numbers of probes and covered base pairs for each chromosome. By
+This command will compute summary statstics of the BED file. This includes the
+total numbers of probes and covered base pairs for each chromosome. By
 default, covered base paris are displayed in bp, but if you prefer you can,
 for example, use '--bases 1000' to display base pairs in kb.
 
@@ -125,7 +125,7 @@ optional arguments:
 ```
 usage: fuc dfsum [-h] [--delimiter TEXT] text_file
 
-This command will summarize a text file. This essentially wraps the
+This command will summarize a text file. It essentially wraps the
 `pandas.DataFrame.describe` method.
 
 positional arguments:
@@ -201,21 +201,21 @@ optional arguments:
 ### vfmerge <a name="vfmerge"></a>
 
 ```
-usage: fuc vfmerge [-h]
-                   [--format_subfields FORMAT_SUBFIELDS [FORMAT_SUBFIELDS ...]]
-                   input_vcf [input_vcf ...]
+usage: fuc vfmerge [-h] [--how TEXT] [--format TEXT] vcf_files [vcf_files ...]
 
 This command will merge multiple VCF files (both zipped and unzipped). By
 default, only the GT subfield of the FORMAT field will be included in the
-merged VCF. Use '--format_subfields' to include additional FORMAT subfields
-such as AD and DP.
+merged VCF. Use '--format' to include additional FORMAT subfields such as AD
+and DP.
 
 positional arguments:
-  input_vcf             input VCF files
+  vcf_files      VCF files
 
 optional arguments:
-  -h, --help            show this help message and exit
-  --format_subfields FORMAT_SUBFIELDS [FORMAT_SUBFIELDS ...]
-                        FORMAT subfields
+  -h, --help     show this help message and exit
+  --how TEXT     type of merge to be performed ['left', 'right', 'outer',
+                 'inner', 'cross'] (default: 'inner')
+  --format TEXT  FORMAT subfields to be retained (e.g. 'GT:AD:DP') (default:
+                 'GT')
 ```
 
