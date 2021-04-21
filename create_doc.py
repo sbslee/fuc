@@ -32,6 +32,9 @@ readme = """
 README
 ******
 
+.. image:: https://badge.fury.io/py/fuc.svg
+    :target: https://badge.fury.io/py/fuc
+
 .. image:: https://readthedocs.org/projects/sbslee-fuc/badge/?version=latest
    :target: https://sbslee-fuc.readthedocs.io/en/latest/?badge=latest
    :alt: Documentation Status
@@ -81,13 +84,23 @@ The following packages are required to run ``fuc``:
 Getting Started
 ===============
 
-To install ``fuc``, enter the following in your terminal:
+There are various ways you can install ``fuc``. The easiest one would be to use ``pip``:
+
+.. code-block:: console
+
+   $ pip install fuc
+
+Above will automatically download and install all the dependencies as well.
+
+Alternatively, you can clone the GitHub repository and then install ``fuc`` this way:
 
 .. code-block:: console
 
    $ git clone https://github.com/sbslee/fuc
    $ cd fuc
    $ pip install .
+
+Above will also allow you to install a development version that's not available in PyPI.
 
 For getting help on CLI:
 
