@@ -7,170 +7,202 @@ from fuc import VcfFrame
 import fuc
 
 modules = [x for x in dir(fuc) if x not in ['api', 'cli'] and '__' not in x]
-readme_file = f'{fuc_dir()}/README.md'
-cli_file = f'{fuc_dir()}/doc/CLI.md'
-api_file = f'{fuc_dir()}/doc/API.md'
 
-# -- README.md ---------------------------------------------------------------
+# -- README.rst ---------------------------------------------------------------
+
+readme_file = f'{fuc_dir()}/README.rst'
+
+fuc_help = subprocess.run(['fuc', '-h'], capture_output=True, text=True, check=True).stdout
+fuc_help = '\n'.join(['   ' + x for x in fuc_help.splitlines()])
+
+vfmerge_help = subprocess.run(['fuc', 'vfmerge', '-h'], capture_output=True, text=True, check=True).stdout
+vfmerge_help = '\n'.join(['   ' + x for x in fuc_help.splitlines()])
+
+module_help = ''
+for module in modules:
+    description = pydoc.getdoc(getattr(fuc, module)).replace('\n', ' ')
+    module_help += f'- **{module}** : {description}\n'
+
+vcfframe_help = pydoc.render_doc(VcfFrame, renderer=pydoc.plaintext)
+vcfframe_help = '\n'.join(['   ' + x for x in vcfframe_help.splitlines()])
+
+d = dict(fuc_help=fuc_help, vfmerge_help=vfmerge_help, module_help=module_help, vcfframe_help=vcfframe_help)
+
+readme = """
+README
+******
+
+Introduction
+============
+
+The main goal of the ``fuc`` package is to wrap some of the most frequently used commands in the field of bioinformatics into one place.
+
+You can use ``fuc`` for both command line interface (CLI) and application programming interface (API) whose documentations are available at `Read the Docs <https://fuc.readthedocs.io/en/latest/>`_.
+
+Your contributions (e.g. feature ideas, pull requests) are most welcome.
+
+| Author: Seung-been "Steven" Lee
+| Email: sbstevenlee@gmail.com
+| License: MIT License
+
+Examples
+========
+
+To merge VCF files with CLI:
+
+.. code-block:: console
+
+   $ fuc vfmerge 1.vcf 2.vcf 3.vcf > merged.vcf
+
+To filter a VCF file based on a BED file using API:
+
+.. code:: python3
+
+   from fuc.api.VcfFrame import VcfFrame
+   vf = VcfFrame.from_file('original.vcf')
+   filtered_vf = vf.filter_bed('targets.bed')
+   filtered_vf.to_file('filtered.vcf')
+
+Required Packages
+=================
+
+The following packages are required to run ``fuc``:
+
+.. parsed-literal::
+
+   numpy
+   pandas
+   pyranges
+
+Getting Started
+===============
+
+To install ``fuc``, enter the following in your terminal:
+
+.. code-block:: console
+
+   $ git clone https://github.com/sbslee/fuc
+   $ cd fuc
+   $ pip install .
+
+For getting help on CLI:
+
+.. code-block:: console
+
+   $ fuc -h
+{fuc_help}
+
+For getting help on a specific command (e.g. `vfmerge`):
+
+.. code-block:: console
+
+   $ fuc vfmerge -h
+{vfmerge_help}
+
+Below is the list of modules available in API:
+
+{module_help}
+For getting help on a specific module (e.g. `VcfFrame`):
+
+.. code:: python3
+
+   from fuc.api import VcfFrame
+   help(VcfFrame)
+
+To give:
+
+.. parsed-literal::
+
+{vcfframe_help}
+""".format(**d)
 
 with open(readme_file, 'w') as f:
-    f.write('# README\n')
-    f.write('\n')
-    f.write('## Introduction\n')
-    f.write('\n')
-    f.write('The main goal of the `fuc` package is to wrap some of the most '
-            'frequently used commands in the field of bioinformatics '
-            'into one place.\n')
-    f.write('\n')
-    f.write('You can use `fuc` for both command line interface (CLI) '
-            'and application programming interface (API). Click '
-            '[here](doc/CLI.md) to see the CLI documentation and '
-            '[here](doc/API.md) to see the API documentation.\n')
-    f.write('\n')
-    f.write('Your contributions (e.g. feature ideas, pull requests) '
-            'are most welcome.\n')
-    f.write('\n')
-    f.write('Author: Seung-been "Steven" Lee<br/>\n')
-    f.write('Email: sbstevenlee@gmail.com<br/>\n')
-    f.write('License: MIT License\n')
-    f.write('\n')
-    f.write('## Examples\n')
-    f.write('\n')
-    f.write('To merge VCF files with CLI:\n')
-    f.write('\n')
-    f.write('```\n')
-    f.write('$ fuc vfmerge 1.vcf 2.vcf 3.vcf > merged.vcf\n')
-    f.write('```\n')
-    f.write('\n')
-    f.write('To filter a VCF file based on a BED file using API:\n')
-    f.write('\n')
-    f.write('```\n')
-    f.write('from fuc.api.VcfFrame import VcfFrame\n')
-    f.write("vf = VcfFrame.from_file('original.vcf')\n")
-    f.write("filtered_vf = vf.filter_bed('targets.bed')\n")
-    f.write("filtered_vf.to_file('filtered.vcf')\n")
-    f.write('```\n')
-    f.write('\n')
-    f.write('## Required Packages\n')
-    f.write('\n')
-    f.write('The following packages are required to run `fuc`:\n')
-    f.write('\n')
-    f.write('```\n')
-    f.write('numpy\n')
-    f.write('pandas\n')
-    f.write('pyranges\n')
-    f.write('```\n')
-    f.write('\n')
-    f.write('## Getting Started\n')
-    f.write('\n')
-    f.write('To install `fuc`, enter the following in your terminal:\n')
-    f.write('\n')
-    f.write('```\n')
-    f.write('$ git clone https://github.com/sbslee/fuc\n')
-    f.write('$ cd fuc\n')
-    f.write('$ pip install .\n')
-    f.write('```\n')
-    f.write('\n')
-    f.write('For getting help on CLI:\n')
-    f.write('\n')
-    f.write('```\n')
-    f.write('$ fuc -h\n')
-    args = ['fuc', '-h']
-    result = subprocess.run(args, capture_output=True, text=True, check=True)
-    f.write(result.stdout)
-    f.write('```\n')
-    f.write('\n')
-    example = 'vfmerge'
-    f.write(f'For getting help on a specific command (e.g. `{example}`):\n')
-    f.write('\n')
-    f.write('```\n')
-    f.write(f'$ fuc {example} -h\n')
-    args = ['fuc', example, '-h']
-    result = subprocess.run(args, capture_output=True, text=True, check=True)
-    f.write(result.stdout)
-    f.write('```\n')
-    f.write('\n')
-    f.write('Below is the list of modules available in API:\n')
-    f.write('\n')
-    for module in modules:
-        description = pydoc.getdoc(getattr(fuc, module)).replace('\n', ' ')
-        f.write(f'- **{module}** : {description}\n')
-    f.write('\n')
-    f.write('For getting help on a specific module (e.g. `VcfFrame`):\n')
-    f.write('\n')
-    f.write('```\n')
-    f.write('from fuc import VcfFrame\n')
-    f.write('help(VcfFrame)\n')
-    f.write('```\n')
-    f.write('\n')
-    f.write('To give:\n')
-    f.write('\n')
-    f.write('```\n')
-    result = pydoc.render_doc(VcfFrame, renderer=pydoc.plaintext)
-    f.write(result)
-    f.write('```\n')
+    f.write(readme.lstrip())
 
-# -- CLI.md ------------------------------------------------------------------
+# -- cli.rst -----------------------------------------------------------------
+
+cli_file = f'{fuc_dir()}/docs/cli.rst'
+
+cli = """
+CLI
+***
+
+Introduction
+============
+
+This section describes command line interface (CLI) for the ``fuc`` package.
+
+For getting help on CLI:
+
+.. code-block:: console
+
+   $ fuc -h
+{fuc_help}
+
+For getting help on a specific command (e.g. `vfmerge`):
+
+.. code-block:: console
+
+   $ fuc vfmerge -h
+{vfmerge_help}
+
+""".format(**d)
+
+for command in commands:
+    s = f'{command}\n'
+    s += '=' * (len(s)-1) + '\n'
+    s += '\n'
+    s += '.. code-block:: console\n'
+    s += '\n'
+    s += f'   $ fuc {command} -h\n'
+    command_help = subprocess.run(['fuc', command, '-h'], capture_output=True, text=True, check=True).stdout
+    command_help = '\n'.join(['   ' + x for x in command_help.splitlines()])
+    s += command_help + '\n'
+    s += '\n'
+    cli += s
 
 with open(cli_file, 'w') as f:
-    f.write('# CLI\n')
-    f.write('\n')
-    f.write('## Table of contents\n')
-    f.write('\n')
-    f.write('* [Introduction](#Introduction)\n')
-    f.write('* [Commands](#Commands)\n')
-    for command in commands:
-        f.write(f'\t* [{command}](#{command}) \n')
-    f.write('\n')
-    f.write('## Introduction <a name="Introduction"></a>\n')
-    f.write('\n')
-    f.write('For getting help on CLI:\n')
-    f.write('\n')
-    f.write('```\n')
-    f.write('$ fuc -h\n')
-    args = ['fuc', '-h']
-    result = subprocess.run(args, capture_output=True, text=True, check=True)
-    f.write(result.stdout)
-    f.write('```\n')
-    f.write('\n')
-    example = 'vfmerge'
-    f.write(f'For getting help on a specific command (e.g. `{example}`):\n')
-    f.write('\n')
-    f.write('```\n')
-    f.write(f'$ fuc {example} -h\n')
-    args = ['fuc', example, '-h']
-    result = subprocess.run(args, capture_output=True, text=True, check=True)
-    f.write(result.stdout)
-    f.write('```\n')
-    f.write('\n')
-    f.write('## Commands <a name="Commands"></a>\n')
-    f.write('\n')
-    for command in commands:
-        args = ['fuc', command, '-h']
-        result = subprocess.run(args, capture_output=True,
-            text=True, check=True)
-        f.write(f'### {command} <a name="{command}"></a>\n')
-        f.write('\n')
-        f.write('```\n')
-        f.write(result.stdout)
-        f.write('```\n')
-        f.write('\n')
+    f.write(cli.lstrip())
 
-# -- API.md ------------------------------------------------------------------
+# -- api.rst -----------------------------------------------------------------
+
+api_file = f'{fuc_dir()}/docs/api.rst'
+
+api = """
+API
+***
+
+Introduction
+============
+
+This section describes application programming interface (API) for the ``fuc`` package.
+
+Below is the list of modules available in API:
+
+{module_help}
+For getting help on a specific module (e.g. `VcfFrame`):
+
+.. code:: python3
+
+   from fuc.api import VcfFrame
+   help(VcfFrame)
+
+To give:
+
+.. parsed-literal::
+
+{vcfframe_help}
+
+""".format(**d)
+
+for module in modules:
+    s = f'fuc.api.{module}\n'
+    s += '=' * (len(s)-1) + '\n'
+    s += '\n'
+    s += f'.. automodule:: fuc.api.{module}\n'
+    s += '   :members:\n'
+    s += '\n'
+    api += s
 
 with open(api_file, 'w') as f:
-    f.write('# API\n')
-    f.write('\n')
-    f.write('## Table of contents\n')
-    f.write('\n')
-    for module in modules:
-        f.write(f'* [{module}](#{module}) \n')
-    f.write('\n')
-    for module in modules:
-        f.write(f'## {module} <a name="{module}"></a>\n')
-        f.write('\n')
-        f.write('```\n')
-        doc = pydoc.render_doc(getattr(fuc, module), renderer=pydoc.plaintext)
-        f.write(f'{doc}')
-        f.write('```\n')
-        f.write('\n')
+    f.write(api.lstrip())

@@ -14,7 +14,7 @@ HEADERS = ['Chromosome', 'Start', 'End', 'Name',
 class BedFrame:
     """Class for storing BED data.
 
-    This class is essentially a wrapper for the `pyranges` package
+    This class is essentially a wrapper for the ``pyranges`` package
     (https://github.com/biocore-ntnu/pyranges).
 
     BED lines have three required fields and nine additional optional fields:
