@@ -239,9 +239,9 @@ class VcfFrame:
         Parameters
         ----------
         n1 : str or int
-            Name of index of the test sample.
+            Name or index of the test sample.
         n2 : str or int
-            Name of index of the truth sample.
+            Name or index of the truth sample.
 
         Returns
         -------
@@ -268,6 +268,68 @@ class VcfFrame:
         tn = d['tn'] if 'tn' in d else 0
         result = (tp, fp, fn, tn)
         return result
+
+    def combine(self, n1, n2):
+        """Return a new column after combining data from the two samples.
+
+        Parameters
+        ----------
+        n1 : str or int
+            Name or index of the first (or original) sample.
+        n2 : str or int
+            Name or index of the second (or replicate) sample.
+
+        Returns
+        -------
+        s : pandas.Series
+            VCF column corresponding to a new sample.
+        """
+        n1 = n1 if isinstance(n1, str) else self.samples[n1]
+        n2 = n2 if isinstance(n2, str) else self.samples[n2]
+        def func(r):
+            a = _has_var(r[n1])
+            b = _has_var(r[n2])
+            if a and b:
+                return r[n1]
+            elif a and not b:
+                return r[n1]
+            elif not a and b:
+                return r[n2]
+            else:
+                return r[n1]
+        s = self.df.apply(func, axis=1)
+        return s
+
+    def subtract(self, n1, n2):
+        """Return a new column after subtracting data from the two samples.
+
+        Parameters
+        ----------
+        n1 : str or int
+            Name or index of the first (or somatic) sample.
+        n2 : str or int
+            Name or index of the second (or germline) sample.
+
+        Returns
+        -------
+        s : pandas.Series
+            VCF column corresponding to a new sample.
+        """
+        n1 = n1 if isinstance(n1, str) else self.samples[n1]
+        n2 = n2 if isinstance(n2, str) else self.samples[n2]
+        def func(r):
+            a = _has_var(r[n1])
+            b = _has_var(r[n2])
+            if a and b:
+                return r[n1]
+            elif a and not b:
+                return r[n1]
+            elif not a and b:
+                return r[n2]
+            else:
+                return r[n1]
+        s = self.df.apply(func, axis=1)
+        return s
 
     def reset_samples(self, names):
         """Reset the sample list."""
