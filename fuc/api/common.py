@@ -29,3 +29,18 @@ def get_most_similar(a, l):
     m = max(s)
     i = [i for i, x in enumerate(s) if x == m][0]
     return l[i]
+
+def sumstat(tp, fp, fn, tn):
+    """Return various important statistics."""
+    d = {
+        'tpr': tp / (tp + fn), # sensitivity, recall, hit rate
+        'tnr': tn / (tn + fp), # specificity, selectivity
+        'ppv': tp / (tp + fp), # precision
+        'npv': tn / (tn + fn),
+        'fnr': fn / (fn + tp), # miss rate
+        'fpr': fp / (fp + tn), # fall-out rate
+        'fdr': fp / (fp + tp),
+        'for': fn / (fn + tn),
+        'acc': (tp + tn) / (tp + tn + fp + fn),
+    }
+    return d
