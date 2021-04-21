@@ -24,7 +24,7 @@ class BedFrame:
     3. chromEnd (required) - The ending position of the feature.
     4. name (optional) - Defines the name of the BED line.
     5. score (optional) - A score between 0 and 1000 for color density.
-    6. strand (optional) - Either "." (=no strand) or "+" or "-".
+    6. strand (optional) - Either ``.`` (=no strand) or ``+`` or ``-``.
     7. thickStart (optional) - The starting position for thick drawing.
     8. thickEnd (optional) - The ending position for thick drawing.
     9. itemRgb (optional) - An RGB value (e.g. 255,0,0).

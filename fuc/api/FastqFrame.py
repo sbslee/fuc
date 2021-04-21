@@ -10,6 +10,7 @@ import gzip
 
 @dataclass(unsafe_hash=True)
 class FastqRecord:
+    """Class for storing sequence read data."""
     id   : str = field(compare=False)
     seq  : str = field(compare=True)
     ext  : str = field(compare=False)
@@ -17,6 +18,7 @@ class FastqRecord:
 
 @dataclass
 class FastqFrame:
+    """Class for storing FASTQ data."""
     data : List[FastqRecord]
 
     @property

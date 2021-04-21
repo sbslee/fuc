@@ -16,7 +16,7 @@ fuc_help = subprocess.run(['fuc', '-h'], capture_output=True, text=True, check=T
 fuc_help = '\n'.join(['   ' + x for x in fuc_help.splitlines()])
 
 vfmerge_help = subprocess.run(['fuc', 'vfmerge', '-h'], capture_output=True, text=True, check=True).stdout
-vfmerge_help = '\n'.join(['   ' + x for x in fuc_help.splitlines()])
+vfmerge_help = '\n'.join(['   ' + x for x in vfmerge_help.splitlines()])
 
 module_help = ''
 for module in modules:

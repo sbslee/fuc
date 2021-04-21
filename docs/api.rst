@@ -47,7 +47,7 @@ To give:
         |  
         |  VCF lines have nine required fields for storing variant data and
         |  variable-length fields for storing sample genotype data. In all cases,
-        |  missing values are specified with a dot ('.'). The required fields are:
+        |  missing values are specified with a dot (``.``). The required fields are:
         |  
         |  1. CHROM - An identifier from the reference genome.
         |  2. POS - The 1-based reference position.
