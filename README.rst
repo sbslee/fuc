@@ -1,12 +1,16 @@
 README
 ******
 
+.. image:: https://readthedocs.org/projects/sbslee-fuc/badge/?version=latest
+   :target: https://sbslee-fuc.readthedocs.io/en/latest/?badge=latest
+   :alt: Documentation Status
+
 Introduction
 ============
 
 The main goal of the ``fuc`` package is to wrap some of the most frequently used commands in the field of bioinformatics into one place.
 
-You can use ``fuc`` for both command line interface (CLI) and application programming interface (API) whose documentations are available at `Read the Docs <https://fuc.readthedocs.io/en/latest/>`_.
+You can use ``fuc`` for both command line interface (CLI) and application programming interface (API) whose documentations are available at `Read the Docs <https://sbslee-fuc.readthedocs.io/en/latest/>`_.
 
 Your contributions (e.g. feature ideas, pull requests) are most welcome.
 
