@@ -31,6 +31,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
     'sphinx_rtd_theme',
+    'sphinx_issues'
 ]
 
 autodoc_mock_imports = [
@@ -38,6 +39,8 @@ autodoc_mock_imports = [
     'pandas',
     'pyranges'
 ]
+
+issues_github_path = 'sbslee/fuc'
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
