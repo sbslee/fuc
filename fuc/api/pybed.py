@@ -1,5 +1,5 @@
 """
-The ``pybed`` module is designed for working with BED files. For example,
+The ``pybed`` submodule is designed for working with BED files. For example,
 it can be used to find the intersection between multiple BED files.
 """
 

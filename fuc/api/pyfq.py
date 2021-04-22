@@ -1,5 +1,5 @@
 """
-The ``pyfq`` module is designed for working with FASTQ files (both zipped
+The ``pyfq`` submodule is designed for working with FASTQ files (both zipped
 and unzipped).
 """
 

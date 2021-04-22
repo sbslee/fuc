@@ -1,5 +1,5 @@
 """
-The ``pyvcf`` module is designed for working with VCF files (both zipped
+The ``pyvcf`` submodule is designed for working with VCF files (both zipped
 and unzipped).
 """
 

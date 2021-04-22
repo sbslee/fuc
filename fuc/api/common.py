@@ -1,6 +1,6 @@
 """
-The common module is used by other ``fuc`` modules such as `VcfFrame` and
-`BedFrame`. It also provides many useful methods.
+The ``common`` submodule is used by other ``fuc`` submodules such as
+`pyvcf` and `pybed`. It also provides many useful methods.
 """
 
 import pathlib
