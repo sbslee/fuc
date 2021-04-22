@@ -29,7 +29,7 @@ For getting help on CLI:
      -h, --help     show this help message and exit
      -v, --version  show the version number and exit
 
-For getting help on a specific command (e.g. `vfmerge`):
+For getting help on a specific command (e.g. ``vfmerge``):
 
 .. code-block:: console
 

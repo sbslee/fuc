@@ -103,7 +103,7 @@ For getting help on CLI:
    $ fuc -h
 {fuc_help}
 
-For getting help on a specific command (e.g. `vfmerge`):
+For getting help on a specific command (e.g. ``vfmerge``):
 
 .. code-block:: console
 
@@ -112,7 +112,7 @@ For getting help on a specific command (e.g. `vfmerge`):
 Below is the list of submodules available in API:
 
 {module_help}
-For getting help on a specific module (e.g. `pyvcf`):
+For getting help on a specific module (e.g. ``pyvcf``):
 
 .. code:: python3
 
@@ -144,7 +144,7 @@ For getting help on CLI:
    $ fuc -h
 {fuc_help}
 
-For getting help on a specific command (e.g. `vfmerge`):
+For getting help on a specific command (e.g. ``vfmerge``):
 
 .. code-block:: console
 
@@ -184,7 +184,7 @@ This section describes application programming interface (API) for the ``fuc`` p
 Below is the list of submodules available in API:
 
 {module_help}
-For getting help on a specific module (e.g. `pyvcf`):
+For getting help on a specific module (e.g. ``pyvcf``):
 
 .. code:: python3
 

@@ -13,7 +13,7 @@ Below is the list of submodules available in API:
 - **pyfq** : The ``pyfq`` submodule is designed for working with FASTQ files (both zipped and unzipped).
 - **pyvcf** : The ``pyvcf`` submodule is designed for working with VCF files (both zipped and unzipped).
 
-For getting help on a specific module (e.g. `pyvcf`):
+For getting help on a specific module (e.g. ``pyvcf``):
 
 .. code:: python3
 
