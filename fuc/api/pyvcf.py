@@ -1,12 +1,53 @@
 """
-The VcfFrame module is designed for working with VCF files (both zipped
+The ``pyvcf`` module is designed for working with VCF files (both zipped
 and unzipped).
 """
 
 import pandas as pd
 import gzip
 from copy import deepcopy
-from .BedFrame import BedFrame
+from . import pybed
+
+def read_file(fn):
+    """Create a VcfFrame from a VCF file (both zipped and unzipped)."""
+    meta = []
+    skip_rows = 0
+    if fn.endswith('.gz'):
+        f = gzip.open(fn, 'rt')
+    else:
+        f = open(fn)
+    for line in f:
+        if line.startswith('##'):
+            meta.append(line.strip())
+            skip_rows += 1
+        else:
+            break
+    df = pd.read_table(fn, skiprows=skip_rows)
+    vf = VcfFrame(meta, df)
+    f.close()
+    return vf
+
+def merge(vfs, how='inner', format='GT'):
+    """Return the merged VcfFrame.
+
+    Parameters
+    ----------
+    vfs : list
+        List of VcfFrames to be merged.
+    how : str, default: 'inner'
+        Type of merge as defined in `pandas.DataFrame.merge`.
+    format : str, default: 'GT'
+        FORMAT subfields to be retained (e.g. 'GT:AD:DP').
+
+    Returns
+    -------
+    merged_vf : VcfFrame
+        Merged VcfFrame.
+    """
+    merged_vf = vfs[0]
+    for vf in vfs[1:]:
+        merged_vf = merged_vf.merge(vf, how=how, format=format)
+    return merged_vf
 
 def _has_var(x):
     """Return True if the GT field has a variant (e.g. 0/1)."""
@@ -40,26 +81,6 @@ class VcfFrame:
     def samples(self):
         """Return a list of the sample IDs."""
         return self.df.columns[9:].to_list()
-
-    @classmethod
-    def from_file(cls, file_path):
-        """Create a VcfFrame from a VCF file."""
-        meta = []
-        skip_rows = 0
-        if file_path.endswith('.gz'):
-            f = gzip.open(file_path, 'rt')
-        else:
-            f = open(file_path)
-        for line in f:
-            if line.startswith('##'):
-                meta.append(line.strip())
-                skip_rows += 1
-            else:
-                break
-        df = pd.read_table(file_path, skiprows=skip_rows)
-        vf = cls(meta, df)
-        f.close()
-        return vf
 
     def to_file(self, file_path):
         """Write the VcfFrame to a VCF file."""
@@ -104,15 +125,12 @@ class VcfFrame:
     def merge(self, other, how='inner', format='GT'):
         """Merge with the other VcfFrame.
 
-        This method essentially wraps the `pandas.DataFrame.merge` method.
-
         Parameters
         ----------
         other : VcfFrame
             Other VcfFrame.
         how : str, default: 'inner'
-            Type of merge to be performed. ['left', 'right', 'outer',
-            'inner', 'cross']
+            Type of merge as defined in `pandas.DataFrame.merge`.
         format : str, default: 'GT'
             FORMAT subfields to be retained (e.g. 'GT:AD:DP').
 
@@ -214,18 +232,18 @@ class VcfFrame:
 
         Parameters
         ----------
-        bed : BedFrame or str
-            BedFrame or path to a BED file.
+        bed : pybed.BedFrame or str
+            pybed.BedFrame or path to a BED file.
 
         Returns
         -------
         vf : VcfFrame
             Filtered VcfFrame.
         """
-        if isinstance(bed, BedFrame):
+        if isinstance(bed, pybed.BedFrame):
             bf = bed
         else:
-            bf = BedFrame.from_file(bed)
+            bf = pybed.read_file(bed)
         def func(r):
             return not bf.gr[r['#CHROM'], r['POS']:r['POS']+1].empty
         i = self.df.apply(func, axis=1)

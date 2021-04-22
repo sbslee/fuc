@@ -8,29 +8,29 @@ This section describes application programming interface (API) for the ``fuc`` p
 
 Below is the list of modules available in API:
 
-- **BedFrame** : The BedFrame module is designed for working with BED files. For example, it can be used to find the intersection between multiple BED files.
-- **FastqFrame** : The FastqFrame module is designed for working with FASTQ files (both zipped and unzipped).
-- **VcfFrame** : The VcfFrame module is designed for working with VCF files (both zipped and unzipped).
 - **common** : The common module is used by other ``fuc`` modules such as `VcfFrame` and `BedFrame`. It also provides many useful methods.
+- **pybed** : The ``pybed`` module is designed for working with BED files. For example, it can be used to find the intersection between multiple BED files.
+- **pyfq** : The ``pyfq`` module is designed for working with FASTQ files (both zipped and unzipped).
+- **pyvcf** : The ``pyvcf`` module is designed for working with VCF files (both zipped and unzipped).
 
-For getting help on a specific module (e.g. `VcfFrame`):
+For getting help on a specific module (e.g. `pyvcf`):
 
 .. code:: python3
 
-   from fuc.api import VcfFrame
-   help(VcfFrame)
+   from fuc import pyvcf
+   help(pyvcf)
 
 To give:
 
 .. parsed-literal::
 
-   Python Library Documentation: module fuc.api.VcfFrame in fuc.api
+   Python Library Documentation: module fuc.api.pyvcf in fuc.api
    
    NAME
-       fuc.api.VcfFrame
+       fuc.api.pyvcf
    
    DESCRIPTION
-       The VcfFrame module is designed for working with VCF files (both zipped
+       The ``pyvcf`` module is designed for working with VCF files (both zipped
        and unzipped).
    
    CLASSES
@@ -110,8 +110,8 @@ To give:
         |      
         |      Parameters
         |      ----------
-        |      bed : BedFrame or str
-        |          BedFrame or path to a BED file.
+        |      bed : pybed.BedFrame or str
+        |          pybed.BedFrame or path to a BED file.
         |      
         |      Returns
         |      -------
@@ -130,15 +130,12 @@ To give:
         |  merge(self, other, how='inner', format='GT')
         |      Merge with the other VcfFrame.
         |      
-        |      This method essentially wraps the `pandas.DataFrame.merge` method.
-        |      
         |      Parameters
         |      ----------
         |      other : VcfFrame
         |          Other VcfFrame.
         |      how : str, default: 'inner'
-        |          Type of merge to be performed. ['left', 'right', 'outer',
-        |          'inner', 'cross']
+        |          Type of merge as defined in `pandas.DataFrame.merge`.
         |      format : str, default: 'GT'
         |          FORMAT subfields to be retained (e.g. 'GT:AD:DP').
         |      
@@ -239,12 +236,6 @@ To give:
         |          Updated VcfFrame.
         |  
         |  ----------------------------------------------------------------------
-        |  Class methods defined here:
-        |  
-        |  from_file(file_path) from builtins.type
-        |      Create a VcfFrame from a VCF file.
-        |  
-        |  ----------------------------------------------------------------------
         |  Readonly properties defined here:
         |  
         |  samples
@@ -259,31 +250,52 @@ To give:
         |  __weakref__
         |      list of weak references to the object (if defined)
    
-   FILE
-       /Users/sbslee/Desktop/fuc/fuc/api/VcfFrame.py
+   FUNCTIONS
+       merge(vfs, how='inner', format='GT')
+           Return the merged VcfFrame.
+           
+           Parameters
+           ----------
+           vfs : list
+               List of VcfFrames to be merged.
+           how : str, default: 'inner'
+               Type of merge as defined in `pandas.DataFrame.merge`.
+           format : str, default: 'GT'
+               FORMAT subfields to be retained (e.g. 'GT:AD:DP').
+           
+           Returns
+           -------
+           merged_vf : VcfFrame
+               Merged VcfFrame.
+       
+       read_file(fn)
+           Create a VcfFrame from a VCF file (both zipped and unzipped).
    
-
-fuc.api.BedFrame
-================
-
-.. automodule:: fuc.api.BedFrame
-   :members:
-
-fuc.api.FastqFrame
-==================
-
-.. automodule:: fuc.api.FastqFrame
-   :members:
-
-fuc.api.VcfFrame
-================
-
-.. automodule:: fuc.api.VcfFrame
-   :members:
+   FILE
+       /Users/sbslee/Desktop/fuc/fuc/api/pyvcf.py
+   
 
 fuc.api.common
 ==============
 
 .. automodule:: fuc.api.common
+   :members:
+
+fuc.api.pybed
+=============
+
+.. automodule:: fuc.api.pybed
+   :members:
+
+fuc.api.pyfq
+============
+
+.. automodule:: fuc.api.pyfq
+   :members:
+
+fuc.api.pyvcf
+=============
+
+.. automodule:: fuc.api.pyvcf
    :members:
 

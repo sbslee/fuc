@@ -1,5 +1,5 @@
 """
-The BedFrame module is designed for working with BED files. For example,
+The ``pybed`` module is designed for working with BED files. For example,
 it can be used to find the intersection between multiple BED files.
 """
 
@@ -10,6 +10,23 @@ from copy import deepcopy
 HEADERS = ['Chromosome', 'Start', 'End', 'Name',
            'Score', 'Strand', 'ThickStart', 'ThickEnd',
            'ItemRGB', 'BlockCount', 'BlockSizes', 'BlockStarts']
+
+def read_file(fn):
+    """Create a BedFrame from a BED file."""
+    meta = []
+    skip_rows = 0
+    with open(fn, 'r') as f:
+        for line in f:
+            if 'browser' in line or 'track' in line:
+                meta.append(line.strip())
+                skip_rows += 1
+            else:
+                headers = HEADERS[:len(line.strip().split())]
+                break
+    df = pd.read_table(fn, header=None, names=headers,
+        skiprows=skip_rows)
+    bf = BedFrame(meta, pr.PyRanges(df))
+    return bf
 
 class BedFrame:
     """Class for storing BED data.
@@ -38,24 +55,6 @@ class BedFrame:
     def __init__(self, meta, gr):
         self.meta = meta
         self.gr = gr
-
-    @classmethod
-    def from_file(cls, file_path):
-        """Create a BedFrame from a BED file."""
-        meta = []
-        skip_rows = 0
-        with open(file_path, 'r') as f:
-            for line in f:
-                if 'browser' in line or 'track' in line:
-                    meta.append(line.strip())
-                    skip_rows += 1
-                else:
-                    headers = HEADERS[:len(line.strip().split())]
-                    break
-        df = pd.read_table(file_path, header=None, names=headers,
-            skiprows=skip_rows)
-        bf = cls(meta, pr.PyRanges(df))
-        return bf
 
     def to_file(self, file_path):
         """Write the BedFrame to a BED file."""

@@ -21,7 +21,7 @@ For getting help on CLI:
        dfsum        [TABLE] summarize a text file
        fuccompf     [FUC] compare two files
        fucexist     [FUC] check whether files/dirs exist
-       qfcount      [FASTQ] count sequence reads in a FASTQ file
+       qfcount      [FASTQ] count sequence reads in FASTQ files
        qfsum        [FASTQ] summarize a FASTQ file
        vfmerge      [VCF] merge two or more VCF files
    
@@ -46,8 +46,8 @@ For getting help on a specific command (e.g. `vfmerge`):
    
    optional arguments:
      -h, --help     show this help message and exit
-     --how TEXT     type of merge to be performed ['left', 'right', 'outer',
-                    'inner', 'cross'] (default: 'inner')
+     --how TEXT     type of merge as defined in `pandas.DataFrame.merge`
+                    (default: 'inner')
      --format TEXT  FORMAT subfields to be retained (e.g. 'GT:AD:DP') (default:
                     'GT')
 
@@ -178,13 +178,14 @@ qfcount
 .. code-block:: console
 
    $ fuc qfcount -h
-   usage: fuc qfcount [-h] fastq_file
+   usage: fuc qfcount [-h] [paths ...]
    
-   This command will count sequence reads in a FASTQ file (both zipped and
-   unzipped).
+   This command will count sequence reads in FASTQ files (both zipped and
+   unzipped). It will look for stdin if there are no arguments (e.g. $ cat
+   files.list | fuc qfcount).
    
    positional arguments:
-     fastq_file  input FASTQ file
+     paths       FASTQ file paths (default: stdin)
    
    optional arguments:
      -h, --help  show this help message and exit
@@ -226,8 +227,8 @@ vfmerge
    
    optional arguments:
      -h, --help     show this help message and exit
-     --how TEXT     type of merge to be performed ['left', 'right', 'outer',
-                    'inner', 'cross'] (default: 'inner')
+     --how TEXT     type of merge as defined in `pandas.DataFrame.merge`
+                    (default: 'inner')
      --format TEXT  FORMAT subfields to be retained (e.g. 'GT:AD:DP') (default:
                     'GT')
 

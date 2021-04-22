@@ -3,7 +3,7 @@ import pydoc
 
 from fuc.api.common import fuc_dir
 from fuc.cli import commands
-from fuc import VcfFrame
+from fuc import pyvcf
 import fuc
 
 modules = [x for x in dir(fuc) if x not in ['api', 'cli'] and '__' not in x]
@@ -23,10 +23,10 @@ for module in modules:
     description = pydoc.getdoc(getattr(fuc, module)).replace('\n', ' ')
     module_help += f'- **{module}** : {description}\n'
 
-vcfframe_help = pydoc.render_doc(VcfFrame, renderer=pydoc.plaintext)
-vcfframe_help = '\n'.join(['   ' + x for x in vcfframe_help.splitlines()])
+pyvcf_help = pydoc.render_doc(pyvcf, renderer=pydoc.plaintext)
+pyvcf_help = '\n'.join(['   ' + x for x in pyvcf_help.splitlines()])
 
-d = dict(fuc_help=fuc_help, vfmerge_help=vfmerge_help, module_help=module_help, vcfframe_help=vcfframe_help)
+d = dict(fuc_help=fuc_help, vfmerge_help=vfmerge_help, module_help=module_help, pyvcf_help=pyvcf_help)
 
 readme = """
 README
@@ -65,8 +65,8 @@ To filter a VCF file based on a BED file using API:
 
 .. code:: python3
 
-   from fuc.api.VcfFrame import VcfFrame
-   vf = VcfFrame.from_file('original.vcf')
+   from fuc import pyvcf
+   vf = pyvcf.read_file('original.vcf')
    filtered_vf = vf.filter_bed('targets.bed')
    filtered_vf.to_file('filtered.vcf')
 
@@ -119,18 +119,18 @@ For getting help on a specific command (e.g. `vfmerge`):
 Below is the list of modules available in API:
 
 {module_help}
-For getting help on a specific module (e.g. `VcfFrame`):
+For getting help on a specific module (e.g. `pyvcf`):
 
 .. code:: python3
 
-   from fuc.api import VcfFrame
-   help(VcfFrame)
+   from fuc import pyvcf
+   help(pyvcf)
 
 To give:
 
 .. parsed-literal::
 
-{vcfframe_help}
+{pyvcf_help}
 """.format(**d)
 
 with open(readme_file, 'w') as f:
@@ -197,18 +197,18 @@ This section describes application programming interface (API) for the ``fuc`` p
 Below is the list of modules available in API:
 
 {module_help}
-For getting help on a specific module (e.g. `VcfFrame`):
+For getting help on a specific module (e.g. `pyvcf`):
 
 .. code:: python3
 
-   from fuc.api import VcfFrame
-   help(VcfFrame)
+   from fuc import pyvcf
+   help(pyvcf)
 
 To give:
 
 .. parsed-literal::
 
-{vcfframe_help}
+{pyvcf_help}
 
 """.format(**d)
 

@@ -1,5 +1,5 @@
 from fuc.api.common import get_script_name
-from fuc.api.FastqFrame import FastqFrame
+from fuc import pyfq
 
 def create_parser(subparsers):
     parser = subparsers.add_parser(
@@ -13,7 +13,7 @@ def create_parser(subparsers):
     parser.add_argument('fastq_file', help='input FASTQ file')
 
 def main(args):
-    qf = FastqFrame.from_file(args.fastq_file)
+    qf = pyfq.read_file(args.fastq_file)
     print(f'# Total: {qf.shape:,}')
     unique = len(set(qf.data))
     duplicate = qf.shape - unique
