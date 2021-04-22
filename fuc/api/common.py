@@ -1,6 +1,6 @@
 """
 The ``common`` submodule is used by other ``fuc`` submodules such as
-`pyvcf` and `pybed`. It also provides many useful methods.
+``pyvcf`` and ``pybed``. It also provides many useful methods.
 """
 
 import pathlib
