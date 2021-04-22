@@ -58,7 +58,7 @@ def merge(vfs, how='inner', format='GT'):
         merged_vf = merged_vf.merge(vf, how=how, format=format)
     return merged_vf
 
-def _has_var(x):
+def hasvar(x):
     """Return True if the GT field has a variant (e.g. 0/1)."""
     return x.split(':')[0].replace('/', '').replace('.', '').replace('0', '')
 
@@ -304,8 +304,8 @@ class VcfFrame:
         n1 = n1 if isinstance(n1, str) else self.samples[n1]
         n2 = n2 if isinstance(n2, str) else self.samples[n2]
         def func(r):
-            a = _has_var(r[n1])
-            b = _has_var(r[n2])
+            a = hasvar(r[n1])
+            b = hasvar(r[n2])
             if a and b:
                 return 'tp'
             elif a and not b:
@@ -345,8 +345,8 @@ class VcfFrame:
         n1 = n1 if isinstance(n1, str) else self.samples[n1]
         n2 = n2 if isinstance(n2, str) else self.samples[n2]
         def func(r):
-            a = _has_var(r[n1])
-            b = _has_var(r[n2])
+            a = hasvar(r[n1])
+            b = hasvar(r[n2])
             if a and b:
                 return r[n1]
             elif a and not b:
@@ -373,7 +373,7 @@ class VcfFrame:
         """
         name = name if isinstance(name, str) else self.samples[name]
         def func(r):
-            return not _has_var(r[name])
+            return not hasvar(r[name])
         i = self.df.apply(func, axis=1)
         df = self.df[i].reset_index(drop=True)
         vf = self.__class__(deepcopy(self.meta), df)

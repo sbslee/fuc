@@ -9,5 +9,6 @@ dependencies:
   - numpy
   - pandas
   - pyranges
+  - seaborn
   - sphinx-issues
   - sphinx_rtd_theme
