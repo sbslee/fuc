@@ -15,15 +15,12 @@ readme_file = f'{fuc_dir()}/README.rst'
 fuc_help = subprocess.run(['fuc', '-h'], capture_output=True, text=True, check=True).stdout
 fuc_help = '\n'.join(['   ' + x for x in fuc_help.splitlines()])
 
-vfmerge_help = subprocess.run(['fuc', 'vfmerge', '-h'], capture_output=True, text=True, check=True).stdout
-vfmerge_help = '\n'.join(['   ' + x for x in vfmerge_help.splitlines()])
-
 module_help = ''
 for module in modules:
     description = pydoc.getdoc(getattr(fuc, module)).replace('\n', ' ')
     module_help += f'- **{module}** : {description}\n'
 
-d = dict(fuc_help=fuc_help, vfmerge_help=vfmerge_help, module_help=module_help)
+d = dict(fuc_help=fuc_help, module_help=module_help)
 
 readme = """
 README
@@ -111,7 +108,6 @@ For getting help on a specific command (e.g. `vfmerge`):
 .. code-block:: console
 
    $ fuc vfmerge -h
-{vfmerge_help}
 
 Below is the list of modules available in API:
 
@@ -153,7 +149,6 @@ For getting help on a specific command (e.g. `vfmerge`):
 .. code-block:: console
 
    $ fuc vfmerge -h
-{vfmerge_help}
 
 """.format(**d)
 
@@ -195,7 +190,7 @@ For getting help on a specific module (e.g. `pyvcf`):
 
    from fuc import pyvcf
    help(pyvcf)
-   
+
 """.format(**d)
 
 for module in modules:

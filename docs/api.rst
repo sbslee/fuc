@@ -19,7 +19,7 @@ For getting help on a specific module (e.g. `pyvcf`):
 
    from fuc import pyvcf
    help(pyvcf)
-   
+
 fuc.api.common
 ==============
 
