@@ -227,6 +227,32 @@ class VcfFrame:
         vf = self.__class__(deepcopy(self.meta), df)
         return vf
 
+    def filter_indels(self, include=False):
+        """Filter out rows that have an indel.
+
+        Parameters
+        ----------
+        include : bool, default: False
+            If True, include such rows instead of excluding them.
+
+        Returns
+        -------
+        vf : VcfFrame
+            Filtered VcfFrame.
+        """
+        def func(r):
+            ref = len(r['REF']) > 1
+            alt = max([len(x) for x in r['ALT'].split(',')]) > 1
+            has_indel = any([ref, alt])
+            if include:
+                return has_indel
+            else:
+                return not has_indel
+        i = self.df.apply(func, axis=1)
+        df = self.df[i].reset_index(drop=True)
+        vf = self.__class__(deepcopy(self.meta), df)
+        return vf
+
     def filter_multiallelic(self):
         """Filter out rows that have multiple alternative alleles."""
         def func(r):
