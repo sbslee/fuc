@@ -109,7 +109,7 @@ For getting help on a specific command (e.g. `vfmerge`):
 
    $ fuc vfmerge -h
 
-Below is the list of modules available in API:
+Below is the list of submodules available in API:
 
 {module_help}
 For getting help on a specific module (e.g. `pyvcf`):
@@ -181,7 +181,7 @@ Introduction
 
 This section describes application programming interface (API) for the ``fuc`` package.
 
-Below is the list of modules available in API:
+Below is the list of submodules available in API:
 
 {module_help}
 For getting help on a specific module (e.g. `pyvcf`):

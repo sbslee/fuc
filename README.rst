@@ -100,7 +100,7 @@ For getting help on a specific command (e.g. `vfmerge`):
 
    $ fuc vfmerge -h
 
-Below is the list of modules available in API:
+Below is the list of submodules available in API:
 
 - **common** : The ``common`` submodule is used by other ``fuc`` submodules such as `pyvcf` and `pybed`. It also provides many useful methods.
 - **pybed** : The ``pybed`` submodule is designed for working with BED files. For example, it can be used to find the intersection between multiple BED files.
