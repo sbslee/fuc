@@ -23,10 +23,7 @@ for module in modules:
     description = pydoc.getdoc(getattr(fuc, module)).replace('\n', ' ')
     module_help += f'- **{module}** : {description}\n'
 
-pyvcf_help = pydoc.render_doc(pyvcf, renderer=pydoc.plaintext)
-pyvcf_help = '\n'.join(['   ' + x for x in pyvcf_help.splitlines()])
-
-d = dict(fuc_help=fuc_help, vfmerge_help=vfmerge_help, module_help=module_help, pyvcf_help=pyvcf_help)
+d = dict(fuc_help=fuc_help, vfmerge_help=vfmerge_help, module_help=module_help)
 
 readme = """
 README
@@ -126,11 +123,6 @@ For getting help on a specific module (e.g. `pyvcf`):
    from fuc import pyvcf
    help(pyvcf)
 
-To give:
-
-.. parsed-literal::
-
-{pyvcf_help}
 """.format(**d)
 
 with open(readme_file, 'w') as f:
@@ -203,13 +195,7 @@ For getting help on a specific module (e.g. `pyvcf`):
 
    from fuc import pyvcf
    help(pyvcf)
-
-To give:
-
-.. parsed-literal::
-
-{pyvcf_help}
-
+   
 """.format(**d)
 
 for module in modules:

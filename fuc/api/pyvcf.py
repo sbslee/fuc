@@ -218,10 +218,25 @@ class VcfFrame:
         vf = self.__class__(deepcopy(self.meta), df)
         return vf
 
-    def filter_empty(self):
-        """Filter out rows that have no genotype calls."""
+    def filter_empty(self, include=False):
+        """Filter out rows that have no genotype calls.
+
+        Parameters
+        ----------
+        include : bool, default: False
+            If True, include only such rows instead of excluding them.
+
+        Returns
+        -------
+        vf : VcfFrame
+            Filtered VcfFrame.
+        """
         def func(r):
-            return not all(r.iloc[9:].apply(lambda x: '.' in x.split(':')[0]))
+            empty = all(r.iloc[9:].apply(lambda x: '.' in x.split(':')[0]))
+            if include:
+                return empty
+            else:
+                return not empty
         i = self.df.apply(func, axis=1)
         df = self.df[i].reset_index(drop=True)
         vf = self.__class__(deepcopy(self.meta), df)
@@ -233,7 +248,7 @@ class VcfFrame:
         Parameters
         ----------
         include : bool, default: False
-            If True, include such rows instead of excluding them.
+            If True, include only such rows instead of excluding them.
 
         Returns
         -------
@@ -253,22 +268,39 @@ class VcfFrame:
         vf = self.__class__(deepcopy(self.meta), df)
         return vf
 
-    def filter_multiallelic(self):
-        """Filter out rows that have multiple alternative alleles."""
+    def filter_multiallelic(self, include=False):
+        """Filter out rows that have multiple ALT alleles.
+
+        Parameters
+        ----------
+        include : bool, default: False
+            If True, include only such rows instead of excluding them.
+
+        Returns
+        -------
+        vf : VcfFrame
+            Filtered VcfFrame.
+        """
         def func(r):
-            return not ',' in r['ALT']
+            is_multiallelic = ',' in r['ALT']
+            if include:
+                return is_multiallelic
+            else:
+                return not is_multiallelic
         i = self.df.apply(func, axis=1)
         df = self.df[i].reset_index(drop=True)
         vf = self.__class__(deepcopy(self.meta), df)
         return vf
 
-    def filter_bed(self, bed):
-        """Filter rows based on BED data.
+    def filter_bed(self, bed, include=False):
+        """Filter out rows that are not specified in the BED data.
 
         Parameters
         ----------
         bed : pybed.BedFrame or str
             pybed.BedFrame or path to a BED file.
+        include : bool, default: False
+            If True, include only such rows instead of excluding them.
 
         Returns
         -------
@@ -280,7 +312,11 @@ class VcfFrame:
         else:
             bf = pybed.read_file(bed)
         def func(r):
-            return not bf.gr[r['#CHROM'], r['POS']:r['POS']+1].empty
+            not_in_bed = bf.gr[r['#CHROM'], r['POS']:r['POS']+1].empty
+            if include:
+                return not_in_bed
+            else:
+                return not not_in_bed
         i = self.df.apply(func, axis=1)
         df = self.df[i].reset_index(drop=True)
         vf = self.__class__(deepcopy(self.meta), df)

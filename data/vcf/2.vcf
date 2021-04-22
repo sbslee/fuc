@@ -3,4 +3,5 @@
 chr1	100	.	A	T	.	.	.	GT:AD:DP	1/1:0,40:40
 chr1	101	.	G	T	.	.	.	GT:AD:DP	0/1:15,15:30
 chr2	1055	.	T	G	.	.	.	GT:AD:DP	1/1:0,30:30
+chr2	3345	.	A	C	.	.	.	GT:AD:DP	./.:.:.
 chr2	5594	.	T	G	.	.	.	GT:AD:DP	1/1:0,29:29
