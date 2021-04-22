@@ -229,7 +229,7 @@ class VcfFrame:
         def func(r):
             return not bf.gr[r['#CHROM'], r['POS']:r['POS']+1].empty
         i = self.df.apply(func, axis=1)
-        df = self.df[i]
+        df = self.df[i].reset_index(drop=True)
         vf = self.__class__(deepcopy(self.meta), df)
         return vf
 
@@ -272,6 +272,11 @@ class VcfFrame:
     def combine(self, n1, n2):
         """Return a new column after combining data from the two samples.
 
+        This method is useful when, for example, you are trying to
+        consolidate data from multiple replicate samples. When the same
+        variant is found in both samples, the method will use the genotype
+        data of the first sample.
+
         Parameters
         ----------
         n1 : str or int
@@ -282,7 +287,7 @@ class VcfFrame:
         Returns
         -------
         s : pandas.Series
-            VCF column corresponding to a new sample.
+            VCF column representing the combined data.
         """
         n1 = n1 if isinstance(n1, str) else self.samples[n1]
         n2 = n2 if isinstance(n2, str) else self.samples[n2]
@@ -300,36 +305,26 @@ class VcfFrame:
         s = self.df.apply(func, axis=1)
         return s
 
-    def subtract(self, n1, n2):
-        """Return a new column after subtracting data from the two samples.
+    def subtract(self, name):
+        """Remove rows that have a variant call in the sample.
 
         Parameters
         ----------
-        n1 : str or int
-            Name or index of the first (or somatic) sample.
-        n2 : str or int
-            Name or index of the second (or germline) sample.
+        name : str or int
+            Name or index of the sample.
 
         Returns
         -------
-        s : pandas.Series
-            VCF column corresponding to a new sample.
+        vf : VcfFrame
+            Filtered VcfFrame.
         """
-        n1 = n1 if isinstance(n1, str) else self.samples[n1]
-        n2 = n2 if isinstance(n2, str) else self.samples[n2]
+        name = name if isinstance(name, str) else self.samples[name]
         def func(r):
-            a = _has_var(r[n1])
-            b = _has_var(r[n2])
-            if a and b:
-                return r[n1]
-            elif a and not b:
-                return r[n1]
-            elif not a and b:
-                return r[n2]
-            else:
-                return r[n1]
-        s = self.df.apply(func, axis=1)
-        return s
+            return not _has_var(r[name])
+        i = self.df.apply(func, axis=1)
+        df = self.df[i].reset_index(drop=True)
+        vf = self.__class__(deepcopy(self.meta), df)
+        return vf
 
     def reset_samples(self, names):
         """Reset the sample list."""

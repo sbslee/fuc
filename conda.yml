@@ -4,6 +4,7 @@ channels:
   - defaults
 dependencies:
   - cython
+  - matplotlib
   - notebook
   - numpy
   - pandas

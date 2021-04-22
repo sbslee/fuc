@@ -177,15 +177,35 @@ To give:
         |  add_dp(self)
         |      Compute and add the DP subfield of the FORMAT field.
         |  
+        |  combine(self, n1, n2)
+        |      Return a new column after combining data from the two samples.
+        |      
+        |      This method is useful when, for example, you are trying to
+        |      consolidate data from multiple replicate samples. When the same
+        |      variant is found in both samples, the method will use the genotype
+        |      data of the first sample.
+        |      
+        |      Parameters
+        |      ----------
+        |      n1 : str or int
+        |          Name or index of the first (or original) sample.
+        |      n2 : str or int
+        |          Name or index of the second (or replicate) sample.
+        |      
+        |      Returns
+        |      -------
+        |      s : pandas.Series
+        |          VCF column representing the combined data.
+        |  
         |  compare(self, n1, n2)
         |      Compare two samples within the VcfFrame.
         |      
         |      Parameters
         |      ----------
         |      n1 : str or int
-        |          Name of index of the test sample.
+        |          Name or index of the test sample.
         |      n2 : str or int
-        |          Name of index of the truth sample.
+        |          Name or index of the truth sample.
         |      
         |      Returns
         |      -------
@@ -287,6 +307,19 @@ To give:
         |      -------
         |      vf : VcfFrame
         |          Stripped VcfFrame.
+        |  
+        |  subtract(self, name)
+        |      Remove rows that have a variant call in the sample.
+        |      
+        |      Parameters
+        |      ----------
+        |      name : str or int
+        |          Name or index of the sample.
+        |      
+        |      Returns
+        |      -------
+        |      vf : VcfFrame
+        |          Filtered VcfFrame.
         |  
         |  to_file(self, file_path)
         |      Write the VcfFrame to a VCF file.
