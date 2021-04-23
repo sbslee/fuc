@@ -242,7 +242,7 @@ class VcfFrame:
         After collapsing, above will look like this:
 
         +-------+-----+-----+-----+--------+---------------+-------------+
-        | CHROM | POS | REF | ALT | FORMAT | Steven        | Sara        |
+        | CHROM | POS | REF | ALT | FORMAT | Steven        | James       |
         +=======+=====+=====+=====+========+===============+=============+
         | chr1  | 100 | A   | C,T | GT:AD  | 0/2:12,0,15   | 1/2:0,17,11 |
         +-------+-----+-----+-----+--------+---------------+-------------+
