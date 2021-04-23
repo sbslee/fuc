@@ -33,6 +33,7 @@ def read_file(fn):
         else:
             break
     df = pd.read_table(fn, skiprows=skip_rows)
+    df = df.rename(columns={'#CHROM': 'CHROM'})
     vf = VcfFrame(meta, df)
     f.close()
     return vf
@@ -99,7 +100,8 @@ class VcfFrame:
         with open(file_path, 'w') as f:
             if self.meta:
                 f.write('\n'.join(self.meta) + '\n')
-            self.df.to_csv(f, sep='\t', index=False)
+            self.df.rename(columns={'CHROM': '#CHROM'}).to_csv(
+                f, sep='\t', index=False)
 
     def to_string(self):
         """Render the VcfFrame to a console-friendly tabular output."""
@@ -156,7 +158,7 @@ class VcfFrame:
         vf1 = self.strip(format=format)
         vf2 = other.strip(format=format)
         dropped = ['ID', 'QUAL', 'FILTER', 'INFO', 'FORMAT']
-        shared = ['#CHROM', 'POS', 'REF', 'ALT']
+        shared = ['CHROM', 'POS', 'REF', 'ALT']
         df = vf1.df.merge(vf2.df.drop(columns=dropped),
             on=shared, how=how)
         df[dropped] = df[dropped].fillna('.')
@@ -319,7 +321,7 @@ class VcfFrame:
         else:
             bf = pybed.read_file(bed)
         def func(r):
-            not_in_bed = bf.gr[r['#CHROM'], r['POS']:r['POS']+1].empty
+            not_in_bed = bf.gr[r['CHROM'], r['POS']:r['POS']+1].empty
             if include:
                 return not_in_bed
             else:
@@ -454,7 +456,7 @@ class VcfFrame:
             for header in headers:
                 targets.remove(header)
         def func(r1):
-            r2 = other.df[(other.df['#CHROM'] == r1['#CHROM']) &
+            r2 = other.df[(other.df['CHROM'] == r1['CHROM']) &
                           (other.df['POS'] == r1['POS']) &
                           (other.df['REF'] == r1['REF']) &
                           (other.df['ALT'] == r1['ALT'])]
@@ -520,7 +522,7 @@ class VcfFrame:
 
     def sort(self):
         """Return the sorted VcfFrame."""
-        df = self.df.sort_values(by=['#CHROM', 'POS'], ignore_index=True,
+        df = self.df.sort_values(by=['CHROM', 'POS'], ignore_index=True,
             key=lambda col: [CONTIGS.index(x) if isinstance(x, str)
                              else x for x in col])
         vf = self.__class__(deepcopy(self.meta), df)
