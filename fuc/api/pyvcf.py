@@ -139,6 +139,31 @@ class VcfFrame:
     def merge(self, other, how='inner', format='GT', sort=True):
         """Merge with the other VcfFrame.
 
+        Notably, this method is smart enough to automatically find and
+        collapse duplicate records -- i.e. rows that have the identical
+        values for CHROM, POS, and REF. For example, consider these two
+        VCF records:
+
+        +-------+-----+-----+-----+--------+-------------+
+        | CHROM | POS | REF | ALT | FORMAT | Steven      |
+        +=======+=====+=====+=====+========+=============+
+        | chr1  | 100 | A   | T   | GT:AD  | 0/1:12,15   |
+        +=======+=====+=====+=====+========+=============+
+
+        +-------+-----+-----+-----+--------+-------------+
+        | CHROM | POS | REF | ALT | FORMAT | Sara        |
+        +=======+=====+=====+=====+========+=============+
+        | chr1  | 100 | A   | T,C | GT:AD  | 1/2:0,14,15 |
+        +=======+=====+=====+=====+========+=============+
+
+        After merging, above records will be collapsed like this:
+
+        +-------+-----+-----+-----+--------+---------------+-------------+
+        | CHROM | POS | REF | ALT | FORMAT | Steven        | Sara        |
+        +=======+=====+=====+=====+========+===============+=============+
+        | chr1  | 100 | A   | C,T | GT:AD  | 0/2:12,0,15   | 1/2:0,15,14 |
+        +=======+=====+=====+=====+========+===============+=============+
+
         Parameters
         ----------
         other : VcfFrame
@@ -162,7 +187,76 @@ class VcfFrame:
         df = vf1.df.merge(vf2.df.drop(columns=dropped),
             on=shared, how=how)
         df[dropped] = df[dropped].fillna('.')
-        df['FORMAT'] = format
+        df.FORMAT = format
+
+        # Collapse duplicate records.
+        def collapse_one(df):
+            ref_allele = df.REF.unique()[0]
+            alt_alleles = []
+            for i, r in df.iterrows():
+                alt_alleles += r.ALT.split(',')
+            alt_alleles = sorted(list(set(alt_alleles)))
+            all_alleles = [ref_allele] + alt_alleles
+            id_field = df.ID.unique()[0]
+            qual_field = df.QUAL.unique()[0]
+            filter_field = df.FILTER.unique()[0]
+            info_field = df.INFO.unique()[0]
+            format_field = df.FORMAT.unique()[0]
+
+            def infunc(x, r_all_alleles, index_map):
+                if pd.isna(x):
+                    return x
+                if not hasvar(x):
+                    return x
+                old_fields = x.split(':')
+                old_gt = old_fields[0]
+                new_gt = '/'.join([str(x) for x in
+                    sorted([index_map[int(i)] for i in old_gt.split('/')])
+                ])
+                new_fields = [new_gt]
+                for old_field in old_fields[1:]:
+                    old_subfields = old_field.split(',')
+                    new_subfields = ['0' for x in all_alleles]
+                    if len(old_subfields) == len(r_all_alleles):
+                        for i, old_subfield in enumerate(old_subfields):
+                            new_subfields[index_map[i]] = old_subfield
+                        new_fields.append(','.join(new_subfields))
+                    else:
+                        new_fields.append(old_field)
+                return ':'.join(new_fields)
+
+            def outfunc(r):
+                r_alt_alleles = r.ALT.split(',')
+                r_all_alleles = [r.REF] + r_alt_alleles
+                old_indicies = [i for i in range(len(r_all_alleles))]
+                new_indicies = [all_alleles.index(x) for x in r_all_alleles]
+                index_map = dict(zip(old_indicies, new_indicies))
+                r[9:] = r[9:].apply(infunc, args=(r_all_alleles, index_map))
+                return r
+
+            collapsed_df = df2 = df.apply(outfunc, axis=1)
+            collapsed_df = collapsed_df.fillna('')
+            collapsed_df = collapsed_df.groupby(['CHROM', 'POS', 'REF']).agg(''.join)
+            collapsed_df = collapsed_df.reset_index()
+            collapsed_df.ID = id_field
+            collapsed_df.ALT = ','.join(alt_alleles)
+            collapsed_df.QUAL = qual_field
+            collapsed_df.FILTER = filter_field
+            collapsed_df.INFO = info_field
+            collapsed_df.FORMAT = format_field
+            return collapsed_df.squeeze()
+
+        i = df.duplicated(['CHROM', 'POS', 'REF'], keep=False)
+        duplicates = {}
+        for j, r in df[i].iterrows():
+            name = f'{r.CHROM}:{r.POS}:{r.REF}'
+            if name not in duplicates:
+                duplicates[name] = []
+            duplicates[name].append(j)
+        for name in duplicates:
+            df.iloc[duplicates[name]] = collapse_one(df.iloc[duplicates[name]])
+        df.drop_duplicates(subset=['CHROM', 'POS', 'REF'], inplace=True)
+
         def func(r):
             n = len(r['FORMAT'].split(':'))
             x = './.'
