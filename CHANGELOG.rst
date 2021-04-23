@@ -11,6 +11,7 @@ Changelog
 * Add ``fuc.api.pyvcf.VcfFrame.sort`` method.
 * Add ``fuc.api.pyvcf.VcfFrame.filter_indels`` method.
 * Add ``fuc.api.pyvcf.hasvar`` method.
+* Add ``fuc.api.pyvcf.VcfFrame.filter_polyploid`` method.
 
 0.1.4 (2021-04-21)
 ------------------

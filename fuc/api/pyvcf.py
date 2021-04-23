@@ -63,8 +63,17 @@ def merge(vfs, how='inner', format='GT', sort=True):
     return merged_vf
 
 def hasvar(x):
-    """Return True if the GT field has a variant (e.g. 0/1)."""
+    """Return True if the GT field has a variant (e.g. ``0/1``)."""
     return x.split(':')[0].replace('/', '').replace('.', '').replace('0', '')
+
+def gt_unphase(x):
+    """Unphase the genotype (e.g. if ``GT:DP``, `1|0:20`` to ``0/1:20``)."""
+    l = x.split(':')
+    gt = l[0]
+    if '|' not in gt:
+        return x
+    l[0] = '/'.join([str(b) for b in sorted([int(a) for a in gt.split('|')])])
+    return ':'.join(l)
 
 class VcfFrame:
     """Class for storing VCF data.
@@ -94,6 +103,11 @@ class VcfFrame:
     def samples(self):
         """Return a list of the sample IDs."""
         return self.df.columns[9:].to_list()
+
+    @property
+    def shape(self):
+        """Return a tuple representing the dimensionality of the VcfFrame."""
+        return (self.df.shape[0], len(self.samples))
 
     def to_file(self, file_path):
         """Write the VcfFrame to a VCF file."""
@@ -136,33 +150,9 @@ class VcfFrame:
         vf = self.__class__([], df)
         return vf
 
-    def merge(self, other, how='inner', format='GT', sort=True):
+    def merge(self, other, how='inner', format='GT', sort=True,
+              collapse=False):
         """Merge with the other VcfFrame.
-
-        Notably, this method is smart enough to automatically find and
-        collapse duplicate records -- i.e. rows that have the identical
-        values for CHROM, POS, and REF. For example, consider these two
-        VCF records:
-
-        +-------+-----+-----+-----+--------+-------------+
-        | CHROM | POS | REF | ALT | FORMAT | Steven      |
-        +=======+=====+=====+=====+========+=============+
-        | chr1  | 100 | A   | T   | GT:AD  | 0/1:12,15   |
-        +-------+-----+-----+-----+--------+-------------+
-
-        +-------+-----+-----+-----+--------+-------------+
-        | CHROM | POS | REF | ALT | FORMAT | Sara        |
-        +=======+=====+=====+=====+========+=============+
-        | chr1  | 100 | A   | T,C | GT:AD  | 1/2:0,14,15 |
-        +-------+-----+-----+-----+--------+-------------+
-
-        After merging, above records will be collapsed like this:
-
-        +-------+-----+-----+-----+--------+---------------+-------------+
-        | CHROM | POS | REF | ALT | FORMAT | Steven        | Sara        |
-        +=======+=====+=====+=====+========+===============+=============+
-        | chr1  | 100 | A   | C,T | GT:AD  | 0/2:12,0,15   | 1/2:0,15,14 |
-        +-------+-----+-----+-----+--------+---------------+-------------+
 
         Parameters
         ----------
@@ -174,6 +164,8 @@ class VcfFrame:
             FORMAT subfields to be retained (e.g. 'GT:AD:DP').
         sort : bool, default: True
             If True, sort the VcfFrame before returning.
+        collapse : bool, default: False
+            If True, find and collapse duplicate records.
 
         Returns
         -------
@@ -188,12 +180,74 @@ class VcfFrame:
             on=shared, how=how)
         df[dropped] = df[dropped].fillna('.')
         df.FORMAT = format
+        def func(r):
+            n = len(r['FORMAT'].split(':'))
+            x = './.'
+            for i in range(1, n):
+                x += ':.'
+            r = r.fillna(x)
+            return r
+        df = df.apply(func, axis=1)
+        vf3 = self.__class__([], df)
+        if collapse:
+            vf3 = vf3.collapse()
+        if sort:
+            vf3 = vf3.sort()
+        return vf3
 
-        # Find and collapse duplicate records. The algorithm is quite simple.
-        # First, we obtain the indicies of duplicate records for each
-        # unique chromosomal position. We then subset the dataframe for each
-        # position, apply the collapsing to it to get the consensus record,
-        # and replace original duplicates with the consensus record.
+    def collapse(self):
+        """Collapse duplicate records.
+
+        Duplicate records have the identical values for ``CHROM``, ``POS``,
+        and ``REF``. They can result from merging two VCF files.
+
+        .. note::
+           The method will sort the order of ALT alleles.
+
+        Returns
+        -------
+        vf : VcfFrame
+            Collapsed VcfFrame.
+
+        Examples
+        --------
+        Consider the following:
+
+        +-------+-----+-----+-----+--------+---------------+-------------+
+        | CHROM | POS | REF | ALT | FORMAT | Steven        | Sara        |
+        +=======+=====+=====+=====+========+===============+=============+
+        | chr1  | 100 | A   | C   | GT:AD  | 0/1:12,15     | ./.:.       |
+        +-------+-----+-----+-----+--------+---------------+-------------+
+        | chr1  | 100 | A   | T   | GT:AD  | ./.:.         | 0/1:14,15   |
+        +-------+-----+-----+-----+--------+---------------+-------------+
+
+        After collapsing, above will look like this:
+
+        +-------+-----+-----+-----+--------+---------------+-------------+
+        | CHROM | POS | REF | ALT | FORMAT | Steven        | Sara        |
+        +=======+=====+=====+=====+========+===============+=============+
+        | chr1  | 100 | A   | C,T | GT:AD  | 0/1:12,15     | 0/2:14,15   |
+        +-------+-----+-----+-----+--------+---------------+-------------+
+
+        Below is a slightly more complex scenario:
+
+        +-------+-----+-----+-----+--------+---------------+-------------+
+        | CHROM | POS | REF | ALT | FORMAT | Steven        | James       |
+        +=======+=====+=====+=====+========+===============+=============+
+        | chr1  | 100 | A   | T   | GT:AD  | 0/1:12,15     | ./.:.       |
+        +-------+-----+-----+-----+--------+---------------+-------------+
+        | chr1  | 100 | A   | T,C | GT:AD  | ./.:.         | 1/2:0,11,17 |
+        +-------+-----+-----+-----+--------+---------------+-------------+
+
+        After collapsing, above will look like this:
+
+        +-------+-----+-----+-----+--------+---------------+-------------+
+        | CHROM | POS | REF | ALT | FORMAT | Steven        | Sara        |
+        +=======+=====+=====+=====+========+===============+=============+
+        | chr1  | 100 | A   | C,T | GT:AD  | 0/2:12,0,15   | 1/2:0,17,11 |
+        +-------+-----+-----+-----+--------+---------------+-------------+
+        """
+        df = self.df.copy()
         dup_idx = df.duplicated(['CHROM', 'POS', 'REF'], keep=False)
         dups = {}
         for i, r in df[dup_idx].iterrows():
@@ -211,8 +265,6 @@ class VcfFrame:
             all_alleles = [ref_allele] + alt_alleles
 
             def infunc(x, r_all_alleles, index_map):
-                if pd.isna(x):
-                    return x
                 if not hasvar(x):
                     return x
                 old_fields = x.split(':')
@@ -261,24 +313,8 @@ class VcfFrame:
             df.iloc[i] = collapse_one(df.iloc[i])
         df.drop_duplicates(subset=['CHROM', 'POS', 'REF'], inplace=True)
 
-        # Fill any empty cells created by merging with the missing genotype.
-        def func(r):
-            n = len(r['FORMAT'].split(':'))
-            x = './.'
-            for i in range(1, n):
-                x += ':.'
-            r = r.fillna(x)
-            return r
-        df = df.apply(func, axis=1)
-
-        # Create a new VcfFrame.
-        vf3 = self.__class__([], df)
-
-        # Sort the VcfFrame before returning, if requested.
-        if sort:
-            vf3 = vf3.sort()
-
-        return vf3
+        vf = self.__class__(deepcopy(self.meta), df)
+        return vf
 
     def add_dp(self):
         """Compute and add the DP subfield of the FORMAT field."""
@@ -654,5 +690,14 @@ class VcfFrame:
         df = self.df.sort_values(by=['CHROM', 'POS'], ignore_index=True,
             key=lambda col: [CONTIGS.index(x) if isinstance(x, str)
                              else x for x in col])
+        vf = self.__class__(deepcopy(self.meta), df)
+        return vf
+
+    def unphase(self):
+        """Unphase the genotypes (e.g. 1|0 to 0/1)."""
+        def func(r):
+            r[9:] = r[9:].apply(gt_unphase)
+            return r
+        df = self.df.apply(func, axis=1)
         vf = self.__class__(deepcopy(self.meta), df)
         return vf

@@ -1,14 +1,27 @@
+import os
 import unittest
 import subprocess
 
 from fuc.api.common import fuc_dir
 from fuc import pyvcf, pybed, pyfq
 
+if not os.path.exists('test_fuc'):
+    os.mkdir('test_fuc')
+
+vcf_file1 = f'{fuc_dir()}/data/vcf/1.vcf'
+vcf_file2 = f'{fuc_dir()}/data/vcf/2.vcf'
+vcf_file3 = f'{fuc_dir()}/data/vcf/3.vcf'
+
 class TestPyvcf(unittest.TestCase):
+
+    def test_shape(self):
+        vf = pyvcf.read_file(vcf_file1)
+        self.assertEqual(vf.shape, (5, 4))
 
     def test_filter_empty(self):
         vf = pyvcf.read_file(f'{fuc_dir()}/data/vcf/2.vcf')
         vf = vf.filter_empty()
+        vf.to_file('test_fuc/filter_empty.vcf')
         self.assertEqual(vf.df.shape, (4, 11))
 
     def test_filter_bed(self):
@@ -21,7 +34,8 @@ class TestPyvcf(unittest.TestCase):
         vf1 = pyvcf.read_file(f'{fuc_dir()}/data/vcf/1.vcf')
         vf2 = pyvcf.read_file(f'{fuc_dir()}/data/vcf/2.vcf')
         vf3 = vf1.merge(vf2, how='outer', format='GT:DP')
-        self.assertEqual(vf3.df.shape, (8, 15))
+        vf3.to_file('test_fuc/test_merge.vcf')
+        self.assertEqual(vf3.df.shape, (9, 15))
 
     def test_compare(self):
         vf = pyvcf.read_file(f'{fuc_dir()}/data/vcf/1.vcf')
@@ -58,7 +72,7 @@ class TestCli(unittest.TestCase):
 
     def test_vfmerge(self):
         result = subprocess.run(['fuc', 'vfmerge', f'{fuc_dir()}/data/vcf/1.vcf', f'{fuc_dir()}/data/vcf/2.vcf', '--how', 'outer'], capture_output=True, text=True, check=True)
-        self.assertEqual(len(result.stdout.strip().split('\n')), 9)
+        self.assertEqual(len(result.stdout.strip().split('\n')), 10)
 
 if __name__ == '__main__':
     unittest.main()
