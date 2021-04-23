@@ -1,6 +1,7 @@
 """
 The ``pyvcf`` submodule is designed for working with VCF files (both zipped
-and unzipped).
+and unzipped). It implements `pyvcf.VcfFrame` which stores VCF data as
+a ``pandas.DataFrame`` to allow fast computation and easy minipulation.
 """
 
 import pandas as pd
@@ -36,7 +37,7 @@ def read_file(fn):
     f.close()
     return vf
 
-def merge(vfs, how='inner', format='GT'):
+def merge(vfs, how='inner', format='GT', sort=True):
     """Return the merged VcfFrame.
 
     Parameters
@@ -47,6 +48,8 @@ def merge(vfs, how='inner', format='GT'):
         Type of merge as defined in `pandas.DataFrame.merge`.
     format : str, default: 'GT'
         FORMAT subfields to be retained (e.g. 'GT:AD:DP').
+    sort : bool, default: True
+        If True, sort the VcfFrame before returning.
 
     Returns
     -------
@@ -55,7 +58,7 @@ def merge(vfs, how='inner', format='GT'):
     """
     merged_vf = vfs[0]
     for vf in vfs[1:]:
-        merged_vf = merged_vf.merge(vf, how=how, format=format)
+        merged_vf = merged_vf.merge(vf, how=how, format=format, sort=sort)
     return merged_vf
 
 def hasvar(x):
@@ -131,7 +134,7 @@ class VcfFrame:
         vf = self.__class__([], df)
         return vf
 
-    def merge(self, other, how='inner', format='GT'):
+    def merge(self, other, how='inner', format='GT', sort=True):
         """Merge with the other VcfFrame.
 
         Parameters
@@ -142,6 +145,8 @@ class VcfFrame:
             Type of merge as defined in `pandas.DataFrame.merge`.
         format : str, default: 'GT'
             FORMAT subfields to be retained (e.g. 'GT:AD:DP').
+        sort : bool, default: True
+            If True, sort the VcfFrame before returning.
 
         Returns
         -------
@@ -165,6 +170,8 @@ class VcfFrame:
             return r
         df = df.apply(func, axis=1)
         vf3 = self.__class__([], df)
+        if sort:
+            vf3 = vf3.sort()
         return vf3
 
     def add_dp(self):
