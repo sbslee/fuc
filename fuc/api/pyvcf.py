@@ -435,6 +435,31 @@ class VcfFrame:
         vf = self.__class__(deepcopy(self.meta), df)
         return vf
 
+    def filter_polyploid(self, include=False):
+        """Filter out rows that have polyploid genotype (e.g. 0/0/1).
+
+        Parameters
+        ----------
+        include : bool, default: False
+            If True, include only such rows instead of excluding them.
+
+        Returns
+        -------
+        vf : VcfFrame
+            Filtered VcfFrame.
+        """
+        def func(r):
+            has_polyploid = any(
+                [x.split(':')[0].count('/') > 1 for x in r[9:]])
+            if include:
+                return has_polyploid
+            else:
+                return not has_polyploid
+        i = self.df.apply(func, axis=1)
+        df = self.df[i].reset_index(drop=True)
+        vf = self.__class__(deepcopy(self.meta), df)
+        return vf
+
     def compare(self, n1, n2):
         """Compare two samples within the VcfFrame.
 
