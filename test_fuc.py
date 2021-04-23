@@ -21,7 +21,7 @@ class TestPyvcf(unittest.TestCase):
         vf1 = pyvcf.read_file(f'{fuc_dir()}/data/vcf/1.vcf')
         vf2 = pyvcf.read_file(f'{fuc_dir()}/data/vcf/2.vcf')
         vf3 = vf1.merge(vf2, how='outer', format='GT:DP')
-        self.assertEqual(vf3.df.shape, (9, 15))
+        self.assertEqual(vf3.df.shape, (8, 15))
 
     def test_compare(self):
         vf = pyvcf.read_file(f'{fuc_dir()}/data/vcf/1.vcf')
@@ -58,7 +58,7 @@ class TestCli(unittest.TestCase):
 
     def test_vfmerge(self):
         result = subprocess.run(['fuc', 'vfmerge', f'{fuc_dir()}/data/vcf/1.vcf', f'{fuc_dir()}/data/vcf/2.vcf', '--how', 'outer'], capture_output=True, text=True, check=True)
-        self.assertEqual(len(result.stdout.strip().split('\n')), 10)
+        self.assertEqual(len(result.stdout.strip().split('\n')), 9)
 
 if __name__ == '__main__':
     unittest.main()

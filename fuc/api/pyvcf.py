@@ -189,7 +189,19 @@ class VcfFrame:
         df[dropped] = df[dropped].fillna('.')
         df.FORMAT = format
 
-        # Collapse duplicate records.
+        # Find and collapse duplicate records. The algorithm is quite simple.
+        # First, we obtain the indicies of duplicate records for each
+        # unique chromosomal position. We then subset the dataframe for each
+        # position, apply the collapsing to it to get the consensus record,
+        # and replace original duplicates with the consensus record.
+        dup_idx = df.duplicated(['CHROM', 'POS', 'REF'], keep=False)
+        dups = {}
+        for i, r in df[dup_idx].iterrows():
+            name = f'{r.CHROM}:{r.POS}:{r.REF}'
+            if name not in dups:
+                dups[name] = []
+            dups[name].append(i)
+
         def collapse_one(df):
             ref_allele = df.REF.unique()[0]
             alt_alleles = []
@@ -197,11 +209,6 @@ class VcfFrame:
                 alt_alleles += r.ALT.split(',')
             alt_alleles = sorted(list(set(alt_alleles)))
             all_alleles = [ref_allele] + alt_alleles
-            id_field = df.ID.unique()[0]
-            qual_field = df.QUAL.unique()[0]
-            filter_field = df.FILTER.unique()[0]
-            info_field = df.INFO.unique()[0]
-            format_field = df.FORMAT.unique()[0]
 
             def infunc(x, r_all_alleles, index_map):
                 if pd.isna(x):
@@ -234,29 +241,27 @@ class VcfFrame:
                 r[9:] = r[9:].apply(infunc, args=(r_all_alleles, index_map))
                 return r
 
-            collapsed_df = df2 = df.apply(outfunc, axis=1)
-            collapsed_df = collapsed_df.fillna('')
-            collapsed_df = collapsed_df.groupby(['CHROM', 'POS', 'REF']).agg(''.join)
-            collapsed_df = collapsed_df.reset_index()
-            collapsed_df.ID = id_field
-            collapsed_df.ALT = ','.join(alt_alleles)
-            collapsed_df.QUAL = qual_field
-            collapsed_df.FILTER = filter_field
-            collapsed_df.INFO = info_field
-            collapsed_df.FORMAT = format_field
-            return collapsed_df.squeeze()
+            df2 = df.apply(outfunc, axis=1)
+            df2 = df2.fillna('')
+            df2 = df2.groupby(['CHROM', 'POS', 'REF']).agg(''.join)
+            df2 = df2.reset_index()
+            cols = list(df2)
+            cols[2], cols[3] = cols[3], cols[2]
+            df2 = df2[cols]
+            df2.ID = df.ID.unique()[0]
+            df2.ALT = ','.join(alt_alleles)
+            df2.QUAL = df.QUAL.unique()[0]
+            df2.FILTER = df.FILTER.unique()[0]
+            df2.INFO = df.INFO.unique()[0]
+            df2.FORMAT = df.FORMAT.unique()[0]
+            s = df2.squeeze()
+            return s
 
-        i = df.duplicated(['CHROM', 'POS', 'REF'], keep=False)
-        duplicates = {}
-        for j, r in df[i].iterrows():
-            name = f'{r.CHROM}:{r.POS}:{r.REF}'
-            if name not in duplicates:
-                duplicates[name] = []
-            duplicates[name].append(j)
-        for name in duplicates:
-            df.iloc[duplicates[name]] = collapse_one(df.iloc[duplicates[name]])
+        for name, i in dups.items():
+            df.iloc[i] = collapse_one(df.iloc[i])
         df.drop_duplicates(subset=['CHROM', 'POS', 'REF'], inplace=True)
 
+        # Fill any empty cells created by merging with the missing genotype.
         def func(r):
             n = len(r['FORMAT'].split(':'))
             x = './.'
@@ -265,9 +270,14 @@ class VcfFrame:
             r = r.fillna(x)
             return r
         df = df.apply(func, axis=1)
+
+        # Create a new VcfFrame.
         vf3 = self.__class__([], df)
+
+        # Sort the VcfFrame before returning, if requested.
         if sort:
             vf3 = vf3.sort()
+
         return vf3
 
     def add_dp(self):
