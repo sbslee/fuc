@@ -19,8 +19,15 @@ def create_parser(subparsers):
         help="FORMAT subfields to be retained (e.g. 'GT:AD:DP') "
         "(default: 'GT')"
     )
+    parser.add_argument('--sort', action='store_false',
+        help='use this flag to turn off sorting of records (default: True)'
+    )
+    parser.add_argument('--collapse', action='store_true',
+        help='use this flag to collapse duplicate records (default: False)'
+    )
 
 def main(args):
     vfs = [pyvcf.read_file(x) for x in args.vcf_files]
-    merged_vf = pyvcf.merge(vfs, format=args.format, how=args.how)
+    merged_vf = pyvcf.merge(vfs, format=args.format, how=args.how,
+        sort=args.sort, collapse=args.collapse)
     print(merged_vf.to_string())

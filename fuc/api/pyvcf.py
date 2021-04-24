@@ -38,7 +38,7 @@ def read_file(fn):
     f.close()
     return vf
 
-def merge(vfs, how='inner', format='GT', sort=True, collapse=True):
+def merge(vfs, how='inner', format='GT', sort=True, collapse=False):
     """Return the merged VcfFrame.
 
     Parameters
@@ -74,7 +74,7 @@ def gt_missing(x):
     return '.' in x.split(':')[0]
 
 def gt_unphase(x):
-    """Unphase the genotype (e.g. if ``GT:DP``, `1|0:20`` to ``0/1:20``)."""
+    """Unphase the genotype (e.g. if ``GT:DP``, ``1|0:20`` to ``0/1:20``)."""
     l = x.split(':')
     gt = l[0]
     if '|' not in gt:
