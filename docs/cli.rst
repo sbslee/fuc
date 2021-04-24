@@ -199,7 +199,8 @@ vfmerge
 .. code-block:: console
 
    $ fuc vfmerge -h
-   usage: fuc vfmerge [-h] [--how TEXT] [--format TEXT] vcf_files [vcf_files ...]
+   usage: fuc vfmerge [-h] [--how TEXT] [--format TEXT] [--sort] [--collapse]
+                      vcf_files [vcf_files ...]
    
    This command will merge multiple VCF files (both zipped and unzipped). By
    default, only the GT subfield of the FORMAT field will be included in the
@@ -215,4 +216,6 @@ vfmerge
                     (default: 'inner')
      --format TEXT  FORMAT subfields to be retained (e.g. 'GT:AD:DP') (default:
                     'GT')
+     --sort         use this flag to turn off sorting of records (default: True)
+     --collapse     use this flag to collapse duplicate records (default: False)
 
