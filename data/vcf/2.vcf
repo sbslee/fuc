@@ -1,6 +1,6 @@
 ##fileformat=VCFv4.2
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	Daniel	Lucy
-chr1	100	.	A	T,C	.	.	.	GT:AD:DP	1/1:0,40,0:40	1/2:0,15,15:30
+chr1	100	.	A	T,C	.	.	.	GT:AD:DP	./.:.:.	1/2:0,15,15:30
 chr1	101	.	G	T	.	.	.	GT:AD:DP	0/1:15,15:30	0/0:32,0:32
 chr2	1055	.	T	G	.	.	.	GT:AD:DP	1/1:0,30:30	0/0:27,0:27
 chr2	3345	.	A	C	.	.	.	GT:AD:DP	./.:.:.	./.:.:.

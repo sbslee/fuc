@@ -38,7 +38,7 @@ def read_file(fn):
     f.close()
     return vf
 
-def merge(vfs, how='inner', format='GT', sort=True):
+def merge(vfs, how='inner', format='GT', sort=True, collapse=True):
     """Return the merged VcfFrame.
 
     Parameters
@@ -51,6 +51,8 @@ def merge(vfs, how='inner', format='GT', sort=True):
         FORMAT subfields to be retained (e.g. 'GT:AD:DP').
     sort : bool, default: True
         If True, sort the VcfFrame before returning.
+    collapse : bool, default: False
+        If True, collapse duplicate records.
 
     Returns
     -------
@@ -59,12 +61,17 @@ def merge(vfs, how='inner', format='GT', sort=True):
     """
     merged_vf = vfs[0]
     for vf in vfs[1:]:
-        merged_vf = merged_vf.merge(vf, how=how, format=format, sort=sort)
+        merged_vf = merged_vf.merge(vf, how=how, format=format, sort=sort,
+            collapse=collapse)
     return merged_vf
 
-def hasvar(x):
-    """Return True if the GT field has a variant (e.g. ``0/1``)."""
+def gt_hasvar(x):
+    """Return True if the genotype has a variant call (e.g. ``0/1``)."""
     return x.split(':')[0].replace('/', '').replace('.', '').replace('0', '')
+
+def gt_missing(x):
+    """Return True if the genotype has a missing value."""
+    return '.' in x.split(':')[0]
 
 def gt_unphase(x):
     """Unphase the genotype (e.g. if ``GT:DP``, `1|0:20`` to ``0/1:20``)."""
@@ -74,6 +81,16 @@ def gt_unphase(x):
         return x
     l[0] = '/'.join([str(b) for b in sorted([int(a) for a in gt.split('|')])])
     return ':'.join(l)
+
+def row_missing_value(r):
+    """Return the missing value for the row (e.g. ``./.:.`` if ``GT:DP``)."""
+    if 'X' in r.CHROM or 'Y' in r.CHROM:
+        m = '.'
+    else:
+        m = './.'
+    for i in range(1, len(r.FORMAT.split(':'))):
+        m += ':.'
+    return m
 
 class VcfFrame:
     """Class for storing VCF data.
@@ -165,7 +182,7 @@ class VcfFrame:
         sort : bool, default: True
             If True, sort the VcfFrame before returning.
         collapse : bool, default: False
-            If True, find and collapse duplicate records.
+            If True, collapse duplicate records.
 
         Returns
         -------
@@ -226,10 +243,10 @@ class VcfFrame:
         +-------+-----+-----+-----+--------+---------------+-------------+
         | CHROM | POS | REF | ALT | FORMAT | Steven        | Sara        |
         +=======+=====+=====+=====+========+===============+=============+
-        | chr1  | 100 | A   | C,T | GT:AD  | 0/1:12,15     | 0/2:14,15   |
+        | chr1  | 100 | A   | C,T | GT:AD  | 0/1:12,15,0   | 0/2:14,0,15 |
         +-------+-----+-----+-----+--------+---------------+-------------+
 
-        Below is a slightly more complex scenario:
+        Now here is a slightly more complex scenario:
 
         +-------+-----+-----+-----+--------+---------------+-------------+
         | CHROM | POS | REF | ALT | FORMAT | Steven        | James       |
@@ -265,8 +282,8 @@ class VcfFrame:
             all_alleles = [ref_allele] + alt_alleles
 
             def infunc(x, r_all_alleles, index_map):
-                if not hasvar(x):
-                    return x
+                if gt_missing(x):
+                    return ''
                 old_fields = x.split(':')
                 old_gt = old_fields[0]
                 new_gt = '/'.join([str(x) for x in
@@ -294,7 +311,6 @@ class VcfFrame:
                 return r
 
             df2 = df.apply(outfunc, axis=1)
-            df2 = df2.fillna('')
             df2 = df2.groupby(['CHROM', 'POS', 'REF']).agg(''.join)
             df2 = df2.reset_index()
             cols = list(df2)
@@ -307,6 +323,7 @@ class VcfFrame:
             df2.INFO = df.INFO.unique()[0]
             df2.FORMAT = df.FORMAT.unique()[0]
             s = df2.squeeze()
+            s = s.replace('', row_missing_value(s))
             return s
 
         for name, i in dups.items():
@@ -514,8 +531,8 @@ class VcfFrame:
         n1 = n1 if isinstance(n1, str) else self.samples[n1]
         n2 = n2 if isinstance(n2, str) else self.samples[n2]
         def func(r):
-            a = hasvar(r[n1])
-            b = hasvar(r[n2])
+            a = gt_hasvar(r[n1])
+            b = gt_hasvar(r[n2])
             if a and b:
                 return 'tp'
             elif a and not b:
@@ -555,8 +572,8 @@ class VcfFrame:
         n1 = n1 if isinstance(n1, str) else self.samples[n1]
         n2 = n2 if isinstance(n2, str) else self.samples[n2]
         def func(r):
-            a = hasvar(r[n1])
-            b = hasvar(r[n2])
+            a = gt_hasvar(r[n1])
+            b = gt_hasvar(r[n2])
             if a and b:
                 return r[n1]
             elif a and not b:
@@ -583,7 +600,7 @@ class VcfFrame:
         """
         name = name if isinstance(name, str) else self.samples[name]
         def func(r):
-            return not hasvar(r[name])
+            return not gt_hasvar(r[name])
         i = self.df.apply(func, axis=1)
         df = self.df[i].reset_index(drop=True)
         vf = self.__class__(deepcopy(self.meta), df)

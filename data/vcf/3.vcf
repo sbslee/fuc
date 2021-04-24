@@ -1,4 +1,0 @@
-##fileformat=VCFv4.2
-#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	Lora	Jackson
-chr1	100	.	A	T	.	.	.	GT:AD	0/1:12,15	0/1:13,12
-chr1	101	.	G	T,A	.	.	.	GT:AD	./.:.	1/2:0,12,16
