@@ -341,7 +341,7 @@ class VcfFrame:
             df.iloc[i] = collapse_one(df.iloc[i])
         df.drop_duplicates(subset=['CHROM', 'POS', 'REF'], inplace=True)
 
-        vf = self.__class__(deepcopy(self.meta), df)
+        vf = self.__class__(self.copy_meta(), df)
         return vf
 
     def add_dp(self):
@@ -360,7 +360,7 @@ class VcfFrame:
             r['FORMAT'] += ':DP'
             return r
         df = self.df.apply(outfunc, axis=1)
-        vf = self.__class__(deepcopy(self.meta), df)
+        vf = self.__class__(self.copy_meta(), df)
         return vf
 
     def filter_dp(self, threshold=200):
@@ -376,7 +376,7 @@ class VcfFrame:
             r.iloc[9:] = r.iloc[9:].apply(infunc)
             return r
         df = self.df.apply(outfunc, axis=1)
-        vf = self.__class__(deepcopy(self.meta), df)
+        vf = self.__class__(self.copy_meta(), df)
         return vf
 
     def filter_af(self, threshold=0.1):
@@ -392,7 +392,7 @@ class VcfFrame:
             r.iloc[9:] = r.iloc[9:].apply(infunc)
             return r
         df = self.df.apply(outfunc, axis=1)
-        vf = self.__class__(deepcopy(self.meta), df)
+        vf = self.__class__(self.copy_meta(), df)
         return vf
 
     def filter_empty(self, include=False):
@@ -416,7 +416,7 @@ class VcfFrame:
                 return not empty
         i = self.df.apply(func, axis=1)
         df = self.df[i].reset_index(drop=True)
-        vf = self.__class__(deepcopy(self.meta), df)
+        vf = self.__class__(self.copy_meta(), df)
         return vf
 
     def filter_indels(self, include=False):
@@ -442,7 +442,7 @@ class VcfFrame:
                 return not has_indel
         i = self.df.apply(func, axis=1)
         df = self.df[i].reset_index(drop=True)
-        vf = self.__class__(deepcopy(self.meta), df)
+        vf = self.__class__(self.copy_meta(), df)
         return vf
 
     def filter_multiallelic(self, include=False):
@@ -466,7 +466,7 @@ class VcfFrame:
                 return not is_multiallelic
         i = self.df.apply(func, axis=1)
         df = self.df[i].reset_index(drop=True)
-        vf = self.__class__(deepcopy(self.meta), df)
+        vf = self.__class__(self.copy_meta(), df)
         return vf
 
     def filter_bed(self, bed, include=False):
@@ -496,7 +496,7 @@ class VcfFrame:
                 return not not_in_bed
         i = self.df.apply(func, axis=1)
         df = self.df[i].reset_index(drop=True)
-        vf = self.__class__(deepcopy(self.meta), df)
+        vf = self.__class__(self.copy_meta(), df)
         return vf
 
     def filter_polyploid(self, include=False):
@@ -521,7 +521,7 @@ class VcfFrame:
                 return not has_polyploid
         i = self.df.apply(func, axis=1)
         df = self.df[i].reset_index(drop=True)
-        vf = self.__class__(deepcopy(self.meta), df)
+        vf = self.__class__(self.copy_meta(), df)
         return vf
 
     def filter_sample_counts(self, threshold, include=False):
@@ -547,7 +547,34 @@ class VcfFrame:
                 return not is_filtered
         i = self.df.apply(func, axis=1)
         df = self.df[i].reset_index(drop=True)
-        vf = self.__class__(deepcopy(self.meta), df)
+        vf = self.__class__(self.copy_meta(), df)
+        return vf
+
+    def filter_by_sample(self, name, include=False):
+        """Filter out rows that have a variant call in the target sample.
+
+        Parameters
+        ----------
+        name : str or int
+            Name or index of the sample.
+        include : bool, default: False
+            If True, include only such rows instead of excluding them.
+
+        Returns
+        -------
+        vf : VcfFrame
+            Filtered VcfFrame.
+        """
+        name = name if isinstance(name, str) else self.samples[name]
+        def func(r):
+            is_filtered = gt_hasvar(r[name])
+            if include:
+                return is_filtered
+            else:
+                return not is_filtered
+        i = self.df.apply(func, axis=1)
+        df = self.df[i].reset_index(drop=True)
+        vf = self.__class__(self.copy_meta(), df)
         return vf
 
     def compare(self, n1, n2):
@@ -622,31 +649,10 @@ class VcfFrame:
         s = self.df.apply(func, axis=1)
         return s
 
-    def subtract(self, name):
-        """Remove rows that have a variant call in the sample.
-
-        Parameters
-        ----------
-        name : str or int
-            Name or index of the sample.
-
-        Returns
-        -------
-        vf : VcfFrame
-            Filtered VcfFrame.
-        """
-        name = name if isinstance(name, str) else self.samples[name]
-        def func(r):
-            return not gt_hasvar(r[name])
-        i = self.df.apply(func, axis=1)
-        df = self.df[i].reset_index(drop=True)
-        vf = self.__class__(deepcopy(self.meta), df)
-        return vf
-
     def reset_samples(self, names):
         """Reset the sample list."""
         df = self.df[self.df.columns[:9].to_list() + names]
-        vf = self.__class__(deepcopy(self.meta), df)
+        vf = self.__class__(self.copy_meta(), df)
         return vf
 
     def update(self, other, headers=None, missing=True):
@@ -691,7 +697,7 @@ class VcfFrame:
                     r1[target] = r2.iloc[0][target]
             return r1
         df = self.df.apply(func, axis=1)
-        vf = self.__class__(deepcopy(self.meta), df)
+        vf = self.__class__(self.copy_meta(), df)
         return vf
 
     def sort(self):
@@ -699,7 +705,7 @@ class VcfFrame:
         df = self.df.sort_values(by=['CHROM', 'POS'], ignore_index=True,
             key=lambda col: [CONTIGS.index(x) if isinstance(x, str)
                              else x for x in col])
-        vf = self.__class__(deepcopy(self.meta), df)
+        vf = self.__class__(self.copy_meta(), df)
         return vf
 
     def unphase(self):
@@ -708,5 +714,5 @@ class VcfFrame:
             r[9:] = r[9:].apply(gt_unphase)
             return r
         df = self.df.apply(func, axis=1)
-        vf = self.__class__(deepcopy(self.meta), df)
+        vf = self.__class__(self.copy_meta(), df)
         return vf

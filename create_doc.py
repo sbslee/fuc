@@ -17,7 +17,7 @@ fuc_help = '\n'.join(['   ' + x for x in fuc_help.splitlines()])
 
 module_help = ''
 for module in modules:
-    description = pydoc.getdoc(getattr(fuc, module)).split('\n\n')[0]
+    description = pydoc.getdoc(getattr(fuc, module)).split('\n\n')[0] + '\n'
     module_help += f'- **{module}** : {description}\n'
 
 d = dict(fuc_help=fuc_help, module_help=module_help)
