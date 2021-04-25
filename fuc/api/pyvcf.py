@@ -67,7 +67,10 @@ def merge(vfs, how='inner', format='GT', sort=True, collapse=False):
 
 def gt_hasvar(x):
     """Return True if the genotype has a variant call (e.g. ``0/1``)."""
-    return x.split(':')[0].replace('/', '').replace('.', '').replace('0', '')
+    if x.split(':')[0].replace('/', '').replace('.', '').replace('0', ''):
+        return True
+    else:
+        return False
 
 def gt_missing(x):
     """Return True if the genotype has a missing value."""
@@ -125,6 +128,14 @@ class VcfFrame:
     def shape(self):
         """Return a tuple representing the dimensionality of the VcfFrame."""
         return (self.df.shape[0], len(self.samples))
+
+    def copy_meta(self):
+        """Return a copy of the metadata."""
+        return deepcopy(self.meta)
+
+    def copy_df(self):
+        """Return a copy of the dataframe."""
+        return self.df.copy()
 
     def to_file(self, file_path):
         """Write the VcfFrame to a VCF file."""
@@ -513,6 +524,32 @@ class VcfFrame:
         vf = self.__class__(deepcopy(self.meta), df)
         return vf
 
+    def filter_sample_counts(self, threshold, include=False):
+        """Filter out rows based on the number of samples with the variant.
+
+        Parameters
+        ----------
+        threshold : int
+            Number of samples above which will signify the row to be removed.
+        include : bool, default: False
+            If True, include only such rows instead of excluding them.
+
+        Returns
+        -------
+        vf : VcfFrame
+            Filtered VcfFrame.
+        """
+        def func(r):
+            is_filtered = r[9:].apply(gt_hasvar).sum() > threshold
+            if include:
+                return is_filtered
+            else:
+                return not is_filtered
+        i = self.df.apply(func, axis=1)
+        df = self.df[i].reset_index(drop=True)
+        vf = self.__class__(deepcopy(self.meta), df)
+        return vf
+
     def compare(self, n1, n2):
         """Compare two samples within the VcfFrame.
 
@@ -656,51 +693,6 @@ class VcfFrame:
         df = self.df.apply(func, axis=1)
         vf = self.__class__(deepcopy(self.meta), df)
         return vf
-
-    def parse_snpeff(self, idx, sep=' | '):
-        """Parse SnpEff annotations.
-
-        SnpEff provides the following functional annotations:
-
-        1. Allele
-        2. Annotation
-        3. Annotation_Impact
-        4. Gene_Name
-        5. Gene_ID
-        6. Feature_Type
-        7. Feature_ID
-        8. Transcript_BioType
-        9. Rank
-        10. HGVS.c
-        11. HGVS.p
-        12. cDNA.pos / cDNA.length
-        13. CDS.pos / CDS.length
-        14. AA.pos / AA.length
-        15. Distance
-        16. ERRORS / WARNINGS
-        17. INFO
-
-        Parameters
-        ----------
-        i : list
-            List of annotation indicies.
-        sep : str, default: ' | '
-            Separator for joining requested annotations.
-
-        Returns
-        -------
-        s : pandas.Series
-            Parsed annotations.
-        """
-        def func(r):
-            ann = [x for x in r['INFO'].split(';') if 'ANN=' in x]
-            if not ann:
-                return '.'
-            ann = ann[0].replace('ANN=', '').split('|')
-            ann = sep.join([ann[i] for i in idx])
-            return ann
-        s = self.df.apply(func, axis=1)
-        return s
 
     def sort(self):
         """Return the sorted VcfFrame."""
