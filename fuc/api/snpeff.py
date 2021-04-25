@@ -1,4 +1,7 @@
 """
+The ``snpeff`` submodule is designed for parsing annotation data from the
+SnpEff program.
+
 One VCF record can have several SnpEff annotations if, for example,
 the record is a multiallelic site or the variant is shared by
 multiple genes. When more than one annotations are reported, SnpEff
