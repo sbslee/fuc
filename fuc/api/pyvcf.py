@@ -1,6 +1,6 @@
 """
 The ``pyvcf`` submodule is designed for working with VCF files (both zipped
-and unzipped). It implements `pyvcf.VcfFrame` which stores VCF data as
+and unzipped). It implements ``pyvcf.VcfFrame`` which stores VCF data as
 a ``pandas.DataFrame`` to allow fast computation and easy minipulation.
 """
 
