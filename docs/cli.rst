@@ -19,7 +19,7 @@ For getting help on CLI:
        bfsum        [BED] summarize a BED file
        dfmerge      [TABLE] merge two text files
        dfsum        [TABLE] summarize a text file
-       fuccompf     [FUC] compare two files
+       fuccompf     [FUC] compare contents of two files
        fucexist     [FUC] check whether files/dirs exist
        qfcount      [FASTQ] count sequence reads in FASTQ files
        qfsum        [FASTQ] summarize a FASTQ file
@@ -130,7 +130,8 @@ fuccompf
    $ fuc fuccompf -h
    usage: fuc fuccompf [-h] file1 file2
    
-   This command will compare two files.
+   This command will compare the contents of two files. It will return 'True' if
+   they are identical and 'False' otherwise.
    
    positional arguments:
      file1       first file
@@ -147,8 +148,9 @@ fucexist
    $ fuc fucexist -h
    usage: fuc fucexist [-h] [paths ...]
    
-   This command will check whether files/dirs exist. It will look for stdin if
-   there are no arguments (e.g. $ cat files.list | fuc fucexist).
+   This command will check whether files/dirs exist. It will return 'True' if
+   they exist and 'False' otherwise. The command will look for stdin if there are
+   no arguments (e.g. $ cat files.list | fuc fucexist).
    
    positional arguments:
      paths       file/dir paths (default: stdin)

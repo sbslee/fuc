@@ -1,7 +1,7 @@
 """
 The ``pyvcf`` submodule is designed for working with VCF files (both zipped
-and unzipped). It implements ``pyvcf.VcfFrame`` which stores VCF data as
-a ``pandas.DataFrame`` to allow fast computation and easy minipulation.
+and unzipped). It implements ``pyvcf.VcfFrame`` which stores VCF data as a
+``pandas.DataFrame`` to allow fast computation and easy manipulation.
 """
 
 import pandas as pd
@@ -167,14 +167,14 @@ class VcfFrame:
             Stripped VcfFrame.
         """
         def outfunc(r):
-            idx = [r['FORMAT'].split(':').index(x) for x in format.split(':')]
+            idx = [r.FORMAT.split(':').index(x) for x in format.split(':')]
             infunc = lambda x: ':'.join([x.split(':')[i] for i in idx])
             r.iloc[9:] = r.iloc[9:].apply(infunc)
             return r
         df = self.df.copy()
         df[['ID', 'QUAL', 'FILTER', 'INFO']] = '.'
         df = df.apply(outfunc, axis=1)
-        df['FORMAT'] = format
+        df.FORMAT = format
         vf = self.__class__([], df)
         return vf
 
@@ -204,12 +204,17 @@ class VcfFrame:
         vf2 = other.strip(format=format)
         dropped = ['ID', 'QUAL', 'FILTER', 'INFO', 'FORMAT']
         shared = ['CHROM', 'POS', 'REF', 'ALT']
-        df = vf1.df.merge(vf2.df.drop(columns=dropped),
-            on=shared, how=how)
+        df = vf1.df.merge(vf2.df.drop(columns=dropped), on=shared, how=how)
+
+        # This ensures that the column order is intact when either of the
+        # dataframes is empty.
+        cols = vf1.df.columns.to_list() + vf2.df.columns[9:].to_list()
+        df = df[cols]
+
         df[dropped] = df[dropped].fillna('.')
         df.FORMAT = format
         def func(r):
-            n = len(r['FORMAT'].split(':'))
+            n = len(r.FORMAT.split(':'))
             x = './.'
             for i in range(1, n):
                 x += ':.'
@@ -568,6 +573,30 @@ class VcfFrame:
         name = name if isinstance(name, str) else self.samples[name]
         def func(r):
             is_filtered = gt_hasvar(r[name])
+            if include:
+                return is_filtered
+            else:
+                return not is_filtered
+        i = self.df.apply(func, axis=1)
+        df = self.df[i].reset_index(drop=True)
+        vf = self.__class__(self.copy_meta(), df)
+        return vf
+
+    def filter_nonpass(self, include=False):
+        """Filter out rows that don't have PASS in the FILTER field.
+
+        Parameters
+        ----------
+        include : bool, default: False
+            If True, include only such rows instead of excluding them.
+
+        Returns
+        -------
+        vf : VcfFrame
+            Filtered VcfFrame.
+        """
+        def func(r):
+            is_filtered = r.FILTER != 'PASS'
             if include:
                 return is_filtered
             else:

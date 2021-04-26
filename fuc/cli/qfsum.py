@@ -14,9 +14,9 @@ def create_parser(subparsers):
 
 def main(args):
     qf = pyfq.read_file(args.fastq_file)
-    print(f'# Total: {qf.shape:,}')
-    unique = len(set(qf.data))
-    duplicate = qf.shape - unique
+    print(f'# Total: {qf.shape[0]:,}')
+    unique = qf.df.SEQ.nunique()
+    duplicate = qf.shape[0] - unique
     print(f'# Unique: {unique:,}')
     print(f'# Duplicate: {duplicate:,}')
     lengths = qf.readlen()

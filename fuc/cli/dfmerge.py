@@ -13,7 +13,6 @@ def create_parser(subparsers):
     )
     parser.add_argument('left_file', help='left file')
     parser.add_argument('right_file', help='right file')
-    parser.add_argument('output_file', help='output file')
     parser.add_argument('--how', metavar='TEXT', choices=CHOICES,
          default='inner', help=f'type of merge to be performed {CHOICES} '
         "(default: 'inner')")
@@ -31,4 +30,4 @@ def main(args):
     df1 = pd.read_table(args.left_file, delimiter=args.left_delimiter)
     df2 = pd.read_table(args.right_file, delimiter=args.right_delimiter)
     df3 = df1.merge(df2, on=args.on, how=args.how)
-    df3.to_csv(args.output_file, sep=args.output_delimiter, index=False)
+    print(df3.to_csv(sep=args.output_delimiter, index=False))

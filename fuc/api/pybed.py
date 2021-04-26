@@ -1,6 +1,7 @@
 """
-The ``pybed`` submodule is designed for working with BED files. For example,
-it can be used to find the intersection between multiple BED files.
+The ``pybed`` submodule is designed for working with BED files. It
+implements ``pybed.BedFrame`` which stores BED data as a
+``pyranges.PyRanges`` to allow fast computation and easy manipulation.
 """
 
 import pandas as pd

@@ -1,6 +1,6 @@
 """
 The ``snpeff`` submodule is designed for parsing VCF annotation data from
-the SnpEff program.
+the SnpEff program. It should be used with ``pyvcf.VcfFrame``.
 
 One VCF record can have several SnpEff annotations if, for example,
 the record is a multiallelic site or the variant is shared by

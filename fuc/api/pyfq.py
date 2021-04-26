@@ -1,6 +1,7 @@
 """
 The ``pyfq`` submodule is designed for working with FASTQ files (both zipped
-and unzipped).
+and unzipped). It implements ``pyfq.FqFrame`` which stores FASTQ data as a
+``pandas.DataFrame`` to allow fast computation and easy manipulation.
 """
 
 import gzip
@@ -39,21 +40,11 @@ class FqFrame:
         self.df = df
 
     @property
-    def vdata(self):
-        """Return a view (copy) of the data."""
-        return deepcopy(self.data)
-
-    @property
     def shape(self):
         """Return the size of the FqFrame."""
-        return len(self.data)
+        return self.df.shape
 
     def readlen(self):
         """Return a dictionary of read lengths and their counts."""
-        lengths = {}
-        for r in self.data:
-            length = len(r.seq)
-            if length not in lengths:
-                lengths[length] = 0
-            lengths[length] += 1
-        return lengths
+        return self.df.apply(lambda r: len(r.SEQ), axis=1
+            ).value_counts().to_dict()
