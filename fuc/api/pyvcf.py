@@ -606,6 +606,32 @@ class VcfFrame:
         vf = self.__class__(self.copy_meta(), df)
         return vf
 
+    def filter_info(self, s, include=False):
+        """Filter out rows that don't contain the target string in the INFO field.
+
+        Parameters
+        ----------
+        s : str
+            Target string.
+        include : bool, default: False
+            If True, include only such rows instead of excluding them.
+
+        Returns
+        -------
+        vf : VcfFrame
+            Filtered VcfFrame.
+        """
+        def func(r):
+            is_filtered = r.INFO.contains(s)
+            if include:
+                return is_filtered
+            else:
+                return not is_filtered
+        i = self.df.apply(func, axis=1)
+        df = self.df[i].reset_index(drop=True)
+        vf = self.__class__(self.copy_meta(), df)
+        return vf
+
     def compare(self, n1, n2):
         """Compare two samples within the VcfFrame.
 
