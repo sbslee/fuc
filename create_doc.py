@@ -3,7 +3,7 @@ import pydoc
 
 from fuc.api.common import fuc_dir
 from fuc.cli import commands
-from fuc import VcfFrame
+from fuc import pyvcf
 import fuc
 
 modules = [x for x in dir(fuc) if x not in ['api', 'cli'] and '__' not in x]
@@ -15,18 +15,12 @@ readme_file = f'{fuc_dir()}/README.rst'
 fuc_help = subprocess.run(['fuc', '-h'], capture_output=True, text=True, check=True).stdout
 fuc_help = '\n'.join(['   ' + x for x in fuc_help.splitlines()])
 
-vfmerge_help = subprocess.run(['fuc', 'vfmerge', '-h'], capture_output=True, text=True, check=True).stdout
-vfmerge_help = '\n'.join(['   ' + x for x in vfmerge_help.splitlines()])
-
 module_help = ''
 for module in modules:
-    description = pydoc.getdoc(getattr(fuc, module)).replace('\n', ' ')
+    description = pydoc.getdoc(getattr(fuc, module)).split('\n\n')[0].replace('\n', ' ')
     module_help += f'- **{module}** : {description}\n'
 
-vcfframe_help = pydoc.render_doc(VcfFrame, renderer=pydoc.plaintext)
-vcfframe_help = '\n'.join(['   ' + x for x in vcfframe_help.splitlines()])
-
-d = dict(fuc_help=fuc_help, vfmerge_help=vfmerge_help, module_help=module_help, vcfframe_help=vcfframe_help)
+d = dict(fuc_help=fuc_help, module_help=module_help)
 
 readme = """
 README
@@ -65,8 +59,8 @@ To filter a VCF file based on a BED file using API:
 
 .. code:: python3
 
-   from fuc.api.VcfFrame import VcfFrame
-   vf = VcfFrame.from_file('original.vcf')
+   from fuc import pyvcf
+   vf = pyvcf.read_file('original.vcf')
    filtered_vf = vf.filter_bed('targets.bed')
    filtered_vf.to_file('filtered.vcf')
 
@@ -109,28 +103,22 @@ For getting help on CLI:
    $ fuc -h
 {fuc_help}
 
-For getting help on a specific command (e.g. `vfmerge`):
+For getting help on a specific command (e.g. ``vfmerge``):
 
 .. code-block:: console
 
    $ fuc vfmerge -h
-{vfmerge_help}
 
-Below is the list of modules available in API:
+Below is the list of submodules available in API:
 
 {module_help}
-For getting help on a specific module (e.g. `VcfFrame`):
+For getting help on a specific module (e.g. ``pyvcf``):
 
 .. code:: python3
 
-   from fuc.api import VcfFrame
-   help(VcfFrame)
+   from fuc import pyvcf
+   help(pyvcf)
 
-To give:
-
-.. parsed-literal::
-
-{vcfframe_help}
 """.format(**d)
 
 with open(readme_file, 'w') as f:
@@ -156,12 +144,11 @@ For getting help on CLI:
    $ fuc -h
 {fuc_help}
 
-For getting help on a specific command (e.g. `vfmerge`):
+For getting help on a specific command (e.g. ``vfmerge``):
 
 .. code-block:: console
 
    $ fuc vfmerge -h
-{vfmerge_help}
 
 """.format(**d)
 
@@ -194,21 +181,15 @@ Introduction
 
 This section describes application programming interface (API) for the ``fuc`` package.
 
-Below is the list of modules available in API:
+Below is the list of submodules available in API:
 
 {module_help}
-For getting help on a specific module (e.g. `VcfFrame`):
+For getting help on a specific module (e.g. ``pyvcf``):
 
 .. code:: python3
 
-   from fuc.api import VcfFrame
-   help(VcfFrame)
-
-To give:
-
-.. parsed-literal::
-
-{vcfframe_help}
+   from fuc import pyvcf
+   help(pyvcf)
 
 """.format(**d)
 

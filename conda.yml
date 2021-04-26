@@ -1,0 +1,14 @@
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - cython
+  - matplotlib
+  - notebook
+  - numpy
+  - pandas
+  - pyranges
+  - seaborn
+  - sphinx-issues
+  - sphinx_rtd_theme

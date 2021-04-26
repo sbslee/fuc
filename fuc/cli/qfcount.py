@@ -1,16 +1,27 @@
+import sys
 from fuc.api.common import get_script_name
-from fuc.api.FastqFrame import FastqFrame
+from fuc import pyfq
 
 def create_parser(subparsers):
     parser = subparsers.add_parser(
         get_script_name(__file__),
-        help='[FASTQ] count sequence reads in a FASTQ file',
-        description='This command will count sequence reads in a FASTQ '
-                    'file (both zipped and unzipped).'
+        help='[FASTQ] count sequence reads in FASTQ files',
+        description='This command will count sequence reads in FASTQ '
+            'files (both zipped and unzipped). It will look for stdin '
+            'if there are no arguments (e.g. $ cat files.list | fuc '
+            f'{get_script_name(__file__)}).'
     )
-    parser.add_argument('fastq_file', help='input FASTQ file')
+    parser.add_argument('paths', nargs='*',
+        help='FASTQ file paths (default: stdin)')
     return parser
 
 def main(args):
-    fastq_result = FastqFrame.from_file(args.fastq_file)
-    print(fastq_result.shape)
+    if args.paths:
+        paths = args.paths
+    elif not sys.stdin.isatty():
+        paths = sys.stdin.read().rstrip('\n').split('\n')
+    else:
+        raise ValueError('no input files detected')
+    for path in paths:
+        qf = pyfq.read_file(path)
+        print(qf.df.shape[0])

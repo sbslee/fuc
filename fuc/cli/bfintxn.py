@@ -1,5 +1,5 @@
 from fuc.api.common import get_script_name
-from fuc.api.BedFrame import BedFrame
+from fuc import pybed
 
 def create_parser(subparsers):
     parser = subparsers.add_parser(
@@ -12,7 +12,7 @@ def create_parser(subparsers):
     parser.add_argument('bed_files', help='BED files', nargs='+')
 
 def main(args):
-    bfs = [BedFrame.from_file(x) for x in args.bed_files]
+    bfs = [pybed.read_file(x) for x in args.bed_files]
     final_bf = bfs[0]
     for bf in bfs[1:]:
         final_bf = final_bf.intersect(bf)

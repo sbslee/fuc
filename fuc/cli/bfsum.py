@@ -1,5 +1,5 @@
 from fuc.api.common import get_script_name
-from fuc.api.BedFrame import BedFrame
+from fuc import pybed
 
 def create_parser(subparsers):
     parser = subparsers.add_parser(
@@ -18,7 +18,7 @@ def create_parser(subparsers):
         help='maximum number of decimals (default: 0)')
 
 def main(args):
-    bf = BedFrame.from_file(args.bed_file)
+    bf = pybed.read_file(args.bed_file)
     chrom_dict = {}
     total = [0, 0]
     for i, r in bf.gr.df.iterrows():

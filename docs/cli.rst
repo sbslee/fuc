@@ -19,9 +19,9 @@ For getting help on CLI:
        bfsum        [BED] summarize a BED file
        dfmerge      [TABLE] merge two text files
        dfsum        [TABLE] summarize a text file
-       fuccompf     [FUC] compare two files
+       fuccompf     [FUC] compare contents of two files
        fucexist     [FUC] check whether files/dirs exist
-       qfcount      [FASTQ] count sequence reads in a FASTQ file
+       qfcount      [FASTQ] count sequence reads in FASTQ files
        qfsum        [FASTQ] summarize a FASTQ file
        vfmerge      [VCF] merge two or more VCF files
    
@@ -29,27 +29,11 @@ For getting help on CLI:
      -h, --help     show this help message and exit
      -v, --version  show the version number and exit
 
-For getting help on a specific command (e.g. `vfmerge`):
+For getting help on a specific command (e.g. ``vfmerge``):
 
 .. code-block:: console
 
    $ fuc vfmerge -h
-   usage: fuc vfmerge [-h] [--how TEXT] [--format TEXT] vcf_files [vcf_files ...]
-   
-   This command will merge multiple VCF files (both zipped and unzipped). By
-   default, only the GT subfield of the FORMAT field will be included in the
-   merged VCF. Use '--format' to include additional FORMAT subfields such as AD
-   and DP.
-   
-   positional arguments:
-     vcf_files      VCF files
-   
-   optional arguments:
-     -h, --help     show this help message and exit
-     --how TEXT     type of merge to be performed ['left', 'right', 'outer',
-                    'inner', 'cross'] (default: 'inner')
-     --format TEXT  FORMAT subfields to be retained (e.g. 'GT:AD:DP') (default:
-                    'GT')
 
 bfintxn
 =======
@@ -98,7 +82,7 @@ dfmerge
    usage: fuc dfmerge [-h] [--how TEXT] [--on TEXT [TEXT ...]]
                       [--left_delimiter TEXT] [--right_delimiter TEXT]
                       [--output_delimiter TEXT]
-                      left_file right_file output_file
+                      left_file right_file
    
    This command will merge two text files using one or more shared columns. This
    essentially wraps the `pandas.DataFrame.merge` method.
@@ -106,7 +90,6 @@ dfmerge
    positional arguments:
      left_file             left file
      right_file            right file
-     output_file           output file
    
    optional arguments:
      -h, --help            show this help message and exit
@@ -146,7 +129,8 @@ fuccompf
    $ fuc fuccompf -h
    usage: fuc fuccompf [-h] file1 file2
    
-   This command will compare two files.
+   This command will compare the contents of two files. It will return 'True' if
+   they are identical and 'False' otherwise.
    
    positional arguments:
      file1       first file
@@ -163,8 +147,9 @@ fucexist
    $ fuc fucexist -h
    usage: fuc fucexist [-h] [paths ...]
    
-   This command will check whether files/dirs exist. It will look for stdin if
-   there are no arguments (e.g. $ cat files.list | fuc fucexist).
+   This command will check whether files/dirs exist. It will return 'True' if
+   they exist and 'False' otherwise. The command will look for stdin if there are
+   no arguments (e.g. $ cat files.list | fuc fucexist).
    
    positional arguments:
      paths       file/dir paths (default: stdin)
@@ -178,13 +163,14 @@ qfcount
 .. code-block:: console
 
    $ fuc qfcount -h
-   usage: fuc qfcount [-h] fastq_file
+   usage: fuc qfcount [-h] [paths ...]
    
-   This command will count sequence reads in a FASTQ file (both zipped and
-   unzipped).
+   This command will count sequence reads in FASTQ files (both zipped and
+   unzipped). It will look for stdin if there are no arguments (e.g. $ cat
+   files.list | fuc qfcount).
    
    positional arguments:
-     fastq_file  input FASTQ file
+     paths       FASTQ file paths (default: stdin)
    
    optional arguments:
      -h, --help  show this help message and exit
@@ -214,7 +200,8 @@ vfmerge
 .. code-block:: console
 
    $ fuc vfmerge -h
-   usage: fuc vfmerge [-h] [--how TEXT] [--format TEXT] vcf_files [vcf_files ...]
+   usage: fuc vfmerge [-h] [--how TEXT] [--format TEXT] [--sort] [--collapse]
+                      vcf_files [vcf_files ...]
    
    This command will merge multiple VCF files (both zipped and unzipped). By
    default, only the GT subfield of the FORMAT field will be included in the
@@ -226,8 +213,10 @@ vfmerge
    
    optional arguments:
      -h, --help     show this help message and exit
-     --how TEXT     type of merge to be performed ['left', 'right', 'outer',
-                    'inner', 'cross'] (default: 'inner')
+     --how TEXT     type of merge as defined in `pandas.DataFrame.merge`
+                    (default: 'inner')
      --format TEXT  FORMAT subfields to be retained (e.g. 'GT:AD:DP') (default:
                     'GT')
+     --sort         use this flag to turn off sorting of records (default: True)
+     --collapse     use this flag to collapse duplicate records (default: False)
 

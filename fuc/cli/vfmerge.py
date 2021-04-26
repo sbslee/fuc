@@ -1,7 +1,5 @@
 from fuc.api.common import get_script_name
-from fuc.api.VcfFrame import VcfFrame
-
-CHOICES = ['left', 'right', 'outer', 'inner', 'cross']
+from fuc import pyvcf
 
 def create_parser(subparsers):
     parser = subparsers.add_parser(
@@ -14,17 +12,22 @@ def create_parser(subparsers):
                     'subfields such as AD and DP.'
     )
     parser.add_argument('vcf_files', help='VCF files', nargs='+')
-    parser.add_argument('--how', metavar='TEXT', choices=CHOICES,
-         default='inner', help=f'type of merge to be performed {CHOICES} '
-        "(default: 'inner')")
+    parser.add_argument('--how', metavar='TEXT', default='inner',
+        help='type of merge as defined in `pandas.DataFrame.merge` '
+              "(default: 'inner')")
     parser.add_argument('--format', metavar='TEXT', default='GT',
         help="FORMAT subfields to be retained (e.g. 'GT:AD:DP') "
         "(default: 'GT')"
     )
+    parser.add_argument('--sort', action='store_false',
+        help='use this flag to turn off sorting of records (default: True)'
+    )
+    parser.add_argument('--collapse', action='store_true',
+        help='use this flag to collapse duplicate records (default: False)'
+    )
 
 def main(args):
-    vfs = [VcfFrame.from_file(x) for x in args.vcf_files]
-    merged_vf = vfs[0]
-    for vf in vfs[1:]:
-        merged_vf = merged_vf.merge(vf, format=args.format, how=args.how)
+    vfs = [pyvcf.read_file(x) for x in args.vcf_files]
+    merged_vf = pyvcf.merge(vfs, format=args.format, how=args.how,
+        sort=args.sort, collapse=args.collapse)
     print(merged_vf.to_string())
