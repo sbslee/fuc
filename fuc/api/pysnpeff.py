@@ -69,7 +69,7 @@ def filter_ann(vf, targets, include=True):
     vf = vf.__class__(vf.copy_meta(), df)
     return vf
 
-def parse_snpeff(vf, idx, sep=' | '):
+def parse_ann(vf, idx, sep=' | '):
     """Parse SnpEff annotations.
 
     Parameters
