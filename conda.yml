@@ -12,3 +12,4 @@ dependencies:
   - seaborn
   - sphinx-issues
   - sphinx_rtd_theme
+  - twine
