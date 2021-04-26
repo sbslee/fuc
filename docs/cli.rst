@@ -82,7 +82,7 @@ dfmerge
    usage: fuc dfmerge [-h] [--how TEXT] [--on TEXT [TEXT ...]]
                       [--left_delimiter TEXT] [--right_delimiter TEXT]
                       [--output_delimiter TEXT]
-                      left_file right_file output_file
+                      left_file right_file
    
    This command will merge two text files using one or more shared columns. This
    essentially wraps the `pandas.DataFrame.merge` method.
@@ -90,7 +90,6 @@ dfmerge
    positional arguments:
      left_file             left file
      right_file            right file
-     output_file           output file
    
    optional arguments:
      -h, --help            show this help message and exit

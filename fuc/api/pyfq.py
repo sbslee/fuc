@@ -44,6 +44,12 @@ class FqFrame:
         """Return the size of the FqFrame."""
         return self.df.shape
 
+    def to_file(self, file_path):
+        """Write the FqFrame to a FASTQ file."""
+        with open(file_path, 'w') as f:
+            for line in self.df.stack().to_list():
+                f.write(line + '\n')
+
     def readlen(self):
         """Return a dictionary of read lengths and their counts."""
         return self.df.apply(lambda r: len(r.SEQ), axis=1
