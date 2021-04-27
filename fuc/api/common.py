@@ -31,7 +31,7 @@ def get_most_similar(a, l):
     i = [i for i, x in enumerate(s) if x == m][0]
     return l[i]
 
-def sumstat(tp, fp, fn, tn):
+def sumstat(fp, fn, tp, tn):
     """Return various important statistics."""
     d = {
         'tpr': tp / (tp + fn), # sensitivity, recall, hit rate

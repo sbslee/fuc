@@ -401,7 +401,7 @@ class VcfFrame:
             vf = pyvcf.VcfFrame([], df)
             print(vf.df)
 
-        To give:
+        Which gives:
 
         .. parsed-literal::
 
@@ -415,7 +415,7 @@ class VcfFrame:
 
             print(vf.markmiss_dp(30).df)
 
-        To give:
+        Which gives:
 
         .. parsed-literal::
 
@@ -429,7 +429,7 @@ class VcfFrame:
 
             print(vf.markmiss_dp(30, samples=['Steven', 'Sara']).df)
 
-        To give:
+        Which gives:
 
         .. parsed-literal::
 
@@ -774,61 +774,204 @@ class VcfFrame:
         vf = self.__class__(self.copy_meta(), df)
         return vf
 
-    def compare(self, n1, n2):
-        """Compare two samples within the VcfFrame.
+    def compare(self, n1, n2, n3=None):
+        """Compare two (A, B) or three (A, B, C) samples.
+
+        This method will return ``(Ab, aB, AB, ab)`` for two samples and
+        ``(Abc, aBc, ABc, abC, AbC, aBC, ABC)`` for three samples. Note that
+        the former is equivalent to ``(FP, FN, TP, TN)`` if we assume A is
+        the test sample and B is the truth sample.
 
         Parameters
         ----------
         n1 : str or int
-            Name or index of the test sample.
+            Name or index of the sample A (or test).
         n2 : str or int
-            Name or index of the truth sample.
+            Name or index of the sample B (or truth).
+        n3 : str or int, optional
+            Name or index of the sample C.
 
         Returns
         -------
         result : tuple
-            Comparison result (tp, fp, fn, tn).
+            Four- or eight-element tuple depending on the number of samples.
+
+        Examples
+        --------
+        Let's assume we have the following data:
+
+        .. code:: python3
+
+            df = pd.DataFrame({
+                'CHROM': ['chr1', 'chr1', 'chr1'], 'POS': [100, 101, 102],
+                'ID': ['.', '.', '.'], 'REF': ['G', 'T', 'T'],
+                'ALT': ['A', 'C', 'A'], 'QUAL': ['.', '.', '.'],
+                'FILTER': ['.', '.', '.'], 'INFO': ['.', '.', '.'],
+                'FORMAT': ['GT:DP', 'GT:DP', 'GT:DP'],
+                'Steven': ['0/1:30', '0/0:29', '0/0:28'],
+                'Sara': ['0/1:24', '0/1:30', './.:.'],
+                'James': ['0/1:18', '0/1:24', '1/1:34'],
+            })
+            vf = pyvcf.VcfFrame([], df)
+            print(vf.df)
+
+        To give:
+
+        .. parsed-literal::
+
+              CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT  Steven    Sara   James
+            0  chr1  100  .   G   A    .      .    .  GT:DP  0/1:30  0/1:24  0/1:18
+            1  chr1  101  .   T   C    .      .    .  GT:DP  0/0:29  0/1:30  0/1:24
+            2  chr1  102  .   T   A    .      .    .  GT:DP  0/0:28   ./.:.  1/1:34
+
+        Compare Steven and Sara:
+
+        .. code:: python3
+
+            vf.compare('Steven', 'Sara')
+
+        Which gives:
+
+        .. parsed-literal::
+
+            (0, 1, 1, 1)
+
+        Next, compare all three samples:
+
+        .. code:: python3
+
+            vf.compare('Steven', 'Sara', 'James')
+
+        Which gives:
+
+        .. parsed-literal::
+
+            (0, 0, 0, 1, 0, 1, 1, 0)
         """
+        if n3 is None:
+            result = self._compare_two(n1, n2)
+        else:
+            result = self._compare_three(n1, n2, n3)
+        return result
+
+    def _compare_two(self, n1, n2):
         n1 = n1 if isinstance(n1, str) else self.samples[n1]
         n2 = n2 if isinstance(n2, str) else self.samples[n2]
         def func(r):
             a = gt_hasvar(r[n1])
             b = gt_hasvar(r[n2])
-            if a and b:
-                return 'tp'
-            elif a and not b:
-                return 'fp'
+            if a and not b:
+                return 'Ab'
             elif not a and b:
-                return 'fn'
+                return 'aB'
+            elif a and b:
+                return 'AB'
             else:
-                return 'tn'
+                return 'ab'
         d = self.df.apply(func, axis=1).value_counts().to_dict()
-        tp = d['tp'] if 'tp' in d else 0
-        fp = d['fp'] if 'fp' in d else 0
-        fn = d['fn'] if 'fn' in d else 0
-        tn = d['tn'] if 'tn' in d else 0
-        result = (tp, fp, fn, tn)
-        return result
+        Ab = d['Ab'] if 'Ab' in d else 0
+        aB = d['aB'] if 'aB' in d else 0
+        AB = d['AB'] if 'AB' in d else 0
+        ab = d['ab'] if 'ab' in d else 0
+        return (Ab, aB, AB, ab)
+
+    def _compare_three(self, n1, n2, n3):
+        n1 = n1 if isinstance(n1, str) else self.samples[n1]
+        n2 = n2 if isinstance(n2, str) else self.samples[n2]
+        n3 = n3 if isinstance(n3, str) else self.samples[n3]
+        def func(r):
+            a = gt_hasvar(r[n1])
+            b = gt_hasvar(r[n2])
+            c = gt_hasvar(r[n3])
+            if a and not b and not c:
+                return 'Abc'
+            elif not a and b and not c:
+                return 'aBc'
+            elif a and b and not c:
+                return 'ABc'
+            elif not a and not b and c:
+                return 'abC'
+            elif a and not b and c:
+                return 'AbC'
+            elif not a and b and c:
+                return 'aBC'
+            elif a and b and c:
+                return 'ABC'
+            else:
+                return 'abc'
+        d = self.df.apply(func, axis=1).value_counts().to_dict()
+        Abc = d['Abc'] if 'Abc' in d else 0
+        aBc = d['aBc'] if 'aBc' in d else 0
+        ABc = d['ABc'] if 'ABc' in d else 0
+        abC = d['abC'] if 'abC' in d else 0
+        AbC = d['AbC'] if 'AbC' in d else 0
+        aBC = d['aBC'] if 'aBC' in d else 0
+        ABC = d['ABC'] if 'ABC' in d else 0
+        abc = d['abc'] if 'abc' in d else 0
+        return (Abc, aBc, ABc, abC, AbC, aBC, ABC, abc)
 
     def combine(self, n1, n2):
-        """Return a new column after combining data from the two samples.
+        """Combine data from two samples.
 
         This method is useful when, for example, you are trying to
         consolidate data from multiple replicate samples. When the same
-        variant is found in both samples, the method will use the genotype
-        data of the first sample.
+        variant is found (or not found) in both samples, the method will
+        use the genotype data of the first sample.
 
         Parameters
         ----------
         n1 : str or int
-            Name or index of the first (or original) sample.
+            Name or index of the first sample (or original).
         n2 : str or int
-            Name or index of the second (or replicate) sample.
+            Name or index of the second sample (or replicate).
 
         Returns
         -------
         s : pandas.Series
             VCF column representing the combined data.
+
+        Examples
+        --------
+        Let's assume we have the following data:
+
+        .. code:: python3
+
+            df = pd.DataFrame({
+                'CHROM': ['chr1', 'chr1', 'chr1'], 'POS': [100, 101, 102],
+                'ID': ['.', '.', '.'], 'REF': ['G', 'T', 'T'],
+                'ALT': ['A', 'C', 'A'], 'QUAL': ['.', '.', '.'],
+                'FILTER': ['.', '.', '.'], 'INFO': ['.', '.', '.'],
+                'FORMAT': ['GT:DP', 'GT:DP', 'GT:DP'],
+                'Steven': ['./.:.', '0/0:29', '0/0:28'],
+                'Sara': ['0/1:24', '0/1:30', './.:.'],
+            })
+            vf = pyvcf.VcfFrame([], df)
+            print(vf.df)
+
+        Which gives:
+
+        .. parsed-literal::
+
+              CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT  Steven    Sara
+            0  chr1  100  .   G   A    .      .    .  GT:DP   ./.:.  0/1:24
+            1  chr1  101  .   T   C    .      .    .  GT:DP  0/0:29  0/1:30
+            2  chr1  102  .   T   A    .      .    .  GT:DP  0/0:28   ./.:.
+
+        Let's combine data from Steven and Sara:
+
+        .. code:: python3
+
+            vf.df['Combined'] = vf.combine('Steven', 'Sara')
+            print(vf.df)
+
+        which gives:
+
+        .. parsed-literal::
+
+              CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT  Steven    Sara Combined
+            0  chr1  100  .   G   A    .      .    .  GT:DP   ./.:.  0/1:24   0/1:24
+            1  chr1  101  .   T   C    .      .    .  GT:DP  0/0:29  0/1:30   0/1:30
+            2  chr1  102  .   T   A    .      .    .  GT:DP  0/0:28   ./.:.   0/0:28
         """
         n1 = n1 if isinstance(n1, str) else self.samples[n1]
         n2 = n2 if isinstance(n2, str) else self.samples[n2]
@@ -847,7 +990,7 @@ class VcfFrame:
         return s
 
     def subtract(self, n1, n2):
-        """Return a new column after subtracting data between the two samples.
+        """Subtract data from one sample to another.
 
         This method is useful when, for example, you are trying to
         remove germline variants from somatic mutations.
