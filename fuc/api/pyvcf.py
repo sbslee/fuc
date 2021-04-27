@@ -1006,6 +1006,49 @@ class VcfFrame:
         -------
         s : pandas.Series
             VCF column representing the combined data.
+
+        Examples
+        --------
+        Let's assume we have the following data:
+
+        .. code:: python3
+
+            df = pd.DataFrame({
+                'CHROM': ['chr1', 'chr1', 'chr1'], 'POS': [100, 101, 102],
+                'ID': ['.', '.', '.'], 'REF': ['G', 'T', 'T'],
+                'ALT': ['A', 'C', 'A'], 'QUAL': ['.', '.', '.'],
+                'FILTER': ['.', '.', '.'], 'INFO': ['.', '.', '.'],
+                'FORMAT': ['GT:DP', 'GT:DP', 'GT:DP'],
+                'Steven': ['./.:.', '1/1:29', '0/1:28'],
+                'Sara': ['0/1:24', '0/1:30', './.:.'],
+            })
+            vf = pyvcf.VcfFrame([], df)
+            print(vf.df)
+
+        Which gives:
+
+        .. parsed-literal::
+
+              CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT  Steven    Sara
+            0  chr1  100  .   G   A    .      .    .  GT:DP   ./.:.  0/1:24
+            1  chr1  101  .   T   C    .      .    .  GT:DP  1/1:29  0/1:30
+            2  chr1  102  .   T   A    .      .    .  GT:DP  0/1:28   ./.:.
+
+        Let's subtract Sara's variant data from Steven:
+
+        .. code:: python3
+
+            vf.df['Subtracted'] = vf.subtract('Steven', 'Sara')
+            print(vf.df)
+
+        which gives:
+
+        .. parsed-literal::
+
+              CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT  Steven    Sara Subtracted
+            0  chr1  100  .   G   A    .      .    .  GT:DP   ./.:.  0/1:24      ./.:.
+            1  chr1  101  .   T   C    .      .    .  GT:DP  1/1:29  0/1:30      ./.:.
+            2  chr1  102  .   T   A    .      .    .  GT:DP  0/1:28   ./.:.     0/1:28
         """
         n1 = n1 if isinstance(n1, str) else self.samples[n1]
         n2 = n2 if isinstance(n2, str) else self.samples[n2]
