@@ -137,6 +137,10 @@ class VcfFrame:
         """Return a copy of the dataframe."""
         return self.df.copy()
 
+    def copy(self):
+        """Return a copy of the VcfFrame."""
+        return self.__class__(self.copy_meta(), self.copy_df())
+
     def to_file(self, fn):
         """Write the VcfFrame to a VCF file."""
         with open(fn, 'w') as f:
