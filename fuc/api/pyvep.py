@@ -45,6 +45,7 @@ the Ensembl Variant Effect Predictor (VEP). It should be used with
 """
 
 import re
+import pandas as pd
 
 def row_first_ann(r):
     """Return the first VEP annotation for the row."""
@@ -86,6 +87,45 @@ def filter_ann(vf, targets, include=True):
     vf = vf.__class__(vf.copy_meta(), df)
     return vf
 
+def filter_clinsig(vf, whitelist=None, blacklist=None, include=False):
+    """Filter out rows whose variant is deemed as not clincally significant.
+
+    Parameters
+    ----------
+    whilelist : list, default: None
+        CLIN_SIG values that signifiy a variant is clincally significant.
+        By default, it includes ``pathogenic`` and ``likely_pathogenic``
+    blacklist : list, default: None
+        CLIN_SIG values that signifiy a variant is not clincally significant.
+        By default, it includes ``benign`` and ``likely_benign``.
+    include : bool, default: False
+        If True, include only such rows instead of excluding them.
+
+    Returns
+    -------
+    vf : VcfFrame
+        Filtered VcfFrame.
+    """
+    if whitelist is None:
+        whitelist = ['pathogenic', 'likely_pathogenic']
+    if blacklist is None:
+        blacklist = ['benign', 'likely_benign']
+    def func(r):
+        ann = row_first_ann(r)
+        values = ann.split('|')[get_index(vf, 'CLIN_SIG')].split('&')
+        if not list(set(values) & set(whitelist)):
+            return False
+        if list(set(values) & set(blacklist)):
+            return False
+        return True
+
+    i = vf.df.apply(func, axis=1)
+    if include:
+        i = ~i
+    df = vf.df[i].reset_index(drop=True)
+    vf = vf.__class__(vf.copy_meta(), df)
+    return vf
+
 def parse_ann(vf, idx, sep=' | '):
     """Parse VEP annotations.
 
@@ -115,11 +155,29 @@ def parse_ann(vf, idx, sep=' | '):
 
 def get_index(vf, target):
     """Return the index of the target field (e.g. CLIN_SIG)."""
-    i = 0
-    for j, line in enumerate(vf.meta):
+    headers = get_headers(vf)
+    return headers.index(target)
+
+def get_headers(vf):
+    headers = []
+    for i, line in enumerate(vf.meta):
         if 'ID=CSQ' in line:
-            i = j
-    if not i:
-        return 0
-    s = re.search(r'Format: (.*?)">', vf.meta[i]).group(1)
-    return s.split('|').index(target)
+            headers = re.search(r'Format: (.*?)">',
+                                vf.meta[i]).group(1).split('|')
+    return headers
+
+def write_table(vf, fn):
+    """Write the VcfFrame as a tab-delimited text file."""
+    df = vf.df.copy()
+    headers = get_headers(vf)
+    def func(r):
+        ann = row_first_ann(r)
+        if ann:
+            s = ['.' if x == '' else x for x in ann.split('|')]
+        else:
+            s = ['.' for x in headers]
+        s = pd.Series(s, index=headers)
+        s = pd.concat([r[:9], s, r[9:]])
+        return s
+    df = df.apply(func, axis=1)
+    df.to_csv(fn, sep='\t', index=False)

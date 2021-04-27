@@ -137,9 +137,9 @@ class VcfFrame:
         """Return a copy of the dataframe."""
         return self.df.copy()
 
-    def to_file(self, file_path):
+    def to_file(self, fn):
         """Write the VcfFrame to a VCF file."""
-        with open(file_path, 'w') as f:
+        with open(fn, 'w') as f:
             if self.meta:
                 f.write('\n'.join(self.meta) + '\n')
             self.df.rename(columns={'CHROM': '#CHROM'}).to_csv(
@@ -368,33 +368,171 @@ class VcfFrame:
         vf = self.__class__(self.copy_meta(), df)
         return vf
 
-    def filter_dp(self, threshold=200):
-        """Filter rows based on the DP subfield of the FORMAT field."""
+    def markmiss_dp(self, threshold, samples=None):
+        """Mark genotypes whose DP is below threshold as missing.
+
+        Parameters
+        ----------
+        threshold : int
+            Minimum read depth.
+        sampels : list, optional
+            If provided, only these samples will be marked.
+
+        Returns
+        -------
+        vf : VcfFrame
+            Filtered VcfFrame.
+
+        Examples
+        --------
+
+        Let's assume we have the following data:
+
+        .. code:: python3
+
+            df = pd.DataFrame({
+                'CHROM': ['chr1', 'chr1'], 'POS': [100, 101],
+                'ID': ['.', '.'], 'REF': ['G', 'T'],
+                'ALT': ['A', 'C'], 'QUAL': ['.', '.'],
+                'FILTER': ['.', '.'], 'INFO': ['.', '.'],
+                'FORMAT': ['GT:DP', 'GT:DP'], 'Steven': ['0/1:30', '0/1:29'],
+                'Sara': ['0/1:24', '0/1:30'], 'James': ['0/1:18', '0/1:24'],
+            })
+            vf = pyvcf.VcfFrame([], df)
+            print(vf.df)
+
+        To give:
+
+        .. parsed-literal::
+
+              CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT  Steven    Sara   James
+            0  chr1  100  .   G   A    .      .    .  GT:DP  0/1:30  0/1:24  0/1:18
+            1  chr1  101  .   T   C    .      .    .  GT:DP  0/1:29  0/1:30  0/1:24
+
+        We can mark all the genotypes whose DP is below 30 as missing with:
+
+        .. code:: python3
+
+            print(vf.markmiss_dp(30).df)
+
+        To give:
+
+        .. parsed-literal::
+
+              CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT  Steven    Sara  James
+            0  chr1  100  .   G   A    .      .    .  GT:DP  0/1:30   ./.:.  ./.:.
+            1  chr1  101  .   T   C    .      .    .  GT:DP   ./.:.  0/1:30  ./.:.
+
+        We can apply the marking to a subset of the samples:
+
+        .. code:: python3
+
+            print(vf.markmiss_dp(30, samples=['Steven', 'Sara']).df)
+
+        To give:
+
+        .. parsed-literal::
+
+              CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT  Steven    Sara   James
+            0  chr1  100  .   G   A    .      .    .  GT:DP  0/1:30   ./.:.  0/1:18
+            1  chr1  101  .   T   C    .      .    .  GT:DP   ./.:.  0/1:30  0/1:24
+        """
+        if samples is None:
+            samples = self.samples
         def outfunc(r):
-            i = r['FORMAT'].split(':').index('DP')
+            i = r.FORMAT.split(':').index('DP')
+            m = row_missing_value(r)
             def infunc(x):
-                l = x.split(':')
-                dp = l[i]
-                if dp == '.' or int(dp) < threshold:
-                    return './.' + ':.' * (len(l)-1)
+                s = x.split(':')[i]
+                if s == '.' or int(s) < threshold:
+                    return m
                 return x
-            r.iloc[9:] = r.iloc[9:].apply(infunc)
+            r[samples] = r[samples].apply(infunc)
             return r
         df = self.df.apply(outfunc, axis=1)
         vf = self.__class__(self.copy_meta(), df)
         return vf
 
-    def filter_af(self, threshold=0.1):
-        """Filter rows based on the AF subfield of the FORMAT field."""
+    def markmiss_af(self, threshold, samples=None):
+        """Mark genotypes whose AF is below threshold as missing.
+
+        Parameters
+        ----------
+        threshold : int
+            Minimum allele fraction.
+        sampels : list, optional
+            If provided, only these samples will be marked.
+
+        Returns
+        -------
+        vf : VcfFrame
+            Filtered VcfFrame.
+
+        Examples
+        --------
+
+        Let's assume we have the following data:
+
+        .. code:: python3
+
+            df = pd.DataFrame({
+                'CHROM': ['chr1', 'chr1'], 'POS': [100, 101],
+                'ID': ['.', '.'], 'REF': ['G', 'T'],
+                'ALT': ['A', 'C'], 'QUAL': ['.', '.'],
+                'FILTER': ['.', '.'], 'INFO': ['.', '.'],
+                'FORMAT': ['GT:AF', 'GT:AF'], 'Steven': ['0/1:0.25', '0/1:0.31'],
+                'Sara': ['0/1:0.12', '0/1:0.25'], 'James': ['0/1:0.11', '0/1:0.09'],
+            })
+            vf = pyvcf.VcfFrame([], df)
+            print(vf.df)
+
+        To give:
+
+        .. parsed-literal::
+
+              CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    Steven      Sara     James
+            0  chr1  100  .   G   A    .      .    .  GT:AF  0/1:0.25  0/1:0.12  0/1:0.11
+            1  chr1  101  .   T   C    .      .    .  GT:AF  0/1:0.31  0/1:0.25  0/1:0.09
+
+        We can mark all the genotypes whose AF is below 0.3 as missing with:
+
+        .. code:: python3
+
+            print(vf.markmiss_af(0.3).df)
+
+        To give:
+
+        .. parsed-literal::
+
+              CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    Steven   Sara  James
+            0  chr1  100  .   G   A    .      .    .  GT:AF     ./.:.  ./.:.  ./.:.
+            1  chr1  101  .   T   C    .      .    .  GT:AF  0/1:0.31  ./.:.  ./.:.
+
+        We can apply the marking to a subset of the samples:
+
+        .. code:: python3
+
+            print(vf.markmiss_af(0.3, samples=['Steven', 'Sara']).df)
+
+        To give:
+
+        .. parsed-literal::
+
+              CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    Steven   Sara     James
+            0  chr1  100  .   G   A    .      .    .  GT:AF     ./.:.  ./.:.  0/1:0.11
+            1  chr1  101  .   T   C    .      .    .  GT:AF  0/1:0.31  ./.:.  0/1:0.09
+        """
+        if samples is None:
+            samples = self.samples
         def outfunc(r):
-            i = r['FORMAT'].split(':').index('AF')
+            i = r.FORMAT.split(':').index('AF')
+            m = row_missing_value(r)
             def infunc(x):
-                l = x.split(':')
-                af = l[i]
-                if af == '.' or float(af) < threshold:
-                    return './.' + ':.' * (len(l)-1)
+                s = x.split(':')[i]
+                if s == '.' or float(s) < threshold:
+                    return m
                 return x
-            r.iloc[9:] = r.iloc[9:].apply(infunc)
+            r[samples] = r[samples].apply(infunc)
             return r
         df = self.df.apply(outfunc, axis=1)
         vf = self.__class__(self.copy_meta(), df)
@@ -440,12 +578,10 @@ class VcfFrame:
         def func(r):
             ref = len(r['REF']) > 1
             alt = max([len(x) for x in r['ALT'].split(',')]) > 1
-            has_indel = any([ref, alt])
-            if include:
-                return has_indel
-            else:
-                return not has_indel
+            return not any([ref, alt])
         i = self.df.apply(func, axis=1)
+        if include:
+            i = ~i
         df = self.df[i].reset_index(drop=True)
         vf = self.__class__(self.copy_meta(), df)
         return vf
@@ -607,12 +743,12 @@ class VcfFrame:
         return vf
 
     def filter_info(self, s, include=False):
-        """Filter out rows that don't contain the target string in the INFO field.
+        """Filter out rows that lack certain string(s) in the INFO field.
 
         Parameters
         ----------
-        s : str
-            Target string.
+        s : str or list
+            Target string or list of target strings.
         include : bool, default: False
             If True, include only such rows instead of excluding them.
 
@@ -621,8 +757,14 @@ class VcfFrame:
         vf : VcfFrame
             Filtered VcfFrame.
         """
+        if isinstance(s, str):
+            s = [s]
         def func(r):
-            is_filtered = r.INFO.contains(s)
+            is_filtered = True
+            for x in s:
+                if x in r.INFO:
+                    is_filtered = False
+                    break
             if include:
                 return is_filtered
             else:
@@ -699,6 +841,41 @@ class VcfFrame:
                 return r[n1]
             elif not a and b:
                 return r[n2]
+            else:
+                return r[n1]
+        s = self.df.apply(func, axis=1)
+        return s
+
+    def subtract(self, n1, n2):
+        """Return a new column after subtracting data between the two samples.
+
+        This method is useful when, for example, you are trying to
+        remove germline variants from somatic mutations.
+
+        Parameters
+        ----------
+        n1 : str or int
+            Name or index of the first (or somatic) sample.
+        n2 : str or int
+            Name or index of the second (or germline) sample.
+
+        Returns
+        -------
+        s : pandas.Series
+            VCF column representing the combined data.
+        """
+        n1 = n1 if isinstance(n1, str) else self.samples[n1]
+        n2 = n2 if isinstance(n2, str) else self.samples[n2]
+        def func(r):
+            m = row_missing_value(r)
+            a = gt_hasvar(r[n1])
+            b = gt_hasvar(r[n2])
+            if a and b:
+                return m
+            elif a and not b:
+                return r[n1]
+            elif not a and b:
+                return r[n1]
             else:
                 return r[n1]
         s = self.df.apply(func, axis=1)

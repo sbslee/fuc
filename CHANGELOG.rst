@@ -6,6 +6,7 @@ Changelog
 
 * Rename ``snpeff`` submodule to ``pysnpeff``.
 * Add new submodule ``pyvep``.
+* Update ``fuc.api.pyvcf.VcfFrame`` class.
 
 0.2.0 (2021-04-26)
 ------------------
