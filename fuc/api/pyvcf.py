@@ -233,7 +233,7 @@ class VcfFrame:
         return vf3
 
     def collapse(self):
-        """Collapse duplicate records.
+        """Collapse duplicate records in the VcfFrame.
 
         Duplicate records have the identical values for ``CHROM``, ``POS``,
         and ``REF``. They can result from merging two VCF files.
@@ -243,7 +243,7 @@ class VcfFrame:
 
         Returns
         -------
-        vf : VcfFrame
+        fuc.api.pyvcf.VcfFrame
             Collapsed VcfFrame.
 
         Examples
@@ -331,6 +331,13 @@ class VcfFrame:
                 return r
 
             df2 = df.apply(outfunc, axis=1)
+
+            def handle_replicates(c):
+                if sum(c.values != '') > 1:
+
+                    raise ValueError(f'cannot collapse:\n{df.loc[c.index]}')
+
+            df2.iloc[:, 9:].apply(handle_replicates)
             df2 = df2.groupby(['CHROM', 'POS', 'REF']).agg(''.join)
             df2 = df2.reset_index()
             cols = list(df2)
