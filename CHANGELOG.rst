@@ -7,6 +7,7 @@ Changelog
 * Rename ``snpeff`` submodule to ``pysnpeff``.
 * Add new submodule ``pyvep``.
 * Update ``fuc.api.pyvcf.VcfFrame`` class.
+* Add ``autodocsumm`` extension to Read the Docs.
 
 0.2.0 (2021-04-26)
 ------------------

@@ -31,7 +31,8 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
     'sphinx_rtd_theme',
-    'sphinx_issues'
+    'sphinx_issues',
+    'autodocsumm'
 ]
 
 autodoc_mock_imports = [
@@ -39,6 +40,10 @@ autodoc_mock_imports = [
     'pandas',
     'pyranges'
 ]
+
+autodoc_default_options = {
+    'autosummary': True,
+}
 
 issues_github_path = 'sbslee/fuc'
 
