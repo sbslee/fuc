@@ -87,7 +87,8 @@ def filter_ann(vf, targets, include=True):
     vf = vf.__class__(vf.copy_meta(), df)
     return vf
 
-def filter_clinsig(vf, whitelist=None, blacklist=None, include=False):
+def filter_clinsig(vf, whitelist=None, blacklist=None, include=False,
+                   index=False):
     """Filter out rows whose variant is deemed as not clincally significant.
 
     Parameters
@@ -100,11 +101,13 @@ def filter_clinsig(vf, whitelist=None, blacklist=None, include=False):
         By default, it includes ``benign`` and ``likely_benign``.
     include : bool, default: False
         If True, include only such rows instead of excluding them.
+    index : bool, default: False
+        If True, return the boolean index instead of a new VcfFrame.
 
     Returns
     -------
-    vf : VcfFrame
-        Filtered VcfFrame.
+    vf : VcfFrame or pandas.Series
+        Filtered VcfFrame or boolean index.
     """
     if whitelist is None:
         whitelist = ['pathogenic', 'likely_pathogenic']
@@ -118,15 +121,16 @@ def filter_clinsig(vf, whitelist=None, blacklist=None, include=False):
         if list(set(values) & set(blacklist)):
             return False
         return True
-
     i = vf.df.apply(func, axis=1)
     if include:
         i = ~i
+    if index:
+        return i
     df = vf.df[i].reset_index(drop=True)
     vf = vf.__class__(vf.copy_meta(), df)
     return vf
 
-def filter_impact(vf, values, include=False):
+def filter_impact(vf, values, include=False, index=False):
     """Filter out rows based on the IMPACT field."""
     def func(r):
         ann = row_first_ann(r)
@@ -135,6 +139,8 @@ def filter_impact(vf, values, include=False):
     i = vf.df.apply(func, axis=1)
     if include:
         i = ~i
+    if index:
+        return i
     df = vf.df[i].reset_index(drop=True)
     vf = vf.__class__(vf.copy_meta(), df)
     return vf
@@ -180,7 +186,7 @@ def get_headers(vf):
                                 vf.meta[i]).group(1).split('|')
     return headers
 
-def write_table(vf, fn):
+def get_table(vf):
     """Write the VcfFrame as a tab-delimited text file."""
     df = vf.df.copy()
     headers = get_headers(vf)
@@ -194,4 +200,9 @@ def write_table(vf, fn):
         s = pd.concat([r[:9], s, r[9:]])
         return s
     df = df.apply(func, axis=1)
+    return df
+
+def write_table(vf, fn):
+    """Write the VcfFrame as a tab-delimited text file."""
+    df = get_table(vf)
     df.to_csv(fn, sep='\t', index=False)
