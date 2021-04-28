@@ -126,6 +126,19 @@ def filter_clinsig(vf, whitelist=None, blacklist=None, include=False):
     vf = vf.__class__(vf.copy_meta(), df)
     return vf
 
+def filter_impact(vf, values, include=False):
+    """Filter out rows based on the IMPACT field."""
+    def func(r):
+        ann = row_first_ann(r)
+        impact = ann.split('|')[get_index(vf, 'IMPACT')]
+        return impact not in values
+    i = vf.df.apply(func, axis=1)
+    if include:
+        i = ~i
+    df = vf.df[i].reset_index(drop=True)
+    vf = vf.__class__(vf.copy_meta(), df)
+    return vf
+
 def parse_ann(vf, idx, sep=' | '):
     """Parse VEP annotations.
 
@@ -159,6 +172,7 @@ def get_index(vf, target):
     return headers.index(target)
 
 def get_headers(vf):
+    """Return the list of field IDs."""
     headers = []
     for i, line in enumerate(vf.meta):
         if 'ID=CSQ' in line:

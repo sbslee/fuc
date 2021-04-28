@@ -1123,7 +1123,56 @@ class VcfFrame:
         return vf
 
     def sort(self):
-        """Return the sorted VcfFrame."""
+        """Return the sorted VcfFrame.
+
+        Returns
+        -------
+        vf : VcfFrame
+            Updated VcfFrame.
+
+        Examples
+        --------
+        Let’s assume we have the following data:
+
+        .. code:: python3
+
+            df = pd.DataFrame({
+                'CHROM': ['chr10', 'chr2', 'chr1', 'chr2'], 'POS': [100, 101, 102, 90],
+                'ID': ['.', '.', '.', '.'], 'REF': ['G', 'T', 'T', 'A'],
+                'ALT': ['A', 'C', 'A', 'T'], 'QUAL': ['.', '.', '.', '.'],
+                'FILTER': ['.', '.', '.', '.'], 'INFO': ['.', '.', '.', '.'],
+                'FORMAT': ['GT:DP', 'GT:DP', 'GT:DP', 'GT:DP'],
+                'Steven': ['./.:.', '0/0:29', '0/0:28', '0/1:17']
+            })
+            vf = pyvcf.VcfFrame([], df)
+            print(vf.df)
+
+        Which gives:
+
+        .. parsed-literal::
+
+               CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT  Steven
+            0  chr10  100  .   G   A    .      .    .  GT:DP   ./.:.
+            1   chr2  101  .   T   C    .      .    .  GT:DP  0/0:29
+            2   chr1  102  .   T   A    .      .    .  GT:DP  0/0:28
+            3   chr2   90  .   A   T    .      .    .  GT:DP  0/1:17
+
+        We sort the VcfFrame:
+
+        .. code:: python3
+
+            print(vf.sort().df)
+
+        Which gives:
+
+        .. parsed-literal::
+
+               CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT  Steven
+            0   chr1  102  .   T   A    .      .    .  GT:DP  0/0:28
+            1   chr2   90  .   A   T    .      .    .  GT:DP  0/1:17
+            2   chr2  101  .   T   C    .      .    .  GT:DP  0/0:29
+            3  chr10  100  .   G   A    .      .    .  GT:DP   ./.:.
+        """
         df = self.df.sort_values(by=['CHROM', 'POS'], ignore_index=True,
             key=lambda col: [CONTIGS.index(x) if isinstance(x, str)
                              else x for x in col])
@@ -1136,5 +1185,12 @@ class VcfFrame:
             r[9:] = r[9:].apply(gt_unphase)
             return r
         df = self.df.apply(func, axis=1)
+        vf = self.__class__(self.copy_meta(), df)
+        return vf
+
+    def subset(self, samples):
+        """Return the subseted VcfFrame."""
+        headers = self.df.columns[:9].to_list() + samples
+        df = self.df[headers]
         vf = self.__class__(self.copy_meta(), df)
         return vf
