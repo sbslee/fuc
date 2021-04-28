@@ -66,7 +66,7 @@ def merge(vfs, how='inner', format='GT', sort=True, collapse=False):
     return merged_vf
 
 def gt_hasvar(x):
-    """Return True if the genotype has a variant call (e.g. ``0/1``)."""
+    """Return ``True`` if the genotype has a variant call such as ``0/1``."""
     if x.split(':')[0].replace('/', '').replace('.', '').replace('0', ''):
         return True
     else:

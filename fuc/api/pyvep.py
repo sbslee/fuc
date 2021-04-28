@@ -1,51 +1,19 @@
 """
-The ``vep`` submodule is designed for parsing VCF annotation data from
+The ``pyvep`` submodule is designed for parsing VCF annotation data from
 the Ensembl Variant Effect Predictor (VEP). It should be used with
 ``pyvcf.VcfFrame``.
-
-1. Allele
-2. Consequence
-3. IMPACT
-4. SYMBOL
-5. Gene
-6. Feature_type
-7. Feature
-8. BIOTYPE
-9. EXON
-10. INTRON
-11. HGVSc
-12. HGVSp
-13. cDNA_position
-14. CDS_position
-15. Protein_position
-16. Amino_acids
-17. Codons
-18. Existing_variation
-19. DISTANCE
-20. STRAND
-21. FLAGS
-22. SYMBOL_SOURCE
-23. HGNC_ID
-24. MANE_SELECT
-25. MANE_PLUS_CLINICAL
-26. TSL
-27. APPRIS
-28. SIFT
-29. PolyPhen
-30. AF
-31. CLIN_SIG
-32. SOMATIC
-33. PHENO
-34. PUBMED
-35. MOTIF_NAME
-36. MOTIF_POS
-37. HIGH_INF_POS
-38. MOTIF_SCORE_CHANGE
-39. TRANSCRIPTION_FACTORS
 """
 
 import re
 import pandas as pd
+
+def _get_keys(vf):
+    """Return existing annotation keys (e.g. Allele, IMPACT)."""
+    l = []
+    for i, line in enumerate(vf.meta):
+        if 'ID=CSQ' in line:
+            l = re.search(r'Format: (.*?)">', vf.meta[i]).group(1).split('|')
+    return l
 
 def row_first_ann(r):
     """Return the first VEP annotation for the row."""
@@ -55,7 +23,7 @@ def row_first_ann(r):
     ann = ann[0].replace('CSQ=', '').split(',')[0]
     return ann
 
-def filter_ann(vf, targets, include=True):
+def filter_nothas(vf, s, include=False):
     """Filter out rows based on the VEP annotations.
 
     Parameters
@@ -74,15 +42,10 @@ def filter_ann(vf, targets, include=True):
     """
     def func(r):
         ann = row_first_ann(r)
-        if not ann:
-            return False
-        ann = ann.split('|')[1]
-        has_ann = ann in targets
-        if include:
-            return has_ann
-        else:
-            return not has_ann
+        return s not in ann
     i = vf.df.apply(func, axis=1)
+    if include:
+        i = ~i
     df = vf.df[i].reset_index(drop=True)
     vf = vf.__class__(vf.copy_meta(), df)
     return vf
@@ -145,15 +108,15 @@ def filter_impact(vf, values, include=False, index=False):
     vf = vf.__class__(vf.copy_meta(), df)
     return vf
 
-def parse_ann(vf, idx, sep=' | '):
-    """Parse VEP annotations.
+def annparse(vf, l, sep=' | '):
+    """Parse annotations of the first report.
 
     Parameters
     ----------
-    vf : fuc.api.pyvcf.VcfFrame
+    vf : fuc.pyvcf.VcfFrame
         Input VcfFrame.
-    i : list
-        List of annotation indicies.
+    l : list
+        List of subfield IDs or indicies or both.
     sep : str, default: ' | '
         Separator for joining requested annotations.
 
@@ -162,34 +125,26 @@ def parse_ann(vf, idx, sep=' | '):
     s : pandas.Series
         Parsed annotations.
     """
+    l = [x if isinstance(x, int) else _get_keys(vf).index(x) for x in l]
     def func(r):
         ann = row_first_ann(r)
         if not ann:
             return '.'
         ann = ann.split('|')
-        ann = sep.join([ann[i] for i in idx])
+        ann = sep.join([ann[i] for i in l])
         return ann
     s = vf.df.apply(func, axis=1)
     return s
 
 def get_index(vf, target):
     """Return the index of the target field (e.g. CLIN_SIG)."""
-    headers = get_headers(vf)
+    headers = _get_keys(vf)
     return headers.index(target)
-
-def get_headers(vf):
-    """Return the list of field IDs."""
-    headers = []
-    for i, line in enumerate(vf.meta):
-        if 'ID=CSQ' in line:
-            headers = re.search(r'Format: (.*?)">',
-                                vf.meta[i]).group(1).split('|')
-    return headers
 
 def get_table(vf):
     """Write the VcfFrame as a tab-delimited text file."""
     df = vf.df.copy()
-    headers = get_headers(vf)
+    headers = _get_keys(vf)
     def func(r):
         ann = row_first_ann(r)
         if ann:

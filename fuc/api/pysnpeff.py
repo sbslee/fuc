@@ -1,5 +1,5 @@
 """
-The ``snpeff`` submodule is designed for parsing VCF annotation data from
+The ``pysnpeff`` submodule is designed for parsing VCF annotation data from
 the SnpEff program. It should be used with ``pyvcf.VcfFrame``.
 
 One VCF record can have several SnpEff annotations if, for example,
@@ -69,7 +69,7 @@ def filter_ann(vf, targets, include=True):
     vf = vf.__class__(vf.copy_meta(), df)
     return vf
 
-def parse_ann(vf, idx, sep=' | '):
+def annparse(vf, idx, sep=' | '):
     """Parse SnpEff annotations.
 
     Parameters
