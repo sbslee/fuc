@@ -248,41 +248,49 @@ class VcfFrame:
 
         Examples
         --------
-        Consider the following:
+        Let's assume we have the following data:
 
-        +-------+-----+-----+-----+--------+---------------+-------------+
-        | CHROM | POS | REF | ALT | FORMAT | Steven        | Sara        |
-        +=======+=====+=====+=====+========+===============+=============+
-        | chr1  | 100 | A   | C   | GT:AD  | 0/1:12,15     | ./.:.       |
-        +-------+-----+-----+-----+--------+---------------+-------------+
-        | chr1  | 100 | A   | T   | GT:AD  | ./.:.         | 0/1:14,15   |
-        +-------+-----+-----+-----+--------+---------------+-------------+
+        .. code:: python3
 
-        After collapsing, above will look like this:
+            df = pd.DataFrame({
+                'CHROM': ['chr1', 'chr1', 'chr2', 'chr2'],
+                'POS': [100, 100, 200, 200],
+                'ID': ['.', '.', '.', '.'],
+                'REF': ['A', 'A', 'C', 'C'],
+                'ALT': ['C', 'T', 'G', 'G,A'],
+                'QUAL': ['.', '.', '.', '.'],
+                'FILTER': ['.', '.', '.', '.'],
+                'INFO': ['.', '.', '.', '.'],
+                'FORMAT': ['GT:AD', 'GT:AD', 'GT:AD', 'GT:AD'],
+                'Steven': ['0/1:12,15', './.:.', '0/1:16,12', './.:.'],
+                'Sara': ['./.:.', '0/1:14,15', './.:.', '1/2:0,11,17'],
+            })
+            vf = pyvcf.VcfFrame([], df)
+            print(vf.df)
 
-        +-------+-----+-----+-----+--------+---------------+-------------+
-        | CHROM | POS | REF | ALT | FORMAT | Steven        | Sara        |
-        +=======+=====+=====+=====+========+===============+=============+
-        | chr1  | 100 | A   | C,T | GT:AD  | 0/1:12,15,0   | 0/2:14,0,15 |
-        +-------+-----+-----+-----+--------+---------------+-------------+
+        Which gives:
 
-        Now here is a slightly more complex scenario:
+        .. parsed-literal::
 
-        +-------+-----+-----+-----+--------+---------------+-------------+
-        | CHROM | POS | REF | ALT | FORMAT | Steven        | James       |
-        +=======+=====+=====+=====+========+===============+=============+
-        | chr1  | 100 | A   | T   | GT:AD  | 0/1:12,15     | ./.:.       |
-        +-------+-----+-----+-----+--------+---------------+-------------+
-        | chr1  | 100 | A   | T,C | GT:AD  | ./.:.         | 1/2:0,11,17 |
-        +-------+-----+-----+-----+--------+---------------+-------------+
+              CHROM  POS ID REF  ALT QUAL FILTER INFO FORMAT     Steven         Sara
+            0  chr1  100  .   A    C    .      .    .  GT:AD  0/1:12,15        ./.:.
+            1  chr1  100  .   A    T    .      .    .  GT:AD      ./.:.    0/1:14,15
+            2  chr2  200  .   C    G    .      .    .  GT:AD  0/1:16,12        ./.:.
+            3  chr2  200  .   C  G,A    .      .    .  GT:AD      ./.:.  1/2:0,11,17
 
-        After collapsing, above will look like this:
+        We can collapse the VcfFrame by:
 
-        +-------+-----+-----+-----+--------+---------------+-------------+
-        | CHROM | POS | REF | ALT | FORMAT | Steven        | James       |
-        +=======+=====+=====+=====+========+===============+=============+
-        | chr1  | 100 | A   | C,T | GT:AD  | 0/2:12,0,15   | 1/2:0,17,11 |
-        +-------+-----+-----+-----+--------+---------------+-------------+
+        .. code:: python3
+
+            print(vf.collapse().df)
+
+        Which gives:
+
+        .. parsed-literal::
+
+              CHROM  POS ID REF  ALT QUAL FILTER INFO FORMAT       Steven         Sara
+            0  chr1  100  .   A  C,T    .      .    .  GT:AD  0/1:12,15,0  0/2:14,0,15
+            2  chr2  200  .   C  A,G    .      .    .  GT:AD  0/2:16,0,12  1/2:0,17,11
         """
         df = self.df.copy()
         dup_idx = df.duplicated(['CHROM', 'POS', 'REF'], keep=False)
@@ -332,12 +340,13 @@ class VcfFrame:
 
             df2 = df.apply(outfunc, axis=1)
 
-            def handle_replicates(c):
+            def raise_error(c):
                 if sum(c.values != '') > 1:
+                    message = ('cannot collapse following '
+                               f'records:\n{df.loc[c.index]}')
+                    raise ValueError(message)
 
-                    raise ValueError(f'cannot collapse:\n{df.loc[c.index]}')
-
-            df2.iloc[:, 9:].apply(handle_replicates)
+            df2.iloc[:, 9:].apply(raise_error)
             df2 = df2.groupby(['CHROM', 'POS', 'REF']).agg(''.join)
             df2 = df2.reset_index()
             cols = list(df2)
@@ -396,7 +405,6 @@ class VcfFrame:
 
         Examples
         --------
-
         Let's assume we have the following data:
 
         .. code:: python3
@@ -481,7 +489,6 @@ class VcfFrame:
 
         Examples
         --------
-
         Let's assume we have the following data:
 
         .. code:: python3
@@ -1139,7 +1146,7 @@ class VcfFrame:
 
         Examples
         --------
-        Let’s assume we have the following data:
+        Let's assume we have the following data:
 
         .. code:: python3
 
@@ -1214,7 +1221,7 @@ class VcfFrame:
 
         Examples
         --------
-        Let’s assume we have the following data:
+        Let's assume we have the following data:
 
         .. code:: python3
 
