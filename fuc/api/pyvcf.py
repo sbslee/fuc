@@ -197,12 +197,18 @@ def merge(vfs, how='inner', format='GT', sort=True, collapse=False):
 class VcfFrame:
     """Class for storing VCF data.
 
-    This class strictly sticks to the standard Variant Call Format
+    This class strictly adheres to the standard Variant Call Format
     specification (https://samtools.github.io/hts-specs/VCFv4.3.pdf).
 
-    VCF lines have nine required fields for storing variant data and
-    variable-length fields for storing sample genotype data. In all cases,
-    missing values are specified with a dot (``.``). The required fields are:
+    A regular VCF file has metadata lines that start with '##', a header
+    line that starts with '#CHROM', and genotype lines that start with the
+    chromosome identifier such as 'chr1'. See the VCF specification above
+    for an example VCF file.
+
+    Genotype lines have nine required fields for storing variant information
+    and variable-length fields for storing sample genotype data. In all
+    cases, missing values are specified with a dot ('.'). The nine
+    required fields are:
 
     1. CHROM - An identifier from the reference genome.
     2. POS - The 1-based reference position.
@@ -213,6 +219,26 @@ class VcfFrame:
     7. FILTER - PASS or a semicolon-separated list of filters that fail.
     8. INFO - Semicolon-separated series of additional information fields.
     9. FORMAT - Colon-separated series of genotype fields.
+
+    There are commonly used INFO keys and VcfFrame is aware of these:
+
+    * AD - Total read depth for each allele (R, Integer).
+    * AF - Allele frequency for each ALT allele (A, Float)
+    * DP - Combined depth across samples (1, Integer)
+
+    Parameters
+    ----------
+    meta : list
+        List of metadata lines.
+    df : pandas.DataFrame
+        DataFrame containing VCF data.
+
+    Attributes
+    ----------
+    meta : list
+        List of metadata lines.
+    df : pandas.DataFrame
+        DataFrame containing VCF data.
     """
     def __init__(self, meta, df):
         self.meta = meta
@@ -220,12 +246,12 @@ class VcfFrame:
 
     @property
     def samples(self):
-        """Return a list of the sample IDs."""
+        """list : List of the sample IDs."""
         return self.df.columns[9:].to_list()
 
     @property
     def shape(self):
-        """Return a tuple representing the dimensionality of the VcfFrame."""
+        """tuple : Tuple representing the dimensionality of the VcfFrame."""
         return (self.df.shape[0], len(self.samples))
 
     @classmethod
