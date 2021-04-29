@@ -8,6 +8,7 @@ Changelog
 * Add new submodule ``pyvep``.
 * Update ``fuc.api.pyvcf.VcfFrame`` class.
 * Add ``autodocsumm`` extension to Read the Docs.
+* Add contents to Read the Docs.
 
 0.2.0 (2021-04-26)
 ------------------

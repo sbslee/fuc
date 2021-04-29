@@ -1,6 +1,6 @@
 """
 The ``pyvcf`` submodule is designed for working with VCF files (both zipped
-and unzipped). It implements ``pyvcf.VcfFrame`` which stores VCF data as a
+and unzipped). It implements ``pyvcf.VcfFrame`` which stores VCF data as
 ``pandas.DataFrame`` to allow fast computation and easy manipulation.
 """
 
@@ -18,8 +18,63 @@ CONTIGS = [
     'chrX', 'chrY', 'chrM'
 ]
 
+# -- Private methods ---------------------------------------------------------
+
+def _gt_hasvar(x):
+    """Return True if the genotype has a variant call such as ``0/1``."""
+    if x.split(':')[0].replace('/', '').replace('.', '').replace('0', ''):
+        return True
+    else:
+        return False
+
+def _gt_missing(x):
+    """Return True if the genotype has a missing value (e.g. ./.)."""
+    return '.' in x.split(':')[0]
+
+def _gt_unphase(x):
+    """Return the unphased genotype (e.g. 0/1 for 1|0)."""
+    l = x.split(':')
+    gt = l[0]
+    if '|' not in gt:
+        return x
+    l[0] = '/'.join([str(b) for b in sorted([int(a) for a in gt.split('|')])])
+    return ':'.join(l)
+
+def _row_missing_value(r):
+    """Return the proper missing value for the row (e.g. ./.:. for GT:DP)."""
+    if 'X' in r.CHROM or 'Y' in r.CHROM:
+        m = '.'
+    else:
+        m = './.'
+    for i in range(1, len(r.FORMAT.split(':'))):
+        m += ':.'
+    return m
+
+def _row_hasindel(r):
+    """Return True if the row has an indel."""
+    ref_has = len(r['REF']) > 1
+    alt_has = max([len(x) for x in r['ALT'].split(',')]) > 1
+    return ref_has or alt_has
+
+# -- Public methods ----------------------------------------------------------
+
 def read_file(fn):
-    """Create a VcfFrame from a VCF file (both zipped and unzipped)."""
+    """Read a VCF file into VcfFrame.
+
+    Parameters
+    ----------
+    fn : str
+        Path to a zipped or unzipped VCF file.
+
+    Returns
+    -------
+    VcfFrame
+        VcfFrame.
+
+    Examples
+    --------
+    >>> pyvcf.read_file('example.vcf')
+    """
     meta = []
     skip_rows = 0
     if fn.endswith('.gz'):
@@ -39,7 +94,7 @@ def read_file(fn):
     return vf
 
 def merge(vfs, how='inner', format='GT', sort=True, collapse=False):
-    """Return the merged VcfFrame.
+    """Merge the VcfFrames.
 
     Parameters
     ----------
@@ -65,35 +120,7 @@ def merge(vfs, how='inner', format='GT', sort=True, collapse=False):
             collapse=collapse)
     return merged_vf
 
-def gt_hasvar(x):
-    """Return ``True`` if the genotype has a variant call such as ``0/1``."""
-    if x.split(':')[0].replace('/', '').replace('.', '').replace('0', ''):
-        return True
-    else:
-        return False
-
-def gt_missing(x):
-    """Return True if the genotype has a missing value."""
-    return '.' in x.split(':')[0]
-
-def gt_unphase(x):
-    """Unphase the genotype (e.g. if ``GT:DP``, ``1|0:20`` to ``0/1:20``)."""
-    l = x.split(':')
-    gt = l[0]
-    if '|' not in gt:
-        return x
-    l[0] = '/'.join([str(b) for b in sorted([int(a) for a in gt.split('|')])])
-    return ':'.join(l)
-
-def row_missing_value(r):
-    """Return the missing value for the row (e.g. ``./.:.`` if ``GT:DP``)."""
-    if 'X' in r.CHROM or 'Y' in r.CHROM:
-        m = '.'
-    else:
-        m = './.'
-    for i in range(1, len(r.FORMAT.split(':'))):
-        m += ':.'
-    return m
+# -- VcfFrame ----------------------------------------------------------------
 
 class VcfFrame:
     """Class for storing VCF data.
@@ -117,7 +144,7 @@ class VcfFrame:
     """
     def __init__(self, meta, df):
         self.meta = meta
-        self.df = df
+        self.df = df.reset_index(drop=True)
 
     @property
     def samples(self):
@@ -340,7 +367,7 @@ class VcfFrame:
             all_alleles = [ref_allele] + alt_alleles
 
             def infunc(x, r_all_alleles, index_map):
-                if gt_missing(x):
+                if _gt_missing(x):
                     return ''
                 old_fields = x.split(':')
                 old_gt = old_fields[0]
@@ -389,7 +416,7 @@ class VcfFrame:
             df2.INFO = df.INFO.unique()[0]
             df2.FORMAT = df.FORMAT.unique()[0]
             s = df2.squeeze()
-            s = s.replace('', row_missing_value(s))
+            s = s.replace('', _row_missing_value(s))
             return s
 
         for name, i in dups.items():
@@ -480,7 +507,7 @@ class VcfFrame:
             samples = self.samples
         def outfunc(r):
             i = r.FORMAT.split(':').index('AF')
-            m = row_missing_value(r)
+            m = _row_missing_value(r)
             def infunc(x):
                 s = x.split(':')[i]
                 if s == '.' or float(s) < threshold:
@@ -554,7 +581,7 @@ class VcfFrame:
             samples = self.samples
         def outfunc(r):
             i = r.FORMAT.split(':').index('DP')
-            m = row_missing_value(r)
+            m = _row_missing_value(r)
             def infunc(x):
                 s = x.split(':')[i]
                 if s == '.' or int(s) < threshold:
@@ -566,53 +593,238 @@ class VcfFrame:
         vf = self.__class__(self.copy_meta(), df)
         return vf
 
-    def filter_empty(self, include=False):
-        """Filter out rows that have no genotype calls.
+    def filter_bed(self, bed, opposite=False, index=False):
+        """Select rows that overlap with the BED data.
 
         Parameters
         ----------
-        include : bool, default: False
-            If True, include only such rows instead of excluding them.
+        bed : pybed.BedFrame or str
+            BedFrame or path to a BED file.
+        opposite : bool, default: False
+            If True, return rows that don't meet the said criteria.
+        index : bool, default: False
+            If True, return boolean index array instead of VcfFrame.
 
         Returns
         -------
-        VcfFrame
-            Filtered VcfFrame.
+        VcfFrame or pandas.Series
+            Filtered VcfFrame or boolean index array.
+
+        Examples
+        --------
+        Assume we have the following data:
+
+        >>> data = {
+        ...     'Chromosome': ['chr1', 'chr2', 'chr3'],
+        ...     'Start': [100, 400, 100],
+        ...     'End': [200, 500, 200]
+        ... }
+        >>> bf = pybed.BedFrame.from_dict([], data)
+        >>> bf.gr.df
+          Chromosome  Start  End
+        0       chr1    100  200
+        1       chr2    400  500
+        2       chr3    100  200
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr2', 'chr3'],
+        ...     'POS': [100, 201, 450, 99],
+        ...     'ID': ['.', '.', '.', '.'],
+        ...     'REF': ['G', 'CT', 'A', 'C'],
+        ...     'ALT': ['A', 'C', 'AT', 'A'],
+        ...     'QUAL': ['.', '.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.', '.'],
+        ...     'INFO': ['.', '.', '.', '.'],
+        ...     'FORMAT': ['GT', 'GT', 'GT', 'GT'],
+        ...     'Steven': ['0/1', '1/1', '0/1', '0/1'],
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
+        0  chr1  100  .   G   A    .      .    .     GT    0/1
+        1  chr1  201  .  CT   C    .      .    .     GT    1/1
+        2  chr2  450  .   A  AT    .      .    .     GT    0/1
+        3  chr3   99  .   C   A    .      .    .     GT    0/1
+
+        We can select the rows that overlap with the BED data (first and
+        third):
+
+        >>> vf.filter_bed(bf).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
+        0  chr1  100  .   G   A    .      .    .     GT    0/1
+        1  chr2  450  .   A  AT    .      .    .     GT    0/1
+
+        We can also remove those rows:
+
+        >>> vf.filter_bed(bf, opposite=True).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
+        0  chr1  201  .  CT   C    .      .    .     GT    1/1
+        1  chr3   99  .   C   A    .      .    .     GT    0/1
+
+        Finally, we can return boolean index array from the filtering:
+
+        >>> vf.filter_bed(bf, index=True)
+        0     True
+        1    False
+        2     True
+        3    False
+        dtype: bool
+        >>>
         """
-        def func(r):
-            empty = all(r.iloc[9:].apply(lambda x: '.' in x.split(':')[0]))
-            if include:
-                return empty
-            else:
-                return not empty
-        i = self.df.apply(func, axis=1)
-        df = self.df[i].reset_index(drop=True)
-        vf = self.__class__(self.copy_meta(), df)
-        return vf
-
-    def filter_indels(self, include=False):
-        """Filter out rows that have an indel.
-
-        Parameters
-        ----------
-        include : bool, default: False
-            If True, include only such rows instead of excluding them.
-
-        Returns
-        -------
-        vf : VcfFrame
-            Filtered VcfFrame.
-        """
-        def func(r):
-            ref = len(r['REF']) > 1
-            alt = max([len(x) for x in r['ALT'].split(',')]) > 1
-            return not any([ref, alt])
-        i = self.df.apply(func, axis=1)
-        if include:
+        if isinstance(bed, pybed.BedFrame):
+            bf = bed
+        else:
+            bf = pybed.read_file(bed)
+        f = lambda r: not bf.gr[r.CHROM, r.POS:r.POS+1].empty
+        i = self.df.apply(f, axis=1)
+        if opposite:
             i = ~i
-        df = self.df[i].reset_index(drop=True)
-        vf = self.__class__(self.copy_meta(), df)
+        if index:
+            return i
+        vf = self.__class__(self.copy_meta(), self.df[i])
         return vf
+
+    def filter_empty(self, opposite=False, index=False):
+        """Remove rows with no genotype calls.
+
+        Parameters
+        ----------
+        opposite : bool, default: False
+            If True, return rows that don't meet the said criteria.
+        index : bool, default: False
+            If True, return boolean index array instead of VcfFrame.
+
+        Returns
+        -------
+        VcfFrame or pandas.Series
+            Filtered VcfFrame or boolean index array.
+
+        Examples
+        --------
+        Assume we have the following data:
+
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102, 103],
+        ...     'ID': ['.', '.', '.', '.'],
+        ...     'REF': ['G', 'T', 'A', 'C'],
+        ...     'ALT': ['A', 'C', 'T', 'A'],
+        ...     'QUAL': ['.', '.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.', '.'],
+        ...     'INFO': ['.', '.', '.', '.'],
+        ...     'FORMAT': ['GT', 'GT', 'GT', 'GT'],
+        ...     'Steven': ['0/0', './.', '0/1', './.'],
+        ...     'Sara': ['0/1', './.', '0/1', './.'],
+        ...     'James': ['./.', './.', '0/1', './.'],
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven Sara James
+        0  chr1  100  .   G   A    .      .    .     GT    0/0  0/1   ./.
+        1  chr1  101  .   T   C    .      .    .     GT    ./.  ./.   ./.
+        2  chr1  102  .   A   T    .      .    .     GT    0/1  0/1   0/1
+        3  chr1  103  .   C   A    .      .    .     GT    ./.  ./.   ./.
+
+        We can remove the empty rows (second and fourth):
+
+        >>> vf.filter_empty().df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven Sara James
+        0  chr1  100  .   G   A    .      .    .     GT    0/0  0/1   ./.
+        1  chr1  102  .   A   T    .      .    .     GT    0/1  0/1   0/1
+
+        We can also select those rows:
+
+        >>> vf.filter_empty(opposite=True).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven Sara James
+        0  chr1  101  .   T   C    .      .    .     GT    ./.  ./.   ./.
+        1  chr1  103  .   C   A    .      .    .     GT    ./.  ./.   ./.
+
+        Finally, we can return boolean index array from the filtering:
+
+        >>> vf.filter_empty(index=True)
+        0     True
+        1    False
+        2     True
+        3    False
+        dtype: bool
+        """
+        f = lambda r: not all(r.iloc[9:].apply(_gt_missing))
+        i = self.df.apply(f, axis=1)
+        if opposite:
+            i = ~i
+        if index:
+            return i
+        return self.__class__(self.copy_meta(), self.df[i])
+
+    def filter_indel(self, opposite=False, index=False):
+        """Remove rows with an indel.
+
+        Parameters
+        ----------
+        opposite : bool, default: False
+            If True, return rows that don't meet the said criteria.
+        index : bool, default: False
+            If True, return boolean index array instead of VcfFrame.
+
+        Returns
+        -------
+        VcfFrame or pandas.Series
+            Filtered VcfFrame or boolean index array.
+
+        Examples
+        --------
+        Assume we have the following data:
+
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102, 103],
+        ...     'ID': ['.', '.', '.', '.'],
+        ...     'REF': ['G', 'CT', 'A', 'C'],
+        ...     'ALT': ['A', 'C', 'AT', 'A'],
+        ...     'QUAL': ['.', '.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.', '.'],
+        ...     'INFO': ['.', '.', '.', '.'],
+        ...     'FORMAT': ['GT', 'GT', 'GT', 'GT'],
+        ...     'Steven': ['0/0', './.', '0/1', './.'],
+        ...     'Sara': ['0/1', '0/1', '0/1', './.'],
+        ...     'James': ['./.', './.', '0/1', './.'],
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven Sara James
+        0  chr1  100  .   G   A    .      .    .     GT    0/0  0/1   ./.
+        1  chr1  101  .  CT   C    .      .    .     GT    ./.  0/1   ./.
+        2  chr1  102  .   A  AT    .      .    .     GT    0/1  0/1   0/1
+        3  chr1  103  .   C   A    .      .    .     GT    ./.  ./.   ./.
+
+        We can remove the rows with an indel (second and third):
+
+        >>> vf.filter_indel().df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven Sara James
+        0  chr1  100  .   G   A    .      .    .     GT    0/0  0/1   ./.
+        1  chr1  103  .   C   A    .      .    .     GT    ./.  ./.   ./.
+
+        We can also select those rows:
+
+        >>> vf.filter_indel(opposite=True).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven Sara James
+        0  chr1  101  .  CT   C    .      .    .     GT    ./.  0/1   ./.
+        1  chr1  102  .   A  AT    .      .    .     GT    0/1  0/1   0/1
+
+        Finally, we can return boolean index array from the filtering:
+
+        >>> vf.filter_indel(index=True)
+        0     True
+        1    False
+        2    False
+        3     True
+        dtype: bool
+        """
+        i = ~self.df.apply(_row_hasindel, axis=1)
+        if opposite:
+            i = ~i
+        if index:
+            return i
+        return self.__class__(self.copy_meta(), self.df[i])
 
     def filter_multiallelic(self, include=False):
         """Filter out rows that have multiple ALT alleles.
@@ -633,36 +845,6 @@ class VcfFrame:
                 return is_multiallelic
             else:
                 return not is_multiallelic
-        i = self.df.apply(func, axis=1)
-        df = self.df[i].reset_index(drop=True)
-        vf = self.__class__(self.copy_meta(), df)
-        return vf
-
-    def filter_bed(self, bed, include=False):
-        """Filter out rows that are not specified in the BED data.
-
-        Parameters
-        ----------
-        bed : pybed.BedFrame or str
-            pybed.BedFrame or path to a BED file.
-        include : bool, default: False
-            If True, include only such rows instead of excluding them.
-
-        Returns
-        -------
-        vf : VcfFrame
-            Filtered VcfFrame.
-        """
-        if isinstance(bed, pybed.BedFrame):
-            bf = bed
-        else:
-            bf = pybed.read_file(bed)
-        def func(r):
-            not_in_bed = bf.gr[r['CHROM'], r['POS']:r['POS']+1].empty
-            if include:
-                return not_in_bed
-            else:
-                return not not_in_bed
         i = self.df.apply(func, axis=1)
         df = self.df[i].reset_index(drop=True)
         vf = self.__class__(self.copy_meta(), df)
@@ -709,7 +891,7 @@ class VcfFrame:
             Filtered VcfFrame.
         """
         def func(r):
-            is_filtered = r[9:].apply(gt_hasvar).sum() > threshold
+            is_filtered = r[9:].apply(_gt_hasvar).sum() > threshold
             if include:
                 return is_filtered
             else:
@@ -736,7 +918,7 @@ class VcfFrame:
         """
         name = name if isinstance(name, str) else self.samples[name]
         def func(r):
-            is_filtered = gt_hasvar(r[name])
+            is_filtered = _gt_hasvar(r[name])
             if include:
                 return is_filtered
             else:
@@ -806,7 +988,7 @@ class VcfFrame:
         """Compare genotype data between Samples A & B or Samples A, B, & C.
 
         This method will return ``(Ab, aB, AB, ab)`` for two samples and
-        ``(Abc, aBc, ABc, abC, AbC, aBC, ABC)`` for three samples. Note that
+        ``(Abc, aBc, ABc, abC, AbC, aBC, ABC, abc)`` for three samples. Note that
         the former is equivalent to ``(FP, FN, TP, TN)`` if we assume A is
         the test sample and B is the truth sample.
 
@@ -869,8 +1051,8 @@ class VcfFrame:
         a = a if isinstance(a, str) else self.samples[a]
         b = b if isinstance(b, str) else self.samples[b]
         def func(r):
-            a_has = gt_hasvar(r[a])
-            b_has = gt_hasvar(r[b])
+            a_has = _gt_hasvar(r[a])
+            b_has = _gt_hasvar(r[b])
             if a_has and not b_has:
                 return 'Ab'
             elif not a_has and b_has:
@@ -891,9 +1073,9 @@ class VcfFrame:
         b = b if isinstance(b, str) else self.samples[b]
         c = c if isinstance(c, str) else self.samples[c]
         def func(r):
-            a_has = gt_hasvar(r[a])
-            b_has = gt_hasvar(r[b])
-            c_has = gt_hasvar(r[c])
+            a_has = _gt_hasvar(r[a])
+            b_has = _gt_hasvar(r[b])
+            c_has = _gt_hasvar(r[c])
             if a_has and not b_has and not c_has:
                 return 'Abc'
             elif not a_has and b_has and not c_has:
@@ -977,8 +1159,8 @@ class VcfFrame:
         a = a if isinstance(a, str) else self.samples[a]
         b = b if isinstance(b, str) else self.samples[b]
         def func(r):
-            a_has = gt_hasvar(r[a])
-            b_has = gt_hasvar(r[b])
+            a_has = _gt_hasvar(r[a])
+            b_has = _gt_hasvar(r[b])
             if a_has and b_has:
                 return r[a]
             elif a_has and not b_has:
@@ -1044,9 +1226,9 @@ class VcfFrame:
         a = a if isinstance(a, str) else self.samples[a]
         b = b if isinstance(b, str) else self.samples[b]
         def func(r):
-            m = row_missing_value(r)
-            a_has = gt_hasvar(r[a])
-            b_bas = gt_hasvar(r[b])
+            m = _row_missing_value(r)
+            a_has = _gt_hasvar(r[a])
+            b_bas = _gt_hasvar(r[b])
             if a_has and b_bas:
                 return m
             elif a_has and not b_bas:
@@ -1153,7 +1335,7 @@ class VcfFrame:
     def unphase(self):
         """Unphase the genotypes (e.g. 1|0 to 0/1)."""
         def func(r):
-            r[9:] = r[9:].apply(gt_unphase)
+            r[9:] = r[9:].apply(_gt_unphase)
             return r
         df = self.df.apply(func, axis=1)
         vf = self.__class__(self.copy_meta(), df)

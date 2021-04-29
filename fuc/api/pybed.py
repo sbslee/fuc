@@ -1,6 +1,6 @@
 """
 The ``pybed`` submodule is designed for working with BED files. It
-implements ``pybed.BedFrame`` which stores BED data as a
+implements ``pybed.BedFrame`` which stores BED data as
 ``pyranges.PyRanges`` to allow fast computation and easy manipulation.
 """
 
@@ -13,7 +13,7 @@ HEADERS = ['Chromosome', 'Start', 'End', 'Name',
            'ItemRGB', 'BlockCount', 'BlockSizes', 'BlockStarts']
 
 def read_file(fn):
-    """Create a BedFrame from a BED file."""
+    """Read a BED file into BedFrame."""
     meta = []
     skip_rows = 0
     with open(fn, 'r') as f:
@@ -24,8 +24,7 @@ def read_file(fn):
             else:
                 headers = HEADERS[:len(line.strip().split())]
                 break
-    df = pd.read_table(fn, header=None, names=headers,
-        skiprows=skip_rows)
+    df = pd.read_table(fn, header=None, names=headers, skiprows=skip_rows)
     bf = BedFrame(meta, pr.PyRanges(df))
     return bf
 
@@ -76,3 +75,41 @@ class BedFrame:
         """Find intersection between the BedFrames."""
         bf = self.__class__(deepcopy(self.meta), self.gr.intersect(other.gr))
         return bf
+
+    @classmethod
+    def from_dict(cls, meta, data):
+        """Construct BedFrame from dict of array-like or dicts.
+
+        Parameters
+        ----------
+        meta : list
+            List of the metadata lines.
+        data : dict
+            Of the form {field : array-like} or {field : dict}.
+
+        Returns
+        -------
+        BedFrame
+            BedFrame
+
+        See Also
+        --------
+        BedFrame : BedFrame object creation using constructor.
+
+        Examples
+        --------
+        Below is a simple example:
+
+        >>> data = {
+        ...     'Chromosome': ['chr1', 'chr2', 'chr3'],
+        ...     'Start': [100, 400, 100],
+        ...     'End': [200, 500, 200]
+        ... }
+        >>> bf = pybed.BedFrame.from_dict([], data)
+        >>> bf.gr.df
+          Chromosome  Start  End
+        0       chr1    100  200
+        1       chr2    400  500
+        2       chr3    100  200
+        """
+        return cls(meta, pr.PyRanges(pd.DataFrame(data)))
