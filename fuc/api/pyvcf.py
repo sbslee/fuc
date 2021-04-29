@@ -174,7 +174,8 @@ class VcfFrame:
 
         See Also
         --------
-        VcfFrame : VcfFrame object creation using constructor.
+        VcfFrame
+            VcfFrame object creation using constructor.
 
         Examples
         --------
@@ -875,34 +876,8 @@ class VcfFrame:
         vf = self.__class__(self.copy_meta(), df)
         return vf
 
-    def filter_sample_counts(self, threshold, include=False):
-        """Filter out rows based on the number of samples with the variant.
-
-        Parameters
-        ----------
-        threshold : int
-            Number of samples above which will signify the row to be removed.
-        include : bool, default: False
-            If True, include only such rows instead of excluding them.
-
-        Returns
-        -------
-        vf : VcfFrame
-            Filtered VcfFrame.
-        """
-        def func(r):
-            is_filtered = r[9:].apply(_gt_hasvar).sum() > threshold
-            if include:
-                return is_filtered
-            else:
-                return not is_filtered
-        i = self.df.apply(func, axis=1)
-        df = self.df[i].reset_index(drop=True)
-        vf = self.__class__(self.copy_meta(), df)
-        return vf
-
     def filter_sampall(self, samples, opposite=False, index=False):
-        """Select rows where all of the samples have the variant.
+        """Select rows if all of the given samples have the variant.
 
         Parameters
         ----------
@@ -917,6 +892,12 @@ class VcfFrame:
         -------
         VcfFrame or pandas.Series
             Filtered VcfFrame or boolean index array.
+
+        See Also
+        --------
+        filter_sampany
+            Similar method that selects rows if any one of the samples
+            has the variant.
 
         Examples
         --------
@@ -976,7 +957,7 @@ class VcfFrame:
         return self.__class__(self.copy_meta(), self.df[i])
 
     def filter_sampany(self, samples, opposite=False, index=False):
-        """Select rows where any one of the samples has the variant.
+        """Select rows if any one of the given samples has the variant.
 
         Parameters
         ----------
@@ -991,6 +972,12 @@ class VcfFrame:
         -------
         VcfFrame or pandas.Series
             Filtered VcfFrame or boolean index array.
+
+        See Also
+        --------
+        filter_sampall
+            Similar method that selects rows if all of the samples
+            have the variant.
 
         Examples
         --------
@@ -1017,7 +1004,7 @@ class VcfFrame:
         1  chr1  101  .   T   C    .      .    .  GT:DP  0/1:29  0/1:30  0/0:24
         2  chr1  102  .   T   A    .      .    .  GT:DP  1/1:28  0/0:28  0/0:34
 
-        We can select rows where either Sara or James has the variant
+        We can select the rows where either Sara or James has the variant
         (first and second):
 
         >>> vf.filter_sampany(['Sara', 'James']).df
@@ -1048,6 +1035,30 @@ class VcfFrame:
         if index:
             return i
         return self.__class__(self.copy_meta(), self.df[i])
+
+    def filter_sampnum(self, threshold, opposite=False, index=False):
+        """Select rows if the variant is prevalent enough.
+
+        Parameters
+        ----------
+        threshold : int
+            Minimum number of samples with the variant.
+        include : bool, default: False
+            If True, include only such rows instead of excluding them.
+
+        Returns
+        -------
+        VcfFrame
+            Filtered VcfFrame.
+        """
+        f = lambda r: r[9:].apply(_gt_hasvar).sum() >= threshold
+        i = self.df.apply(f, axis=1)
+        if opposite:
+            i = ~i
+        if index:
+            return i
+        vf = self.__class__(self.copy_meta(), self.df[i])
+        return vf
 
     def filter_nonpass(self, include=False):
         """Filter out rows that don't have PASS in the FILTER field.
@@ -1361,51 +1372,6 @@ class VcfFrame:
         s = self.df.apply(func, axis=1)
         return s
 
-    def update(self, other, headers=None, missing=True):
-        """Copy data from the other VcfFrame.
-
-        This method will copy and paste data from the other VcfFrame for
-        overlapping records. By default, the following VCF headers are
-        used: ID, QUAL, FILTER, and, INFO.
-
-        Parameters
-        ----------
-        other : VcfFrame
-            Other VcfFrame.
-        headers : list, optional
-            List of VCF headers to exclude.
-        missing : bool, default: True
-            If True, only fields with the missing value ('.') will be updated.
-
-        Returns
-        -------
-        vf : VcfFrame
-            Updated VcfFrame.
-        """
-        targets = ['ID', 'QUAL', 'FILTER', 'INFO']
-        if headers is not None:
-            for header in headers:
-                targets.remove(header)
-        def func(r1):
-            r2 = other.df[(other.df['CHROM'] == r1['CHROM']) &
-                          (other.df['POS'] == r1['POS']) &
-                          (other.df['REF'] == r1['REF']) &
-                          (other.df['ALT'] == r1['ALT'])]
-            if r2.empty:
-                return r1
-            for target in targets:
-                if missing:
-                    if r1[target] == '.':
-                        r1[target] = r2.iloc[0][target]
-                    else:
-                        pass
-                else:
-                    r1[target] = r2.iloc[0][target]
-            return r1
-        df = self.df.apply(func, axis=1)
-        vf = self.__class__(self.copy_meta(), df)
-        return vf
-
     def sort(self):
         """Sort the VcfFrame by chromosome and position.
 
@@ -1450,15 +1416,6 @@ class VcfFrame:
         df = self.df.sort_values(by=['CHROM', 'POS'], ignore_index=True,
             key=lambda col: [CONTIGS.index(x) if isinstance(x, str)
                              else x for x in col])
-        vf = self.__class__(self.copy_meta(), df)
-        return vf
-
-    def unphase(self):
-        """Unphase the genotypes (e.g. 1|0 to 0/1)."""
-        def func(r):
-            r[9:] = r[9:].apply(_gt_unphase)
-            return r
-        df = self.df.apply(func, axis=1)
         vf = self.__class__(self.copy_meta(), df)
         return vf
 
@@ -1521,5 +1478,65 @@ class VcfFrame:
             samples = [x for x in self.samples if x not in samples]
         cols = self.df.columns[:9].to_list() + samples
         df = self.df[cols]
+        vf = self.__class__(self.copy_meta(), df)
+        return vf
+
+    def unphase(self):
+        """Unphase all the genotypes.
+
+        Returns
+        -------
+        VcfFrame
+            Unphased VcfFrame.
+        """
+        def func(r):
+            r[9:] = r[9:].apply(_gt_unphase)
+            return r
+        df = self.df.apply(func, axis=1)
+        vf = self.__class__(self.copy_meta(), df)
+        return vf
+
+    def update(self, other, headers=None, missing=True):
+        """Copy data from the other VcfFrame.
+
+        This method will copy and paste data from the other VcfFrame for
+        overlapping records. By default, the following VCF headers are
+        used: ID, QUAL, FILTER, and, INFO.
+
+        Parameters
+        ----------
+        other : VcfFrame
+            Other VcfFrame.
+        headers : list, optional
+            List of VCF headers to exclude.
+        missing : bool, default: True
+            If True, only fields with the missing value ('.') will be updated.
+
+        Returns
+        -------
+        vf : VcfFrame
+            Updated VcfFrame.
+        """
+        targets = ['ID', 'QUAL', 'FILTER', 'INFO']
+        if headers is not None:
+            for header in headers:
+                targets.remove(header)
+        def func(r1):
+            r2 = other.df[(other.df['CHROM'] == r1['CHROM']) &
+                          (other.df['POS'] == r1['POS']) &
+                          (other.df['REF'] == r1['REF']) &
+                          (other.df['ALT'] == r1['ALT'])]
+            if r2.empty:
+                return r1
+            for target in targets:
+                if missing:
+                    if r1[target] == '.':
+                        r1[target] = r2.iloc[0][target]
+                    else:
+                        pass
+                else:
+                    r1[target] = r2.iloc[0][target]
+            return r1
+        df = self.df.apply(func, axis=1)
         vf = self.__class__(self.copy_meta(), df)
         return vf
