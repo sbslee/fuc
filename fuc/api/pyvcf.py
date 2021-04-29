@@ -129,6 +129,50 @@ class VcfFrame:
         """Return a tuple representing the dimensionality of the VcfFrame."""
         return (self.df.shape[0], len(self.samples))
 
+    @classmethod
+    def from_dict(cls, meta, data):
+        """Construct VcfFrame from dict of array-like or dicts.
+
+        Parameters
+        ----------
+        meta : list
+            List of the metadata lines.
+        data : dict
+            Of the form {field : array-like} or {field : dict}.
+
+        Returns
+        -------
+        VcfFrame
+            VcfFrame
+
+        See Also
+        --------
+        VcfFrame : VcfFrame object creation using constructor.
+
+        Examples
+        --------
+        Below is a simple example:
+
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr2'],
+        ...     'POS': [100, 101],
+        ...     'ID': ['.', '.'],
+        ...     'REF': ['G', 'T'],
+        ...     'ALT': ['A', 'C'],
+        ...     'QUAL': ['.', '.'],
+        ...     'FILTER': ['.', '.'],
+        ...     'INFO': ['.', '.'],
+        ...     'FORMAT': ['GT', 'GT'],
+        ...     'Steven': ['0/1', '1/1']
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
+        0  chr1  100  .   G   A    .      .    .     GT    0/1
+        1  chr2  101  .   T   C    .      .    .     GT    1/1
+        """
+        return cls(meta, pd.DataFrame(data))
+
     def copy_meta(self):
         """Return a copy of the metadata."""
         return deepcopy(self.meta)
