@@ -1129,12 +1129,6 @@ class VcfFrame:
         s = self.df.apply(func, axis=1)
         return s
 
-    def reset_samples(self, names):
-        """Reset the sample list."""
-        df = self.df[self.df.columns[:9].to_list() + names]
-        vf = self.__class__(self.copy_meta(), df)
-        return vf
-
     def update(self, other, headers=None, missing=True):
         """Copy data from the other VcfFrame.
 
@@ -1265,56 +1259,41 @@ class VcfFrame:
 
         Examples
         --------
-        Let's assume we have the following data:
+        Assume we have the following data:
 
-        .. code:: python3
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr1'],
+        ...     'POS': [100, 101],
+        ...     'ID': ['.', '.'],
+        ...     'REF': ['G', 'T'],
+        ...     'ALT': ['A', 'C'],
+        ...     'QUAL': ['.', '.'],
+        ...     'FILTER': ['.', '.'],
+        ...     'INFO': ['.', '.'],
+        ...     'FORMAT': ['GT:DP', 'GT:DP'],
+        ...     'Steven': ['0/1:30', '0/1:29'],
+        ...     'Sara': ['0/1:24', '0/1:30'],
+        ...     'James': ['0/1:18', '0/1:24'],
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT  Steven    Sara   James
+        0  chr1  100  .   G   A    .      .    .  GT:DP  0/1:30  0/1:24  0/1:18
+        1  chr1  101  .   T   C    .      .    .  GT:DP  0/1:29  0/1:30  0/1:24
 
-            df = pd.DataFrame({
-                'CHROM': ['chr1', 'chr1'], 'POS': [100, 101],
-                'ID': ['.', '.'], 'REF': ['G', 'T'],
-                'ALT': ['A', 'C'], 'QUAL': ['.', '.'],
-                'FILTER': ['.', '.'], 'INFO': ['.', '.'],
-                'FORMAT': ['GT:DP', 'GT:DP'], 'Steven': ['0/1:30', '0/1:29'],
-                'Sara': ['0/1:24', '0/1:30'], 'James': ['0/1:18', '0/1:24'],
-            })
-            vf = pyvcf.VcfFrame([], df)
-            print(vf.df)
+        We can subset the VcfFrame for James and Steven (in that order too):
 
-        Which gives:
-
-        .. parsed-literal::
-
-              CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT  Steven    Sara   James
-            0  chr1  100  .   G   A    .      .    .  GT:DP  0/1:30  0/1:24  0/1:18
-            1  chr1  101  .   T   C    .      .    .  GT:DP  0/1:29  0/1:30  0/1:24
-
-        We can subset the VcfFrame for James and Steven (the order matters):
-
-        .. code:: python3
-
-            print(vf.subset(['James', 'Steven']).df)
-
-        Which gives:
-
-        .. parsed-literal::
-
-              CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT   James  Steven
-            0  chr1  100  .   G   A    .      .    .  GT:DP  0/1:18  0/1:30
-            1  chr1  101  .   T   C    .      .    .  GT:DP  0/1:24  0/1:29
+        >>> vf.subset(['James', 'Steven']).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT   James  Steven
+        0  chr1  100  .   G   A    .      .    .  GT:DP  0/1:18  0/1:30
+        1  chr1  101  .   T   C    .      .    .  GT:DP  0/1:24  0/1:29
 
         Alternatively, we can exclude James and Steven:
 
-        .. code:: python3
-
-            print(vf.subset(['James', 'Steven'], exclude=True).df)
-
-        Which gives:
-
-        .. parsed-literal::
-
-              CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    Sara
-            0  chr1  100  .   G   A    .      .    .  GT:DP  0/1:24
-            1  chr1  101  .   T   C    .      .    .  GT:DP  0/1:30
+        >>> vf.subset(['James', 'Steven'], exclude=True).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    Sara
+        0  chr1  100  .   G   A    .      .    .  GT:DP  0/1:24
+        1  chr1  101  .   T   C    .      .    .  GT:DP  0/1:30
         """
         if exclude:
             samples = [x for x in self.samples if x not in samples]
