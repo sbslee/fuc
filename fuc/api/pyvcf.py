@@ -901,32 +901,153 @@ class VcfFrame:
         vf = self.__class__(self.copy_meta(), df)
         return vf
 
-    def filter_by_sample(self, name, include=False):
-        """Filter out rows that have a variant call in the target sample.
+    def filter_sampall(self, samples, opposite=False, index=False):
+        """Select rows where all of the samples have the variant.
 
         Parameters
         ----------
-        name : str or int
-            Name or index of the sample.
-        include : bool, default: False
-            If True, include only such rows instead of excluding them.
+        samples : list
+            List of sample names or indicies.
+        opposite : bool, default: False
+            If True, return rows that don't meet the said criteria.
+        index : bool, default: False
+            If True, return boolean index array instead of VcfFrame.
 
         Returns
         -------
-        vf : VcfFrame
-            Filtered VcfFrame.
+        VcfFrame or pandas.Series
+            Filtered VcfFrame or boolean index array.
+
+        Examples
+        --------
+        Assume we have the following data:
+
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102],
+        ...     'ID': ['.', '.', '.'],
+        ...     'REF': ['G', 'T', 'T'],
+        ...     'ALT': ['A', 'C', 'A'],
+        ...     'QUAL': ['.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.'],
+        ...     'INFO': ['.', '.', '.'],
+        ...     'FORMAT': ['GT:DP', 'GT:DP', 'GT:DP'],
+        ...     'Steven': ['0/1:30', '0/1:29', '1/1:28'],
+        ...     'Sara': ['0/1:24', '0/1:30', '0/0:28'],
+        ...     'James': ['0/1:18', '0/0:24', '0/0:34'],
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT  Steven    Sara   James
+        0  chr1  100  .   G   A    .      .    .  GT:DP  0/1:30  0/1:24  0/1:18
+        1  chr1  101  .   T   C    .      .    .  GT:DP  0/1:29  0/1:30  0/0:24
+        2  chr1  102  .   T   A    .      .    .  GT:DP  1/1:28  0/0:28  0/0:34
+
+        We can select the row where both Sara and James have the variant
+        (first):
+
+        >>> vf.filter_sampall(['Sara', 'James']).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT  Steven    Sara   James
+        0  chr1  100  .   G   A    .      .    .  GT:DP  0/1:30  0/1:24  0/1:18
+
+        We can also remove those rows:
+
+        >>> vf.filter_sampall(['Sara', 'James'], opposite=True).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT  Steven    Sara   James
+        0  chr1  101  .   T   C    .      .    .  GT:DP  0/1:29  0/1:30  0/0:24
+        1  chr1  102  .   T   A    .      .    .  GT:DP  1/1:28  0/0:28  0/0:34
+
+        Finally, we can return boolean index array from the filtering:
+
+        >>> vf.filter_sampall(['Sara', 'James'], index=True)
+        0     True
+        1    False
+        2    False
+        dtype: bool
         """
-        name = name if isinstance(name, str) else self.samples[name]
-        def func(r):
-            is_filtered = _gt_hasvar(r[name])
-            if include:
-                return is_filtered
-            else:
-                return not is_filtered
-        i = self.df.apply(func, axis=1)
-        df = self.df[i].reset_index(drop=True)
-        vf = self.__class__(self.copy_meta(), df)
-        return vf
+        samples = [x if isinstance(x, str) else self.samples[x]
+                   for x in samples]
+        f = lambda r: all(r[samples].apply(_gt_hasvar))
+        i = self.df.apply(f, axis=1)
+        if opposite:
+            i = ~i
+        if index:
+            return i
+        return self.__class__(self.copy_meta(), self.df[i])
+
+    def filter_sampany(self, samples, opposite=False, index=False):
+        """Select rows where any one of the samples has the variant.
+
+        Parameters
+        ----------
+        samples : list
+            List of sample names or indicies.
+        opposite : bool, default: False
+            If True, return rows that don't meet the said criteria.
+        index : bool, default: False
+            If True, return boolean index array instead of VcfFrame.
+
+        Returns
+        -------
+        VcfFrame or pandas.Series
+            Filtered VcfFrame or boolean index array.
+
+        Examples
+        --------
+        Assume we have the following data:
+
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102],
+        ...     'ID': ['.', '.', '.'],
+        ...     'REF': ['G', 'T', 'T'],
+        ...     'ALT': ['A', 'C', 'A'],
+        ...     'QUAL': ['.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.'],
+        ...     'INFO': ['.', '.', '.'],
+        ...     'FORMAT': ['GT:DP', 'GT:DP', 'GT:DP'],
+        ...     'Steven': ['0/1:30', '0/1:29', '1/1:28'],
+        ...     'Sara': ['0/1:24', '0/1:30', '0/0:28'],
+        ...     'James': ['0/1:18', '0/0:24', '0/0:34'],
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT  Steven    Sara   James
+        0  chr1  100  .   G   A    .      .    .  GT:DP  0/1:30  0/1:24  0/1:18
+        1  chr1  101  .   T   C    .      .    .  GT:DP  0/1:29  0/1:30  0/0:24
+        2  chr1  102  .   T   A    .      .    .  GT:DP  1/1:28  0/0:28  0/0:34
+
+        We can select rows where either Sara or James has the variant
+        (first and second):
+
+        >>> vf.filter_sampany(['Sara', 'James']).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT  Steven    Sara   James
+        0  chr1  100  .   G   A    .      .    .  GT:DP  0/1:30  0/1:24  0/1:18
+        1  chr1  101  .   T   C    .      .    .  GT:DP  0/1:29  0/1:30  0/0:24
+
+        We can also remove those rows:
+
+        >>> vf.filter_sampany(['Sara', 'James'], opposite=True).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT  Steven    Sara   James
+        0  chr1  102  .   T   A    .      .    .  GT:DP  1/1:28  0/0:28  0/0:34
+
+        Finally, we can return boolean index array from the filtering:
+
+        >>> vf.filter_sampany(['Sara', 'James'], index=True)
+        0     True
+        1     True
+        2    False
+        dtype: bool
+        """
+        samples = [x if isinstance(x, str) else self.samples[x]
+                   for x in samples]
+        f = lambda r: any(r[samples].apply(_gt_hasvar))
+        i = self.df.apply(f, axis=1)
+        if opposite:
+            i = ~i
+        if index:
+            return i
+        return self.__class__(self.copy_meta(), self.df[i])
 
     def filter_nonpass(self, include=False):
         """Filter out rows that don't have PASS in the FILTER field.
