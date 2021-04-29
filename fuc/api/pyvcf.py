@@ -287,54 +287,40 @@ class VcfFrame:
 
         Returns
         -------
-        fuc.api.pyvcf.VcfFrame
+        VcfFrame
             Collapsed VcfFrame.
 
         Examples
         --------
-        Let's assume we have the following data:
+        Assume we have the following data:
 
-        .. code:: python3
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr2', 'chr2'],
+        ...     'POS': [100, 100, 200, 200],
+        ...     'ID': ['.', '.', '.', '.'],
+        ...     'REF': ['A', 'A', 'C', 'C'],
+        ...     'ALT': ['C', 'T', 'G', 'G,A'],
+        ...     'QUAL': ['.', '.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.', '.'],
+        ...     'INFO': ['.', '.', '.', '.'],
+        ...     'FORMAT': ['GT:AD', 'GT:AD', 'GT:AD', 'GT:AD'],
+        ...     'Steven': ['0/1:12,15', './.:.', '0/1:16,12', './.:.'],
+        ...     'Sara': ['./.:.', '0/1:14,15', './.:.', '1/2:0,11,17'],
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF  ALT QUAL FILTER INFO FORMAT     Steven         Sara
+        0  chr1  100  .   A    C    .      .    .  GT:AD  0/1:12,15        ./.:.
+        1  chr1  100  .   A    T    .      .    .  GT:AD      ./.:.    0/1:14,15
+        2  chr2  200  .   C    G    .      .    .  GT:AD  0/1:16,12        ./.:.
+        3  chr2  200  .   C  G,A    .      .    .  GT:AD      ./.:.  1/2:0,11,17
 
-            df = pd.DataFrame({
-                'CHROM': ['chr1', 'chr1', 'chr2', 'chr2'],
-                'POS': [100, 100, 200, 200],
-                'ID': ['.', '.', '.', '.'],
-                'REF': ['A', 'A', 'C', 'C'],
-                'ALT': ['C', 'T', 'G', 'G,A'],
-                'QUAL': ['.', '.', '.', '.'],
-                'FILTER': ['.', '.', '.', '.'],
-                'INFO': ['.', '.', '.', '.'],
-                'FORMAT': ['GT:AD', 'GT:AD', 'GT:AD', 'GT:AD'],
-                'Steven': ['0/1:12,15', './.:.', '0/1:16,12', './.:.'],
-                'Sara': ['./.:.', '0/1:14,15', './.:.', '1/2:0,11,17'],
-            })
-            vf = pyvcf.VcfFrame([], df)
-            print(vf.df)
+        We collapse the VcfFrame:
 
-        Which gives:
-
-        .. parsed-literal::
-
-              CHROM  POS ID REF  ALT QUAL FILTER INFO FORMAT     Steven         Sara
-            0  chr1  100  .   A    C    .      .    .  GT:AD  0/1:12,15        ./.:.
-            1  chr1  100  .   A    T    .      .    .  GT:AD      ./.:.    0/1:14,15
-            2  chr2  200  .   C    G    .      .    .  GT:AD  0/1:16,12        ./.:.
-            3  chr2  200  .   C  G,A    .      .    .  GT:AD      ./.:.  1/2:0,11,17
-
-        We can collapse the VcfFrame by:
-
-        .. code:: python3
-
-            print(vf.collapse().df)
-
-        Which gives:
-
-        .. parsed-literal::
-
-              CHROM  POS ID REF  ALT QUAL FILTER INFO FORMAT       Steven         Sara
-            0  chr1  100  .   A  C,T    .      .    .  GT:AD  0/1:12,15,0  0/2:14,0,15
-            2  chr2  200  .   C  A,G    .      .    .  GT:AD  0/2:16,0,12  1/2:0,17,11
+        >>> vf.collapse().df
+          CHROM  POS ID REF  ALT QUAL FILTER INFO FORMAT       Steven         Sara
+        0  chr1  100  .   A  C,T    .      .    .  GT:AD  0/1:12,15,0  0/2:14,0,15
+        2  chr2  200  .   C  A,G    .      .    .  GT:AD  0/2:16,0,12  1/2:0,17,11
         """
         df = self.df.copy()
         dup_idx = df.duplicated(['CHROM', 'POS', 'REF'], keep=False)
@@ -432,6 +418,80 @@ class VcfFrame:
         vf = self.__class__(self.copy_meta(), df)
         return vf
 
+    def markmiss_af(self, threshold, samples=None):
+        """Mark genotypes whose AF is below threshold as missing.
+
+        Parameters
+        ----------
+        threshold : int
+            Minimum allele fraction.
+        sampels : list, optional
+            If provided, only these samples will be marked.
+
+        Returns
+        -------
+        VcfFrame
+            Filtered VcfFrame.
+
+        See Also
+        --------
+        markmiss_dp
+            Similar method using DP.
+
+        Examples
+        --------
+        Assume we have the following data:
+
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr1'],
+        ...     'POS': [100, 101],
+        ...     'ID': ['.', '.'],
+        ...     'REF': ['G', 'T'],
+        ...     'ALT': ['A', 'C'],
+        ...     'QUAL': ['.', '.'],
+        ...     'FILTER': ['.', '.'],
+        ...     'INFO': ['.', '.'],
+        ...     'FORMAT': ['GT:AF', 'GT:AF'],
+        ...     'Steven': ['0/1:0.25', '0/1:0.31'],
+        ...     'Sara': ['0/1:0.12', '0/1:0.25'],
+        ...     'James': ['0/1:0.11', '0/1:0.09'],
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> print(vf.df)
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    Steven      Sara     James
+        0  chr1  100  .   G   A    .      .    .  GT:AF  0/1:0.25  0/1:0.12  0/1:0.11
+        1  chr1  101  .   T   C    .      .    .  GT:AF  0/1:0.31  0/1:0.25  0/1:0.09
+
+        We mark all the genotypes whose AF is below 0.3 as missing:
+
+        >>> vf.markmiss_af(0.3).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    Steven   Sara  James
+        0  chr1  100  .   G   A    .      .    .  GT:AF     ./.:.  ./.:.  ./.:.
+        1  chr1  101  .   T   C    .      .    .  GT:AF  0/1:0.31  ./.:.  ./.:.
+
+        We can apply the marking only to a subset of the samples:
+
+        >>> vf.markmiss_af(0.3, samples=['Steven', 'Sara']).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    Steven   Sara     James
+        0  chr1  100  .   G   A    .      .    .  GT:AF     ./.:.  ./.:.  0/1:0.11
+        1  chr1  101  .   T   C    .      .    .  GT:AF  0/1:0.31  ./.:.  0/1:0.09
+        """
+        if samples is None:
+            samples = self.samples
+        def outfunc(r):
+            i = r.FORMAT.split(':').index('AF')
+            m = row_missing_value(r)
+            def infunc(x):
+                s = x.split(':')[i]
+                if s == '.' or float(s) < threshold:
+                    return m
+                return x
+            r[samples] = r[samples].apply(infunc)
+            return r
+        df = self.df.apply(outfunc, axis=1)
+        vf = self.__class__(self.copy_meta(), df)
+        return vf
+
     def markmiss_dp(self, threshold, samples=None):
         """Mark genotypes whose DP is below threshold as missing.
 
@@ -447,58 +507,48 @@ class VcfFrame:
         vf : VcfFrame
             Filtered VcfFrame.
 
+        See Also
+        --------
+        markmiss_af
+            Similar method using AF.
+
         Examples
         --------
-        Let's assume we have the following data:
+        Assume we have the following data:
 
-        .. code:: python3
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr1'],
+        ...     'POS': [100, 101],
+        ...     'ID': ['.', '.'],
+        ...     'REF': ['G', 'T'],
+        ...     'ALT': ['A', 'C'],
+        ...     'QUAL': ['.', '.'],
+        ...     'FILTER': ['.', '.'],
+        ...     'INFO': ['.', '.'],
+        ...     'FORMAT': ['GT:DP', 'GT:DP'],
+        ...     'Steven': ['0/1:30', '0/1:29'],
+        ...     'Sara': ['0/1:24', '0/1:30'],
+        ...     'James': ['0/1:18', '0/1:24'],
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT  Steven    Sara   James
+        0  chr1  100  .   G   A    .      .    .  GT:DP  0/1:30  0/1:24  0/1:18
+        1  chr1  101  .   T   C    .      .    .  GT:DP  0/1:29  0/1:30  0/1:24
 
-            df = pd.DataFrame({
-                'CHROM': ['chr1', 'chr1'], 'POS': [100, 101],
-                'ID': ['.', '.'], 'REF': ['G', 'T'],
-                'ALT': ['A', 'C'], 'QUAL': ['.', '.'],
-                'FILTER': ['.', '.'], 'INFO': ['.', '.'],
-                'FORMAT': ['GT:DP', 'GT:DP'], 'Steven': ['0/1:30', '0/1:29'],
-                'Sara': ['0/1:24', '0/1:30'], 'James': ['0/1:18', '0/1:24'],
-            })
-            vf = pyvcf.VcfFrame([], df)
-            print(vf.df)
+        We mark all the genotypes whose DP is below 30 as missing:
 
-        Which gives:
+        >>> vf.markmiss_dp(30).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT  Steven    Sara  James
+        0  chr1  100  .   G   A    .      .    .  GT:DP  0/1:30   ./.:.  ./.:.
+        1  chr1  101  .   T   C    .      .    .  GT:DP   ./.:.  0/1:30  ./.:.
 
-        .. parsed-literal::
+        We can apply the marking only to a subset of the samples:
 
-              CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT  Steven    Sara   James
-            0  chr1  100  .   G   A    .      .    .  GT:DP  0/1:30  0/1:24  0/1:18
-            1  chr1  101  .   T   C    .      .    .  GT:DP  0/1:29  0/1:30  0/1:24
-
-        We can mark all the genotypes whose DP is below 30 as missing with:
-
-        .. code:: python3
-
-            print(vf.markmiss_dp(30).df)
-
-        Which gives:
-
-        .. parsed-literal::
-
-              CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT  Steven    Sara  James
-            0  chr1  100  .   G   A    .      .    .  GT:DP  0/1:30   ./.:.  ./.:.
-            1  chr1  101  .   T   C    .      .    .  GT:DP   ./.:.  0/1:30  ./.:.
-
-        We can apply the marking to a subset of the samples:
-
-        .. code:: python3
-
-            print(vf.markmiss_dp(30, samples=['Steven', 'Sara']).df)
-
-        Which gives:
-
-        .. parsed-literal::
-
-              CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT  Steven    Sara   James
-            0  chr1  100  .   G   A    .      .    .  GT:DP  0/1:30   ./.:.  0/1:18
-            1  chr1  101  .   T   C    .      .    .  GT:DP   ./.:.  0/1:30  0/1:24
+        >>> vf.markmiss_dp(30, samples=['Steven', 'Sara']).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT  Steven    Sara   James
+        0  chr1  100  .   G   A    .      .    .  GT:DP  0/1:30   ./.:.  0/1:18
+        1  chr1  101  .   T   C    .      .    .  GT:DP   ./.:.  0/1:30  0/1:24
         """
         if samples is None:
             samples = self.samples
@@ -508,90 +558,6 @@ class VcfFrame:
             def infunc(x):
                 s = x.split(':')[i]
                 if s == '.' or int(s) < threshold:
-                    return m
-                return x
-            r[samples] = r[samples].apply(infunc)
-            return r
-        df = self.df.apply(outfunc, axis=1)
-        vf = self.__class__(self.copy_meta(), df)
-        return vf
-
-    def markmiss_af(self, threshold, samples=None):
-        """Mark genotypes whose AF is below threshold as missing.
-
-        Parameters
-        ----------
-        threshold : int
-            Minimum allele fraction.
-        sampels : list, optional
-            If provided, only these samples will be marked.
-
-        Returns
-        -------
-        vf : VcfFrame
-            Filtered VcfFrame.
-
-        Examples
-        --------
-        Let's assume we have the following data:
-
-        .. code:: python3
-
-            df = pd.DataFrame({
-                'CHROM': ['chr1', 'chr1'], 'POS': [100, 101],
-                'ID': ['.', '.'], 'REF': ['G', 'T'],
-                'ALT': ['A', 'C'], 'QUAL': ['.', '.'],
-                'FILTER': ['.', '.'], 'INFO': ['.', '.'],
-                'FORMAT': ['GT:AF', 'GT:AF'], 'Steven': ['0/1:0.25', '0/1:0.31'],
-                'Sara': ['0/1:0.12', '0/1:0.25'], 'James': ['0/1:0.11', '0/1:0.09'],
-            })
-            vf = pyvcf.VcfFrame([], df)
-            print(vf.df)
-
-        To give:
-
-        .. parsed-literal::
-
-              CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    Steven      Sara     James
-            0  chr1  100  .   G   A    .      .    .  GT:AF  0/1:0.25  0/1:0.12  0/1:0.11
-            1  chr1  101  .   T   C    .      .    .  GT:AF  0/1:0.31  0/1:0.25  0/1:0.09
-
-        We can mark all the genotypes whose AF is below 0.3 as missing with:
-
-        .. code:: python3
-
-            print(vf.markmiss_af(0.3).df)
-
-        To give:
-
-        .. parsed-literal::
-
-              CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    Steven   Sara  James
-            0  chr1  100  .   G   A    .      .    .  GT:AF     ./.:.  ./.:.  ./.:.
-            1  chr1  101  .   T   C    .      .    .  GT:AF  0/1:0.31  ./.:.  ./.:.
-
-        We can apply the marking to a subset of the samples:
-
-        .. code:: python3
-
-            print(vf.markmiss_af(0.3, samples=['Steven', 'Sara']).df)
-
-        To give:
-
-        .. parsed-literal::
-
-              CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    Steven   Sara     James
-            0  chr1  100  .   G   A    .      .    .  GT:AF     ./.:.  ./.:.  0/1:0.11
-            1  chr1  101  .   T   C    .      .    .  GT:AF  0/1:0.31  ./.:.  0/1:0.09
-        """
-        if samples is None:
-            samples = self.samples
-        def outfunc(r):
-            i = r.FORMAT.split(':').index('AF')
-            m = row_missing_value(r)
-            def infunc(x):
-                s = x.split(':')[i]
-                if s == '.' or float(s) < threshold:
                     return m
                 return x
             r[samples] = r[samples].apply(infunc)
@@ -610,7 +576,7 @@ class VcfFrame:
 
         Returns
         -------
-        vf : VcfFrame
+        VcfFrame
             Filtered VcfFrame.
         """
         def func(r):
@@ -836,8 +802,8 @@ class VcfFrame:
         vf = self.__class__(self.copy_meta(), df)
         return vf
 
-    def compare(self, n1, n2, n3=None):
-        """Compare two (A, B) or three (A, B, C) samples.
+    def compare(self, a, b, c=None):
+        """Compare genotype data between Samples A & B or Samples A, B, & C.
 
         This method will return ``(Ab, aB, AB, ab)`` for two samples and
         ``(Abc, aBc, ABc, abC, AbC, aBC, ABC)`` for three samples. Note that
@@ -846,87 +812,70 @@ class VcfFrame:
 
         Parameters
         ----------
-        n1 : str or int
-            Name or index of the sample A (or test).
-        n2 : str or int
-            Name or index of the sample B (or truth).
-        n3 : str or int, optional
-            Name or index of the sample C.
+        a : str or int
+            Name or index of Sample A (or test).
+        b : str or int
+            Name or index of Sample B (or truth).
+        c : str or int, optional
+            Name or index of Sample C.
 
         Returns
         -------
-        result : tuple
+        tuple
             Four- or eight-element tuple depending on the number of samples.
 
         Examples
         --------
-        Let's assume we have the following data:
+        Assume we have the following data:
 
-        .. code:: python3
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102],
+        ...     'ID': ['.', '.', '.'],
+        ...     'REF': ['G', 'T', 'T'],
+        ...     'ALT': ['A', 'C', 'A'],
+        ...     'QUAL': ['.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.'],
+        ...     'INFO': ['.', '.', '.'],
+        ...     'FORMAT': ['GT:DP', 'GT:DP', 'GT:DP'],
+        ...     'Steven': ['0/1:30', '0/0:29', '0/0:28'],
+        ...     'Sara': ['0/1:24', '0/1:30', './.:.'],
+        ...     'James': ['0/1:18', '0/1:24', '1/1:34'],
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT  Steven    Sara   James
+        0  chr1  100  .   G   A    .      .    .  GT:DP  0/1:30  0/1:24  0/1:18
+        1  chr1  101  .   T   C    .      .    .  GT:DP  0/0:29  0/1:30  0/1:24
+        2  chr1  102  .   T   A    .      .    .  GT:DP  0/0:28   ./.:.  1/1:34
 
-            df = pd.DataFrame({
-                'CHROM': ['chr1', 'chr1', 'chr1'], 'POS': [100, 101, 102],
-                'ID': ['.', '.', '.'], 'REF': ['G', 'T', 'T'],
-                'ALT': ['A', 'C', 'A'], 'QUAL': ['.', '.', '.'],
-                'FILTER': ['.', '.', '.'], 'INFO': ['.', '.', '.'],
-                'FORMAT': ['GT:DP', 'GT:DP', 'GT:DP'],
-                'Steven': ['0/1:30', '0/0:29', '0/0:28'],
-                'Sara': ['0/1:24', '0/1:30', './.:.'],
-                'James': ['0/1:18', '0/1:24', '1/1:34'],
-            })
-            vf = pyvcf.VcfFrame([], df)
-            print(vf.df)
+        We compare Steven and Sara:
 
-        To give:
+        >>> vf.compare('Steven', 'Sara')
+        (0, 1, 1, 1)
 
-        .. parsed-literal::
+        Next, we compare all three:
 
-              CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT  Steven    Sara   James
-            0  chr1  100  .   G   A    .      .    .  GT:DP  0/1:30  0/1:24  0/1:18
-            1  chr1  101  .   T   C    .      .    .  GT:DP  0/0:29  0/1:30  0/1:24
-            2  chr1  102  .   T   A    .      .    .  GT:DP  0/0:28   ./.:.  1/1:34
-
-        Compare Steven and Sara:
-
-        .. code:: python3
-
-            vf.compare('Steven', 'Sara')
-
-        Which gives:
-
-        .. parsed-literal::
-
-            (0, 1, 1, 1)
-
-        Next, compare all three samples:
-
-        .. code:: python3
-
-            vf.compare('Steven', 'Sara', 'James')
-
-        Which gives:
-
-        .. parsed-literal::
-
-            (0, 0, 0, 1, 0, 1, 1, 0)
+        >>> vf.compare('Steven', 'Sara', 'James')
+        (0, 0, 0, 1, 0, 1, 1, 0)
         """
-        if n3 is None:
-            result = self._compare_two(n1, n2)
+        if c is None:
+            result = self._compare_two(a, b)
         else:
-            result = self._compare_three(n1, n2, n3)
+            result = self._compare_three(a, b, c)
         return result
 
-    def _compare_two(self, n1, n2):
-        n1 = n1 if isinstance(n1, str) else self.samples[n1]
-        n2 = n2 if isinstance(n2, str) else self.samples[n2]
+    def _compare_two(self, a, b):
+        a = a if isinstance(a, str) else self.samples[a]
+        b = b if isinstance(b, str) else self.samples[b]
         def func(r):
-            a = gt_hasvar(r[n1])
-            b = gt_hasvar(r[n2])
-            if a and not b:
+            a_has = gt_hasvar(r[a])
+            b_has = gt_hasvar(r[b])
+            if a_has and not b_has:
                 return 'Ab'
-            elif not a and b:
+            elif not a_has and b_has:
                 return 'aB'
-            elif a and b:
+            elif a_has and b_has:
                 return 'AB'
             else:
                 return 'ab'
@@ -937,27 +886,27 @@ class VcfFrame:
         ab = d['ab'] if 'ab' in d else 0
         return (Ab, aB, AB, ab)
 
-    def _compare_three(self, n1, n2, n3):
-        n1 = n1 if isinstance(n1, str) else self.samples[n1]
-        n2 = n2 if isinstance(n2, str) else self.samples[n2]
-        n3 = n3 if isinstance(n3, str) else self.samples[n3]
+    def _compare_three(self, a, b, c):
+        a = a if isinstance(a, str) else self.samples[a]
+        b = b if isinstance(b, str) else self.samples[b]
+        c = c if isinstance(c, str) else self.samples[c]
         def func(r):
-            a = gt_hasvar(r[n1])
-            b = gt_hasvar(r[n2])
-            c = gt_hasvar(r[n3])
-            if a and not b and not c:
+            a_has = gt_hasvar(r[a])
+            b_has = gt_hasvar(r[b])
+            c_has = gt_hasvar(r[c])
+            if a_has and not b_has and not c_has:
                 return 'Abc'
-            elif not a and b and not c:
+            elif not a_has and b_has and not c_has:
                 return 'aBc'
-            elif a and b and not c:
+            elif a_has and b_has and not c_has:
                 return 'ABc'
-            elif not a and not b and c:
+            elif not a_has and not b_has and c_has:
                 return 'abC'
-            elif a and not b and c:
+            elif a_has and not b_has and c_has:
                 return 'AbC'
-            elif not a and b and c:
+            elif not a_has and b_has and c_has:
                 return 'aBC'
-            elif a and b and c:
+            elif a_has and b_has and c_has:
                 return 'ABC'
             else:
                 return 'abc'
@@ -972,8 +921,8 @@ class VcfFrame:
         abc = d['abc'] if 'abc' in d else 0
         return (Abc, aBc, ABc, abC, AbC, aBC, ABC, abc)
 
-    def combine(self, n1, n2):
-        """Combine data from two samples.
+    def combine(self, a, b):
+        """Combine the genotype data of Sample A and Sample B.
 
         This method is useful when, for example, you are trying to
         consolidate data from multiple replicate samples. When the same
@@ -982,150 +931,130 @@ class VcfFrame:
 
         Parameters
         ----------
-        n1 : str or int
+        a : str or int
             Name or index of the first sample (or original).
-        n2 : str or int
+        b : str or int
             Name or index of the second sample (or replicate).
 
         Returns
         -------
-        s : pandas.Series
-            VCF column representing the combined data.
+        pandas.Series
+            Resulting VCF column.
 
         Examples
         --------
-        Let's assume we have the following data:
+        Assume we have the following data:
 
-        .. code:: python3
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102],
+        ...     'ID': ['.', '.', '.'],
+        ...     'REF': ['G', 'T', 'T'],
+        ...     'ALT': ['A', 'C', 'A'],
+        ...     'QUAL': ['.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.'],
+        ...     'INFO': ['.', '.', '.'],
+        ...     'FORMAT': ['GT:DP', 'GT:DP', 'GT:DP'],
+        ...     'Original': ['./.:.', '0/0:29', '0/1:28'],
+        ...     'Replicate': ['0/1:24', '0/1:30', './.:.'],
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Original Replicate
+        0  chr1  100  .   G   A    .      .    .  GT:DP    ./.:.    0/1:24
+        1  chr1  101  .   T   C    .      .    .  GT:DP   0/0:29    0/1:30
+        2  chr1  102  .   T   A    .      .    .  GT:DP   0/1:28     ./.:.
 
-            df = pd.DataFrame({
-                'CHROM': ['chr1', 'chr1', 'chr1'], 'POS': [100, 101, 102],
-                'ID': ['.', '.', '.'], 'REF': ['G', 'T', 'T'],
-                'ALT': ['A', 'C', 'A'], 'QUAL': ['.', '.', '.'],
-                'FILTER': ['.', '.', '.'], 'INFO': ['.', '.', '.'],
-                'FORMAT': ['GT:DP', 'GT:DP', 'GT:DP'],
-                'Steven': ['./.:.', '0/0:29', '0/0:28'],
-                'Sara': ['0/1:24', '0/1:30', './.:.'],
-            })
-            vf = pyvcf.VcfFrame([], df)
-            print(vf.df)
+        We combine the two samples to get consolidated genotype data:
 
-        Which gives:
-
-        .. parsed-literal::
-
-              CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT  Steven    Sara
-            0  chr1  100  .   G   A    .      .    .  GT:DP   ./.:.  0/1:24
-            1  chr1  101  .   T   C    .      .    .  GT:DP  0/0:29  0/1:30
-            2  chr1  102  .   T   A    .      .    .  GT:DP  0/0:28   ./.:.
-
-        Let's combine data from Steven and Sara:
-
-        .. code:: python3
-
-            vf.df['Combined'] = vf.combine('Steven', 'Sara')
-            print(vf.df)
-
-        which gives:
-
-        .. parsed-literal::
-
-              CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT  Steven    Sara Combined
-            0  chr1  100  .   G   A    .      .    .  GT:DP   ./.:.  0/1:24   0/1:24
-            1  chr1  101  .   T   C    .      .    .  GT:DP  0/0:29  0/1:30   0/1:30
-            2  chr1  102  .   T   A    .      .    .  GT:DP  0/0:28   ./.:.   0/0:28
+        >>> vf.df['Combined'] = vf.combine('Original', 'Replicate')
+        >>> vf.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Original Replicate Combined
+        0  chr1  100  .   G   A    .      .    .  GT:DP    ./.:.    0/1:24   0/1:24
+        1  chr1  101  .   T   C    .      .    .  GT:DP   0/0:29    0/1:30   0/1:30
+        2  chr1  102  .   T   A    .      .    .  GT:DP   0/1:28     ./.:.   0/1:28
         """
-        n1 = n1 if isinstance(n1, str) else self.samples[n1]
-        n2 = n2 if isinstance(n2, str) else self.samples[n2]
+        a = a if isinstance(a, str) else self.samples[a]
+        b = b if isinstance(b, str) else self.samples[b]
         def func(r):
-            a = gt_hasvar(r[n1])
-            b = gt_hasvar(r[n2])
-            if a and b:
-                return r[n1]
-            elif a and not b:
-                return r[n1]
-            elif not a and b:
-                return r[n2]
+            a_has = gt_hasvar(r[a])
+            b_has = gt_hasvar(r[b])
+            if a_has and b_has:
+                return r[a]
+            elif a_has and not b_has:
+                return r[a]
+            elif not a_has and b_has:
+                return r[b]
             else:
-                return r[n1]
+                return r[a]
         s = self.df.apply(func, axis=1)
         return s
 
-    def subtract(self, n1, n2):
-        """Subtract data from one sample to another.
+    def subtract(self, a, b):
+        """Subtract the genotype data of Sample B from Sample A.
 
-        This method is useful when, for example, you are trying to
-        remove germline variants from somatic mutations.
+        This method is useful when, for example, you want to distinguish
+        between somatic mutations and germline variants from an individual.
 
         Parameters
         ----------
-        n1 : str or int
-            Name or index of the first (or somatic) sample.
-        n2 : str or int
-            Name or index of the second (or germline) sample.
+        a : str or int
+            Name or index of Sample A (e.g. somatic).
+        b : str or int
+            Name or index of Sample B (e.g. germline).
 
         Returns
         -------
-        s : pandas.Series
-            VCF column representing the combined data.
+        pandas.Series
+            Resulting VCF column.
 
         Examples
         --------
-        Let's assume we have the following data:
+        Assume we have the following data:
 
-        .. code:: python3
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102],
+        ...     'ID': ['.', '.', '.'],
+        ...     'REF': ['G', 'T', 'T'],
+        ...     'ALT': ['A', 'C', 'A'],
+        ...     'QUAL': ['.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.'],
+        ...     'INFO': ['.', '.', '.'],
+        ...     'FORMAT': ['GT:DP', 'GT:DP', 'GT:DP'],
+        ...     'Somatic': ['./.:.', '0/1:29', '0/1:28'],
+        ...     'Germline': ['0/1:24', '0/1:30', './.:.'],
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Somatic Germline
+        0  chr1  100  .   G   A    .      .    .  GT:DP   ./.:.   0/1:24
+        1  chr1  101  .   T   C    .      .    .  GT:DP  0/1:29   0/1:30
+        2  chr1  102  .   T   A    .      .    .  GT:DP  0/1:28    ./.:.
 
-            df = pd.DataFrame({
-                'CHROM': ['chr1', 'chr1', 'chr1'], 'POS': [100, 101, 102],
-                'ID': ['.', '.', '.'], 'REF': ['G', 'T', 'T'],
-                'ALT': ['A', 'C', 'A'], 'QUAL': ['.', '.', '.'],
-                'FILTER': ['.', '.', '.'], 'INFO': ['.', '.', '.'],
-                'FORMAT': ['GT:DP', 'GT:DP', 'GT:DP'],
-                'Steven': ['./.:.', '1/1:29', '0/1:28'],
-                'Sara': ['0/1:24', '0/1:30', './.:.'],
-            })
-            vf = pyvcf.VcfFrame([], df)
-            print(vf.df)
+        We subtract the two samples to get the true somatic mutations:
 
-        Which gives:
-
-        .. parsed-literal::
-
-              CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT  Steven    Sara
-            0  chr1  100  .   G   A    .      .    .  GT:DP   ./.:.  0/1:24
-            1  chr1  101  .   T   C    .      .    .  GT:DP  1/1:29  0/1:30
-            2  chr1  102  .   T   A    .      .    .  GT:DP  0/1:28   ./.:.
-
-        Let's subtract Sara's variant data from Steven:
-
-        .. code:: python3
-
-            vf.df['Subtracted'] = vf.subtract('Steven', 'Sara')
-            print(vf.df)
-
-        which gives:
-
-        .. parsed-literal::
-
-              CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT  Steven    Sara Subtracted
-            0  chr1  100  .   G   A    .      .    .  GT:DP   ./.:.  0/1:24      ./.:.
-            1  chr1  101  .   T   C    .      .    .  GT:DP  1/1:29  0/1:30      ./.:.
-            2  chr1  102  .   T   A    .      .    .  GT:DP  0/1:28   ./.:.     0/1:28
+        >>> vf.df['TruelySomatic'] = vf.subtract('Somatic', 'Germline')
+        >>> vf.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Somatic Germline TruelySomatic
+        0  chr1  100  .   G   A    .      .    .  GT:DP   ./.:.   0/1:24         ./.:.
+        1  chr1  101  .   T   C    .      .    .  GT:DP  0/1:29   0/1:30         ./.:.
+        2  chr1  102  .   T   A    .      .    .  GT:DP  0/1:28    ./.:.        0/1:28
         """
-        n1 = n1 if isinstance(n1, str) else self.samples[n1]
-        n2 = n2 if isinstance(n2, str) else self.samples[n2]
+        a = a if isinstance(a, str) else self.samples[a]
+        b = b if isinstance(b, str) else self.samples[b]
         def func(r):
             m = row_missing_value(r)
-            a = gt_hasvar(r[n1])
-            b = gt_hasvar(r[n2])
-            if a and b:
+            a_has = gt_hasvar(r[a])
+            b_bas = gt_hasvar(r[b])
+            if a_has and b_bas:
                 return m
-            elif a and not b:
-                return r[n1]
-            elif not a and b:
-                return r[n1]
+            elif a_has and not b_bas:
+                return r[a]
+            elif not a_has and b_bas:
+                return r[a]
             else:
-                return r[n1]
+                return r[a]
         s = self.df.apply(func, axis=1)
         return s
 
@@ -1179,51 +1108,41 @@ class VcfFrame:
 
         Returns
         -------
-        fuc.api.pyvcf.VcfFrame
+        VcfFrame
             Sorted VcfFrame.
 
         Examples
         --------
-        Let's assume we have the following data:
+        Assume we have the following data:
 
-        .. code:: python3
+        >>> data = {
+        ...     'CHROM': ['chr10', 'chr2', 'chr1', 'chr2'],
+        ...     'POS': [100, 101, 102, 90],
+        ...     'ID': ['.', '.', '.', '.'],
+        ...     'REF': ['G', 'T', 'T', 'A'],
+        ...     'ALT': ['A', 'C', 'A', 'T'],
+        ...     'QUAL': ['.', '.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.', '.'],
+        ...     'INFO': ['.', '.', '.', '.'],
+        ...     'FORMAT': ['GT:DP', 'GT:DP', 'GT:DP', 'GT:DP'],
+        ...     'Steven': ['./.:.', '0/0:29', '0/0:28', '0/1:17']
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+           CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT  Steven
+        0  chr10  100  .   G   A    .      .    .  GT:DP   ./.:.
+        1   chr2  101  .   T   C    .      .    .  GT:DP  0/0:29
+        2   chr1  102  .   T   A    .      .    .  GT:DP  0/0:28
+        3   chr2   90  .   A   T    .      .    .  GT:DP  0/1:17
 
-            df = pd.DataFrame({
-                'CHROM': ['chr10', 'chr2', 'chr1', 'chr2'], 'POS': [100, 101, 102, 90],
-                'ID': ['.', '.', '.', '.'], 'REF': ['G', 'T', 'T', 'A'],
-                'ALT': ['A', 'C', 'A', 'T'], 'QUAL': ['.', '.', '.', '.'],
-                'FILTER': ['.', '.', '.', '.'], 'INFO': ['.', '.', '.', '.'],
-                'FORMAT': ['GT:DP', 'GT:DP', 'GT:DP', 'GT:DP'],
-                'Steven': ['./.:.', '0/0:29', '0/0:28', '0/1:17']
-            })
-            vf = pyvcf.VcfFrame([], df)
-            print(vf.df)
+        We can sort the VcfFrame by:
 
-        Which gives:
-
-        .. parsed-literal::
-
-               CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT  Steven
-            0  chr10  100  .   G   A    .      .    .  GT:DP   ./.:.
-            1   chr2  101  .   T   C    .      .    .  GT:DP  0/0:29
-            2   chr1  102  .   T   A    .      .    .  GT:DP  0/0:28
-            3   chr2   90  .   A   T    .      .    .  GT:DP  0/1:17
-
-        We sort the VcfFrame:
-
-        .. code:: python3
-
-            print(vf.sort().df)
-
-        Which gives:
-
-        .. parsed-literal::
-
-               CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT  Steven
-            0   chr1  102  .   T   A    .      .    .  GT:DP  0/0:28
-            1   chr2   90  .   A   T    .      .    .  GT:DP  0/1:17
-            2   chr2  101  .   T   C    .      .    .  GT:DP  0/0:29
-            3  chr10  100  .   G   A    .      .    .  GT:DP   ./.:.
+        >>> vf.sort().df
+           CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT  Steven
+        0   chr1  102  .   T   A    .      .    .  GT:DP  0/0:28
+        1   chr2   90  .   A   T    .      .    .  GT:DP  0/1:17
+        2   chr2  101  .   T   C    .      .    .  GT:DP  0/0:29
+        3  chr10  100  .   G   A    .      .    .  GT:DP   ./.:.
         """
         df = self.df.sort_values(by=['CHROM', 'POS'], ignore_index=True,
             key=lambda col: [CONTIGS.index(x) if isinstance(x, str)
@@ -1254,7 +1173,7 @@ class VcfFrame:
 
         Returns
         -------
-        fuc.api.pyvcf.VcfFrame
+        VcfFrame
             Subsetted VcfFrame.
 
         Examples
