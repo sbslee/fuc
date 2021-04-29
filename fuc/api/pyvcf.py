@@ -94,14 +94,14 @@ def read_file(fn):
     return vf
 
 def merge(vfs, how='inner', format='GT', sort=True, collapse=False):
-    """Merge the VcfFrames.
+    """Merge VcfFrame objects.
 
     Parameters
     ----------
     vfs : list
         List of VcfFrames to be merged.
     how : str, default: 'inner'
-        Type of merge as defined in `pandas.DataFrame.merge`.
+        Type of merge as defined in pandas.DataFrame.merge.
     format : str, default: 'GT'
         FORMAT subfields to be retained (e.g. 'GT:AD:DP').
     sort : bool, default: True
@@ -111,8 +111,80 @@ def merge(vfs, how='inner', format='GT', sort=True, collapse=False):
 
     Returns
     -------
-    merged_vf : VcfFrame
+    VcfFrame
         Merged VcfFrame.
+
+    See Also
+    --------
+    VcfFrame.merge
+        Merge self with another VcfFrame.
+
+    Examples
+    --------
+    Assume we have the following data:
+
+    >>> data1 = {
+    ...     'CHROM': ['chr1', 'chr1'],
+    ...     'POS': [100, 101],
+    ...     'ID': ['.', '.'],
+    ...     'REF': ['G', 'T'],
+    ...     'ALT': ['A', 'C'],
+    ...     'QUAL': ['.', '.'],
+    ...     'FILTER': ['.', '.'],
+    ...     'INFO': ['.', '.'],
+    ...     'FORMAT': ['GT:DP', 'GT:DP'],
+    ...     'Steven': ['0/0:32', '0/1:29'],
+    ...     'Sara': ['0/1:24', '1/1:30'],
+    ... }
+    >>>
+    >>> data2 = {
+    ...     'CHROM': ['chr1', 'chr1', 'chr2'],
+    ...     'POS': [100, 101, 200],
+    ...     'ID': ['.', '.', '.'],
+    ...     'REF': ['G', 'T', 'A'],
+    ...     'ALT': ['A', 'C', 'T'],
+    ...     'QUAL': ['.', '.', '.'],
+    ...     'FILTER': ['.', '.', '.'],
+    ...     'INFO': ['.', '.', '.'],
+    ...     'FORMAT': ['GT:DP', 'GT:DP', 'GT:DP'],
+    ...     'Dona': ['./.:.', '0/0:24', '0/0:26'],
+    ...     'Michel': ['0/1:24', '0/1:31', '0/1:26'],
+    ... }
+    >>>
+    >>> vf1 = pyvcf.VcfFrame.from_dict([], data1)
+    >>> vf2 = pyvcf.VcfFrame.from_dict([], data2)
+    >>> vf1.df
+      CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT  Steven    Sara
+    0  chr1  100  .   G   A    .      .    .  GT:DP  0/0:32  0/1:24
+    1  chr1  101  .   T   C    .      .    .  GT:DP  0/1:29  1/1:30
+    >>> vf2.df
+      CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    Dona  Michel
+    0  chr1  100  .   G   A    .      .    .  GT:DP   ./.:.  0/1:24
+    1  chr1  101  .   T   C    .      .    .  GT:DP  0/0:24  0/1:31
+    2  chr2  200  .   A   T    .      .    .  GT:DP  0/0:26  0/1:26
+
+    We can merge the two VcfFrames with ``how='inner'`` (default):
+
+    >>> pyvcf.merge([vf1, vf2]).df
+      CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven Sara Dona Michel
+    0  chr1  100  .   G   A    .      .    .     GT    0/0  0/1  ./.    0/1
+    1  chr1  101  .   T   C    .      .    .     GT    0/1  1/1  0/0    0/1
+
+    We can also merge with ``how='outer'``:
+
+    >>> pyvcf.merge([vf1, vf2], how='outer').df
+      CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven Sara Dona Michel
+    0  chr1  100  .   G   A    .      .    .     GT    0/0  0/1  ./.    0/1
+    1  chr1  101  .   T   C    .      .    .     GT    0/1  1/1  0/0    0/1
+    2  chr2  200  .   A   T    .      .    .     GT    ./.  ./.  0/0    0/1
+
+    Since both VcfFrames have the DP subfield, we can use ``format='GT:DP'``:
+
+    >>> pyvcf.merge([vf1, vf2], how='outer', format='GT:DP').df
+      CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT  Steven    Sara    Dona  Michel
+    0  chr1  100  .   G   A    .      .    .  GT:DP  0/0:32  0/1:24   ./.:.  0/1:24
+    1  chr1  101  .   T   C    .      .    .  GT:DP  0/1:29  1/1:30  0/0:24  0/1:31
+    2  chr2  200  .   A   T    .      .    .  GT:DP   ./.:.   ./.:.  0/0:26  0/1:26
     """
     merged_vf = vfs[0]
     for vf in vfs[1:]:
@@ -307,8 +379,8 @@ class VcfFrame:
     def collapse(self):
         """Collapse duplicate records in the VcfFrame.
 
-        Duplicate records have the identical values for ``CHROM``, ``POS``,
-        and ``REF``. They can result from merging two VCF files.
+        Duplicate records have the identical values for CHROM, POS, and REF.
+        They can result from merging two VCF files.
 
         .. note::
            The method will sort the order of ALT alleles.
@@ -428,9 +500,49 @@ class VcfFrame:
         return vf
 
     def add_dp(self):
-        """Compute and add the DP subfield of the FORMAT field."""
+        """Compute DP using AD and add it to the FORMAT field.
+
+        Returns
+        -------
+        VcfFrame
+            Updated VcfFrame.
+
+        Examples
+        --------
+        Assume we have the following data:
+
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr2', 'chr2'],
+        ...     'POS': [100, 100, 200, 200],
+        ...     'ID': ['.', '.', '.', '.'],
+        ...     'REF': ['A', 'A', 'C', 'C'],
+        ...     'ALT': ['C', 'T', 'G', 'G,A'],
+        ...     'QUAL': ['.', '.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.', '.'],
+        ...     'INFO': ['.', '.', '.', '.'],
+        ...     'FORMAT': ['GT:AD', 'GT:AD', 'GT:AD', 'GT:AD'],
+        ...     'Steven': ['0/1:12,15', '0/0:32,1', '0/1:16,12', './.:.'],
+        ...     'Sara': ['0/1:13,17', '0/1:14,15', './.:.', '1/2:0,11,17'],
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF  ALT QUAL FILTER INFO FORMAT     Steven         Sara
+        0  chr1  100  .   A    C    .      .    .  GT:AD  0/1:12,15    0/1:13,17
+        1  chr1  100  .   A    T    .      .    .  GT:AD   0/0:32,1    0/1:14,15
+        2  chr2  200  .   C    G    .      .    .  GT:AD  0/1:16,12        ./.:.
+        3  chr2  200  .   C  G,A    .      .    .  GT:AD      ./.:.  1/2:0,11,17
+
+        We can add the DP subfield to our genotype data:
+
+        >>> vf.add_dp().df
+          CHROM  POS ID REF  ALT QUAL FILTER INFO    FORMAT        Steven            Sara
+        0  chr1  100  .   A    C    .      .    .  GT:AD:DP  0/1:12,15:27    0/1:13,17:30
+        1  chr1  100  .   A    T    .      .    .  GT:AD:DP   0/0:32,1:33    0/1:14,15:29
+        2  chr2  200  .   C    G    .      .    .  GT:AD:DP  0/1:16,12:28         ./.:.:.
+        3  chr2  200  .   C  G,A    .      .    .  GT:AD:DP       ./.:.:.  1/2:0,11,17:28
+        """
         def outfunc(r):
-            i = r['FORMAT'].split(':').index('AD')
+            i = r.FORMAT.split(':').index('AD')
             def infunc(x):
                 ad = x.split(':')[i].split(',')
                 dp = 0
@@ -440,7 +552,7 @@ class VcfFrame:
                     dp += int(depth)
                 return f'{x}:{dp}'
             r.iloc[9:] = r.iloc[9:].apply(infunc)
-            r['FORMAT'] += ':DP'
+            r.FORMAT += ':DP'
             return r
         df = self.df.apply(outfunc, axis=1)
         vf = self.__class__(self.copy_meta(), df)
@@ -827,29 +939,75 @@ class VcfFrame:
             return i
         return self.__class__(self.copy_meta(), self.df[i])
 
-    def filter_multiallelic(self, include=False):
-        """Filter out rows that have multiple ALT alleles.
+    def filter_multialt(self, opposite=False, index=False):
+        """Remove rows with multiple ALT alleles.
 
         Parameters
         ----------
-        include : bool, default: False
-            If True, include only such rows instead of excluding them.
+        opposite : bool, default: False
+            If True, return rows that don't meet the said criteria.
+        index : bool, default: False
+            If True, return boolean index array instead of VcfFrame.
 
         Returns
         -------
-        vf : VcfFrame
-            Filtered VcfFrame.
+        VcfFrame or pandas.Series
+            Filtered VcfFrame or boolean index array.
+
+        Examples
+        --------
+        Assume we have the following data:
+
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr2', 'chr2'],
+        ...     'POS': [100, 100, 200, 200],
+        ...     'ID': ['.', '.', '.', '.'],
+        ...     'REF': ['A', 'A', 'C', 'C'],
+        ...     'ALT': ['C', 'T', 'G', 'G,A'],
+        ...     'QUAL': ['.', '.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.', '.'],
+        ...     'INFO': ['.', '.', '.', '.'],
+        ...     'FORMAT': ['GT:AD', 'GT:AD', 'GT:AD', 'GT:AD'],
+        ...     'Steven': ['0/1:12,15', '0/0:32,1', '0/1:16,12', './.:.'],
+        ...     'Sara': ['0/1:13,17', '0/1:14,15', './.:.', '1/2:0,11,17'],
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF  ALT QUAL FILTER INFO FORMAT     Steven         Sara
+        0  chr1  100  .   A    C    .      .    .  GT:AD  0/1:12,15    0/1:13,17
+        1  chr1  100  .   A    T    .      .    .  GT:AD   0/0:32,1    0/1:14,15
+        2  chr2  200  .   C    G    .      .    .  GT:AD  0/1:16,12        ./.:.
+        3  chr2  200  .   C  G,A    .      .    .  GT:AD      ./.:.  1/2:0,11,17
+
+        We can remove the row with multiple ALT alleles (fourth):
+
+        >>> vf.filter_multialt().df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT     Steven       Sara
+        0  chr1  100  .   A   C    .      .    .  GT:AD  0/1:12,15  0/1:13,17
+        1  chr1  100  .   A   T    .      .    .  GT:AD   0/0:32,1  0/1:14,15
+        2  chr2  200  .   C   G    .      .    .  GT:AD  0/1:16,12      ./.:.
+
+        We can also select the row:
+
+        >>> vf.filter_multialt(opposite=True).df
+          CHROM  POS ID REF  ALT QUAL FILTER INFO FORMAT Steven         Sara
+        0  chr2  200  .   C  G,A    .      .    .  GT:AD  ./.:.  1/2:0,11,17
+
+        Finally, we can return boolean index array from the filtering:
+
+        >>> vf.filter_multialt(index=True)
+        0     True
+        1     True
+        2     True
+        3    False
+        dtype: bool
         """
-        def func(r):
-            is_multiallelic = ',' in r['ALT']
-            if include:
-                return is_multiallelic
-            else:
-                return not is_multiallelic
-        i = self.df.apply(func, axis=1)
-        df = self.df[i].reset_index(drop=True)
-        vf = self.__class__(self.copy_meta(), df)
-        return vf
+        i = self.df.apply(lambda r: ',' not in r.ALT, axis=1)
+        if opposite:
+            i = ~i
+        if index:
+            return i
+        return self.__class__(self.copy_meta(), self.df[i])
 
     def filter_polyploid(self, include=False):
         """Filter out rows that have polyploid genotype (e.g. 0/0/1).
@@ -1119,9 +1277,9 @@ class VcfFrame:
     def compare(self, a, b, c=None):
         """Compare genotype data between Samples A & B or Samples A, B, & C.
 
-        This method will return ``(Ab, aB, AB, ab)`` for two samples and
-        ``(Abc, aBc, ABc, abC, AbC, aBC, ABC, abc)`` for three samples. Note that
-        the former is equivalent to ``(FP, FN, TP, TN)`` if we assume A is
+        This method will return (Ab, aB, AB, ab) for two samples and
+        (Abc, aBc, ABc, abC, AbC, aBC, ABC, abc) for three samples. Note that
+        the former is equivalent to (FP, FN, TP, TN) if we assume A is
         the test sample and B is the truth sample.
 
         Parameters
