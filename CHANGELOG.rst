@@ -1,7 +1,7 @@
 Changelog
 *********
 
-0.3.0 (2021-04-30)
+0.3.2 (2021-04-30)
 ------------------
 
 * Rename ``snpeff`` submodule to ``pysnpeff``.
