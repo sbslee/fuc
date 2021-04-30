@@ -52,17 +52,6 @@ CONTIGS = [
 
 # -- Private methods ---------------------------------------------------------
 
-def _gt_hasvar(x):
-    """Return True if the genotype has a variant call such as ``0/1``."""
-    if x.split(':')[0].replace('/', '').replace('.', '').replace('0', ''):
-        return True
-    else:
-        return False
-
-def _gt_missing(x):
-    """Return True if the genotype has a missing value (e.g. ./.)."""
-    return '.' in x.split(':')[0]
-
 def _gt_unphase(x):
     """Return the unphased genotype (e.g. 0/1 for 1|0)."""
     l = x.split(':')
@@ -93,6 +82,66 @@ def _row_hasindel(r):
     return ref_has or alt_has
 
 # -- Public methods ----------------------------------------------------------
+
+def gthasvar(g):
+    """Return True if the sample genotype has a variant call.
+
+    Parameters
+    ----------
+    g : str
+        Sample genotype.
+
+    Returns
+    -------
+    bool
+        True if the genotype has a variant call.
+
+    Examples
+    --------
+    Below are some simple examples:
+
+    >>> pyvcf.gthasvar('0/1:35:4')
+    True
+    >>> pyvcf.gthasvar('0/0:61:2')
+    False
+    >>> pyvcf.gthasvar('1|2:21:6:23,27')
+    True
+    >>> pyvcf.gthasvar('0|0:48:1:51,51')
+    False
+    """
+    if g.split(':')[0].replace('/', '').replace(
+        '|', '').replace('.', '').replace('0', ''):
+        return True
+    else:
+        return False
+
+def gtmissing(g):
+    """Return True if the sample genotype has a missing call.
+
+    Parameters
+    ----------
+    g : str
+        Sample genotype.
+
+    Returns
+    -------
+    bool
+        True if the genotype has a missing call.
+
+    Examples
+    --------
+    Below are some simple examples:
+
+    >>> pyvcf.gtmissing('0|0:48:1:51,51')
+    False
+    >>> pyvcf.gtmissing('./.:.:.')
+    True
+    >>> pyvcf.gtmissing('.:.')
+    True
+    >>> pyvcf.gtmissing('.')
+    True
+    """
+    return '.' in g.split(':')[0]
 
 def read_file(fn):
     """Read a VCF file into VcfFrame.
@@ -485,7 +534,7 @@ class VcfFrame:
             all_alleles = [ref_allele] + alt_alleles
 
             def infunc(x, r_all_alleles, index_map):
-                if _gt_missing(x):
+                if gtmissing(x):
                     return ''
                 old_fields = x.split(':')
                 old_gt = old_fields[0]
@@ -904,7 +953,7 @@ class VcfFrame:
         3    False
         dtype: bool
         """
-        f = lambda r: not all(r.iloc[9:].apply(_gt_missing))
+        f = lambda r: not all(r.iloc[9:].apply(gtmissing))
         i = self.df.apply(f, axis=1)
         if opposite:
             i = ~i
@@ -1386,7 +1435,7 @@ class VcfFrame:
         else:
             samples = [x if isinstance(x, str) else self.samples[x]
                        for x in samples]
-        f = lambda r: all(r[samples].apply(_gt_hasvar))
+        f = lambda r: all(r[samples].apply(gthasvar))
         i = self.df.apply(f, axis=1)
         if opposite:
             i = ~i
@@ -1480,7 +1529,7 @@ class VcfFrame:
         else:
             samples = [x if isinstance(x, str) else self.samples[x]
                        for x in samples]
-        f = lambda r: any(r[samples].apply(_gt_hasvar))
+        f = lambda r: any(r[samples].apply(gthasvar))
         i = self.df.apply(f, axis=1)
         if opposite:
             i = ~i
@@ -1560,7 +1609,7 @@ class VcfFrame:
         dtype: bool
         """
         def f(r):
-            n = r[9:].apply(_gt_hasvar).sum()
+            n = r[9:].apply(gthasvar).sum()
             if isinstance(threshold, int):
                 return n >= threshold
             else:
@@ -1640,8 +1689,8 @@ class VcfFrame:
         a = a if isinstance(a, str) else self.samples[a]
         b = b if isinstance(b, str) else self.samples[b]
         def func(r):
-            a_has = _gt_hasvar(r[a])
-            b_has = _gt_hasvar(r[b])
+            a_has = gthasvar(r[a])
+            b_has = gthasvar(r[b])
             if a_has and not b_has:
                 return 'Ab'
             elif not a_has and b_has:
@@ -1662,9 +1711,9 @@ class VcfFrame:
         b = b if isinstance(b, str) else self.samples[b]
         c = c if isinstance(c, str) else self.samples[c]
         def func(r):
-            a_has = _gt_hasvar(r[a])
-            b_has = _gt_hasvar(r[b])
-            c_has = _gt_hasvar(r[c])
+            a_has = gthasvar(r[a])
+            b_has = gthasvar(r[b])
+            c_has = gthasvar(r[c])
             if a_has and not b_has and not c_has:
                 return 'Abc'
             elif not a_has and b_has and not c_has:
@@ -1748,8 +1797,8 @@ class VcfFrame:
         a = a if isinstance(a, str) else self.samples[a]
         b = b if isinstance(b, str) else self.samples[b]
         def func(r):
-            a_has = _gt_hasvar(r[a])
-            b_has = _gt_hasvar(r[b])
+            a_has = gthasvar(r[a])
+            b_has = gthasvar(r[b])
             if a_has and b_has:
                 return r[a]
             elif a_has and not b_has:
@@ -1816,8 +1865,8 @@ class VcfFrame:
         b = b if isinstance(b, str) else self.samples[b]
         def func(r):
             m = _row_missing_value(r)
-            a_has = _gt_hasvar(r[a])
-            b_bas = _gt_hasvar(r[b])
+            a_has = gthasvar(r[a])
+            b_bas = gthasvar(r[b])
             if a_has and b_bas:
                 return m
             elif a_has and not b_bas:
