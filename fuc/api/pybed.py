@@ -1,7 +1,28 @@
 """
-The ``pybed`` submodule is designed for working with BED files. It
+The pybed submodule is designed for working with BED files. It
 implements ``pybed.BedFrame`` which stores BED data as
 ``pyranges.PyRanges`` to allow fast computation and easy manipulation.
+
+This class is essentially a wrapper for the pyranges package
+(https://github.com/biocore-ntnu/pyranges).
+
+BED lines have three required fields and nine additional optional fields:
+
+1. chrom (required) - The name of the chromosome.
+2. chromStart (required) - The starting position of the feature.
+3. chromEnd (required) - The ending position of the feature.
+4. name (optional) - Defines the name of the BED line.
+5. score (optional) - A score between 0 and 1000 for color density.
+6. strand (optional) - Either '.' (=no strand) or '+' or '-'.
+7. thickStart (optional) - The starting position for thick drawing.
+8. thickEnd (optional) - The ending position for thick drawing.
+9. itemRgb (optional) - An RGB value (e.g. 255,0,0).
+10. blockCount (optional) - The number of blocks (exons).
+11. blockSizes (optional) - A comma-separated list of the block sizes.
+12. blockStarts (optional) - A comma-separated list of block starts.
+
+For more information about the BED format, visit the UCSC Genome Browser
+FAQ (https://genome.ucsc.edu/FAQ/FAQformat.html).
 """
 
 import pandas as pd
@@ -29,36 +50,33 @@ def read_file(fn):
     return bf
 
 class BedFrame:
-    """Class for storing BED data.
-
-    This class is essentially a wrapper for the ``pyranges`` package
-    (https://github.com/biocore-ntnu/pyranges).
-
-    BED lines have three required fields and nine additional optional fields:
-
-    1. chrom (required) - The name of the chromosome.
-    2. chromStart (required) - The starting position of the feature.
-    3. chromEnd (required) - The ending position of the feature.
-    4. name (optional) - Defines the name of the BED line.
-    5. score (optional) - A score between 0 and 1000 for color density.
-    6. strand (optional) - Either ``.`` (=no strand) or ``+`` or ``-``.
-    7. thickStart (optional) - The starting position for thick drawing.
-    8. thickEnd (optional) - The ending position for thick drawing.
-    9. itemRgb (optional) - An RGB value (e.g. 255,0,0).
-    10. blockCount (optional) - The number of blocks (exons).
-    11. blockSizes (optional) - A comma-separated list of the block sizes.
-    12. blockStarts (optional) - A comma-separated list of block starts.
-
-    For more information about the BED format, visit the UCSC Genome Browser
-    FAQ (https://genome.ucsc.edu/FAQ/FAQformat.html).
-    """
+    """Class for storing BED data."""
     def __init__(self, meta, gr):
-        self.meta = meta
-        self.gr = gr
+        self._meta = meta
+        self._gr = gr
 
-    def to_file(self, file_path):
+    @property
+    def meta(self):
+        """list : List of metadata lines."""
+        return self._meta
+
+    @meta.setter
+    def meta(self, value):
+        self._meta = value
+
+    @property
+    def gr(self):
+        """pyranges.PyRanges : Two-dimensional representation of genomic
+        intervals and their annotations."""
+        return self._gr
+
+    @gr.setter
+    def gr(self, value):
+        self._gr = value
+
+    def to_file(self, fn):
         """Write the BedFrame to a BED file."""
-        with open(file_path, 'w') as f:
+        with open(fn, 'w') as f:
             if self.meta:
                 f.write('\n'.join(self.meta) + '\n')
             self.gr.df.to_csv(f, sep='\t', index=False, header=False)

@@ -1,5 +1,5 @@
 """
-The ``pysnpeff`` submodule is designed for parsing VCF annotation data from
+The pysnpeff submodule is designed for parsing VCF annotation data from
 the SnpEff program. It should be used with ``pyvcf.VcfFrame``.
 
 One VCF record can have several SnpEff annotations if, for example,
@@ -11,7 +11,7 @@ website (https://pcingola.github.io/SnpEff/).
 For each annotation, SnpEff provides the following data:
 
 1. Allele - ALT allele.
-2. Annotation - Sequence Ontology terms concatenated using ``&``.
+2. Annotation - Sequence Ontology terms concatenated using '&'.
 3. Annotation_Impact - HIGH, MODERATE, LOW, or MODIFIER.
 4. Gene_Name - Common gene name (HGNC).
 5. Gene_ID - Gene ID.

@@ -41,9 +41,9 @@ class TestPyvcf(unittest.TestCase):
         vf = pyvcf.read_file(vcf_file1)
         self.assertEqual(vf.compare('Steven', 'Sarah'), (1, 1, 0, 3))
 
-    def test_filter_multiallelic(self):
+    def test_filter_multialt(self):
         vf = pyvcf.read_file(vcf_file1)
-        vf = vf.filter_multiallelic()
+        vf = vf.filter_multialt()
         self.assertEqual(vf.shape[0], 4)
 
     def test_subset(self):

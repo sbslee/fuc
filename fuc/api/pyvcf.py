@@ -1,7 +1,39 @@
 """
-The ``pyvcf`` submodule is designed for working with VCF files (both zipped
-and unzipped). It implements ``pyvcf.VcfFrame`` which stores VCF data as
-``pandas.DataFrame`` to allow fast computation and easy manipulation.
+The pyvcf submodule is designed for working with VCF files (both
+zipped and unzipped). It implements ``pyvcf.VcfFrame`` which stores
+VCF data as ``pandas.DataFrame`` to allow fast computation and easy
+manipulation.
+
+This module strictly adheres to the standard Variant Call Format
+specification (https://samtools.github.io/hts-specs/VCFv4.3.pdf).
+
+A regular VCF file has metadata lines that start with '##', a header
+line that starts with '#CHROM', and genotype lines that start with the
+chromosome identifier such as 'chr1'. See the VCF specification above
+for an example VCF file.
+
+Genotype lines have nine required fields for storing variant information
+and variable-length fields for storing sample genotype data. In all
+cases, missing values are specified with a dot ('.'). The nine
+required fields are:
+
+1. CHROM - An identifier from the reference genome.
+2. POS - The 1-based reference position.
+3. ID - Semicolon-separated list of unique identifiers.
+4. REF - Reference base(s).
+5. ALT - Comma-separated list of alternate non-reference alleles.
+6. QUAL - Phred-scaled quality score for the assertion made in ALT.
+7. FILTER - PASS or a semicolon-separated list of filters that fail.
+8. INFO - Semicolon-separated series of additional information fields.
+9. FORMAT - Colon-separated series of genotype fields.
+
+There are several common, reserved genotype keywords that are standards
+across the community. Currently, the module is aware of the
+following:
+
+* AD - Total read depth for each allele (R, Integer).
+* AF - Allele fraction of the event in the tumor (1, Float)
+* DP - Read depth (1, Integer)
 """
 
 import pandas as pd
@@ -197,43 +229,7 @@ def merge(vfs, how='inner', format='GT', sort=True, collapse=False):
 class VcfFrame:
     """Class for storing VCF data.
 
-    This class strictly adheres to the standard Variant Call Format
-    specification (https://samtools.github.io/hts-specs/VCFv4.3.pdf).
-
-    A regular VCF file has metadata lines that start with '##', a header
-    line that starts with '#CHROM', and genotype lines that start with the
-    chromosome identifier such as 'chr1'. See the VCF specification above
-    for an example VCF file.
-
-    Genotype lines have nine required fields for storing variant information
-    and variable-length fields for storing sample genotype data. In all
-    cases, missing values are specified with a dot ('.'). The nine
-    required fields are:
-
-    1. CHROM - An identifier from the reference genome.
-    2. POS - The 1-based reference position.
-    3. ID - Semicolon-separated list of unique identifiers.
-    4. REF - Reference base(s).
-    5. ALT - Comma-separated list of alternate non-reference alleles.
-    6. QUAL - Phred-scaled quality score for the assertion made in ALT.
-    7. FILTER - PASS or a semicolon-separated list of filters that fail.
-    8. INFO - Semicolon-separated series of additional information fields.
-    9. FORMAT - Colon-separated series of genotype fields.
-
-    There are commonly used INFO keys and VcfFrame is aware of these:
-
-    * AD - Total read depth for each allele (R, Integer).
-    * AF - Allele frequency for each ALT allele (A, Float)
-    * DP - Combined depth across samples (1, Integer)
-
     Parameters
-    ----------
-    meta : list
-        List of metadata lines.
-    df : pandas.DataFrame
-        DataFrame containing VCF data.
-
-    Attributes
     ----------
     meta : list
         List of metadata lines.
@@ -241,8 +237,26 @@ class VcfFrame:
         DataFrame containing VCF data.
     """
     def __init__(self, meta, df):
-        self.meta = meta
-        self.df = df.reset_index(drop=True)
+        self._meta = meta
+        self._df = df.reset_index(drop=True)
+
+    @property
+    def meta(self):
+        """list : List of metadata lines."""
+        return self._meta
+
+    @meta.setter
+    def meta(self, value):
+        self._meta = value
+
+    @property
+    def df(self):
+        """pandas.DataFrame : DataFrame containing VCF data."""
+        return self._df
+
+    @df.setter
+    def df(self, value):
+        self._df = value.reset_index(drop=True)
 
     @property
     def samples(self):

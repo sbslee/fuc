@@ -1,8 +1,8 @@
 Changelog
 *********
 
-0.3.0 (in development)
-----------------------
+0.3.0 (2021-04-30)
+------------------
 
 * Rename ``snpeff`` submodule to ``pysnpeff``.
 * Add new submodule ``pyvep``.

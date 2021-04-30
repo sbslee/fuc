@@ -11,9 +11,9 @@ README
 Introduction
 ============
 
-The main goal of the ``fuc`` package is to wrap some of the most frequently used commands in the field of bioinformatics into one place.
+The main goal of the fuc package is to wrap some of the most frequently used commands in the field of bioinformatics into one place.
 
-You can use ``fuc`` for both command line interface (CLI) and application programming interface (API) whose documentations are available at `Read the Docs <https://sbslee-fuc.readthedocs.io/en/latest/>`_.
+You can use fuc for both command line interface (CLI) and application programming interface (API) whose documentations are available at `Read the Docs <https://sbslee-fuc.readthedocs.io/en/latest/>`_.
 
 Your contributions (e.g. feature ideas, pull requests) are most welcome.
 
@@ -42,7 +42,7 @@ To filter a VCF file based on a BED file using API:
 Required Packages
 =================
 
-The following packages are required to run ``fuc``:
+The following packages are required to run fuc:
 
 .. parsed-literal::
 
@@ -53,7 +53,7 @@ The following packages are required to run ``fuc``:
 Getting Started
 ===============
 
-There are various ways you can install ``fuc``. The easiest one would be to use ``pip``:
+There are various ways you can install fuc. The easiest one would be to use pip:
 
 .. code-block:: console
 
@@ -61,7 +61,7 @@ There are various ways you can install ``fuc``. The easiest one would be to use 
 
 Above will automatically download and install all the dependencies as well.
 
-Alternatively, you can clone the GitHub repository and then install ``fuc`` this way:
+Alternatively, you can clone the GitHub repository and then install fuc this way:
 
 .. code-block:: console
 
@@ -94,7 +94,7 @@ For getting help on CLI:
      -h, --help     show this help message and exit
      -v, --version  show the version number and exit
 
-For getting help on a specific command (e.g. ``vfmerge``):
+For getting help on a specific command (e.g. vfmerge):
 
 .. code-block:: console
 
@@ -102,14 +102,14 @@ For getting help on a specific command (e.g. ``vfmerge``):
 
 Below is the list of submodules available in API:
 
-- **common** : The ``common`` submodule is used by other ``fuc`` submodules such as ``pyvcf`` and ``pybed``. It also provides many day-to-day actions used in the field of bioinformatics.
-- **pybed** : The ``pybed`` submodule is designed for working with BED files. It implements ``pybed.BedFrame`` which stores BED data as a ``pyranges.PyRanges`` to allow fast computation and easy manipulation.
-- **pyfq** : The ``pyfq`` submodule is designed for working with FASTQ files (both zipped and unzipped). It implements ``pyfq.FqFrame`` which stores FASTQ data as a ``pandas.DataFrame`` to allow fast computation and easy manipulation.
-- **pysnpeff** : The ``pysnpeff`` submodule is designed for parsing VCF annotation data from the SnpEff program. It should be used with ``pyvcf.VcfFrame``.
-- **pyvcf** : The ``pyvcf`` submodule is designed for working with VCF files (both zipped and unzipped). It implements ``pyvcf.VcfFrame`` which stores VCF data as a ``pandas.DataFrame`` to allow fast computation and easy manipulation.
-- **pyvep** : The ``pyvep`` submodule is designed for parsing VCF annotation data from the Ensembl Variant Effect Predictor (VEP). It should be used with ``pyvcf.VcfFrame``.
+- **common** : The common submodule is used by other fuc submodules such as pyvcf and pybed. It also provides many day-to-day actions used in the field of bioinformatics.
+- **pybed** : The pybed submodule is designed for working with BED files. It implements ``pybed.BedFrame`` which stores BED data as ``pyranges.PyRanges`` to allow fast computation and easy manipulation.
+- **pyfq** : The pyfq submodule is designed for working with FASTQ files (both zipped and unzipped). It implements ``pyfq.FqFrame`` which stores FASTQ data as ``pandas.DataFrame`` to allow fast computation and easy manipulation.
+- **pysnpeff** : The pysnpeff submodule is designed for parsing VCF annotation data from the SnpEff program. It should be used with ``pyvcf.VcfFrame``.
+- **pyvcf** : The pyvcf submodule is designed for working with VCF files (both zipped and unzipped). It implements ``pyvcf.VcfFrame`` which stores VCF data as ``pandas.DataFrame`` to allow fast computation and easy manipulation.
+- **pyvep** : The pyvep submodule is designed for parsing VCF annotation data from the Ensembl Variant Effect Predictor (VEP). It should be used with ``pyvcf.VcfFrame``.
 
-For getting help on a specific module (e.g. ``pyvcf``):
+For getting help on a specific module (e.g. pyvcf):
 
 .. code:: python3
 

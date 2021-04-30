@@ -36,9 +36,9 @@ README
 Introduction
 ============
 
-The main goal of the ``fuc`` package is to wrap some of the most frequently used commands in the field of bioinformatics into one place.
+The main goal of the fuc package is to wrap some of the most frequently used commands in the field of bioinformatics into one place.
 
-You can use ``fuc`` for both command line interface (CLI) and application programming interface (API) whose documentations are available at `Read the Docs <https://sbslee-fuc.readthedocs.io/en/latest/>`_.
+You can use fuc for both command line interface (CLI) and application programming interface (API) whose documentations are available at `Read the Docs <https://sbslee-fuc.readthedocs.io/en/latest/>`_.
 
 Your contributions (e.g. feature ideas, pull requests) are most welcome.
 
@@ -67,7 +67,7 @@ To filter a VCF file based on a BED file using API:
 Required Packages
 =================
 
-The following packages are required to run ``fuc``:
+The following packages are required to run fuc:
 
 .. parsed-literal::
 
@@ -78,7 +78,7 @@ The following packages are required to run ``fuc``:
 Getting Started
 ===============
 
-There are various ways you can install ``fuc``. The easiest one would be to use ``pip``:
+There are various ways you can install fuc. The easiest one would be to use pip:
 
 .. code-block:: console
 
@@ -86,7 +86,7 @@ There are various ways you can install ``fuc``. The easiest one would be to use 
 
 Above will automatically download and install all the dependencies as well.
 
-Alternatively, you can clone the GitHub repository and then install ``fuc`` this way:
+Alternatively, you can clone the GitHub repository and then install fuc this way:
 
 .. code-block:: console
 
@@ -103,7 +103,7 @@ For getting help on CLI:
    $ fuc -h
 {fuc_help}
 
-For getting help on a specific command (e.g. ``vfmerge``):
+For getting help on a specific command (e.g. vfmerge):
 
 .. code-block:: console
 
@@ -112,7 +112,7 @@ For getting help on a specific command (e.g. ``vfmerge``):
 Below is the list of submodules available in API:
 
 {module_help}
-For getting help on a specific module (e.g. ``pyvcf``):
+For getting help on a specific module (e.g. pyvcf):
 
 .. code:: python3
 
@@ -135,7 +135,7 @@ CLI
 Introduction
 ============
 
-This section describes command line interface (CLI) for the ``fuc`` package.
+This section describes command line interface (CLI) for the fuc package.
 
 For getting help on CLI:
 
@@ -144,7 +144,7 @@ For getting help on CLI:
    $ fuc -h
 {fuc_help}
 
-For getting help on a specific command (e.g. ``vfmerge``):
+For getting help on a specific command (e.g. vfmerge):
 
 .. code-block:: console
 
@@ -179,12 +179,12 @@ API
 Introduction
 ============
 
-This section describes application programming interface (API) for the ``fuc`` package.
+This section describes application programming interface (API) for the fuc package.
 
 Below is the list of submodules available in API:
 
 {module_help}
-For getting help on a specific module (e.g. ``pyvcf``):
+For getting help on a specific module (e.g. pyvcf):
 
 .. code:: python3
 
