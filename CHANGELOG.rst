@@ -1,6 +1,12 @@
 Changelog
 *********
 
+0.4.0 (in development)
+----------------------
+
+* Update Read the Docs
+* Add new methods to ``fuc.api.pyvcf.VcfFrame``.
+
 0.3.2 (2021-04-30)
 ------------------
 
