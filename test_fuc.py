@@ -39,16 +39,16 @@ class TestPyvcf(unittest.TestCase):
 
     def test_compare(self):
         vf = pyvcf.read_file(vcf_file1)
-        self.assertEqual(vf.compare('Steven', 'Sarah'), (0, 1, 1, 3))
+        self.assertEqual(vf.compare('Steven', 'Sarah'), (1, 1, 0, 3))
 
-    def test_filter_multiallelic(self):
+    def test_filter_multialt(self):
         vf = pyvcf.read_file(vcf_file1)
-        vf = vf.filter_multiallelic()
+        vf = vf.filter_multialt()
         self.assertEqual(vf.shape[0], 4)
 
-    def test_reset_samples(self):
+    def test_subset(self):
         vf = pyvcf.read_file(vcf_file1)
-        vf = vf.reset_samples(['Sarah', 'John'])
+        vf = vf.subset(['Sarah', 'John'])
         self.assertEqual(len(vf.samples), 2)
 
 class TestPybed(unittest.TestCase):

@@ -3,6 +3,7 @@ channels:
   - bioconda
   - defaults
 dependencies:
+  - autodocsumm
   - cython
   - matplotlib
   - notebook
