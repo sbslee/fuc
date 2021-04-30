@@ -1299,12 +1299,14 @@ class VcfFrame:
             return i
         return self.__class__(self.copy_meta(), self.df[i])
 
-    def filter_sampall(self, samples, opposite=False, index=False):
+    def filter_sampall(self, samples=None, opposite=False, index=False):
         """Select rows if all of the given samples have the variant.
+
+        The default behavior is to use all samples in the VcfFrame.
 
         Parameters
         ----------
-        samples : list
+        samples : list, optional
             List of sample names or indicies.
         opposite : bool, default: False
             If True, return rows that don't meet the said criteria.
@@ -1319,26 +1321,26 @@ class VcfFrame:
         See Also
         --------
         filter_sampany
-            Similar method that selects rows if any one of the samples
-            has the variant.
+            Similar method that selects rows if any one of the given
+            samples has the variant.
 
         Examples
         --------
         Assume we have the following data:
 
         >>> data = {
-        ...     'CHROM': ['chr1', 'chr1', 'chr1'],
-        ...     'POS': [100, 101, 102],
-        ...     'ID': ['.', '.', '.'],
-        ...     'REF': ['G', 'T', 'T'],
-        ...     'ALT': ['A', 'C', 'A'],
-        ...     'QUAL': ['.', '.', '.'],
-        ...     'FILTER': ['.', '.', '.'],
-        ...     'INFO': ['.', '.', '.'],
-        ...     'FORMAT': ['GT', 'GT', 'GT'],
-        ...     'Steven': ['0/1', '0/0', '0/1'],
-        ...     'Sara': ['0/1', '0/1', '0/0'],
-        ...     'James': ['0/1', '0/1', '0/1'],
+        ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102, 103],
+        ...     'ID': ['.', '.', '.', '.'],
+        ...     'REF': ['G', 'T', 'T', 'T'],
+        ...     'ALT': ['A', 'C', 'A', 'C'],
+        ...     'QUAL': ['.', '.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.', '.'],
+        ...     'INFO': ['.', '.', '.', '.'],
+        ...     'FORMAT': ['GT', 'GT', 'GT', 'GT'],
+        ...     'Steven': ['0/1', '0/0', '0/1', '0/1'],
+        ...     'Sara': ['0/1', '0/1', '0/0', '0/1'],
+        ...     'James': ['0/1', '0/1', '0/1', '0/1'],
         ... }
         >>> vf = pyvcf.VcfFrame.from_dict([], data)
         >>> vf.df
@@ -1346,30 +1348,44 @@ class VcfFrame:
         0  chr1  100  .   G   A    .      .    .     GT    0/1  0/1   0/1
         1  chr1  101  .   T   C    .      .    .     GT    0/0  0/1   0/1
         2  chr1  102  .   T   A    .      .    .     GT    0/1  0/0   0/1
+        3  chr1  103  .   T   C    .      .    .     GT    0/1  0/1   0/1
 
-        We can select rows where both Sara and James have the variant:
+        We can select rows where all three samples have the variant:
 
-        >>> vf.filter_sampall(['Sara', 'James']).df
+        >>> vf.filter_sampall().df
           CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven Sara James
         0  chr1  100  .   G   A    .      .    .     GT    0/1  0/1   0/1
-        1  chr1  101  .   T   C    .      .    .     GT    0/0  0/1   0/1
+        1  chr1  103  .   T   C    .      .    .     GT    0/1  0/1   0/1
 
         We can also remove those rows:
 
-        >>> vf.filter_sampall(['Sara', 'James'], opposite=True).df
+        >>> vf.filter_sampall(opposite=True).df
           CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven Sara James
-        0  chr1  102  .   T   A    .      .    .     GT    0/1  0/0   0/1
+        0  chr1  101  .   T   C    .      .    .     GT    0/0  0/1   0/1
+        1  chr1  102  .   T   A    .      .    .     GT    0/1  0/0   0/1
+
+        We can select rows where both Sara and James have the variant:
+
+        >>> vf.filter_sampall(samples=['Sara', 'James']).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven Sara James
+        0  chr1  100  .   G   A    .      .    .     GT    0/1  0/1   0/1
+        1  chr1  101  .   T   C    .      .    .     GT    0/0  0/1   0/1
+        2  chr1  103  .   T   C    .      .    .     GT    0/1  0/1   0/1
 
         Finally, we can return boolean index array from the filtering:
 
-        >>> vf.filter_sampall(['Sara', 'James'], index=True)
+        >>> vf.filter_sampall(index=True)
         0     True
-        1     True
+        1    False
         2    False
+        3     True
         dtype: bool
         """
-        samples = [x if isinstance(x, str) else self.samples[x]
-                   for x in samples]
+        if samples is None:
+            samples = self.samples
+        else:
+            samples = [x if isinstance(x, str) else self.samples[x]
+                       for x in samples]
         f = lambda r: all(r[samples].apply(_gt_hasvar))
         i = self.df.apply(f, axis=1)
         if opposite:
@@ -1378,12 +1394,14 @@ class VcfFrame:
             return i
         return self.__class__(self.copy_meta(), self.df[i])
 
-    def filter_sampany(self, samples, opposite=False, index=False):
+    def filter_sampany(self, samples=None, opposite=False, index=False):
         """Select rows if any one of the given samples has the variant.
+
+        The default behavior is to use all samples in the VcfFrame.
 
         Parameters
         ----------
-        samples : list
+        samples : list, optional
             List of sample names or indicies.
         opposite : bool, default: False
             If True, return rows that don't meet the said criteria.
@@ -1398,26 +1416,26 @@ class VcfFrame:
         See Also
         --------
         filter_sampall
-            Similar method that selects rows if all of the samples
-            have the variant.
+            Similar method that selects rows if all of the given
+            samples have the variant.
 
         Examples
         --------
         Assume we have the following data:
 
         >>> data = {
-        ...     'CHROM': ['chr1', 'chr1', 'chr1'],
-        ...     'POS': [100, 101, 102],
-        ...     'ID': ['.', '.', '.'],
-        ...     'REF': ['G', 'T', 'T'],
-        ...     'ALT': ['A', 'C', 'A'],
-        ...     'QUAL': ['.', '.', '.'],
-        ...     'FILTER': ['.', '.', '.'],
-        ...     'INFO': ['.', '.', '.'],
-        ...     'FORMAT': ['GT', 'GT', 'GT'],
-        ...     'Steven': ['0/0', '0/0', '0/1'],
-        ...     'Sara': ['0/0', '0/1', '0/0'],
-        ...     'James': ['0/1', '0/0', '0/0'],
+        ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102, 103],
+        ...     'ID': ['.', '.', '.', '.'],
+        ...     'REF': ['G', 'T', 'T', 'T'],
+        ...     'ALT': ['A', 'C', 'A', 'C'],
+        ...     'QUAL': ['.', '.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.', '.'],
+        ...     'INFO': ['.', '.', '.', '.'],
+        ...     'FORMAT': ['GT', 'GT', 'GT', 'GT'],
+        ...     'Steven': ['0/0', '0/0', '0/1', '0/0'],
+        ...     'Sara': ['0/0', '0/1', '0/0', '0/0'],
+        ...     'James': ['0/1', '0/0', '0/0', '0/0'],
         ... }
         >>> vf = pyvcf.VcfFrame.from_dict([], data)
         >>> vf.df
@@ -1425,30 +1443,43 @@ class VcfFrame:
         0  chr1  100  .   G   A    .      .    .     GT    0/0  0/0   0/1
         1  chr1  101  .   T   C    .      .    .     GT    0/0  0/1   0/0
         2  chr1  102  .   T   A    .      .    .     GT    0/1  0/0   0/0
+        3  chr1  103  .   T   C    .      .    .     GT    0/0  0/0   0/0
+
+        We can select rows where at least one sample has the variant:
+
+        >>> vf.filter_sampany().df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven Sara James
+        0  chr1  100  .   G   A    .      .    .     GT    0/0  0/0   0/1
+        1  chr1  101  .   T   C    .      .    .     GT    0/0  0/1   0/0
+        2  chr1  102  .   T   A    .      .    .     GT    0/1  0/0   0/0
+
+        We can also remove those rows:
+
+        >>> vf.filter_sampany(opposite=True).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven Sara James
+        0  chr1  103  .   T   C    .      .    .     GT    0/0  0/0   0/0
 
         We can select rows where either Sara or James has the variant:
 
-        >>> vf.filter_sampany(['Sara', 'James']).df
+        >>> vf.filter_sampany(samples=['Sara', 'James']).df
           CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven Sara James
         0  chr1  100  .   G   A    .      .    .     GT    0/0  0/0   0/1
         1  chr1  101  .   T   C    .      .    .     GT    0/0  0/1   0/0
 
         Finally, we can return boolean index array from the filtering:
 
-        >>> vf.filter_sampany(['Sara', 'James'], opposite=True).df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven Sara James
-        0  chr1  102  .   T   A    .      .    .     GT    0/1  0/0   0/0
-
-        Finally, we can return boolean index array from the filtering:
-
-        >>> vf.filter_sampany(['Sara', 'James'], index=True)
+        >>> vf.filter_sampany(index=True)
         0     True
         1     True
-        2    False
+        2     True
+        3    False
         dtype: bool
         """
-        samples = [x if isinstance(x, str) else self.samples[x]
-                   for x in samples]
+        if samples is None:
+            samples = self.samples
+        else:
+            samples = [x if isinstance(x, str) else self.samples[x]
+                       for x in samples]
         f = lambda r: any(r[samples].apply(_gt_hasvar))
         i = self.df.apply(f, axis=1)
         if opposite:
