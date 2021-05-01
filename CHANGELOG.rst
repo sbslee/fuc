@@ -4,7 +4,7 @@ Changelog
 0.4.0 (in development)
 ----------------------
 
-* Update Read the Docs
+* Update Read the Docs.
 * Add new methods to ``fuc.api.pyvcf.VcfFrame``.
 * :issue:`6`: Add ``sphinx.ext.linkcode`` extension to Read the Docs.
 

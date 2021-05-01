@@ -7,10 +7,10 @@ manipulation.
 This module strictly adheres to the standard Variant Call Format
 specification (https://samtools.github.io/hts-specs/VCFv4.3.pdf).
 
-A regular VCF file has metadata lines that start with '##', a header
-line that starts with '#CHROM', and genotype lines that start with the
-chromosome identifier such as 'chr1'. See the VCF specification above
-for an example VCF file.
+A VCF file contains metadata lines (prefixed with '#'), a header line
+(prefixed with '##'), and genotype lines that start with the chromosome
+identifier (e.g. 'chr1'). See the VCF specification above for an example
+VCF file.
 
 Genotype lines have nine required fields for storing variant information
 and variable-length fields for storing sample genotype data. In all
@@ -51,15 +51,6 @@ CONTIGS = [
 ]
 
 # -- Private methods ---------------------------------------------------------
-
-def _gt_unphase(x):
-    """Return the unphased genotype (e.g. 0/1 for 1|0)."""
-    l = x.split(':')
-    gt = l[0]
-    if '|' not in gt:
-        return x
-    l[0] = '/'.join([str(b) for b in sorted([int(a) for a in gt.split('|')])])
-    return ':'.join(l)
 
 def _gt_polyp(x):
     """Return True if the genotype has a polyploid call (e.g. 0/1/1)."""
@@ -142,6 +133,37 @@ def gtmissing(g):
     True
     """
     return '.' in g.split(':')[0]
+
+def gtunphase(g):
+    """Unphase the sample genotype.
+
+    Parameters
+    ----------
+    g : str
+        Sample genotype.
+
+    Returns
+    -------
+    str
+        Unphased genotype.
+
+    Examples
+    --------
+    Below are some simple examples:
+
+    >>> pyvcf.gtunphase('1|2:21:6:23,27')
+    '1/2:21:6:23,27'
+    >>> pyvcf.gtunphase('2|1:2:0:18,2')
+    '1/2:2:0:18,2'
+    >>> pyvcf.gtunphase('0/1:35:4')
+    '0/1:35:4'
+    """
+    l = g.split(':')
+    gt = l[0]
+    if '|' not in gt:
+        return g
+    l[0] = '/'.join([str(b) for b in sorted([int(a) for a in gt.split('|')])])
+    return ':'.join(l)
 
 def read_file(fn):
     """Read a VCF file into VcfFrame.
@@ -649,6 +671,79 @@ class VcfFrame:
             r.FORMAT += ':DP'
             return r
         df = self.df.apply(outfunc, axis=1)
+        vf = self.__class__(self.copy_meta(), df)
+        return vf
+
+    def add_flag(self, flag, index=None):
+        """Add the given flag to the INFO field.
+
+        The default behavior is to add the flag to all rows in the VcfFrame.
+
+        Parameters
+        ----------
+        flag : str
+            INFO flag.
+        index : list or pandas.Series, optional
+            Boolean index array indicating which rows should be updated.
+
+        Returns
+        -------
+        VcfFrame
+            Updated VcfFrame.
+
+        Examples
+        --------
+        Assume we have the following data:
+
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102, 103],
+        ...     'ID': ['.', '.', '.', '.'],
+        ...     'REF': ['G', 'T', 'A', 'C'],
+        ...     'ALT': ['A', 'C', 'T', 'A'],
+        ...     'QUAL': ['.', '.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.', '.'],
+        ...     'INFO': ['.', 'DB', 'DB', '.'],
+        ...     'FORMAT': ['GT', 'GT', 'GT', 'GT'],
+        ...     'Steven': ['0/0', '0/1', '0/1', '1/1'],
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
+        0  chr1  100  .   G   A    .      .    .     GT    0/0
+        1  chr1  101  .   T   C    .      .   DB     GT    0/1
+        2  chr1  102  .   A   T    .      .   DB     GT    0/1
+        3  chr1  103  .   C   A    .      .    .     GT    1/1
+
+        We can add the SOMATIC flag to the INFO field:
+
+        >>> vf.add_flag('SOMATIC').df
+          CHROM  POS ID REF ALT QUAL FILTER        INFO FORMAT Steven
+        0  chr1  100  .   G   A    .      .     SOMATIC     GT    0/0
+        1  chr1  101  .   T   C    .      .  DB;SOMATIC     GT    0/1
+        2  chr1  102  .   A   T    .      .  DB;SOMATIC     GT    0/1
+        3  chr1  103  .   C   A    .      .     SOMATIC     GT    1/1
+
+        We can also specify which rows should be updated:
+
+        >>> vf.add_flag('SOMATIC', index=[True, True, False, False]).df
+          CHROM  POS ID REF ALT QUAL FILTER        INFO FORMAT Steven
+        0  chr1  100  .   G   A    .      .     SOMATIC     GT    0/0
+        1  chr1  101  .   T   C    .      .  DB;SOMATIC     GT    0/1
+        2  chr1  102  .   A   T    .      .          DB     GT    0/1
+        3  chr1  103  .   C   A    .      .           .     GT    1/1
+        """
+        if index is None:
+            index = [True for i in range(self.shape[0])]
+        def f(r):
+            if not index[r.name]:
+                return r
+            if r.INFO == '.':
+                r.INFO = flag
+            else:
+                r.INFO += f';{flag}'
+            return r
+        df = self.df.apply(f, axis=1)
         vf = self.__class__(self.copy_meta(), df)
         return vf
 
@@ -1988,15 +2083,48 @@ class VcfFrame:
         return vf
 
     def unphase(self):
-        """Unphase all the genotypes.
+        """Unphase all the sample genotypes.
 
         Returns
         -------
         VcfFrame
             Unphased VcfFrame.
+
+        Examples
+        --------
+        Assume we have the following data:
+
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102, 103],
+        ...     'ID': ['.', '.', '.', '.'],
+        ...     'REF': ['G', 'T', 'A', 'C'],
+        ...     'ALT': ['A', 'C', 'T', 'A'],
+        ...     'QUAL': ['.', '.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.', '.'],
+        ...     'INFO': ['.', '.', '.', '.'],
+        ...     'FORMAT': ['GT', 'GT', 'GT', 'GT'],
+        ...     'Steven': ['1|0', './.', '0|1', '0/1'],
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
+        0  chr1  100  .   G   A    .      .    .     GT    1|0
+        1  chr1  101  .   T   C    .      .    .     GT    ./.
+        2  chr1  102  .   A   T    .      .    .     GT    0|1
+        3  chr1  103  .   C   A    .      .    .     GT    0/1
+
+        We can unphase the samples genotypes:
+
+        >>> vf.unphase().df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
+        0  chr1  100  .   G   A    .      .    .     GT    0/1
+        1  chr1  101  .   T   C    .      .    .     GT    ./.
+        2  chr1  102  .   A   T    .      .    .     GT    0/1
+        3  chr1  103  .   C   A    .      .    .     GT    0/1
         """
         def func(r):
-            r[9:] = r[9:].apply(_gt_unphase)
+            r[9:] = r[9:].apply(gtunphase)
             return r
         df = self.df.apply(func, axis=1)
         vf = self.__class__(self.copy_meta(), df)
