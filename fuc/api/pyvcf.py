@@ -814,7 +814,7 @@ class VcfFrame:
         vf = self.__class__(self.copy_meta(), df)
         return vf
 
-    def add_flag(self, flag, index=None):
+    def add_flag(self, flag, order='last', index=None):
         """Add the given flag to the INFO field.
 
         The default behavior is to add the flag to all rows in the VcfFrame.
@@ -823,6 +823,13 @@ class VcfFrame:
         ----------
         flag : str
             INFO flag.
+        order : {'last', 'first', False}, default: 'last'
+            Determines the order in which the flag will be added.
+
+            - ``last`` : Add to the end of the list.
+            - ``first`` : Add to the beginning of the list.
+            - ``False`` : Overwrite the existing field.
+
         index : list or pandas.Series, optional
             Boolean index array indicating which rows should be updated.
 
@@ -864,6 +871,24 @@ class VcfFrame:
         2  chr1  102  .   A   T    .      .  DB;SOMATIC     GT    0/1
         3  chr1  103  .   C   A    .      .     SOMATIC     GT    1/1
 
+        Setting ``order='first'`` will append the flag at the beginning:
+
+        >>> vf.add_flag('SOMATIC', order='first').df
+          CHROM  POS ID REF ALT QUAL FILTER        INFO FORMAT Steven
+        0  chr1  100  .   G   A    .      .     SOMATIC     GT    0/0
+        1  chr1  101  .   T   C    .      .  SOMATIC;DB     GT    0/1
+        2  chr1  102  .   A   T    .      .  SOMATIC;DB     GT    0/1
+        3  chr1  103  .   C   A    .      .     SOMATIC     GT    1/1
+
+        Setting ``order=False`` will overwrite the INFO field:
+
+        >>> vf.add_flag('SOMATIC', order=False).df
+          CHROM  POS ID REF ALT QUAL FILTER     INFO FORMAT Steven
+        0  chr1  100  .   G   A    .      .  SOMATIC     GT    0/0
+        1  chr1  101  .   T   C    .      .  SOMATIC     GT    0/1
+        2  chr1  102  .   A   T    .      .  SOMATIC     GT    0/1
+        3  chr1  103  .   C   A    .      .  SOMATIC     GT    1/1
+
         We can also specify which rows should be updated:
 
         >>> vf.add_flag('SOMATIC', index=[True, True, False, False]).df
@@ -880,6 +905,10 @@ class VcfFrame:
                 return r
             if r.INFO == '.':
                 r.INFO = flag
+            elif not order:
+                r.INFO = flag
+            elif order == 'first':
+                r.INFO = f'{flag};{r.INFO}'
             else:
                 r.INFO += f';{flag}'
             return r
