@@ -1,14 +1,12 @@
 """
-The pyvcf submodule is designed for working with VCF files (both
-zipped and unzipped). It implements ``pyvcf.VcfFrame`` which stores
-VCF data as ``pandas.DataFrame`` to allow fast computation and easy
-manipulation.
+The pyvcf submodule is designed for working with Variant Call Format (VCF)
+files (both zipped and unzipped). It implements ``pyvcf.VcfFrame`` which
+stores VCF data as ``pandas.DataFrame`` to allow fast computation and easy
+manipulation. The submodule strictly adheres to the standard `VCF
+specification <https://samtools.github.io/hts-specs/VCFv4.3.pdf>`_.
 
-This module strictly adheres to the standard Variant Call Format
-specification (https://samtools.github.io/hts-specs/VCFv4.3.pdf).
-
-A VCF file contains metadata lines (prefixed with '#'), a header line
-(prefixed with '##'), and genotype lines that start with the chromosome
+A VCF file contains metadata lines (prefixed with '##'), a header line
+(prefixed with '#'), and genotype lines that start with the chromosome
 identifier (e.g. 'chr1'). See the VCF specification above for an example
 VCF file.
 
@@ -52,27 +50,39 @@ CONTIGS = [
 
 # -- Private methods ---------------------------------------------------------
 
-def _gt_polyp(x):
-    """Return True if the genotype has a polyploid call (e.g. 0/1/1)."""
-    return x.split(':')[0].count('/') > 1
-
-def _row_missing_value(r):
-    """Return the proper missing value for the row (e.g. ./.:. for GT:DP)."""
-    if 'X' in r.CHROM or 'Y' in r.CHROM:
-        m = '.'
-    else:
-        m = './.'
-    for i in range(1, len(r.FORMAT.split(':'))):
-        m += ':.'
-    return m
-
-def _row_hasindel(r):
-    """Return True if the row has an indel."""
-    ref_has = len(r['REF']) > 1
-    alt_has = max([len(x) for x in r['ALT'].split(',')]) > 1
-    return ref_has or alt_has
-
 # -- Public methods ----------------------------------------------------------
+
+def gthaspolyp(g):
+    """Return True if the sample genotype has a polyploid call.
+
+    Parameters
+    ----------
+    g : str
+        Sample genotype.
+
+    Returns
+    -------
+    bool
+        True if the genotype has a polyploid call.
+
+    Examples
+    --------
+    >>> pyvcf.gthaspolyp('0/1')
+    False
+    >>> pyvcf.gthaspolyp('1')
+    False
+    >>> pyvcf.gthaspolyp('0/1/1')
+    True
+    >>> pyvcf.gthaspolyp('1|0|1')
+    True
+    >>> pyvcf.gthaspolyp('0/./1/1')
+    True
+    """
+    gt = g.split(':')[0]
+    if '/' in gt:
+        return gt.count('/') > 1
+    else:
+        return gt.count('|') > 1
 
 def gthasvar(g):
     """Return True if the sample genotype has a variant call.
@@ -164,41 +174,6 @@ def gtunphase(g):
         return g
     l[0] = '/'.join([str(b) for b in sorted([int(a) for a in gt.split('|')])])
     return ':'.join(l)
-
-def read_file(fn):
-    """Read a VCF file into VcfFrame.
-
-    Parameters
-    ----------
-    fn : str
-        Path to a zipped or unzipped VCF file.
-
-    Returns
-    -------
-    VcfFrame
-        VcfFrame.
-
-    Examples
-    --------
-    >>> pyvcf.read_file('example.vcf')
-    """
-    meta = []
-    skip_rows = 0
-    if fn.endswith('.gz'):
-        f = gzip.open(fn, 'rt')
-    else:
-        f = open(fn)
-    for line in f:
-        if line.startswith('##'):
-            meta.append(line.strip())
-            skip_rows += 1
-        else:
-            break
-    df = pd.read_table(fn, skiprows=skip_rows)
-    df = df.rename(columns={'#CHROM': 'CHROM'})
-    vf = VcfFrame(meta, df)
-    f.close()
-    return vf
 
 def merge(vfs, how='inner', format='GT', sort=True, collapse=False):
     """Merge VcfFrame objects.
@@ -299,6 +274,137 @@ def merge(vfs, how='inner', format='GT', sort=True, collapse=False):
             collapse=collapse)
     return merged_vf
 
+def read_file(fn):
+    """Read a VCF file into VcfFrame.
+
+    Parameters
+    ----------
+    fn : str
+        Path to a zipped or unzipped VCF file.
+
+    Returns
+    -------
+    VcfFrame
+        VcfFrame.
+
+    Examples
+    --------
+    >>> pyvcf.read_file('example.vcf')
+    """
+    meta = []
+    skip_rows = 0
+    if fn.endswith('.gz'):
+        f = gzip.open(fn, 'rt')
+    else:
+        f = open(fn)
+    for line in f:
+        if line.startswith('##'):
+            meta.append(line.strip())
+            skip_rows += 1
+        else:
+            break
+    df = pd.read_table(fn, skiprows=skip_rows)
+    df = df.rename(columns={'#CHROM': 'CHROM'})
+    vf = VcfFrame(meta, df)
+    f.close()
+    return vf
+
+def rowhasindel(r):
+    """Return True if the row has an indel.
+
+    Parameters
+    ----------
+    r : pandas.Series
+        VCF row.
+
+    Returns
+    -------
+    bool
+        True if the row has an indel.
+
+    Examples
+    --------
+
+    >>> data = {
+    ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1'],
+    ...     'POS': [100, 101, 102, 103],
+    ...     'ID': ['.', '.', '.', '.'],
+    ...     'REF': ['G', 'CT', 'A', 'C'],
+    ...     'ALT': ['A', 'C', 'C,AT', 'A'],
+    ...     'QUAL': ['.', '.', '.', '.'],
+    ...     'FILTER': ['.', '.', '.', '.'],
+    ...     'INFO': ['.', '.', '.', '.'],
+    ...     'FORMAT': ['GT', 'GT', 'GT', 'GT'],
+    ...     'Steven': ['0/1', '0/1', '1/2', '0/1'],
+    ... }
+    >>> vf = pyvcf.VcfFrame.from_dict([], data)
+    >>> vf.df
+      CHROM  POS ID REF   ALT QUAL FILTER INFO FORMAT Steven
+    0  chr1  100  .   G     A    .      .    .     GT    0/1
+    1  chr1  101  .  CT     C    .      .    .     GT    0/1
+    2  chr1  102  .   A  C,AT    .      .    .     GT    1/2
+    3  chr1  103  .   C     A    .      .    .     GT    0/1
+    >>> vf.df.apply(pyvcf.rowhasindel, axis=1)
+    0    False
+    1     True
+    2     True
+    3    False
+    dtype: bool
+    """
+    ref_has = len(r['REF']) > 1
+    alt_has = max([len(x) for x in r['ALT'].split(',')]) > 1
+    return ref_has or alt_has
+
+def rowmissval(r):
+    """Return the correctly formatted missing value for the row.
+
+    Parameters
+    ----------
+    r : pandas.Series
+        VCF row.
+
+    Returns
+    -------
+    str
+        Missing value.
+
+    Examples
+    --------
+
+    >>> data = {
+    ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chrX'],
+    ...     'POS': [100, 101, 102, 100],
+    ...     'ID': ['.', '.', '.', '.'],
+    ...     'REF': ['G', 'T', 'A', 'C'],
+    ...     'ALT': ['A', 'C', 'T', 'A'],
+    ...     'QUAL': ['.', '.', '.', '.'],
+    ...     'FILTER': ['.', '.', '.', '.'],
+    ...     'INFO': ['.', '.', '.', '.'],
+    ...     'FORMAT': ['GT', 'GT:AD', 'GT:AD:DP', 'GT'],
+    ...     'Steven': ['0/1', '0/1:14,15', '0/1:13,19:32', '0/1'],
+    ... }
+    >>> vf = pyvcf.VcfFrame.from_dict([], data)
+    >>> vf.df
+      CHROM  POS ID REF ALT QUAL FILTER INFO    FORMAT        Steven
+    0  chr1  100  .   G   A    .      .    .        GT           0/1
+    1  chr1  101  .   T   C    .      .    .     GT:AD     0/1:14,15
+    2  chr1  102  .   A   T    .      .    .  GT:AD:DP  0/1:13,19:32
+    3  chrX  100  .   C   A    .      .    .        GT           0/1
+    >>> vf.df.apply(pyvcf.rowmissval, axis=1)
+    0        ./.
+    1      ./.:.
+    2    ./.:.:.
+    3          .
+    dtype: object
+    """
+    if 'X' in r.CHROM or 'Y' in r.CHROM:
+        m = '.'
+    else:
+        m = './.'
+    for i in range(1, len(r.FORMAT.split(':'))):
+        m += ':.'
+    return m
+
 # -- VcfFrame ----------------------------------------------------------------
 
 class VcfFrame:
@@ -310,6 +416,40 @@ class VcfFrame:
         List of metadata lines.
     df : pandas.DataFrame
         DataFrame containing VCF data.
+
+    See Also
+    --------
+    VcfFrame.from_dict
+        Construct VcfFrame from dict of array-like or dicts.
+    read_file
+        Read a VCF file into VcfFrame.
+
+    Examples
+    --------
+    Constructing VcfFrame from pandas DataFrame:
+
+    >>> data = {
+    ...     'CHROM': ['chr1', 'chr1', 'chr1'],
+    ...     'POS': [100, 101, 102],
+    ...     'ID': ['.', '.', '.',],
+    ...     'REF': ['G', 'T', 'A'],
+    ...     'ALT': ['A', 'C', 'T'],
+    ...     'QUAL': ['.', '.', '.'],
+    ...     'FILTER': ['.', '.', '.'],
+    ...     'INFO': ['.', '.', '.'],
+    ...     'FORMAT': ['GT', 'GT', 'GT'],
+    ...     'Steven': ['0/1', '0/1', '0/1'],
+    ... }
+    >>>
+    >>> df = pd.DataFrame(data)
+    >>> vf = pyvcf.VcfFrame(['##fileformat=VCFv4.3'], df)
+    >>> vf.meta
+    ['##fileformat=VCFv4.3']
+    >>> vf.df
+      CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
+    0  chr1  100  .   G   A    .      .    .     GT    0/1
+    1  chr1  101  .   T   C    .      .    .     GT    0/1
+    2  chr1  102  .   A   T    .      .    .     GT    0/1
     """
     def __init__(self, meta, df):
         self._meta = meta
@@ -605,7 +745,7 @@ class VcfFrame:
             df2.INFO = df.INFO.unique()[0]
             df2.FORMAT = df.FORMAT.unique()[0]
             s = df2.squeeze()
-            s = s.replace('', _row_missing_value(s))
+            s = s.replace('', rowmissval(s))
             return s
 
         for name, i in dups.items():
@@ -809,7 +949,7 @@ class VcfFrame:
             samples = self.samples
         def outfunc(r):
             i = r.FORMAT.split(':').index('AF')
-            m = _row_missing_value(r)
+            m = rowmissval(r)
             def infunc(x):
                 s = x.split(':')[i]
                 if s == '.' or float(s) < threshold:
@@ -883,7 +1023,7 @@ class VcfFrame:
             samples = self.samples
         def outfunc(r):
             i = r.FORMAT.split(':').index('DP')
-            m = _row_missing_value(r)
+            m = rowmissval(r)
             def infunc(x):
                 s = x.split(':')[i]
                 if s == '.' or int(s) < threshold:
@@ -1118,7 +1258,7 @@ class VcfFrame:
         3     True
         dtype: bool
         """
-        i = ~self.df.apply(_row_hasindel, axis=1)
+        i = ~self.df.apply(rowhasindel, axis=1)
         if opposite:
             i = ~i
         if index:
@@ -1435,7 +1575,7 @@ class VcfFrame:
         vf : VcfFrame
             Filtered VcfFrame.
         """
-        f = lambda r: not any([_gt_polyp(x) for x in r[9:]])
+        f = lambda r: not any([gthaspolyp(x) for x in r[9:]])
         i = self.df.apply(f, axis=1)
         if opposite:
             i = ~i
@@ -1959,7 +2099,7 @@ class VcfFrame:
         a = a if isinstance(a, str) else self.samples[a]
         b = b if isinstance(b, str) else self.samples[b]
         def func(r):
-            m = _row_missing_value(r)
+            m = rowmissval(r)
             a_has = gthasvar(r[a])
             b_bas = gthasvar(r[b])
             if a_has and b_bas:
