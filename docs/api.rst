@@ -12,7 +12,7 @@ Below is the list of submodules available in API:
 - **pybed** : The pybed submodule is designed for working with BED files. It implements ``pybed.BedFrame`` which stores BED data as ``pyranges.PyRanges`` to allow fast computation and easy manipulation.
 - **pyfq** : The pyfq submodule is designed for working with FASTQ files (both zipped and unzipped). It implements ``pyfq.FqFrame`` which stores FASTQ data as ``pandas.DataFrame`` to allow fast computation and easy manipulation.
 - **pysnpeff** : The pysnpeff submodule is designed for parsing VCF annotation data from the SnpEff program. It should be used with ``pyvcf.VcfFrame``.
-- **pyvcf** : The pyvcf submodule is designed for working with VCF files (both zipped and unzipped). It implements ``pyvcf.VcfFrame`` which stores VCF data as ``pandas.DataFrame`` to allow fast computation and easy manipulation.
+- **pyvcf** : The pyvcf submodule is designed for working with Variant Call Format (VCF) files (both zipped and unzipped). It implements ``pyvcf.VcfFrame`` which stores VCF data as ``pandas.DataFrame`` to allow fast computation and easy manipulation. The submodule strictly adheres to the standard `VCF specification <https://samtools.github.io/hts-specs/VCFv4.3.pdf>`_.
 - **pyvep** : The pyvep submodule is designed for parsing VCF annotation data from the Ensembl Variant Effect Predictor (VEP). It should be used with ``pyvcf.VcfFrame``.
 
 For getting help on a specific module (e.g. pyvcf):

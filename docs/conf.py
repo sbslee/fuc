@@ -114,6 +114,6 @@ def linkcode_resolve(domain, info):
     else:
         linespec = ''
 
-    fn = os.path.relpath(fn, start=os.path.dirname(fuc.__file__))
+    fn = fn.split('/api/')[1]
 
-    return f'https://github.com/sbslee/fuc/tree/main/fuc/{fn}/{linespec}'
+    return f'https://github.com/sbslee/fuc/tree/main/fuc/api/{fn}/{linespec}'
