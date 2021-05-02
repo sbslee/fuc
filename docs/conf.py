@@ -72,7 +72,6 @@ html_static_path = []
 # -- Add external links to source code with sphinx.ext.linkcode --------------
 
 import inspect
-import fuc
 
 def linkcode_resolve(domain, info):
     if domain != 'py':
