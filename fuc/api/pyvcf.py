@@ -6,24 +6,36 @@ manipulation. The submodule strictly adheres to the standard `VCF
 specification <https://samtools.github.io/hts-specs/VCFv4.3.pdf>`_.
 
 A VCF file contains metadata lines (prefixed with '##'), a header line
-(prefixed with '#'), and genotype lines that start with the chromosome
+(prefixed with '#'), and genotype lines that start with a chromosome
 identifier (e.g. 'chr1'). See the VCF specification above for an example
 VCF file.
 
 Genotype lines have nine required fields for storing variant information
-and variable-length fields for storing sample genotype data. In all
-cases, missing values are specified with a dot ('.'). The nine
-required fields are:
+and variable-length fields for storing sample genotype data. For some
+fields, missing values are tolerated and specified with a dot ('.').
+The nine required fields are:
 
-1. CHROM - An identifier from the reference genome.
-2. POS - The 1-based reference position.
-3. ID - Semicolon-separated list of unique identifiers.
-4. REF - Reference base(s).
-5. ALT - Comma-separated list of alternate non-reference alleles.
-6. QUAL - Phred-scaled quality score for the assertion made in ALT.
-7. FILTER - PASS or a semicolon-separated list of filters that fail.
-8. INFO - Semicolon-separated series of additional information fields.
-9. FORMAT - Colon-separated series of genotype fields.
++-----+--------+------------------------------------+------------------------+
+| No. | Name   | Description                        | Examples               |
++=====+========+====================================+========================+
+| 1   | CHROM  | Chromosome or contig identifier    | 'chr2', '2', 'chrM'    |
++-----+--------+------------------------------------+------------------------+
+| 2   | POS    | 1-based reference position         | 10041, 23042           |
++-----+--------+------------------------------------+------------------------+
+| 3   | ID     | ';'-separated variant identifiers  | '.', 'rs35', 'rs9;rs53'|
++-----+--------+------------------------------------+------------------------+
+| 4   | REF    | Reference allele                   | 'A', 'GT'              |
++-----+--------+------------------------------------+------------------------+
+| 5   | ALT    | ','-separated alternate alleles    | 'T', 'ACT', 'C,T'      |
++-----+--------+------------------------------------+------------------------+
+| 6   | QUAL   | Phred-scaled quality score for ALT | '.', 67, 12            |
++-----+--------+------------------------------------+------------------------+
+| 7   | FILTER | ';'-separated filters that failed  | '.', 'PASS', 'q10;s50' |
++-----+--------+------------------------------------+------------------------+
+| 8   | INFO   | ';'-separated information fields   | '.', 'DP=14;AF=0.5;DB' |
++-----+--------+------------------------------------+------------------------+
+| 9   | FORMAT | ':'-separated genotype fields      | 'GT', 'GT:AD:DP'       |
++-----+--------+------------------------------------+------------------------+
 
 There are several common, reserved genotype keywords that are standards
 across the community. Currently, the module is aware of the
