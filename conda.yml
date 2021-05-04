@@ -4,6 +4,7 @@ channels:
   - defaults
 dependencies:
   - autodocsumm
+  - biopython
   - cython
   - matplotlib
   - notebook

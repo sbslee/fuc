@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 exec(open('fuc/version.py').read())
 
-requirements = ['numpy', 'pandas', 'pyranges']
+requirements = ['biopython', 'numpy', 'pandas', 'pyranges']
 
 setup(
     name='fuc',

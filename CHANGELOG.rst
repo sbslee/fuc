@@ -4,6 +4,8 @@ Changelog
 0.5.0 (in development)
 ----------------------
 
+* Add ``bioconda`` package as dependency for working with BGZF compressed files.
+* Update ``fuc.api.pyvcf.read_file`` and ``fuc.api.pyvcf.VcfFrame.to_file`` methods to support BGZF compressed files.
 * Update Read the Docs.
 
 0.4.1 (2021-05-03)

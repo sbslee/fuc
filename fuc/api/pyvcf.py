@@ -37,6 +37,7 @@ following:
 import pandas as pd
 import gzip
 from copy import deepcopy
+from Bio import bgzf
 from . import pybed
 
 CONTIGS = [
@@ -274,13 +275,15 @@ def merge(vfs, how='inner', format='GT', sort=True, collapse=False):
             collapse=collapse)
     return merged_vf
 
-def read_file(fn):
+def read_file(fn, compression=False):
     """Read a VCF file into VcfFrame.
 
     Parameters
     ----------
     fn : str
         Path to a zipped or unzipped VCF file.
+    compression : bool, default: False
+        If True, use the BGZF decompression when reading the file.
 
     Returns
     -------
@@ -290,11 +293,13 @@ def read_file(fn):
     Examples
     --------
     >>> pyvcf.read_file('example.vcf')
+    >>> pyvcf.read_file('example.vcf.gz')
+    >>> pyvcf.read_file('example.vcf.gz', compression=True)
     """
     meta = []
     skip_rows = 0
-    if fn.endswith('.gz'):
-        f = gzip.open(fn, 'rt')
+    if fn.endswith('.gz') or compression:
+        f = bgzf.open(fn, 'rt')
     else:
         f = open(fn)
     for line in f:
@@ -540,13 +545,15 @@ class VcfFrame:
         """Return a copy of the VcfFrame."""
         return self.__class__(self.copy_meta(), self.copy_df())
 
-    def to_file(self, fn):
+    def to_file(self, fn, compression=False):
         """Write the VcfFrame to a VCF file.
 
         Parameters
         ----------
         fn : str
             VCF file path.
+        compression : bool, default: False
+            If True, use the BGZF compression when writing the file.
 
         Examples
         --------
@@ -564,9 +571,14 @@ class VcfFrame:
         ...     'Steven': ['0/1', '1/1']
         ... }
         >>> vf = pyvcf.VcfFrame.from_dict(['##fileformat=VCFv4.3'], data)
-        >>> vf.to_file('out.vcf')
+        >>> vf.to_file('unzipped.vcf')
+        >>> vf.to_file('zipped.vcf.gz')
+        >>> vf.to_file('zipped.vcf.gz', compression=True)
         """
-        f = open(fn, 'w')
+        if fn.endswith('.gz') or compression:
+            f = bgzf.open(fn, 'w')
+        else:
+            f = open(fn, 'w')
         f.write(self.to_string())
         f.close()
 
