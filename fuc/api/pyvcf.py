@@ -541,19 +541,70 @@ class VcfFrame:
         return self.__class__(self.copy_meta(), self.copy_df())
 
     def to_file(self, fn):
-        """Write the VcfFrame to a VCF file."""
-        with open(fn, 'w') as f:
-            if self.meta:
-                f.write('\n'.join(self.meta) + '\n')
-            self.df.rename(columns={'CHROM': '#CHROM'}).to_csv(
-                f, sep='\t', index=False)
+        """Write the VcfFrame to a VCF file.
+
+        Parameters
+        ----------
+        fn : str
+            VCF file path.
+
+        Examples
+        --------
+
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr2'],
+        ...     'POS': [100, 101],
+        ...     'ID': ['.', '.'],
+        ...     'REF': ['G', 'T'],
+        ...     'ALT': ['A', 'C'],
+        ...     'QUAL': ['.', '.'],
+        ...     'FILTER': ['.', '.'],
+        ...     'INFO': ['.', '.'],
+        ...     'FORMAT': ['GT', 'GT'],
+        ...     'Steven': ['0/1', '1/1']
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict(['##fileformat=VCFv4.3'], data)
+        >>> vf.to_file('out.vcf')
+        """
+        f = open(fn, 'w')
+        f.write(self.to_string())
+        f.close()
 
     def to_string(self):
-        """Render the VcfFrame to a console-friendly tabular output."""
+        """Render the VcfFrame to a console-friendly tabular output.
+
+        Returns
+        -------
+        str
+            String representation of the VcfFrame.
+
+        Examples
+        --------
+
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr2'],
+        ...     'POS': [100, 101],
+        ...     'ID': ['.', '.'],
+        ...     'REF': ['G', 'T'],
+        ...     'ALT': ['A', 'C'],
+        ...     'QUAL': ['.', '.'],
+        ...     'FILTER': ['.', '.'],
+        ...     'INFO': ['.', '.'],
+        ...     'FORMAT': ['GT', 'GT'],
+        ...     'Steven': ['0/1', '1/1']
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict(['##fileformat=VCFv4.3'], data)
+        >>> print(vf.to_string())
+        ##fileformat=VCFv4.3
+        #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	Steven
+        chr1	100	.	G	A	.	.	.	GT	0/1
+        chr2	101	.	T	C	.	.	.	GT	1/1
+        """
         s = ''
         if self.meta:
             s += '\n'.join(self.meta) + '\n'
-        s += self.df.to_csv(index=False, sep='\t')
+        s += self.df.rename(columns={'CHROM': '#CHROM'}
+            ).to_csv(index=False, sep='\t')
         return s
 
     def strip(self, format='GT'):
