@@ -7,6 +7,8 @@ Changelog
 * Add ``bioconda`` package as dependency for working with BGZF compressed files.
 * Update ``fuc.api.pyvcf.read_file`` and ``fuc.api.pyvcf.VcfFrame.to_file`` methods to support BGZF compressed files.
 * Update Read the Docs.
+* Add ``fuc.api.pyvcf.VcfFrame.slice`` method.
+* Add ``vfslice`` command.
 
 0.4.1 (2021-05-03)
 ------------------

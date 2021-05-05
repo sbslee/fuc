@@ -89,6 +89,7 @@ For getting help on CLI:
        qfcount      [FASTQ] count sequence reads in FASTQ files
        qfsum        [FASTQ] summarize a FASTQ file
        vfmerge      [VCF] merge two or more VCF files
+       vfslice      [VCF] slice a VCF file
    
    optional arguments:
      -h, --help     show this help message and exit
