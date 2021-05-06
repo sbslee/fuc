@@ -1,7 +1,8 @@
 """
 The pyvep submodule is designed for parsing VCF annotation data from
-the Ensembl Variant Effect Predictor (VEP). It should be used with
-``pyvcf.VcfFrame``.
+the `Ensembl Variant Effect Predictor (VEP)
+<https://asia.ensembl.org/info/docs/tools/vep/index.html>`_. It should be
+used with ``pyvcf.VcfFrame``.
 """
 
 import re

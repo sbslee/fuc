@@ -1,12 +1,13 @@
 """
 The pysnpeff submodule is designed for parsing VCF annotation data from
-the SnpEff program. It should be used with ``pyvcf.VcfFrame``.
+the `SnpEff <https://pcingola.github.io/SnpEff/>`_ program. It should be
+used with ``pyvcf.VcfFrame``.
 
 One VCF record can have several SnpEff annotations if, for example,
 the record is a multiallelic site or the variant is shared by
 multiple genes. When more than one annotations are reported, SnpEff
-will sort them by their importance. For more details, visit the official
-website (https://pcingola.github.io/SnpEff/).
+will sort them by their importance. For more details, visit the `official
+website <https://pcingola.github.io/SnpEff/>`_.
 
 For each annotation, SnpEff provides the following data:
 

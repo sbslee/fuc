@@ -6,24 +6,36 @@ manipulation. The submodule strictly adheres to the standard `VCF
 specification <https://samtools.github.io/hts-specs/VCFv4.3.pdf>`_.
 
 A VCF file contains metadata lines (prefixed with '##'), a header line
-(prefixed with '#'), and genotype lines that start with the chromosome
+(prefixed with '#'), and genotype lines that start with a chromosome
 identifier (e.g. 'chr1'). See the VCF specification above for an example
 VCF file.
 
 Genotype lines have nine required fields for storing variant information
-and variable-length fields for storing sample genotype data. In all
-cases, missing values are specified with a dot ('.'). The nine
-required fields are:
+and variable-length fields for storing sample genotype data. For some
+fields, missing values are tolerated and specified with a dot ('.').
+The nine required fields are:
 
-1. CHROM - An identifier from the reference genome.
-2. POS - The 1-based reference position.
-3. ID - Semicolon-separated list of unique identifiers.
-4. REF - Reference base(s).
-5. ALT - Comma-separated list of alternate non-reference alleles.
-6. QUAL - Phred-scaled quality score for the assertion made in ALT.
-7. FILTER - PASS or a semicolon-separated list of filters that fail.
-8. INFO - Semicolon-separated series of additional information fields.
-9. FORMAT - Colon-separated series of genotype fields.
++-----+--------+------------------------------------+------------------------+
+| No. | Name   | Description                        | Examples               |
++=====+========+====================================+========================+
+| 1   | CHROM  | Chromosome or contig identifier    | 'chr2', '2', 'chrM'    |
++-----+--------+------------------------------------+------------------------+
+| 2   | POS    | 1-based reference position         | 10041, 23042           |
++-----+--------+------------------------------------+------------------------+
+| 3   | ID     | ';'-separated variant identifiers  | '.', 'rs35', 'rs9;rs53'|
++-----+--------+------------------------------------+------------------------+
+| 4   | REF    | Reference allele                   | 'A', 'GT'              |
++-----+--------+------------------------------------+------------------------+
+| 5   | ALT    | ','-separated alternate alleles    | 'T', 'ACT', 'C,T'      |
++-----+--------+------------------------------------+------------------------+
+| 6   | QUAL   | Phred-scaled quality score for ALT | '.', 67, 12            |
++-----+--------+------------------------------------+------------------------+
+| 7   | FILTER | ';'-separated filters that failed  | '.', 'PASS', 'q10;s50' |
++-----+--------+------------------------------------+------------------------+
+| 8   | INFO   | ';'-separated information fields   | '.', 'DP=14;AF=0.5;DB' |
++-----+--------+------------------------------------+------------------------+
+| 9   | FORMAT | ':'-separated genotype fields      | 'GT', 'GT:AD:DP'       |
++-----+--------+------------------------------------+------------------------+
 
 There are several common, reserved genotype keywords that are standards
 across the community. Currently, the module is aware of the
@@ -37,6 +49,7 @@ following:
 import pandas as pd
 import gzip
 from copy import deepcopy
+from Bio import bgzf
 from . import pybed
 
 CONTIGS = [
@@ -274,13 +287,18 @@ def merge(vfs, how='inner', format='GT', sort=True, collapse=False):
             collapse=collapse)
     return merged_vf
 
-def read_file(fn):
+def read_file(fn, compression=False):
     """Read a VCF file into VcfFrame.
+
+    If the file name ends with '.gz', the method will automatically use the
+    BGZF decompression when reading the file.
 
     Parameters
     ----------
     fn : str
         Path to a zipped or unzipped VCF file.
+    compression : bool, default: False
+        If True, use the BGZF decompression.
 
     Returns
     -------
@@ -290,11 +308,13 @@ def read_file(fn):
     Examples
     --------
     >>> pyvcf.read_file('example.vcf')
+    >>> pyvcf.read_file('example.vcf.gz')
+    >>> pyvcf.read_file('example.vcf.gz', compression=True)
     """
     meta = []
     skip_rows = 0
-    if fn.endswith('.gz'):
-        f = gzip.open(fn, 'rt')
+    if fn.endswith('.gz') or compression:
+        f = bgzf.open(fn, 'rt')
     else:
         f = open(fn)
     for line in f:
@@ -528,6 +548,194 @@ class VcfFrame:
         """
         return cls(meta, pd.DataFrame(data))
 
+    def compare(self, a, b, c=None):
+        """Compare genotype data between Samples A & B or Samples A, B, & C.
+
+        This method will return (Ab, aB, AB, ab) for two samples and
+        (Abc, aBc, ABc, abC, AbC, aBC, ABC, abc) for three samples. Note that
+        the former is equivalent to (FP, FN, TP, TN) if we assume A is
+        the test sample and B is the truth sample.
+
+        Parameters
+        ----------
+        a : str or int
+            Name or index of Sample A (or test).
+        b : str or int
+            Name or index of Sample B (or truth).
+        c : str or int, optional
+            Name or index of Sample C.
+
+        Returns
+        -------
+        tuple
+            Four- or eight-element tuple depending on the number of samples.
+
+        Examples
+        --------
+        Assume we have the following data:
+
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102],
+        ...     'ID': ['.', '.', '.'],
+        ...     'REF': ['G', 'T', 'T'],
+        ...     'ALT': ['A', 'C', 'A'],
+        ...     'QUAL': ['.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.'],
+        ...     'INFO': ['.', '.', '.'],
+        ...     'FORMAT': ['GT:DP', 'GT:DP', 'GT:DP'],
+        ...     'Steven': ['0/1:30', '0/0:29', '0/0:28'],
+        ...     'Sara': ['0/1:24', '0/1:30', './.:.'],
+        ...     'James': ['0/1:18', '0/1:24', '1/1:34'],
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT  Steven    Sara   James
+        0  chr1  100  .   G   A    .      .    .  GT:DP  0/1:30  0/1:24  0/1:18
+        1  chr1  101  .   T   C    .      .    .  GT:DP  0/0:29  0/1:30  0/1:24
+        2  chr1  102  .   T   A    .      .    .  GT:DP  0/0:28   ./.:.  1/1:34
+
+        We compare Steven and Sara:
+
+        >>> vf.compare('Steven', 'Sara')
+        (0, 1, 1, 1)
+
+        Next, we compare all three:
+
+        >>> vf.compare('Steven', 'Sara', 'James')
+        (0, 0, 0, 1, 0, 1, 1, 0)
+        """
+        if c is None:
+            result = self._compare_two(a, b)
+        else:
+            result = self._compare_three(a, b, c)
+        return result
+
+    def _compare_two(self, a, b):
+        a = a if isinstance(a, str) else self.samples[a]
+        b = b if isinstance(b, str) else self.samples[b]
+        def func(r):
+            a_has = gthasvar(r[a])
+            b_has = gthasvar(r[b])
+            if a_has and not b_has:
+                return 'Ab'
+            elif not a_has and b_has:
+                return 'aB'
+            elif a_has and b_has:
+                return 'AB'
+            else:
+                return 'ab'
+        d = self.df.apply(func, axis=1).value_counts().to_dict()
+        Ab = d['Ab'] if 'Ab' in d else 0
+        aB = d['aB'] if 'aB' in d else 0
+        AB = d['AB'] if 'AB' in d else 0
+        ab = d['ab'] if 'ab' in d else 0
+        return (Ab, aB, AB, ab)
+
+    def _compare_three(self, a, b, c):
+        a = a if isinstance(a, str) else self.samples[a]
+        b = b if isinstance(b, str) else self.samples[b]
+        c = c if isinstance(c, str) else self.samples[c]
+        def func(r):
+            a_has = gthasvar(r[a])
+            b_has = gthasvar(r[b])
+            c_has = gthasvar(r[c])
+            if a_has and not b_has and not c_has:
+                return 'Abc'
+            elif not a_has and b_has and not c_has:
+                return 'aBc'
+            elif a_has and b_has and not c_has:
+                return 'ABc'
+            elif not a_has and not b_has and c_has:
+                return 'abC'
+            elif a_has and not b_has and c_has:
+                return 'AbC'
+            elif not a_has and b_has and c_has:
+                return 'aBC'
+            elif a_has and b_has and c_has:
+                return 'ABC'
+            else:
+                return 'abc'
+        d = self.df.apply(func, axis=1).value_counts().to_dict()
+        Abc = d['Abc'] if 'Abc' in d else 0
+        aBc = d['aBc'] if 'aBc' in d else 0
+        ABc = d['ABc'] if 'ABc' in d else 0
+        abC = d['abC'] if 'abC' in d else 0
+        AbC = d['AbC'] if 'AbC' in d else 0
+        aBC = d['aBC'] if 'aBC' in d else 0
+        ABC = d['ABC'] if 'ABC' in d else 0
+        abc = d['abc'] if 'abc' in d else 0
+        return (Abc, aBc, ABc, abC, AbC, aBC, ABC, abc)
+
+    def combine(self, a, b):
+        """Combine the genotype data of Sample A and Sample B.
+
+        This method is useful when, for example, you are trying to
+        consolidate data from multiple replicate samples. When the same
+        variant is found (or not found) in both samples, the method will
+        use the genotype data of the first sample.
+
+        Parameters
+        ----------
+        a : str or int
+            Name or index of the first sample (or original).
+        b : str or int
+            Name or index of the second sample (or replicate).
+
+        Returns
+        -------
+        pandas.Series
+            Resulting VCF column.
+
+        Examples
+        --------
+        Assume we have the following data:
+
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102],
+        ...     'ID': ['.', '.', '.'],
+        ...     'REF': ['G', 'T', 'T'],
+        ...     'ALT': ['A', 'C', 'A'],
+        ...     'QUAL': ['.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.'],
+        ...     'INFO': ['.', '.', '.'],
+        ...     'FORMAT': ['GT:DP', 'GT:DP', 'GT:DP'],
+        ...     'Original': ['./.:.', '0/0:29', '0/1:28'],
+        ...     'Replicate': ['0/1:24', '0/1:30', './.:.'],
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Original Replicate
+        0  chr1  100  .   G   A    .      .    .  GT:DP    ./.:.    0/1:24
+        1  chr1  101  .   T   C    .      .    .  GT:DP   0/0:29    0/1:30
+        2  chr1  102  .   T   A    .      .    .  GT:DP   0/1:28     ./.:.
+
+        We combine the two samples to get consolidated genotype data:
+
+        >>> vf.df['Combined'] = vf.combine('Original', 'Replicate')
+        >>> vf.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Original Replicate Combined
+        0  chr1  100  .   G   A    .      .    .  GT:DP    ./.:.    0/1:24   0/1:24
+        1  chr1  101  .   T   C    .      .    .  GT:DP   0/0:29    0/1:30   0/1:30
+        2  chr1  102  .   T   A    .      .    .  GT:DP   0/1:28     ./.:.   0/1:28
+        """
+        a = a if isinstance(a, str) else self.samples[a]
+        b = b if isinstance(b, str) else self.samples[b]
+        def func(r):
+            a_has = gthasvar(r[a])
+            b_has = gthasvar(r[b])
+            if a_has and b_has:
+                return r[a]
+            elif a_has and not b_has:
+                return r[a]
+            elif not a_has and b_has:
+                return r[b]
+            else:
+                return r[a]
+        s = self.df.apply(func, axis=1)
+        return s
+
     def copy_meta(self):
         """Return a copy of the metadata."""
         return deepcopy(self.meta)
@@ -540,20 +748,81 @@ class VcfFrame:
         """Return a copy of the VcfFrame."""
         return self.__class__(self.copy_meta(), self.copy_df())
 
-    def to_file(self, fn):
-        """Write the VcfFrame to a VCF file."""
-        with open(fn, 'w') as f:
-            if self.meta:
-                f.write('\n'.join(self.meta) + '\n')
-            self.df.rename(columns={'CHROM': '#CHROM'}).to_csv(
-                f, sep='\t', index=False)
+    def to_file(self, fn, compression=False):
+        """Write the VcfFrame to a VCF file.
+
+        If the file name ends with '.gz', the method will automatically
+        use the BGZF compression when writing the file.
+
+        Parameters
+        ----------
+        fn : str
+            VCF file path.
+        compression : bool, default: False
+            If True, use the BGZF compression.
+
+        Examples
+        --------
+
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr2'],
+        ...     'POS': [100, 101],
+        ...     'ID': ['.', '.'],
+        ...     'REF': ['G', 'T'],
+        ...     'ALT': ['A', 'C'],
+        ...     'QUAL': ['.', '.'],
+        ...     'FILTER': ['.', '.'],
+        ...     'INFO': ['.', '.'],
+        ...     'FORMAT': ['GT', 'GT'],
+        ...     'Steven': ['0/1', '1/1']
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict(['##fileformat=VCFv4.3'], data)
+        >>> vf.to_file('unzipped.vcf')
+        >>> vf.to_file('zipped.vcf.gz')
+        >>> vf.to_file('zipped.vcf.gz', compression=True)
+        """
+        if fn.endswith('.gz') or compression:
+            f = bgzf.open(fn, 'w')
+        else:
+            f = open(fn, 'w')
+        f.write(self.to_string())
+        f.close()
 
     def to_string(self):
-        """Render the VcfFrame to a console-friendly tabular output."""
+        """Render the VcfFrame to a console-friendly tabular output.
+
+        Returns
+        -------
+        str
+            String representation of the VcfFrame.
+
+        Examples
+        --------
+
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr2'],
+        ...     'POS': [100, 101],
+        ...     'ID': ['.', '.'],
+        ...     'REF': ['G', 'T'],
+        ...     'ALT': ['A', 'C'],
+        ...     'QUAL': ['.', '.'],
+        ...     'FILTER': ['.', '.'],
+        ...     'INFO': ['.', '.'],
+        ...     'FORMAT': ['GT', 'GT'],
+        ...     'Steven': ['0/1', '1/1']
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict(['##fileformat=VCFv4.3'], data)
+        >>> print(vf.to_string())
+        ##fileformat=VCFv4.3
+        #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	Steven
+        chr1	100	.	G	A	.	.	.	GT	0/1
+        chr2	101	.	T	C	.	.	.	GT	1/1
+        """
         s = ''
         if self.meta:
             s += '\n'.join(self.meta) + '\n'
-        s += self.df.to_csv(index=False, sep='\t')
+        s += self.df.rename(columns={'CHROM': '#CHROM'}
+            ).to_csv(index=False, sep='\t')
         return s
 
     def strip(self, format='GT'):
@@ -566,7 +835,7 @@ class VcfFrame:
 
         Returns
         -------
-        vf : VcfFrame
+        VcfFrame
             Stripped VcfFrame.
         """
         def outfunc(r):
@@ -600,7 +869,7 @@ class VcfFrame:
 
         Returns
         -------
-        vf : VcfFrame
+        VcfFrame
             Merged VcfFrame.
         """
         vf1 = self.strip(format=format)
@@ -1002,7 +1271,7 @@ class VcfFrame:
 
         Returns
         -------
-        vf : VcfFrame
+        VcfFrame
             Filtered VcfFrame.
 
         See Also
@@ -1601,7 +1870,7 @@ class VcfFrame:
 
         Returns
         -------
-        vf : VcfFrame
+        VcfFrame
             Filtered VcfFrame.
         """
         f = lambda r: not any([gthaspolyp(x) for x in r[9:]])
@@ -1886,194 +2155,6 @@ class VcfFrame:
         vf = self.__class__(self.copy_meta(), self.df[i])
         return vf
 
-    def compare(self, a, b, c=None):
-        """Compare genotype data between Samples A & B or Samples A, B, & C.
-
-        This method will return (Ab, aB, AB, ab) for two samples and
-        (Abc, aBc, ABc, abC, AbC, aBC, ABC, abc) for three samples. Note that
-        the former is equivalent to (FP, FN, TP, TN) if we assume A is
-        the test sample and B is the truth sample.
-
-        Parameters
-        ----------
-        a : str or int
-            Name or index of Sample A (or test).
-        b : str or int
-            Name or index of Sample B (or truth).
-        c : str or int, optional
-            Name or index of Sample C.
-
-        Returns
-        -------
-        tuple
-            Four- or eight-element tuple depending on the number of samples.
-
-        Examples
-        --------
-        Assume we have the following data:
-
-        >>> data = {
-        ...     'CHROM': ['chr1', 'chr1', 'chr1'],
-        ...     'POS': [100, 101, 102],
-        ...     'ID': ['.', '.', '.'],
-        ...     'REF': ['G', 'T', 'T'],
-        ...     'ALT': ['A', 'C', 'A'],
-        ...     'QUAL': ['.', '.', '.'],
-        ...     'FILTER': ['.', '.', '.'],
-        ...     'INFO': ['.', '.', '.'],
-        ...     'FORMAT': ['GT:DP', 'GT:DP', 'GT:DP'],
-        ...     'Steven': ['0/1:30', '0/0:29', '0/0:28'],
-        ...     'Sara': ['0/1:24', '0/1:30', './.:.'],
-        ...     'James': ['0/1:18', '0/1:24', '1/1:34'],
-        ... }
-        >>> vf = pyvcf.VcfFrame.from_dict([], data)
-        >>> vf.df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT  Steven    Sara   James
-        0  chr1  100  .   G   A    .      .    .  GT:DP  0/1:30  0/1:24  0/1:18
-        1  chr1  101  .   T   C    .      .    .  GT:DP  0/0:29  0/1:30  0/1:24
-        2  chr1  102  .   T   A    .      .    .  GT:DP  0/0:28   ./.:.  1/1:34
-
-        We compare Steven and Sara:
-
-        >>> vf.compare('Steven', 'Sara')
-        (0, 1, 1, 1)
-
-        Next, we compare all three:
-
-        >>> vf.compare('Steven', 'Sara', 'James')
-        (0, 0, 0, 1, 0, 1, 1, 0)
-        """
-        if c is None:
-            result = self._compare_two(a, b)
-        else:
-            result = self._compare_three(a, b, c)
-        return result
-
-    def _compare_two(self, a, b):
-        a = a if isinstance(a, str) else self.samples[a]
-        b = b if isinstance(b, str) else self.samples[b]
-        def func(r):
-            a_has = gthasvar(r[a])
-            b_has = gthasvar(r[b])
-            if a_has and not b_has:
-                return 'Ab'
-            elif not a_has and b_has:
-                return 'aB'
-            elif a_has and b_has:
-                return 'AB'
-            else:
-                return 'ab'
-        d = self.df.apply(func, axis=1).value_counts().to_dict()
-        Ab = d['Ab'] if 'Ab' in d else 0
-        aB = d['aB'] if 'aB' in d else 0
-        AB = d['AB'] if 'AB' in d else 0
-        ab = d['ab'] if 'ab' in d else 0
-        return (Ab, aB, AB, ab)
-
-    def _compare_three(self, a, b, c):
-        a = a if isinstance(a, str) else self.samples[a]
-        b = b if isinstance(b, str) else self.samples[b]
-        c = c if isinstance(c, str) else self.samples[c]
-        def func(r):
-            a_has = gthasvar(r[a])
-            b_has = gthasvar(r[b])
-            c_has = gthasvar(r[c])
-            if a_has and not b_has and not c_has:
-                return 'Abc'
-            elif not a_has and b_has and not c_has:
-                return 'aBc'
-            elif a_has and b_has and not c_has:
-                return 'ABc'
-            elif not a_has and not b_has and c_has:
-                return 'abC'
-            elif a_has and not b_has and c_has:
-                return 'AbC'
-            elif not a_has and b_has and c_has:
-                return 'aBC'
-            elif a_has and b_has and c_has:
-                return 'ABC'
-            else:
-                return 'abc'
-        d = self.df.apply(func, axis=1).value_counts().to_dict()
-        Abc = d['Abc'] if 'Abc' in d else 0
-        aBc = d['aBc'] if 'aBc' in d else 0
-        ABc = d['ABc'] if 'ABc' in d else 0
-        abC = d['abC'] if 'abC' in d else 0
-        AbC = d['AbC'] if 'AbC' in d else 0
-        aBC = d['aBC'] if 'aBC' in d else 0
-        ABC = d['ABC'] if 'ABC' in d else 0
-        abc = d['abc'] if 'abc' in d else 0
-        return (Abc, aBc, ABc, abC, AbC, aBC, ABC, abc)
-
-    def combine(self, a, b):
-        """Combine the genotype data of Sample A and Sample B.
-
-        This method is useful when, for example, you are trying to
-        consolidate data from multiple replicate samples. When the same
-        variant is found (or not found) in both samples, the method will
-        use the genotype data of the first sample.
-
-        Parameters
-        ----------
-        a : str or int
-            Name or index of the first sample (or original).
-        b : str or int
-            Name or index of the second sample (or replicate).
-
-        Returns
-        -------
-        pandas.Series
-            Resulting VCF column.
-
-        Examples
-        --------
-        Assume we have the following data:
-
-        >>> data = {
-        ...     'CHROM': ['chr1', 'chr1', 'chr1'],
-        ...     'POS': [100, 101, 102],
-        ...     'ID': ['.', '.', '.'],
-        ...     'REF': ['G', 'T', 'T'],
-        ...     'ALT': ['A', 'C', 'A'],
-        ...     'QUAL': ['.', '.', '.'],
-        ...     'FILTER': ['.', '.', '.'],
-        ...     'INFO': ['.', '.', '.'],
-        ...     'FORMAT': ['GT:DP', 'GT:DP', 'GT:DP'],
-        ...     'Original': ['./.:.', '0/0:29', '0/1:28'],
-        ...     'Replicate': ['0/1:24', '0/1:30', './.:.'],
-        ... }
-        >>> vf = pyvcf.VcfFrame.from_dict([], data)
-        >>> vf.df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Original Replicate
-        0  chr1  100  .   G   A    .      .    .  GT:DP    ./.:.    0/1:24
-        1  chr1  101  .   T   C    .      .    .  GT:DP   0/0:29    0/1:30
-        2  chr1  102  .   T   A    .      .    .  GT:DP   0/1:28     ./.:.
-
-        We combine the two samples to get consolidated genotype data:
-
-        >>> vf.df['Combined'] = vf.combine('Original', 'Replicate')
-        >>> vf.df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Original Replicate Combined
-        0  chr1  100  .   G   A    .      .    .  GT:DP    ./.:.    0/1:24   0/1:24
-        1  chr1  101  .   T   C    .      .    .  GT:DP   0/0:29    0/1:30   0/1:30
-        2  chr1  102  .   T   A    .      .    .  GT:DP   0/1:28     ./.:.   0/1:28
-        """
-        a = a if isinstance(a, str) else self.samples[a]
-        b = b if isinstance(b, str) else self.samples[b]
-        def func(r):
-            a_has = gthasvar(r[a])
-            b_has = gthasvar(r[b])
-            if a_has and b_has:
-                return r[a]
-            elif a_has and not b_has:
-                return r[a]
-            elif not a_has and b_has:
-                return r[b]
-            else:
-                return r[a]
-        s = self.df.apply(func, axis=1)
-        return s
-
     def subtract(self, a, b):
         """Subtract the genotype data of Sample B from Sample A.
 
@@ -2317,7 +2398,7 @@ class VcfFrame:
 
         Returns
         -------
-        vf : VcfFrame
+        VcfFrame
             Updated VcfFrame.
         """
         targets = ['ID', 'QUAL', 'FILTER', 'INFO']
@@ -2341,5 +2422,65 @@ class VcfFrame:
                     r1[target] = r2.iloc[0][target]
             return r1
         df = self.df.apply(func, axis=1)
-        vf = self.__class__(self.copy_meta(), df)
-        return vf
+        return self.__class__(self.copy_meta(), df)
+
+    def slice(self, chrom, start=None, end=None):
+        """Slice the VcfFrame for the given region.
+
+        Parameters
+        ----------
+        chrom : str
+            Chromosome.
+        start : int, optional
+            Start position.
+        end : int, optional
+            End position.
+
+        Returns
+        -------
+        VcfFrame
+            Sliced VcfFrame.
+
+        Examples
+        --------
+
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr2'],
+        ...     'POS': [100, 205, 297, 101],
+        ...     'ID': ['.', '.', '.', '.'],
+        ...     'REF': ['G', 'T', 'A', 'C'],
+        ...     'ALT': ['A', 'C', 'T', 'A'],
+        ...     'QUAL': ['.', '.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.', '.'],
+        ...     'INFO': ['.', '.', '.', '.'],
+        ...     'FORMAT': ['GT', 'GT', 'GT', 'GT'],
+        ...     'Steven': ['0/1', '1/1', '0/1', '0/1']
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
+        0  chr1  100  .   G   A    .      .    .     GT    0/1
+        1  chr1  205  .   T   C    .      .    .     GT    1/1
+        2  chr1  297  .   A   T    .      .    .     GT    0/1
+        3  chr2  101  .   C   A    .      .    .     GT    0/1
+        >>> vf.slice('chr1').df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
+        0  chr1  100  .   G   A    .      .    .     GT    0/1
+        1  chr1  205  .   T   C    .      .    .     GT    1/1
+        2  chr1  297  .   A   T    .      .    .     GT    0/1
+        >>> vf.slice('chr1', start=101, end=300).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
+        0  chr1  205  .   T   C    .      .    .     GT    1/1
+        1  chr1  297  .   A   T    .      .    .     GT    0/1
+        >>> vf.slice('chr1', end=296).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
+        0  chr1  100  .   G   A    .      .    .     GT    0/1
+        1  chr1  205  .   T   C    .      .    .     GT    1/1
+        """
+        i = (self.df.CHROM == chrom)
+        if start:
+            i = i & (start <= self.df.POS)
+        if end:
+            i = i & (self.df.POS <= end)
+        df = self.df[i]
+        return self.__class__(self.copy_meta(), df)
