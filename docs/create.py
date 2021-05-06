@@ -52,16 +52,43 @@ Your contributions (e.g. feature ideas, pull requests) are most welcome.
 | Email: sbstevenlee@gmail.com
 | License: MIT License
 
-Examples
-========
+CLI Examples
+============
 
-To merge VCF files with CLI:
+To find intersection between BED files:
+
+.. code-block:: console
+
+   $ fuc bfintxn 1.bed 2.bed 3.bed > intersect.bed
+
+To merge two tab-delimited files:
+
+.. code-block:: console
+
+   $ fuc dfmerge left.txt right.txt > merged.txt
+
+To check whether a file exists in the operating system:
+
+.. code-block:: console
+
+   $ fuc fucexist example.txt
+
+To count sequence reads in a FASTQ file:
+
+.. code-block:: console
+
+   $ fuc qfcount example.fastq
+
+To merge VCF files:
 
 .. code-block:: console
 
    $ fuc vfmerge 1.vcf 2.vcf 3.vcf > merged.vcf
 
-To filter a VCF file based on a BED file using API:
+API Examples
+============
+
+To filter a VCF file based on a BED file:
 
 .. code:: python3
 
@@ -69,6 +96,15 @@ To filter a VCF file based on a BED file using API:
    vf = pyvcf.read_file('original.vcf')
    filtered_vf = vf.filter_bed('targets.bed')
    filtered_vf.to_file('filtered.vcf')
+
+To remove indels from a VCF file:
+
+.. code:: python3
+
+   from fuc import pyvcf
+   vf = pyvcf.read_file('with_indels.vcf')
+   filtered_vf = vf.filter_indel()
+   filtered_vf.to_file('no_indels.vcf')
 
 Required Packages
 =================
