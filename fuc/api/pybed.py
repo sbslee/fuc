@@ -1,28 +1,40 @@
 """
 The pybed submodule is designed for working with BED files. It
 implements ``pybed.BedFrame`` which stores BED data as
-``pyranges.PyRanges`` to allow fast computation and easy manipulation.
+``pandas.DataFrame`` via the `pyranges
+<https://github.com/biocore-ntnu/pyranges>`_ package to allow fast
+computation and easy manipulation. The submodule strictly adheres to the
+standard `BED specification <https://genome.ucsc.edu/FAQ/FAQformat.html>`_.
 
-This class is essentially a wrapper for the pyranges package
-(https://github.com/biocore-ntnu/pyranges).
+BED lines can have the following fields (the first three are required):
 
-BED lines have three required fields and nine additional optional fields:
-
-1. chrom (required) - The name of the chromosome.
-2. chromStart (required) - The starting position of the feature.
-3. chromEnd (required) - The ending position of the feature.
-4. name (optional) - Defines the name of the BED line.
-5. score (optional) - A score between 0 and 1000 for color density.
-6. strand (optional) - Either '.' (=no strand) or '+' or '-'.
-7. thickStart (optional) - The starting position for thick drawing.
-8. thickEnd (optional) - The ending position for thick drawing.
-9. itemRgb (optional) - An RGB value (e.g. 255,0,0).
-10. blockCount (optional) - The number of blocks (exons).
-11. blockSizes (optional) - A comma-separated list of the block sizes.
-12. blockStarts (optional) - A comma-separated list of block starts.
-
-For more information about the BED format, visit the UCSC Genome Browser
-FAQ (https://genome.ucsc.edu/FAQ/FAQformat.html).
++-----+-------------+-----------------------------------+--------------+
+| No. | Name        | Description                       | Examples     |
++=====+=============+===================================+==============+
+| 1   | Chromosome  | Chromosome                        | 'chr2', '2'  |
++-----+-------------+-----------------------------------+--------------+
+| 2   | Start       | Start position                    | 10041, 23042 |
++-----+-------------+-----------------------------------+--------------+
+| 3   | End         | End position                      | 10041, 23042 |
++-----+-------------+-----------------------------------+--------------+
+| 4   | Name        | Feature name                      | 'TP53'       |
++-----+-------------+-----------------------------------+--------------+
+| 5   | Score       | Score for color density (0, 1000) | 342, 544     |
++-----+-------------+-----------------------------------+--------------+
+| 6   | Strand      | '+' or '-' ('.' for no strand)    | '+', '-',    |
++-----+-------------+-----------------------------------+--------------+
+| 7   | ThickStart  | Start position for thick drawing  | 10041, 23042 |
++-----+-------------+-----------------------------------+--------------+
+| 8   | ThickEnd    | End position for thick drawing    | 10041, 23042 |
++-----+-------------+-----------------------------------+--------------+
+| 9   | ItemRGB     | RGB value                         | '255,0,0'    |
++-----+-------------+-----------------------------------+--------------+
+| 10  | BlockCount  | Number of blocks (e.g. exons)     | 12, 8        |
++-----+-------------+-----------------------------------+--------------+
+| 11  | BlockSizes  | ','-separated block sizes         | '224,423'    |
++-----+-------------+-----------------------------------+--------------+
+| 12  | BlockStarts | ','-separated block starts        | '2345,5245'  |
++-----+-------------+-----------------------------------+--------------+
 """
 
 import pandas as pd
