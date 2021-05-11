@@ -1185,6 +1185,82 @@ class VcfFrame:
         vf = self.__class__(self.copy_meta(), df)
         return vf
 
+    def markmiss_ad(self, threshold, samples=None):
+        """Mark genotypes whose AD is below threshold as missing.
+
+        Parameters
+        ----------
+        threshold : int
+            Minimum allelic depth.
+        sampels : list, optional
+            If provided, only these samples will be marked.
+
+        Returns
+        -------
+        VcfFrame
+            Filtered VcfFrame.
+
+        See Also
+        --------
+        markmiss_dp
+            Similar method using DP.
+
+        Examples
+        --------
+        Assume we have the following data:
+
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr1'],
+        ...     'POS': [100, 101],
+        ...     'ID': ['.', '.'],
+        ...     'REF': ['G', 'T'],
+        ...     'ALT': ['A', 'C'],
+        ...     'QUAL': ['.', '.'],
+        ...     'FILTER': ['.', '.'],
+        ...     'INFO': ['.', '.'],
+        ...     'FORMAT': ['GT:AD', 'GT:AD'],
+        ...     'Steven': ['0/1:15,13', '0/0:1,28'],
+        ...     'Sara': ['0/1:15,15', '0/1:14,18'],
+        ...     'James': ['0/0:32,0', '0/1:17,5'],
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT     Steven       Sara     James
+        0  chr1  100  .   G   A    .      .    .  GT:AD  0/1:15,13  0/1:15,15  0/0:32,0
+        1  chr1  101  .   T   C    .      .    .  GT:AD   0/0:1,28  0/1:14,18  0/1:17,5
+
+        We mark all the genotypes whose AD is below 15 as missing:
+
+        >>> vf.markmiss_ad(15).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    Steven       Sara     James
+        0  chr1  100  .   G   A    .      .    .  GT:AD     ./.:.  0/1:15,15  0/0:32,0
+        1  chr1  101  .   T   C    .      .    .  GT:AD  0/0:1,28  0/1:14,18     ./.:.
+
+        We can apply the marking only to a subset of the samples:
+
+        >>> vf.markmiss_ad(15, samples=['Steven', 'Sara']).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    Steven       Sara     James
+        0  chr1  100  .   G   A    .      .    .  GT:AD     ./.:.  0/1:15,15  0/0:32,0
+        1  chr1  101  .   T   C    .      .    .  GT:AD  0/0:1,28  0/1:14,18  0/1:17,5
+        """
+        if samples is None:
+            samples = self.samples
+        def one_row(r):
+            i = r.FORMAT.split(':').index('AD')
+            m = rowmissval(r)
+            def one_gt(g):
+                if not gthasvar(g):
+                    return g
+                s = g.split(':')[i].split(',')[1]
+                if s == '.' or int(s) < threshold:
+                    return m
+                return g
+            r[samples] = r[samples].apply(one_gt)
+            return r
+        df = self.df.apply(one_row, axis=1)
+        vf = self.__class__(self.copy_meta(), df)
+        return vf
+
     def markmiss_af(self, threshold, samples=None):
         """Mark genotypes whose AF is below threshold as missing.
 
@@ -1224,7 +1300,7 @@ class VcfFrame:
         ...     'James': ['0/1:0.11', '0/1:0.09'],
         ... }
         >>> vf = pyvcf.VcfFrame.from_dict([], data)
-        >>> print(vf.df)
+        >>> vf.df
           CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    Steven      Sara     James
         0  chr1  100  .   G   A    .      .    .  GT:AF  0/1:0.25  0/1:0.12  0/1:0.11
         1  chr1  101  .   T   C    .      .    .  GT:AF  0/1:0.31  0/1:0.25  0/1:0.09
