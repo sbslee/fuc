@@ -5,6 +5,7 @@ Changelog
 ----------------------
 
 * Add ``fuc.api.pyvcf.VcfFrame.markmiss_ad`` method.
+* Add ``full`` argument to ``fuc.api.pyvcf.VcfFrame.markmiss_ad``, ``fuc.api.pyvcf.VcfFrame.markmiss_af``, ``fuc.api.pyvcf.VcfFrame.markmiss_dp`` methods.
 
 0.5.0 (2021-05-06)
 ------------------
