@@ -85,6 +85,7 @@ The following packages are required to run fuc:
 
 .. parsed-literal::
 
+   biopython
    numpy
    pandas
    pyranges
