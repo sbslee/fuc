@@ -1428,7 +1428,7 @@ class VcfFrame:
         1  chr1  101  .   T   C    .      .    .  GT:DP   ./.:.  0/1:30  0/0:24
 
         We can mark all genotypes including those without ALT allele:
-        
+
         >>> vf.markmiss_dp(30, full=True).df
           CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven    Sara  James
         0  chr1  100  .   G   A    .      .    .  GT:DP  ./.:.   ./.:.  ./.:.
@@ -2297,33 +2297,35 @@ class VcfFrame:
         Assume we have the following data:
 
         >>> data = {
-        ...     'CHROM': ['chr1', 'chr1', 'chr1'],
-        ...     'POS': [100, 101, 102],
-        ...     'ID': ['.', '.', '.'],
-        ...     'REF': ['G', 'T', 'T'],
-        ...     'ALT': ['A', 'C', 'A'],
-        ...     'QUAL': ['.', '.', '.'],
-        ...     'FILTER': ['.', '.', '.'],
-        ...     'INFO': ['.', '.', '.'],
-        ...     'FORMAT': ['GT:DP', 'GT:DP', 'GT:DP'],
-        ...     'Somatic': ['./.:.', '0/1:29', '0/1:28'],
-        ...     'Germline': ['0/1:24', '0/1:30', './.:.'],
+        ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102, 103],
+        ...     'ID': ['.', '.', '.', '.'],
+        ...     'REF': ['G', 'T', 'T', 'A'],
+        ...     'ALT': ['A', 'C', 'A', 'C'],
+        ...     'QUAL': ['.', '.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.', '.'],
+        ...     'INFO': ['.', '.', '.', '.'],
+        ...     'FORMAT': ['GT', 'GT', 'GT', 'GT'],
+        ...     'Somatic': ['./.', '0/1', '0/1', '0/0'],
+        ...     'Germline': ['0/1', '0/1', './.', '0/1'],
         ... }
         >>> vf = pyvcf.VcfFrame.from_dict([], data)
         >>> vf.df
           CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Somatic Germline
-        0  chr1  100  .   G   A    .      .    .  GT:DP   ./.:.   0/1:24
-        1  chr1  101  .   T   C    .      .    .  GT:DP  0/1:29   0/1:30
-        2  chr1  102  .   T   A    .      .    .  GT:DP  0/1:28    ./.:.
+        0  chr1  100  .   G   A    .      .    .     GT     ./.      0/1
+        1  chr1  101  .   T   C    .      .    .     GT     0/1      0/1
+        2  chr1  102  .   T   A    .      .    .     GT     0/1      ./.
+        3  chr1  103  .   A   C    .      .    .     GT     0/0      0/1
 
         We subtract the two samples to get the true somatic mutations:
 
         >>> vf.df['TruelySomatic'] = vf.subtract('Somatic', 'Germline')
         >>> vf.df
           CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Somatic Germline TruelySomatic
-        0  chr1  100  .   G   A    .      .    .  GT:DP   ./.:.   0/1:24         ./.:.
-        1  chr1  101  .   T   C    .      .    .  GT:DP  0/1:29   0/1:30         ./.:.
-        2  chr1  102  .   T   A    .      .    .  GT:DP  0/1:28    ./.:.        0/1:28
+        0  chr1  100  .   G   A    .      .    .     GT     ./.      0/1           ./.
+        1  chr1  101  .   T   C    .      .    .     GT     0/1      0/1           ./.
+        2  chr1  102  .   T   A    .      .    .     GT     0/1      ./.           0/1
+        3  chr1  103  .   A   C    .      .    .     GT     0/0      0/1           0/0
         """
         a = a if isinstance(a, str) else self.samples[a]
         b = b if isinstance(b, str) else self.samples[b]
