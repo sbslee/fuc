@@ -45,6 +45,12 @@ To check whether a file exists in the operating system:
 
    $ fuc fucexist example.txt
 
+To find all VCF files within the current directory:
+
+.. code-block:: console
+
+   $ fuc fucfind . vcf
+
 To count sequence reads in a FASTQ file:
 
 .. code-block:: console
@@ -126,6 +132,7 @@ For getting help on CLI:
        dfsum        [TABLE] summarize a text file
        fuccompf     [FUC] compare contents of two files
        fucexist     [FUC] check whether files/dirs exist
+       fucfind      [FUC] find files with certain extension recursively
        qfcount      [FASTQ] count sequence reads in FASTQ files
        qfsum        [FASTQ] summarize a FASTQ file
        vfmerge      [VCF] merge two or more VCF files

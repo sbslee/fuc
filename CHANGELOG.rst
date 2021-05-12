@@ -4,8 +4,10 @@ Changelog
 0.6.0 (in development)
 ----------------------
 
+* Update Read the Docs.
 * Add ``fuc.api.pyvcf.VcfFrame.markmiss_ad`` method.
 * Add ``full`` argument to ``fuc.api.pyvcf.VcfFrame.markmiss_ad/af/dp`` methods.
+* Add ``fucfind`` command.
 
 0.5.0 (2021-05-06)
 ------------------

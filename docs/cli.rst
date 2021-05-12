@@ -24,6 +24,7 @@ For getting help on CLI:
        dfsum        [TABLE] summarize a text file
        fuccompf     [FUC] compare contents of two files
        fucexist     [FUC] check whether files/dirs exist
+       fucfind      [FUC] find files with certain extension recursively
        qfcount      [FASTQ] count sequence reads in FASTQ files
        qfsum        [FASTQ] summarize a FASTQ file
        vfmerge      [VCF] merge two or more VCF files
@@ -157,6 +158,25 @@ fucexist
    
    positional arguments:
      paths       file/dir paths (default: stdin)
+   
+   optional arguments:
+     -h, --help  show this help message and exit
+
+fucfind
+=======
+
+.. code-block:: console
+
+   $ fuc fucfind -h
+   usage: fuc fucfind [-h] path extension
+   
+   This command will recursively find files with a certain extension -- such as
+   '.txt' and '.vcf' -- within the given directory and return their absolute
+   paths.
+   
+   positional arguments:
+     path        directory path
+     extension   extension
    
    optional arguments:
      -h, --help  show this help message and exit
