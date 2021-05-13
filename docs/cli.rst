@@ -20,8 +20,8 @@ For getting help on CLI:
      COMMAND        name of the command
        bfintxn      [BED] find intersection of two or more BED files
        bfsum        [BED] summarize a BED file
-       dfmerge      [TABLE] merge two text files
-       dfsum        [TABLE] summarize a text file
+       dfmerge      [TABLE] merge two table files
+       dfsum        [TABLE] summarize a table file
        fuccompf     [FUC] compare contents of two files
        fucexist     [FUC] check whether files/dirs exist
        fucfind      [FUC] find files with certain extension recursively
@@ -89,7 +89,7 @@ dfmerge
                       [--output_delimiter TEXT]
                       left_file right_file
    
-   This command will merge two text files using one or more shared columns. This
+   This command will merge two table files using one or more shared columns. This
    essentially wraps the `pandas.DataFrame.merge` method.
    
    positional arguments:
@@ -115,10 +115,10 @@ dfsum
 
    $ fuc dfsum -h
    usage: fuc dfsum [-h] [--delimiter TEXT] [--skiprows TEXT]
-                    [--na_values TEXT [TEXT ...]]
+                    [--na_values TEXT [TEXT ...]] [--query TEXT]
                     text_file
    
-   This command will summarize a text file. It essentially wraps the
+   This command will summarize a table file. It essentially wraps the
    `pandas.DataFrame.describe` method.
    
    positional arguments:
@@ -129,15 +129,17 @@ dfsum
      --delimiter TEXT      delimiter (default: '\t')
      --skiprows TEXT       comma-separated line numbers to skip (0-indexed) or
                            number of lines to skip at the start of the file (e.g.
-                           '--skiprows 1,' will skip the second line, '--skiprows
-                           2,4' will skip the third and fifth lines, and '--
-                           skiprows 10' will skip the first 10 lines)
+                           `--skiprows 1,` will skip the second line, `--skiprows
+                           2,4` will skip the third and fifth lines, and
+                           `--skiprows 10` will skip the first 10 lines)
      --na_values TEXT [TEXT ...]
                            additional strings to recognize as NA/NaN (by default,
                            the following values are interpreted as NaN: '',
                            '#N/A', '#N/A N/A', '#NA', '-1.#IND', '-1.#QNAN',
                            '-NaN', '-nan', '1.#IND', '1.#QNAN', '<NA>', 'N/A',
                            'NA', 'NULL', 'NaN', 'n/a', 'nan', 'null')
+     --query TEXT          query the columns of a pandas.DataFrame with a boolean
+                           expression (e.g. `--query "A == 'yes'"`)
 
 fuccompf
 ========
