@@ -8,6 +8,7 @@ Changelog
 * Add ``fuc.api.pyvcf.VcfFrame.markmiss_ad`` method.
 * Add ``full`` argument to ``fuc.api.pyvcf.VcfFrame.markmiss_ad/af/dp`` methods.
 * Add ``fucfind`` command.
+* Update ``dfsum`` command.
 
 0.5.0 (2021-05-06)
 ------------------
