@@ -114,17 +114,30 @@ dfsum
 .. code-block:: console
 
    $ fuc dfsum -h
-   usage: fuc dfsum [-h] [--delimiter TEXT] text_file
+   usage: fuc dfsum [-h] [--delimiter TEXT] [--skiprows TEXT]
+                    [--na_values TEXT [TEXT ...]]
+                    text_file
    
    This command will summarize a text file. It essentially wraps the
    `pandas.DataFrame.describe` method.
    
    positional arguments:
-     text_file         text file
+     text_file             text file
    
    optional arguments:
-     -h, --help        show this help message and exit
-     --delimiter TEXT  delimiter (default: '\t')
+     -h, --help            show this help message and exit
+     --delimiter TEXT      delimiter (default: '\t')
+     --skiprows TEXT       comma-separated line numbers to skip (0-indexed) or
+                           number of lines to skip at the start of the file (e.g.
+                           '--skiprows 1,' will skip the second line, '--skiprows
+                           2,4' will skip the third and fifth lines, and '--
+                           skiprows 10' will skip the first 10 lines)
+     --na_values TEXT [TEXT ...]
+                           additional strings to recognize as NA/NaN (by default,
+                           the following values are interpreted as NaN: '',
+                           '#N/A', '#N/A N/A', '#NA', '-1.#IND', '-1.#QNAN',
+                           '-NaN', '-nan', '1.#IND', '1.#QNAN', '<NA>', 'N/A',
+                           'NA', 'NULL', 'NaN', 'n/a', 'nan', 'null')
 
 fuccompf
 ========

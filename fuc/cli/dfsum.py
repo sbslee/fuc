@@ -11,7 +11,6 @@ def create_parser(subparsers):
                     'method.'
     )
     parser.add_argument('text_file', help='text file')
-    parser.add_argument('output_file', help='output file')
     parser.add_argument('--delimiter', metavar='TEXT', default='\t',
         help="delimiter (default: '\\t')")
     parser.add_argument('--skiprows', metavar='TEXT',
@@ -28,7 +27,9 @@ def create_parser(subparsers):
              "'NA', 'NULL', 'NaN', 'n/a', 'nan', 'null')")
 
 def main(args):
-    if ',' in args.skiprows:
+    if args.skiprows is None:
+        skiprows = None
+    elif ',' in args.skiprows:
         skiprows = [int(x) for x in args.skiprows.split(',') if x]
     else:
         skiprows = int(args.skiprows)
