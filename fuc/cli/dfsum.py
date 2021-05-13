@@ -59,7 +59,7 @@ def main(args):
         skiprows = [int(x) for x in args.skiprows.split(',') if x]
     else:
         skiprows = int(args.skiprows)
-    df = pd.read_table(args.text_file,
+    df = pd.read_table(args.table_file,
                        delimiter=args.delimiter,
                        skiprows=skiprows,
                        na_values=args.na_values,
