@@ -7,12 +7,12 @@ def create_parser(subparsers):
         get_script_name(__file__),
         help='[TABLE] summarize a table file',
         description='This command will summarize a table file. It '
-                    'essentially wraps the `pandas.DataFrame.describe` '
-                    'method.'
+                    'essentially wraps the `pandas.Series.describe` '
+                    'and `pandas.Series.value_counts` methods.'
     )
     parser.add_argument(
-        'text_file',
-        help='text file'
+        'table_file',
+        help='table file'
     )
     parser.add_argument(
         '--delimiter',
@@ -40,6 +40,12 @@ def create_parser(subparsers):
              "'NA', 'NULL', 'NaN', 'n/a', 'nan', 'null')"
     )
     parser.add_argument(
+        '--keep_default_na',
+        action='store_false',
+        help='whether or not to include the default NaN values when '
+             'parsing the data (see `pandas.read_table` for details)'
+    )
+    parser.add_argument(
         '--query',
         metavar='TEXT',
         help='query the columns of a pandas.DataFrame with a '
@@ -53,8 +59,11 @@ def main(args):
         skiprows = [int(x) for x in args.skiprows.split(',') if x]
     else:
         skiprows = int(args.skiprows)
-    df = pd.read_table(args.text_file, delimiter=args.delimiter,
-        skiprows=skiprows, na_values=args.na_values)
+    df = pd.read_table(args.text_file,
+                       delimiter=args.delimiter,
+                       skiprows=skiprows,
+                       na_values=args.na_values,
+                       keep_default_na=args.keep_default_na)
     if args.query:
         df = df.query(args.query)
     for header in df:

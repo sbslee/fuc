@@ -115,11 +115,12 @@ dfsum
 
    $ fuc dfsum -h
    usage: fuc dfsum [-h] [--delimiter TEXT] [--skiprows TEXT]
-                    [--na_values TEXT [TEXT ...]] [--query TEXT]
+                    [--na_values TEXT [TEXT ...]] [--keep_default_na]
+                    [--query TEXT]
                     text_file
    
    This command will summarize a table file. It essentially wraps the
-   `pandas.DataFrame.describe` method.
+   `pandas.Series.describe` and `pandas.Series.value_counts` methods.
    
    positional arguments:
      text_file             text file
@@ -138,6 +139,8 @@ dfsum
                            '#N/A', '#N/A N/A', '#NA', '-1.#IND', '-1.#QNAN',
                            '-NaN', '-nan', '1.#IND', '1.#QNAN', '<NA>', 'N/A',
                            'NA', 'NULL', 'NaN', 'n/a', 'nan', 'null')
+     --keep_default_na     whether or not to include the default NaN values when
+                           parsing the data (see `pandas.read_table` for details)
      --query TEXT          query the columns of a pandas.DataFrame with a boolean
                            expression (e.g. `--query "A == 'yes'"`)
 
