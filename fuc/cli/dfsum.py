@@ -51,6 +51,13 @@ def create_parser(subparsers):
         help='query the columns of a pandas.DataFrame with a '
              """boolean expression (e.g. `--query "A == 'yes'"`)"""
     )
+    parser.add_argument(
+        '--columns',
+        metavar='TEXT',
+        nargs='+',
+        help='columns to be summarized (by default, all columns '
+             'will be included)'
+    )
 
 def main(args):
     if args.skiprows is None:
@@ -66,7 +73,12 @@ def main(args):
                        keep_default_na=args.keep_default_na)
     if args.query:
         df = df.query(args.query)
-    for header in df:
+    if args.columns:
+        headers = args.columns
+    else:
+        headers = df.columns
+    print('='*70)
+    for header in headers:
         column = df[header]
         if is_numeric_dtype(column):
             print(column.describe())
