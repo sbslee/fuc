@@ -2,7 +2,10 @@ from setuptools import setup, find_packages
 
 exec(open('fuc/version.py').read())
 
-requirements = ['biopython', 'numpy', 'pandas', 'pyranges']
+requirements = [
+    'biopython', 'lxml', 'matplotlib', 'numpy', 'pandas',
+    'pyranges', 'seaborn'
+]
 
 setup(
     name='fuc',

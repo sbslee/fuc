@@ -1,6 +1,13 @@
 Changelog
 *********
 
+0.7.0 (in development)
+----------------------
+
+* Add ``lxml`` package as dependency for parsing HTML files.
+* Add ``matplotlib`` and ``seaborn`` packages as dependency for creating figures.
+* Add ``fucdemux`` command.
+
 0.6.0 (2021-05-16)
 ------------------
 

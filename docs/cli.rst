@@ -23,6 +23,8 @@ For getting help on CLI:
        dfmerge      [TABLE] merge two table files
        dfsum        [TABLE] summarize a table file
        fuccompf     [FUC] compare contents of two files
+       fucdemux     [FUC] parse the Reports directory from bcl2fastq or
+                    bcl2fastq2
        fucexist     [FUC] check whether files/dirs exist
        fucfind      [FUC] find files with certain extension recursively
        qfcount      [FASTQ] count sequence reads in FASTQ files
@@ -164,6 +166,26 @@ fuccompf
    
    optional arguments:
      -h, --help  show this help message and exit
+
+fucdemux
+========
+
+.. code-block:: console
+
+   $ fuc fucdemux -h
+   usage: fuc fucdemux [-h] reports_dir output_dir
+   
+   This command will parse the Reports directory from the bcl2fastq or bcl2fastq2
+   prograrm. In the output directory, the command will create four files:
+   flowcell_summary.csv, lane_summary.csv, top_unknown_barcodes.csv, and
+   reports.pdf.
+   
+   positional arguments:
+     reports_dir  Reports directory
+     output_dir   output directory
+   
+   optional arguments:
+     -h, --help   show this help message and exit
 
 fucexist
 ========
