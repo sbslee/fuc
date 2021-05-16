@@ -73,6 +73,12 @@ To check whether a file exists in the operating system:
 
    $ fuc fucexist example.txt
 
+To find all VCF files within the current directory:
+
+.. code-block:: console
+
+   $ fuc fucfind . vcf
+
 To count sequence reads in a FASTQ file:
 
 .. code-block:: console
@@ -113,6 +119,7 @@ The following packages are required to run fuc:
 
 .. parsed-literal::
 
+   biopython
    numpy
    pandas
    pyranges

@@ -45,6 +45,12 @@ To check whether a file exists in the operating system:
 
    $ fuc fucexist example.txt
 
+To find all VCF files within the current directory:
+
+.. code-block:: console
+
+   $ fuc fucfind . vcf
+
 To count sequence reads in a FASTQ file:
 
 .. code-block:: console
@@ -85,6 +91,7 @@ The following packages are required to run fuc:
 
 .. parsed-literal::
 
+   biopython
    numpy
    pandas
    pyranges
@@ -121,10 +128,11 @@ For getting help on CLI:
      COMMAND        name of the command
        bfintxn      [BED] find intersection of two or more BED files
        bfsum        [BED] summarize a BED file
-       dfmerge      [TABLE] merge two text files
-       dfsum        [TABLE] summarize a text file
+       dfmerge      [TABLE] merge two table files
+       dfsum        [TABLE] summarize a table file
        fuccompf     [FUC] compare contents of two files
        fucexist     [FUC] check whether files/dirs exist
+       fucfind      [FUC] find files with certain extension recursively
        qfcount      [FASTQ] count sequence reads in FASTQ files
        qfsum        [FASTQ] summarize a FASTQ file
        vfmerge      [VCF] merge two or more VCF files

@@ -6,13 +6,13 @@ CHOICES = ['left', 'right', 'outer', 'inner', 'cross']
 def create_parser(subparsers):
     parser = subparsers.add_parser(
         get_script_name(__file__),
-        help='[TABLE] merge two text files',
-        description='This command will merge two text files using one '
+        help='[TABLE] merge two table files',
+        description='This command will merge two table files using one '
                     'or more shared columns. This essentially wraps the '
                     '`pandas.DataFrame.merge` method.'
     )
-    parser.add_argument('left_file', help='left file')
-    parser.add_argument('right_file', help='right file')
+    parser.add_argument('left_file', help='left table file')
+    parser.add_argument('right_file', help='right table file')
     parser.add_argument('--how', metavar='TEXT', choices=CHOICES,
          default='inner', help=f'type of merge to be performed {CHOICES} '
         "(default: 'inner')")

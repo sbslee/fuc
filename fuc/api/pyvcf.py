@@ -1185,15 +1185,19 @@ class VcfFrame:
         vf = self.__class__(self.copy_meta(), df)
         return vf
 
-    def markmiss_af(self, threshold, samples=None):
-        """Mark genotypes whose AF is below threshold as missing.
+    def markmiss_ad(self, threshold, samples=None, full=False):
+        """Mark genotypes whose AD is below threshold as missing.
+
+        By default, the marking is applied only to genotypes with ALT allele.
 
         Parameters
         ----------
         threshold : int
-            Minimum allele fraction.
+            Minimum allele depth.
         sampels : list, optional
             If provided, only these samples will be marked.
+        full : bool, default: False
+            If True, apply the marking to all genotypes.
 
         Returns
         -------
@@ -1202,6 +1206,97 @@ class VcfFrame:
 
         See Also
         --------
+        markmiss_af
+            Similar method using AF.
+        markmiss_dp
+            Similar method using DP.
+
+        Examples
+        --------
+        Assume we have the following data:
+
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr1'],
+        ...     'POS': [100, 101],
+        ...     'ID': ['.', '.'],
+        ...     'REF': ['G', 'T'],
+        ...     'ALT': ['A', 'C'],
+        ...     'QUAL': ['.', '.'],
+        ...     'FILTER': ['.', '.'],
+        ...     'INFO': ['.', '.'],
+        ...     'FORMAT': ['GT:AD', 'GT:AD'],
+        ...     'Steven': ['0/1:15,13', '0/0:28,1'],
+        ...     'Sara': ['0/1:15,15', '0/1:14,18'],
+        ...     'James': ['0/0:32,0', '0/1:17,5'],
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT     Steven       Sara     James
+        0  chr1  100  .   G   A    .      .    .  GT:AD  0/1:15,13  0/1:15,15  0/0:32,0
+        1  chr1  101  .   T   C    .      .    .  GT:AD   0/0:28,1  0/1:14,18  0/1:17,5
+
+        We mark all the genotypes whose AD is below 15 as missing:
+
+        >>> vf.markmiss_ad(15).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    Steven       Sara     James
+        0  chr1  100  .   G   A    .      .    .  GT:AD     ./.:.  0/1:15,15  0/0:32,0
+        1  chr1  101  .   T   C    .      .    .  GT:AD  0/0:28,1  0/1:14,18     ./.:.
+
+        We can apply the marking only to a subset of the samples:
+
+        >>> vf.markmiss_ad(15, samples=['Steven', 'Sara']).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    Steven       Sara     James
+        0  chr1  100  .   G   A    .      .    .  GT:AD     ./.:.  0/1:15,15  0/0:32,0
+        1  chr1  101  .   T   C    .      .    .  GT:AD  0/0:28,1  0/1:14,18  0/1:17,5
+
+        We can mark all genotypes including those without ALT allele:
+
+        >>> vf.markmiss_ad(15, full=True).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven       Sara  James
+        0  chr1  100  .   G   A    .      .    .  GT:AD  ./.:.  0/1:15,15  ./.:.
+        1  chr1  101  .   T   C    .      .    .  GT:AD  ./.:.  0/1:14,18  ./.:.
+        """
+        if samples is None:
+            samples = self.samples
+        def one_row(r):
+            i = r.FORMAT.split(':').index('AD')
+            m = rowmissval(r)
+            def one_gt(g):
+                if not full and not gthasvar(g):
+                    return g
+                s = g.split(':')[i].split(',')[1]
+                if s == '.' or int(s) < threshold:
+                    return m
+                return g
+            r[samples] = r[samples].apply(one_gt)
+            return r
+        df = self.df.apply(one_row, axis=1)
+        vf = self.__class__(self.copy_meta(), df)
+        return vf
+
+    def markmiss_af(self, threshold, samples=None, full=False):
+        """Mark genotypes whose AF is below threshold as missing.
+
+        By default, the marking is applied only to genotypes with ALT allele.
+
+        Parameters
+        ----------
+        threshold : int
+            Minimum allele fraction.
+        sampels : list, optional
+            If provided, only these samples will be marked.
+        full : bool, default: False
+            If True, apply the marking to all genotypes.
+
+        Returns
+        -------
+        VcfFrame
+            Filtered VcfFrame.
+
+        See Also
+        --------
+        markmiss_ad
+            Similar method using AD.
         markmiss_dp
             Similar method using DP.
 
@@ -1219,48 +1314,59 @@ class VcfFrame:
         ...     'FILTER': ['.', '.'],
         ...     'INFO': ['.', '.'],
         ...     'FORMAT': ['GT:AF', 'GT:AF'],
-        ...     'Steven': ['0/1:0.25', '0/1:0.31'],
+        ...     'Steven': ['0/0:0.01', '0/1:0.31'],
         ...     'Sara': ['0/1:0.12', '0/1:0.25'],
-        ...     'James': ['0/1:0.11', '0/1:0.09'],
+        ...     'James': ['0/1:0.11', '0/0:0.09'],
         ... }
         >>> vf = pyvcf.VcfFrame.from_dict([], data)
-        >>> print(vf.df)
+        >>> vf.df
           CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    Steven      Sara     James
-        0  chr1  100  .   G   A    .      .    .  GT:AF  0/1:0.25  0/1:0.12  0/1:0.11
-        1  chr1  101  .   T   C    .      .    .  GT:AF  0/1:0.31  0/1:0.25  0/1:0.09
+        0  chr1  100  .   G   A    .      .    .  GT:AF  0/0:0.01  0/1:0.12  0/1:0.11
+        1  chr1  101  .   T   C    .      .    .  GT:AF  0/1:0.31  0/1:0.25  0/0:0.09
 
         We mark all the genotypes whose AF is below 0.3 as missing:
 
         >>> vf.markmiss_af(0.3).df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    Steven   Sara  James
-        0  chr1  100  .   G   A    .      .    .  GT:AF     ./.:.  ./.:.  ./.:.
-        1  chr1  101  .   T   C    .      .    .  GT:AF  0/1:0.31  ./.:.  ./.:.
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    Steven   Sara     James
+        0  chr1  100  .   G   A    .      .    .  GT:AF  0/0:0.01  ./.:.     ./.:.
+        1  chr1  101  .   T   C    .      .    .  GT:AF  0/1:0.31  ./.:.  0/0:0.09
 
         We can apply the marking only to a subset of the samples:
 
         >>> vf.markmiss_af(0.3, samples=['Steven', 'Sara']).df
           CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    Steven   Sara     James
-        0  chr1  100  .   G   A    .      .    .  GT:AF     ./.:.  ./.:.  0/1:0.11
-        1  chr1  101  .   T   C    .      .    .  GT:AF  0/1:0.31  ./.:.  0/1:0.09
+        0  chr1  100  .   G   A    .      .    .  GT:AF  0/0:0.01  ./.:.  0/1:0.11
+        1  chr1  101  .   T   C    .      .    .  GT:AF  0/1:0.31  ./.:.  0/0:0.09
+
+        We can mark all genotypes including those without ALT allele:
+
+        >>> vf.markmiss_af(0.3, full=True).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    Steven   Sara  James
+        0  chr1  100  .   G   A    .      .    .  GT:AF     ./.:.  ./.:.  ./.:.
+        1  chr1  101  .   T   C    .      .    .  GT:AF  0/1:0.31  ./.:.  ./.:.
         """
         if samples is None:
             samples = self.samples
-        def outfunc(r):
+        def one_row(r):
             i = r.FORMAT.split(':').index('AF')
             m = rowmissval(r)
-            def infunc(x):
-                s = x.split(':')[i]
+            def one_gt(g):
+                if not full and not gthasvar(g):
+                    return g
+                s = g.split(':')[i]
                 if s == '.' or float(s) < threshold:
                     return m
-                return x
-            r[samples] = r[samples].apply(infunc)
+                return g
+            r[samples] = r[samples].apply(one_gt)
             return r
-        df = self.df.apply(outfunc, axis=1)
+        df = self.df.apply(one_row, axis=1)
         vf = self.__class__(self.copy_meta(), df)
         return vf
 
-    def markmiss_dp(self, threshold, samples=None):
+    def markmiss_dp(self, threshold, samples=None, full=False):
         """Mark genotypes whose DP is below threshold as missing.
+
+        By default, the marking is applied only to genotypes with ALT allele.
 
         Parameters
         ----------
@@ -1268,6 +1374,8 @@ class VcfFrame:
             Minimum read depth.
         sampels : list, optional
             If provided, only these samples will be marked.
+        full : bool, default: False
+            If True, apply the marking to all genotypes.
 
         Returns
         -------
@@ -1276,8 +1384,10 @@ class VcfFrame:
 
         See Also
         --------
+        markmiss_ad
+            Similar method using allele depth.
         markmiss_af
-            Similar method using AF.
+            Similar method using allele fraction.
 
         Examples
         --------
@@ -1293,43 +1403,52 @@ class VcfFrame:
         ...     'FILTER': ['.', '.'],
         ...     'INFO': ['.', '.'],
         ...     'FORMAT': ['GT:DP', 'GT:DP'],
-        ...     'Steven': ['0/1:30', '0/1:29'],
+        ...     'Steven': ['0/0:26', '0/1:29'],
         ...     'Sara': ['0/1:24', '0/1:30'],
-        ...     'James': ['0/1:18', '0/1:24'],
+        ...     'James': ['0/1:18', '0/0:24'],
         ... }
         >>> vf = pyvcf.VcfFrame.from_dict([], data)
         >>> vf.df
           CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT  Steven    Sara   James
-        0  chr1  100  .   G   A    .      .    .  GT:DP  0/1:30  0/1:24  0/1:18
-        1  chr1  101  .   T   C    .      .    .  GT:DP  0/1:29  0/1:30  0/1:24
+        0  chr1  100  .   G   A    .      .    .  GT:DP  0/0:26  0/1:24  0/1:18
+        1  chr1  101  .   T   C    .      .    .  GT:DP  0/1:29  0/1:30  0/0:24
 
         We mark all the genotypes whose DP is below 30 as missing:
 
         >>> vf.markmiss_dp(30).df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT  Steven    Sara  James
-        0  chr1  100  .   G   A    .      .    .  GT:DP  0/1:30   ./.:.  ./.:.
-        1  chr1  101  .   T   C    .      .    .  GT:DP   ./.:.  0/1:30  ./.:.
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT  Steven    Sara   James
+        0  chr1  100  .   G   A    .      .    .  GT:DP  0/0:26   ./.:.   ./.:.
+        1  chr1  101  .   T   C    .      .    .  GT:DP   ./.:.  0/1:30  0/0:24
 
         We can apply the marking only to a subset of the samples:
 
         >>> vf.markmiss_dp(30, samples=['Steven', 'Sara']).df
           CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT  Steven    Sara   James
-        0  chr1  100  .   G   A    .      .    .  GT:DP  0/1:30   ./.:.  0/1:18
-        1  chr1  101  .   T   C    .      .    .  GT:DP   ./.:.  0/1:30  0/1:24
+        0  chr1  100  .   G   A    .      .    .  GT:DP  0/0:26   ./.:.  0/1:18
+        1  chr1  101  .   T   C    .      .    .  GT:DP   ./.:.  0/1:30  0/0:24
+
+        We can mark all genotypes including those without ALT allele:
+
+        >>> vf.markmiss_dp(30, full=True).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven    Sara  James
+        0  chr1  100  .   G   A    .      .    .  GT:DP  ./.:.   ./.:.  ./.:.
+        1  chr1  101  .   T   C    .      .    .  GT:DP  ./.:.  0/1:30  ./.:.
         """
         if samples is None:
             samples = self.samples
-        def outfunc(r):
+        def one_row(r):
             i = r.FORMAT.split(':').index('DP')
             m = rowmissval(r)
-            def infunc(x):
-                s = x.split(':')[i]
+            def one_gt(g):
+                if not full and not gthasvar(g):
+                    return g
+                s = g.split(':')[i]
                 if s == '.' or int(s) < threshold:
                     return m
-                return x
-            r[samples] = r[samples].apply(infunc)
+                return g
+            r[samples] = r[samples].apply(one_gt)
             return r
-        df = self.df.apply(outfunc, axis=1)
+        df = self.df.apply(one_row, axis=1)
         vf = self.__class__(self.copy_meta(), df)
         return vf
 
@@ -2178,33 +2297,35 @@ class VcfFrame:
         Assume we have the following data:
 
         >>> data = {
-        ...     'CHROM': ['chr1', 'chr1', 'chr1'],
-        ...     'POS': [100, 101, 102],
-        ...     'ID': ['.', '.', '.'],
-        ...     'REF': ['G', 'T', 'T'],
-        ...     'ALT': ['A', 'C', 'A'],
-        ...     'QUAL': ['.', '.', '.'],
-        ...     'FILTER': ['.', '.', '.'],
-        ...     'INFO': ['.', '.', '.'],
-        ...     'FORMAT': ['GT:DP', 'GT:DP', 'GT:DP'],
-        ...     'Somatic': ['./.:.', '0/1:29', '0/1:28'],
-        ...     'Germline': ['0/1:24', '0/1:30', './.:.'],
+        ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102, 103],
+        ...     'ID': ['.', '.', '.', '.'],
+        ...     'REF': ['G', 'T', 'T', 'A'],
+        ...     'ALT': ['A', 'C', 'A', 'C'],
+        ...     'QUAL': ['.', '.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.', '.'],
+        ...     'INFO': ['.', '.', '.', '.'],
+        ...     'FORMAT': ['GT', 'GT', 'GT', 'GT'],
+        ...     'Somatic': ['./.', '0/1', '0/1', '0/0'],
+        ...     'Germline': ['0/1', '0/1', './.', '0/1'],
         ... }
         >>> vf = pyvcf.VcfFrame.from_dict([], data)
         >>> vf.df
           CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Somatic Germline
-        0  chr1  100  .   G   A    .      .    .  GT:DP   ./.:.   0/1:24
-        1  chr1  101  .   T   C    .      .    .  GT:DP  0/1:29   0/1:30
-        2  chr1  102  .   T   A    .      .    .  GT:DP  0/1:28    ./.:.
+        0  chr1  100  .   G   A    .      .    .     GT     ./.      0/1
+        1  chr1  101  .   T   C    .      .    .     GT     0/1      0/1
+        2  chr1  102  .   T   A    .      .    .     GT     0/1      ./.
+        3  chr1  103  .   A   C    .      .    .     GT     0/0      0/1
 
         We subtract the two samples to get the true somatic mutations:
 
         >>> vf.df['TruelySomatic'] = vf.subtract('Somatic', 'Germline')
         >>> vf.df
           CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Somatic Germline TruelySomatic
-        0  chr1  100  .   G   A    .      .    .  GT:DP   ./.:.   0/1:24         ./.:.
-        1  chr1  101  .   T   C    .      .    .  GT:DP  0/1:29   0/1:30         ./.:.
-        2  chr1  102  .   T   A    .      .    .  GT:DP  0/1:28    ./.:.        0/1:28
+        0  chr1  100  .   G   A    .      .    .     GT     ./.      0/1           ./.
+        1  chr1  101  .   T   C    .      .    .     GT     0/1      0/1           ./.
+        2  chr1  102  .   T   A    .      .    .     GT     0/1      ./.           0/1
+        3  chr1  103  .   A   C    .      .    .     GT     0/0      0/1           0/0
         """
         a = a if isinstance(a, str) else self.samples[a]
         b = b if isinstance(b, str) else self.samples[b]
