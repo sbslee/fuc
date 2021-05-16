@@ -93,8 +93,8 @@ dfmerge
    essentially wraps the `pandas.DataFrame.merge` method.
    
    positional arguments:
-     left_file             left file
-     right_file            right file
+     left_file             left table file
+     right_file            right table file
    
    optional arguments:
      -h, --help            show this help message and exit
@@ -116,14 +116,14 @@ dfsum
    $ fuc dfsum -h
    usage: fuc dfsum [-h] [--delimiter TEXT] [--skiprows TEXT]
                     [--na_values TEXT [TEXT ...]] [--keep_default_na]
-                    [--query TEXT]
-                    text_file
+                    [--query TEXT] [--columns TEXT [TEXT ...]]
+                    table_file
    
    This command will summarize a table file. It essentially wraps the
    `pandas.Series.describe` and `pandas.Series.value_counts` methods.
    
    positional arguments:
-     text_file             text file
+     table_file            table file
    
    optional arguments:
      -h, --help            show this help message and exit
@@ -143,6 +143,9 @@ dfsum
                            parsing the data (see `pandas.read_table` for details)
      --query TEXT          query the columns of a pandas.DataFrame with a boolean
                            expression (e.g. `--query "A == 'yes'"`)
+     --columns TEXT [TEXT ...]
+                           columns to be summarized (by default, all columns will
+                           be included)
 
 fuccompf
 ========

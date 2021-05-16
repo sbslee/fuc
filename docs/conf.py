@@ -37,10 +37,10 @@ extensions = [
 ]
 
 autodoc_mock_imports = [
+    'Bio',
     'numpy',
     'pandas',
-    'pyranges',
-    'Bio'
+    'pyranges'
 ]
 
 autodoc_default_options = {

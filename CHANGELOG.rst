@@ -1,8 +1,8 @@
 Changelog
 *********
 
-0.6.0 (in development)
-----------------------
+0.6.0 (2021-05-16)
+------------------
 
 * Update Read the Docs.
 * Add ``fuc.api.pyvcf.VcfFrame.markmiss_ad`` method.
