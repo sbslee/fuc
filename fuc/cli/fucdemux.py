@@ -37,12 +37,16 @@ def main(args):
     df2 = dfs[2].rename(columns=d)
     df3 = dfs[3].dropna()
 
-    fig, [[ax1, ax2], [ax3, ax4]] = plt.subplots(2, 2, figsize=(15, 15))
+    fig, axes = plt.subplots(3, 2, figsize=(14, 17))
 
-    sns.histplot(data=df2[:-1], x='PF Clusters', ax=ax1, kde=True)
-    sns.histplot(data=df2[:-1], x='% of the lane', ax=ax2, kde=True)
-    sns.histplot(data=df2[:-1], x='% >= Q30 bases', ax=ax3, kde=True)
-    sns.histplot(data=df2[:-1], x='Mean Quality Score', ax=ax4, kde=True)
+    kwargs = dict(data=df2[:-1], kde=True)
+
+    sns.histplot(ax=axes[0][0], x='PF Clusters', **kwargs)
+    sns.histplot(ax=axes[0][1], x='% of the lane', **kwargs)
+    sns.histplot(ax=axes[1][0], x='Yield (Mbases)', **kwargs)
+    sns.histplot(ax=axes[1][1], x='% PF Clusters', **kwargs)
+    sns.histplot(ax=axes[2][0], x='% >= Q30 bases', **kwargs)
+    sns.histplot(ax=axes[2][1], x='Mean Quality Score', **kwargs)
 
     os.mkdir(args.output_dir)
 
