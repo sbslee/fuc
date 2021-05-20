@@ -231,7 +231,6 @@ def merge(vfs, how='inner', format='GT', sort=True, collapse=False):
     ...     'Steven': ['0/0:32', '0/1:29'],
     ...     'Sara': ['0/1:24', '1/1:30'],
     ... }
-    >>>
     >>> data2 = {
     ...     'CHROM': ['chr1', 'chr1', 'chr2'],
     ...     'POS': [100, 101, 200],
@@ -245,7 +244,6 @@ def merge(vfs, how='inner', format='GT', sort=True, collapse=False):
     ...     'Dona': ['./.:.', '0/0:24', '0/0:26'],
     ...     'Michel': ['0/1:24', '0/1:31', '0/1:26'],
     ... }
-    >>>
     >>> vf1 = pyvcf.VcfFrame.from_dict([], data1)
     >>> vf2 = pyvcf.VcfFrame.from_dict([], data2)
     >>> vf1.df
@@ -871,6 +869,71 @@ class VcfFrame:
         -------
         VcfFrame
             Merged VcfFrame.
+
+        Examples
+        --------
+        Assume we have the following data:
+
+        >>> data1 = {
+        ...     'CHROM': ['chr1', 'chr1'],
+        ...     'POS': [100, 101],
+        ...     'ID': ['.', '.'],
+        ...     'REF': ['G', 'T'],
+        ...     'ALT': ['A', 'C'],
+        ...     'QUAL': ['.', '.'],
+        ...     'FILTER': ['.', '.'],
+        ...     'INFO': ['.', '.'],
+        ...     'FORMAT': ['GT:DP', 'GT:DP'],
+        ...     'Steven': ['0/0:32', '0/1:29'],
+        ...     'Sara': ['0/1:24', '1/1:30'],
+        ... }
+        >>> data2 = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr2'],
+        ...     'POS': [100, 101, 200],
+        ...     'ID': ['.', '.', '.'],
+        ...     'REF': ['G', 'T', 'A'],
+        ...     'ALT': ['A', 'C', 'T'],
+        ...     'QUAL': ['.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.'],
+        ...     'INFO': ['.', '.', '.'],
+        ...     'FORMAT': ['GT:DP', 'GT:DP', 'GT:DP'],
+        ...     'Dona': ['./.:.', '0/0:24', '0/0:26'],
+        ...     'Michel': ['0/1:24', '0/1:31', '0/1:26'],
+        ... }
+        >>> vf1 = pyvcf.VcfFrame.from_dict([], data1)
+        >>> vf2 = pyvcf.VcfFrame.from_dict([], data2)
+        >>> vf1.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT  Steven    Sara
+        0  chr1  100  .   G   A    .      .    .  GT:DP  0/0:32  0/1:24
+        1  chr1  101  .   T   C    .      .    .  GT:DP  0/1:29  1/1:30
+        >>> vf2.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    Dona  Michel
+        0  chr1  100  .   G   A    .      .    .  GT:DP   ./.:.  0/1:24
+        1  chr1  101  .   T   C    .      .    .  GT:DP  0/0:24  0/1:31
+        2  chr2  200  .   A   T    .      .    .  GT:DP  0/0:26  0/1:26
+
+        We can merge the two VcfFrames with ``how='inner'`` (default):
+
+        >>> vf1.merge(vf2).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven Sara Dona Michel
+        0  chr1  100  .   G   A    .      .    .     GT    0/0  0/1  ./.    0/1
+        1  chr1  101  .   T   C    .      .    .     GT    0/1  1/1  0/0    0/1
+
+        We can also merge with ``how='outer'``:
+
+        >>> vf1.merge(vf2, how='outer').df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven Sara Dona Michel
+        0  chr1  100  .   G   A    .      .    .     GT    0/0  0/1  ./.    0/1
+        1  chr1  101  .   T   C    .      .    .     GT    0/1  1/1  0/0    0/1
+        2  chr2  200  .   A   T    .      .    .     GT    ./.  ./.  0/0    0/1
+
+        Since both VcfFrames have the DP subfield, we can use ``format='GT:DP'``:
+
+        >>> vf1.merge(vf2, how='outer', format='GT:DP').df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT  Steven    Sara    Dona  Michel
+        0  chr1  100  .   G   A    .      .    .  GT:DP  0/0:32  0/1:24   ./.:.  0/1:24
+        1  chr1  101  .   T   C    .      .    .  GT:DP  0/1:29  1/1:30  0/0:24  0/1:31
+        2  chr2  200  .   A   T    .      .    .  GT:DP   ./.:.   ./.:.  0/0:26  0/1:26
         """
         vf1 = self.strip(format=format)
         vf2 = other.strip(format=format)
