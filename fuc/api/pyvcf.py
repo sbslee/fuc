@@ -1805,6 +1805,9 @@ class VcfFrame:
           CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
         0  chr1  100  .   G   A    .      .   DB     GT    0/0
         1  chr1  103  .   C   A    .      .    .     GT    0/0
+
+        Finally, we can return boolean index array from the filtering:
+
         >>> vf.filter_flagall(['H2', 'DB'], index=True)
         0    False
         1     True
@@ -1919,6 +1922,7 @@ class VcfFrame:
 
         Examples
         --------
+
         Assume we have the following data:
 
         >>> data = {
@@ -1926,40 +1930,40 @@ class VcfFrame:
         ...     'POS': [100, 100, 200, 200],
         ...     'ID': ['.', '.', '.', '.'],
         ...     'REF': ['A', 'A', 'C', 'C'],
-        ...     'ALT': ['C', 'T', 'G', 'G,A'],
+        ...     'ALT': ['C,T', 'T', 'G', 'G,A'],
         ...     'QUAL': ['.', '.', '.', '.'],
         ...     'FILTER': ['.', '.', '.', '.'],
         ...     'INFO': ['.', '.', '.', '.'],
-        ...     'FORMAT': ['GT:AD', 'GT:AD', 'GT:AD', 'GT:AD'],
-        ...     'Steven': ['0/1:12,15', '0/0:32,1', '0/1:16,12', './.:.'],
-        ...     'Sara': ['0/1:13,17', '0/1:14,15', './.:.', '1/2:0,11,17'],
+        ...     'FORMAT': ['GT', 'GT', 'GT', 'GT'],
+        ...     'Steven': ['0/2', '0/0', '0/1', './.'],
+        ...     'Sara': ['0/1', '0/1', './.', '1/2'],
         ... }
         >>> vf = pyvcf.VcfFrame.from_dict([], data)
         >>> vf.df
-          CHROM  POS ID REF  ALT QUAL FILTER INFO FORMAT     Steven         Sara
-        0  chr1  100  .   A    C    .      .    .  GT:AD  0/1:12,15    0/1:13,17
-        1  chr1  100  .   A    T    .      .    .  GT:AD   0/0:32,1    0/1:14,15
-        2  chr2  200  .   C    G    .      .    .  GT:AD  0/1:16,12        ./.:.
-        3  chr2  200  .   C  G,A    .      .    .  GT:AD      ./.:.  1/2:0,11,17
+          CHROM  POS ID REF  ALT QUAL FILTER INFO FORMAT Steven Sara
+        0  chr1  100  .   A  C,T    .      .    .     GT    0/2  0/1
+        1  chr1  100  .   A    T    .      .    .     GT    0/0  0/1
+        2  chr2  200  .   C    G    .      .    .     GT    0/1  ./.
+        3  chr2  200  .   C  G,A    .      .    .     GT    ./.  1/2
 
         We can remove rows with multiple ALT alleles:
 
         >>> vf.filter_multialt().df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT     Steven       Sara
-        0  chr1  100  .   A   C    .      .    .  GT:AD  0/1:12,15  0/1:13,17
-        1  chr1  100  .   A   T    .      .    .  GT:AD   0/0:32,1  0/1:14,15
-        2  chr2  200  .   C   G    .      .    .  GT:AD  0/1:16,12      ./.:.
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven Sara
+        0  chr1  100  .   A   T    .      .    .     GT    0/0  0/1
+        1  chr2  200  .   C   G    .      .    .     GT    0/1  ./.
 
-        We can also select the row:
+        We can also select those rows:
 
         >>> vf.filter_multialt(opposite=True).df
-          CHROM  POS ID REF  ALT QUAL FILTER INFO FORMAT Steven         Sara
-        0  chr2  200  .   C  G,A    .      .    .  GT:AD  ./.:.  1/2:0,11,17
+          CHROM  POS ID REF  ALT QUAL FILTER INFO FORMAT Steven Sara
+        0  chr1  100  .   A  C,T    .      .    .     GT    0/2  0/1
+        1  chr2  200  .   C  G,A    .      .    .     GT    ./.  1/2
 
         Finally, we can return boolean index array from the filtering:
 
         >>> vf.filter_multialt(index=True)
-        0     True
+        0    False
         1     True
         2     True
         3    False
@@ -2042,6 +2046,76 @@ class VcfFrame:
             return i
         return self.__class__(self.copy_meta(), self.df[i])
 
+    def filter_phased(self, opposite=False, index=False):
+        """Remove rows with phased genotypes.
+
+        Parameters
+        ----------
+        opposite : bool, default: False
+            If True, return rows that don't meet the said criteria.
+        index : bool, default: False
+            If True, return boolean index array instead of VcfFrame.
+
+        Returns
+        -------
+        VcfFrame
+            Filtered VcfFrame.
+
+        Examples
+        --------
+        Assume we have the following data:
+
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102, 103],
+        ...     'ID': ['.', '.', '.', '.'],
+        ...     'REF': ['G', 'CT', 'A', 'C'],
+        ...     'ALT': ['A', 'C', 'C', 'A'],
+        ...     'QUAL': ['.', '.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.', '.'],
+        ...     'INFO': ['.', '.', '.', '.'],
+        ...     'FORMAT': ['GT', 'GT', 'GT', 'GT'],
+        ...     'Steven': ['1|0', '0/1', '0/1', '0|1'],
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
+        0  chr1  100  .   G   A    .      .    .     GT    1|0
+        1  chr1  101  .  CT   C    .      .    .     GT    0/1
+        2  chr1  102  .   A   C    .      .    .     GT    0/1
+        3  chr1  103  .   C   A    .      .    .     GT    0|1
+
+        We can remove rows with a phased genotype:
+
+        >>> vf.filter_phased().df
+          CHROM  POS ID REF   ALT QUAL FILTER INFO FORMAT Steven
+        0  chr1  101  .  CT     C    .      .    .     GT    0/1
+        1  chr1  102  .   A  C,AT    .      .    .     GT    0/1
+
+        We can also select those rows:
+
+        >>> vf.filter_phased(opposite=True).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
+        0  chr1  100  .   G   A    .      .    .     GT    1|0
+        1  chr1  103  .   C   A    .      .    .     GT    0|1
+
+        Finally, we can return boolean index array from the filtering:
+
+        >>> vf.filter_phased(index=True)
+        0    False
+        1     True
+        2     True
+        3    False
+        dtype: bool
+        """
+        f = lambda r: not any(['|' in gt.split(':')[0] for gt in r[9:]])
+        i = self.df.apply(f, axis=1)
+        if opposite:
+            i = ~i
+        if index:
+            return i
+        return self.__class__(self.copy_meta(), self.df[i])
+
     def filter_polyp(self, opposite=False, index=False):
         """Remove rows with a polyploid genotype call.
 
@@ -2054,6 +2128,53 @@ class VcfFrame:
         -------
         VcfFrame
             Filtered VcfFrame.
+
+        Examples
+        --------
+        Assume we have the following data:
+
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr2', 'chr2'],
+        ...     'POS': [100, 100, 200, 200],
+        ...     'ID': ['.', '.', '.', '.'],
+        ...     'REF': ['A', 'A', 'C', 'C'],
+        ...     'ALT': ['C', 'T', 'G', 'G'],
+        ...     'QUAL': ['.', '.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.', '.'],
+        ...     'INFO': ['.', '.', '.', '.'],
+        ...     'FORMAT': ['GT', 'GT', 'GT', 'GT'],
+        ...     'Steven': ['0/0/1', '0/0', '1/1/1', './.'],
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
+        0  chr1  100  .   A   C    .      .    .     GT  0/0/1
+        1  chr1  100  .   A   T    .      .    .     GT    0/0
+        2  chr2  200  .   C   G    .      .    .     GT  1/1/1
+        3  chr2  200  .   C   G    .      .    .     GT    ./.
+
+        We can remove rows with a polyploid genotype call:
+
+        >>> vf.filter_polyp().df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
+        0  chr1  100  .   A   T    .      .    .     GT    0/0
+        1  chr2  200  .   C   G    .      .    .     GT    ./.
+
+        We can also select those rows:
+
+        >>> vf.filter_polyp(opposite=True).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
+        0  chr1  100  .   A   C    .      .    .     GT  0/0/1
+        1  chr2  200  .   C   G    .      .    .     GT  1/1/1
+
+        Finally, we can return boolean index array from the filtering:
+
+        >>> vf.filter_polyp(index=True)
+        0    False
+        1     True
+        2    False
+        3     True
+        dtype: bool
         """
         f = lambda r: not any([gthaspolyp(x) for x in r[9:]])
         i = self.df.apply(f, axis=1)
