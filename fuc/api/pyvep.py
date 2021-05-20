@@ -55,14 +55,30 @@ def filter_clinsig(vf, whitelist=None, blacklist=None, include=False,
                    index=False):
     """Filter out rows whose variant is deemed as not clincally significant.
 
+    Frequently used CLIN_SIG values:
+
+        - benign
+        - likely_benign
+        - pathogenic
+        - likely_pathogenic
+        - drug_response
+        - risk_factor
+        - uncertain_significance
+        - conflicting_interpretations_of_pathogenicity
+        - not_provided
+        - other
+        - benign/likely_benign
+        - pathogenic/likely_pathogenic
+        - ...
+
     Parameters
     ----------
     whilelist : list, default: None
         CLIN_SIG values that signifiy a variant is clincally significant.
-        By default, it includes ``pathogenic`` and ``likely_pathogenic``
+        By default, it includes pathogenic and likely_pathogenic.
     blacklist : list, default: None
         CLIN_SIG values that signifiy a variant is not clincally significant.
-        By default, it includes ``benign`` and ``likely_benign``.
+        By default, it includes benign and likely_benign.
     include : bool, default: False
         If True, include only such rows instead of excluding them.
     index : bool, default: False
