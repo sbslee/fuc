@@ -47,6 +47,7 @@ following:
 """
 
 import pandas as pd
+import numpy as np
 import gzip
 from copy import deepcopy
 from Bio import bgzf
@@ -573,35 +574,36 @@ class VcfFrame:
         Assume we have the following data:
 
         >>> data = {
-        ...     'CHROM': ['chr1', 'chr1', 'chr1'],
-        ...     'POS': [100, 101, 102],
-        ...     'ID': ['.', '.', '.'],
-        ...     'REF': ['G', 'T', 'T'],
-        ...     'ALT': ['A', 'C', 'A'],
-        ...     'QUAL': ['.', '.', '.'],
-        ...     'FILTER': ['.', '.', '.'],
-        ...     'INFO': ['.', '.', '.'],
-        ...     'FORMAT': ['GT:DP', 'GT:DP', 'GT:DP'],
-        ...     'Steven': ['0/1:30', '0/0:29', '0/0:28'],
-        ...     'Sara': ['0/1:24', '0/1:30', './.:.'],
-        ...     'James': ['0/1:18', '0/1:24', '1/1:34'],
+        ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102, 103],
+        ...     'ID': ['.', '.', '.', '.'],
+        ...     'REF': ['G', 'T', 'T', 'C'],
+        ...     'ALT': ['A', 'C', 'A', 'T'],
+        ...     'QUAL': ['.', '.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.', '.'],
+        ...     'INFO': ['.', '.', '.', '.'],
+        ...     'FORMAT': ['GT', 'GT', 'GT', 'GT'],
+        ...     'Steven': ['0/1', '0/0', '0/0', '0/1'],
+        ...     'Sara': ['0/1', '0/1', './.', '0/1'],
+        ...     'James': ['0/1', '0/1', '1/1', './.'],
         ... }
         >>> vf = pyvcf.VcfFrame.from_dict([], data)
         >>> vf.df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT  Steven    Sara   James
-        0  chr1  100  .   G   A    .      .    .  GT:DP  0/1:30  0/1:24  0/1:18
-        1  chr1  101  .   T   C    .      .    .  GT:DP  0/0:29  0/1:30  0/1:24
-        2  chr1  102  .   T   A    .      .    .  GT:DP  0/0:28   ./.:.  1/1:34
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven Sara James
+        0  chr1  100  .   G   A    .      .    .     GT    0/1  0/1   0/1
+        1  chr1  101  .   T   C    .      .    .     GT    0/0  0/1   0/1
+        2  chr1  102  .   T   A    .      .    .     GT    0/0  ./.   1/1
+        3  chr1  103  .   C   T    .      .    .     GT    0/1  0/1   ./.
 
         We compare Steven and Sara:
 
         >>> vf.compare('Steven', 'Sara')
-        (0, 1, 1, 1)
+        (0, 1, 2, 1)
 
         Next, we compare all three:
 
         >>> vf.compare('Steven', 'Sara', 'James')
-        (0, 0, 0, 1, 0, 1, 1, 0)
+        (0, 0, 1, 1, 0, 1, 1, 0)
         """
         if c is None:
             result = self._compare_two(a, b)
@@ -1254,7 +1256,7 @@ class VcfFrame:
         vf = self.__class__(self.copy_meta(), df)
         return vf
 
-    def markmiss_ad(self, threshold, samples=None, full=False):
+    def markmiss_ad(self, threshold, samples=None, full=False, as_nan=False):
         """Mark genotypes whose AD is below threshold as missing.
 
         By default, the marking is applied only to genotypes with ALT allele.
@@ -1267,6 +1269,8 @@ class VcfFrame:
             If provided, only these samples will be marked.
         full : bool, default: False
             If True, apply the marking to all genotypes.
+        as_nan : bool, default: False
+            If True, mark as ``NaN`` instead of missing value.
 
         Returns
         -------
@@ -1324,12 +1328,22 @@ class VcfFrame:
           CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven       Sara  James
         0  chr1  100  .   G   A    .      .    .  GT:AD  ./.:.  0/1:15,15  ./.:.
         1  chr1  101  .   T   C    .      .    .  GT:AD  ./.:.  0/1:14,18  ./.:.
+
+        We can mark as ``NaN`` instead of missing value:
+
+        >>> vf.markmiss_ad(15, as_nan=True).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    Steven       Sara     James
+        0  chr1  100  .   G   A    .      .    .  GT:AD       NaN  0/1:15,15  0/0:32,0
+        1  chr1  101  .   T   C    .      .    .  GT:AD  0/0:28,1  0/1:14,18       NaN
         """
         if samples is None:
             samples = self.samples
         def one_row(r):
             i = r.FORMAT.split(':').index('AD')
-            m = row_missval(r)
+            if as_nan:
+                m = np.nan
+            else:
+                m = row_missval(r)
             def one_gt(g):
                 if not full and not gt_hasvar(g):
                     return g
@@ -1343,7 +1357,7 @@ class VcfFrame:
         vf = self.__class__(self.copy_meta(), df)
         return vf
 
-    def markmiss_af(self, threshold, samples=None, full=False):
+    def markmiss_af(self, threshold, samples=None, full=False, as_nan=False):
         """Mark genotypes whose AF is below threshold as missing.
 
         By default, the marking is applied only to genotypes with ALT allele.
@@ -1356,6 +1370,8 @@ class VcfFrame:
             If provided, only these samples will be marked.
         full : bool, default: False
             If True, apply the marking to all genotypes.
+        as_nan : bool, default: False
+            If True, mark as ``NaN`` instead of missing value.
 
         Returns
         -------
@@ -1413,12 +1429,22 @@ class VcfFrame:
           CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    Steven   Sara  James
         0  chr1  100  .   G   A    .      .    .  GT:AF     ./.:.  ./.:.  ./.:.
         1  chr1  101  .   T   C    .      .    .  GT:AF  0/1:0.31  ./.:.  ./.:.
+
+        We can mark as ``NaN`` instead of missing value:
+
+        >>> vf.markmiss_af(0.3, as_nan=True).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    Steven  Sara     James
+        0  chr1  100  .   G   A    .      .    .  GT:AF  0/0:0.01   NaN       NaN
+        1  chr1  101  .   T   C    .      .    .  GT:AF  0/1:0.31   NaN  0/0:0.09
         """
         if samples is None:
             samples = self.samples
         def one_row(r):
             i = r.FORMAT.split(':').index('AF')
-            m = row_missval(r)
+            if as_nan:
+                m = np.nan
+            else:
+                m = row_missval(r)
             def one_gt(g):
                 if not full and not gt_hasvar(g):
                     return g
@@ -1432,7 +1458,7 @@ class VcfFrame:
         vf = self.__class__(self.copy_meta(), df)
         return vf
 
-    def markmiss_dp(self, threshold, samples=None, full=False):
+    def markmiss_dp(self, threshold, samples=None, full=False, as_nan=False):
         """Mark genotypes whose DP is below threshold as missing.
 
         By default, the marking is applied only to genotypes with ALT allele.
@@ -1445,6 +1471,8 @@ class VcfFrame:
             If provided, only these samples will be marked.
         full : bool, default: False
             If True, apply the marking to all genotypes.
+        as_nan : bool, default: False
+            If True, mark as ``NaN`` instead of missing value.
 
         Returns
         -------
@@ -1502,12 +1530,22 @@ class VcfFrame:
           CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven    Sara  James
         0  chr1  100  .   G   A    .      .    .  GT:DP  ./.:.   ./.:.  ./.:.
         1  chr1  101  .   T   C    .      .    .  GT:DP  ./.:.  0/1:30  ./.:.
+
+        We can mark as ``NaN`` instead of missing value:
+
+        >>> vf.markmiss_dp(30, as_nan=True).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT  Steven    Sara   James
+        0  chr1  100  .   G   A    .      .    .  GT:DP  0/0:26     NaN     NaN
+        1  chr1  101  .   T   C    .      .    .  GT:DP     NaN  0/1:30  0/0:24
         """
         if samples is None:
             samples = self.samples
         def one_row(r):
             i = r.FORMAT.split(':').index('DP')
-            m = row_missval(r)
+            if as_nan:
+                m = np.nan
+            else:
+                m = row_missval(r)
             def one_gt(g):
                 if not full and not gt_hasvar(g):
                     return g

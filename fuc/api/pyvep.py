@@ -3,6 +3,13 @@ The pyvep submodule is designed for parsing VCF annotation data from
 the `Ensembl Variant Effect Predictor (VEP)
 <https://asia.ensembl.org/info/docs/tools/vep/index.html>`_. It should be
 used with ``pyvcf.VcfFrame``.
+
+More often than not, VEP returns more than one annotations for a given
+locus in the input VCF file for a variety of reasons. For example, if a
+locus is multiallelic, then VEP will return at least one annotation for each
+ALT allele. Additioanlly, if a locus overlaps with a region with
+multiple transcripts, it will also generate multiple annotations. Currently,
+The pyvep submodule is set up to use the first annotation only.
 """
 
 import re
@@ -174,7 +181,7 @@ def filter_impact(vf, values, opposite=False, index=False):
     """Select rows based on the given IMPACT values.
 
     List of IMPACT values:
-    
+
         - LOW
         - MODERATE
         - HIGH

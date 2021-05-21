@@ -11,6 +11,7 @@ Changelog
 * Add ``fuc.api.pyvcf.VcfFrame.meta_keys`` method.
 * Update ``fuc.api.pyvep.filter_clinsig`` method.
 * Update ``fuc.api.pyvep.filter_impact`` method.
+* Add ``as_nan`` argument to ``fuc.api.pyvcf.VcfFrame.markmiss_ad/af/dp`` methods.
 
 0.6.0 (2021-05-16)
 ------------------
