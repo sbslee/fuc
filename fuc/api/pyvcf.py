@@ -422,7 +422,7 @@ def row_parseinfo(r, key):
     result = ''
     for field in r.INFO.split(';'):
         if field.startswith(f'{key}='):
-            result = field.strip(f'{key}=')
+            result = field[len(key)+1:]
     return result
 
 def row_missval(r):

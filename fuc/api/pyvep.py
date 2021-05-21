@@ -9,6 +9,45 @@ import re
 import pandas as pd
 from . import pyvcf
 
+SEVERITIY = [
+    'transcript_ablation',
+    'splice_acceptor_variant',
+    'splice_donor_variant',
+    'stop_gained',
+    'frameshift_variant',
+    'stop_lost',
+    'start_lost',
+    'transcript_amplification',
+    'inframe_insertion',
+    'inframe_deletion',
+    'missense_variant',
+    'protein_altering_variant',
+    'splice_region_variant',
+    'incomplete_terminal_codon_variant',
+    'start_retained_variant',
+    'stop_retained_variant',
+    'synonymous_variant',
+    'coding_sequence_variant',
+    'mature_miRNA_variant',
+    '5_prime_UTR_variant',
+    '3_prime_UTR_variant',
+    'non_coding_transcript_exon_variant',
+    'intron_variant',
+    'NMD_transcript_variant',
+    'non_coding_transcript_variant',
+    'upstream_gene_variant',
+    'downstream_gene_variant',
+    'TFBS_ablation',
+    'TFBS_amplification',
+    'TF_binding_site_variant',
+    'regulatory_region_ablation',
+    'regulatory_region_amplification',
+    'feature_elongation',
+    'regulatory_region_variant',
+    'feature_truncation',
+    'intergenic_variant'
+]
+
 def _get_keys(vf):
     """Return existing annotation keys (e.g. Allele, IMPACT)."""
     l = []
@@ -18,12 +57,41 @@ def _get_keys(vf):
     return l
 
 def row_firstann(r):
-    """Return the first VEP annotation for the row."""
-    ann = [x for x in r.INFO.split(';') if 'CSQ=' in x]
-    if not ann:
+    """Return the first result in the row.
+
+    Parameters
+    ----------
+    r : pandas.Series
+        VCF row.
+
+    Returns
+    -------
+    str
+        VEP result.
+    """
+    results = pyvcf.row_parseinfo(r, 'CSQ')
+    if not results:
         return ''
-    ann = ann[0].replace('CSQ=', '').split(',')[0]
-    return ann
+    return results.split(',')[0]
+
+def row_mostsevere(r):
+    """Return result with the most severe consequence in the row.
+
+    Parameters
+    ----------
+    r : pandas.Series
+        VCF row.
+
+    Returns
+    -------
+    str
+        VEP result.
+    """
+    results = pyvcf.row_parseinfo(r, 'CSQ')
+    if not results:
+        return ''
+    f = lambda x: SEVERITIY.index(x.split('|')[1].split('&')[0])
+    return sorted(results.split(','), key=f)[0]
 
 def filter_nothas(vf, s, include=False):
     """Filter out rows based on the VEP annotations.
@@ -115,7 +183,7 @@ def filter_clinsig(vf, whitelist=None, blacklist=None, opposite=False,
     ...     'Steven': ['0/1', '0/1', '0/1', '0/1'],
     ... }
     >>> vf = pyvcf.VcfFrame.from_dict(meta, data)
-    >>> pyvep.annparse(vf, ['CLIN_SIG']).df
+    >>> pyvep.parseann(vf, ['CLIN_SIG']).df
       CHROM  POS ID  REF ALT QUAL FILTER                          INFO FORMAT Steven
     0  chr1  100  .    G   T    .      .  likely_pathogenic&pathogenic     GT    0/1
     1  chr1  101  .    C   T    .      .                        benign     GT    0/1
@@ -126,7 +194,7 @@ def filter_clinsig(vf, whitelist=None, blacklist=None, opposite=False,
 
     >>> whitelist=['pathogenic', 'likely_pathogenic']
     >>> temp_vf = pyvep.filter_clinsig(vf, whitelist=whitelist)
-    >>> pyvep.annparse(temp_vf, ['CLIN_SIG']).df
+    >>> pyvep.parseann(temp_vf, ['CLIN_SIG']).df
       CHROM  POS ID  REF ALT QUAL FILTER                          INFO FORMAT Steven
     0  chr1  100  .    G   T    .      .  likely_pathogenic&pathogenic     GT    0/1
     1  chr2  200  .  CAG   C    .      .                    pathogenic     GT    0/1
@@ -134,7 +202,7 @@ def filter_clinsig(vf, whitelist=None, blacklist=None, opposite=False,
     We can also remove those rows:
 
     >>> temp_vf = pyvep.filter_clinsig(vf, whitelist=whitelist, opposite=True)
-    >>> pyvep.annparse(temp_vf, ['CLIN_SIG']).df
+    >>> pyvep.parseann(temp_vf, ['CLIN_SIG']).df
       CHROM  POS ID REF ALT QUAL FILTER           INFO FORMAT Steven
     0  chr1  101  .   C   T    .      .         benign     GT    0/1
     1  chr2  201  .   C   T    .      .  likely_benign     GT    0/1
@@ -222,7 +290,7 @@ def filter_impact(vf, values, opposite=False, index=False):
     ...     'Steven': ['0/1', '0/1', '0/1', '0/1'],
     ... }
     >>> vf = pyvcf.VcfFrame.from_dict(meta, data)
-    >>> pyvep.annparse(vf, ['IMPACT']).df
+    >>> pyvep.parseann(vf, ['IMPACT']).df
       CHROM  POS ID  REF ALT QUAL FILTER      INFO FORMAT Steven
     0  chr1  100  .    G   T    .      .  MODERATE     GT    0/1
     1  chr1  101  .    C   T    .      .       LOW     GT    0/1
@@ -232,7 +300,7 @@ def filter_impact(vf, values, opposite=False, index=False):
     We can select rows with either LOW or HIGH:
 
     >>> temp_vf = pyvep.filter_impact(vf, ['LOW', 'HIGH'])
-    >>> pyvep.annparse(temp_vf, ['IMPACT']).df
+    >>> pyvep.parseann(temp_vf, ['IMPACT']).df
       CHROM  POS ID REF ALT QUAL FILTER      INFO FORMAT Steven
     0  chr1  100  .   G   T    .      .  MODERATE     GT    0/1
     1  chr2  201  .   C   T    .      .  MODERATE     GT    0/1
@@ -240,7 +308,7 @@ def filter_impact(vf, values, opposite=False, index=False):
     We can also remove those rows:
 
     >>> temp_vf = pyvep.filter_impact(vf, ['LOW', 'HIGH'], opposite=True)
-    >>> pyvep.annparse(temp_vf, ['IMPACT']).df
+    >>> pyvep.parseann(temp_vf, ['IMPACT']).df
       CHROM  POS ID REF ALT QUAL FILTER      INFO FORMAT Steven
     0  chr1  100  .   G   T    .      .  MODERATE     GT    0/1
     1  chr2  201  .   C   T    .      .  MODERATE     GT    0/1
@@ -268,7 +336,7 @@ def filter_impact(vf, values, opposite=False, index=False):
     vf = vf.__class__(vf.copy_meta(), df)
     return vf
 
-def annparse(vf, targets, sep=' | ', as_series=False):
+def parseann(vf, targets, sep=' | ', as_series=False):
     """Parse VEP annotations in VcfFrame.
 
     Parameters
