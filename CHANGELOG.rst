@@ -7,6 +7,7 @@ Changelog
 * Add ``lxml`` package as dependency for parsing HTML files.
 * Add ``matplotlib`` and ``seaborn`` packages as dependency for creating figures.
 * Add ``fucdemux`` command.
+* Add ``fuc.api.pyvcf.VcfFrame.filter_phased`` method.
 
 0.6.0 (2021-05-16)
 ------------------

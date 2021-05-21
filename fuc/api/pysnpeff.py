@@ -30,7 +30,7 @@ For each annotation, SnpEff provides the following data:
 17. INFO - Additional information.
 """
 
-def row_first_ann(r):
+def row_firstann(r):
     """Return the first SnpEff annotation for the row."""
     ann = [x for x in r.INFO.split(';') if 'ANN=' in x]
     if not ann:
@@ -56,7 +56,7 @@ def filter_ann(vf, targets, include=True):
         Filtered VcfFrame.
     """
     def func(r):
-        ann = row_first_ann(r)
+        ann = row_firstann(r)
         if not ann:
             return False
         ann = ann.split('|')[1]
@@ -88,7 +88,7 @@ def annparse(vf, idx, sep=' | '):
         Parsed annotations.
     """
     def func(r):
-        ann = row_first_ann(r)
+        ann = row_firstann(r)
         if not ann:
             return '.'
         ann = ann.split('|')

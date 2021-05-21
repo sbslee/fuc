@@ -16,7 +16,7 @@ def _get_keys(vf):
             l = re.search(r'Format: (.*?)">', vf.meta[i]).group(1).split('|')
     return l
 
-def row_first_ann(r):
+def row_firstann(r):
     """Return the first VEP annotation for the row."""
     ann = [x for x in r.INFO.split(';') if 'CSQ=' in x]
     if not ann:
@@ -42,7 +42,7 @@ def filter_nothas(vf, s, include=False):
         Filtered VcfFrame.
     """
     def func(r):
-        ann = row_first_ann(r)
+        ann = row_firstann(r)
         return s not in ann
     i = vf.df.apply(func, axis=1)
     if include:
@@ -51,11 +51,11 @@ def filter_nothas(vf, s, include=False):
     vf = vf.__class__(vf.copy_meta(), df)
     return vf
 
-def filter_clinsig(vf, whitelist=None, blacklist=None, include=False,
+def filter_clinsig(vf, whitelist=None, blacklist=None, opposite=False,
                    index=False):
-    """Filter out rows whose variant is deemed as not clincally significant.
+    """Select rows based on the given CLIN_SIG values.
 
-    Frequently used CLIN_SIG values:
+    List of CLIN_SIG values:
 
         - benign
         - likely_benign
@@ -74,27 +74,82 @@ def filter_clinsig(vf, whitelist=None, blacklist=None, include=False,
     Parameters
     ----------
     whilelist : list, default: None
-        CLIN_SIG values that signifiy a variant is clincally significant.
-        By default, it includes pathogenic and likely_pathogenic.
+        If these CLIN_SIG values are present, select the row.
     blacklist : list, default: None
-        CLIN_SIG values that signifiy a variant is not clincally significant.
-        By default, it includes benign and likely_benign.
-    include : bool, default: False
-        If True, include only such rows instead of excluding them.
+        If these CLIN_SIG values are present, do not select the row.
+    opposite : bool, default: False
+        If True, return rows that don't meet the said criteria.
     index : bool, default: False
-        If True, return the boolean index instead of a new VcfFrame.
+        If True, return boolean index array instead of VcfFrame.
 
     Returns
     -------
-    vf : VcfFrame or pandas.Series
-        Filtered VcfFrame or boolean index.
+    VcfFrame or pandas.Series
+        Filtered VcfFrame or boolean index array.
+
+    Examples
+    --------
+    Assume we have the following data:
+
+    >>> data = {
+    ...     'CHROM': ['chr1', 'chr1', 'chr2', 'chr2'],
+    ...     'POS': [100, 101, 200, 201],
+    ...     'ID': ['.', '.', '.', '.'],
+    ...     'REF': ['G', 'C', 'CAG', 'C'],
+    ...     'ALT': ['T', 'T', 'C', 'T'],
+    ...     'QUAL': ['.', '.', '.', '.'],
+    ...     'FILTER': ['.', '.', '.', '.'],
+    ...     'INFO': [
+    ...         'CSQ=T|missense_variant|MODERATE|MTOR|ENSG00000198793|Transcript|ENST00000361445.4|protein_coding|47/58||||6721|6644|2215|S/Y|tCt/tAt|rs587777894&COSV63868278&COSV63868313||-1||HGNC|3942|||||deleterious(0)|possibly_damaging(0.876)||likely_pathogenic&pathogenic|0&1&1|1&1&1|26619011&27159400&24631838&26018084&27830187|||||',
+    ...         'CSQ=T|synonymous_variant|LOW|MTOR|ENSG00000198793|Transcript|ENST00000361445.4|protein_coding|49/58||||6986|6909|2303|L|ctG/ctA|rs11121691&COSV63870864||-1||HGNC|3942|||||||0.2206|benign|0&1|1&1|24996771|||||',
+    ...         'CSQ=-|frameshift_variant|HIGH|BRCA2|ENSG00000139618|Transcript|ENST00000380152.3|protein_coding|18/27||||8479-8480|8246-8247|2749|Q/X|cAG/c|rs80359701||1||HGNC|1101||||||||pathogenic||1|26467025&26295337&15340362|||||',
+    ...         'CSQ=T|missense_variant|MODERATE|MTOR|ENSG00000198793|Transcript|ENST00000361445.4|protein_coding|30/58||||4516|4439|1480|R/H|cGc/cAc|rs780930764&COSV63868373||-1||HGNC|3942|||||tolerated(0.13)|benign(0)||likely_benign|0&1|1&1||||||'
+    ...     ],
+    ...     'FORMAT': ['GT', 'GT', 'GT', 'GT'],
+    ...     'Steven': ['0/1', '0/1', '0/1', '0/1'],
+    ... }
+    >>> vf = pyvcf.VcfFrame.from_dict(meta, data)
+    >>> pyvep.annparse(vf, ['CLIN_SIG']).df
+      CHROM  POS ID  REF ALT QUAL FILTER                          INFO FORMAT Steven
+    0  chr1  100  .    G   T    .      .  likely_pathogenic&pathogenic     GT    0/1
+    1  chr1  101  .    C   T    .      .                        benign     GT    0/1
+    2  chr2  200  .  CAG   C    .      .                    pathogenic     GT    0/1
+    3  chr2  201  .    C   T    .      .                 likely_benign     GT    0/1
+
+    We can select rows with pathogenic or likely_pathogenic:
+
+    >>> whitelist=['pathogenic', 'likely_pathogenic']
+    >>> temp_vf = pyvep.filter_clinsig(vf, whitelist=whitelist)
+    >>> pyvep.annparse(temp_vf, ['CLIN_SIG']).df
+      CHROM  POS ID  REF ALT QUAL FILTER                          INFO FORMAT Steven
+    0  chr1  100  .    G   T    .      .  likely_pathogenic&pathogenic     GT    0/1
+    1  chr2  200  .  CAG   C    .      .                    pathogenic     GT    0/1
+
+    We can also remove those rows:
+
+    >>> temp_vf = pyvep.filter_clinsig(vf, whitelist=whitelist, opposite=True)
+    >>> pyvep.annparse(temp_vf, ['CLIN_SIG']).df
+      CHROM  POS ID REF ALT QUAL FILTER           INFO FORMAT Steven
+    0  chr1  101  .   C   T    .      .         benign     GT    0/1
+    1  chr2  201  .   C   T    .      .  likely_benign     GT    0/1
+
+    Finally, we can return boolean index array from the filtering:
+
+    >>> pyvep.filter_clinsig(vf, whitelist=whitelist, index=True)
+    0     True
+    1    False
+    2     True
+    3    False
+    dtype: bool
     """
+    if whitelist is None and blacklist is None:
+        raise ValueError('must provide either whitelist or blcklist')
     if whitelist is None:
-        whitelist = ['pathogenic', 'likely_pathogenic']
+        whitelist = []
     if blacklist is None:
-        blacklist = ['benign', 'likely_benign']
+        blacklist = []
     def func(r):
-        ann = row_first_ann(r)
+        ann = row_firstann(r)
         values = ann.split('|')[get_index(vf, 'CLIN_SIG')].split('&')
         if not list(set(values) & set(whitelist)):
             return False
@@ -102,7 +157,7 @@ def filter_clinsig(vf, whitelist=None, blacklist=None, include=False,
             return False
         return True
     i = vf.df.apply(func, axis=1)
-    if include:
+    if opposite:
         i = ~i
     if index:
         return i
@@ -113,7 +168,7 @@ def filter_clinsig(vf, whitelist=None, blacklist=None, include=False,
 def filter_impact(vf, values, include=False, index=False):
     """Filter out rows based on the IMPACT field."""
     def func(r):
-        ann = row_first_ann(r)
+        ann = row_firstann(r)
         impact = ann.split('|')[get_index(vf, 'IMPACT')]
         return impact not in values
     i = vf.df.apply(func, axis=1)
@@ -125,33 +180,39 @@ def filter_impact(vf, values, include=False, index=False):
     vf = vf.__class__(vf.copy_meta(), df)
     return vf
 
-def annparse(vf, l, sep=' | '):
-    """Parse annotations of the first report.
+def annparse(vf, targets, sep=' | ', as_series=False):
+    """Parse VEP annotations in VcfFrame.
 
     Parameters
     ----------
     vf : fuc.pyvcf.VcfFrame
-        Input VcfFrame.
-    l : list
+        VcfFrame containing VEP annotations.
+    targets : list
         List of subfield IDs or indicies or both.
     sep : str, default: ' | '
         Separator for joining requested annotations.
+    as_series : bool, default: False
+        If True, return 1D array instead of VcfFrame.
 
     Returns
     -------
-    s : pandas.Series
-        Parsed annotations.
+    VcfFrame or pandas.Series
+        Parsed annotations in VcfFrame or 1D array.
     """
-    l = [x if isinstance(x, int) else _get_keys(vf).index(x) for x in l]
+    _targets = [x if isinstance(x, int) else _get_keys(vf).index(x) for x in targets]
     def func(r):
-        ann = row_first_ann(r)
+        ann = row_firstann(r)
         if not ann:
             return '.'
         ann = ann.split('|')
-        ann = sep.join([ann[i] for i in l])
+        ann = sep.join([ann[i] for i in _targets])
         return ann
     s = vf.df.apply(func, axis=1)
-    return s
+    if as_series:
+        return s
+    new_vf = vf.copy()
+    new_vf.df.INFO = s
+    return new_vf
 
 def get_index(vf, target):
     """Return the index of the target field (e.g. CLIN_SIG)."""
@@ -163,7 +224,7 @@ def get_table(vf):
     df = vf.df.copy()
     headers = _get_keys(vf)
     def func(r):
-        ann = row_first_ann(r)
+        ann = row_firstann(r)
         if ann:
             s = ['.' if x == '' else x for x in ann.split('|')]
         else:

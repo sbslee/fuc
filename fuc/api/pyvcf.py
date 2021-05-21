@@ -65,7 +65,7 @@ CONTIGS = [
 
 # -- Public methods ----------------------------------------------------------
 
-def gthaspolyp(g):
+def gt_haspolyp(g):
     """Return True if the sample genotype has a polyploid call.
 
     Parameters
@@ -80,15 +80,15 @@ def gthaspolyp(g):
 
     Examples
     --------
-    >>> pyvcf.gthaspolyp('0/1')
+    >>> pyvcf.gt_haspolyp('0/1')
     False
-    >>> pyvcf.gthaspolyp('1')
+    >>> pyvcf.gt_haspolyp('1')
     False
-    >>> pyvcf.gthaspolyp('0/1/1')
+    >>> pyvcf.gt_haspolyp('0/1/1')
     True
-    >>> pyvcf.gthaspolyp('1|0|1')
+    >>> pyvcf.gt_haspolyp('1|0|1')
     True
-    >>> pyvcf.gthaspolyp('0/./1/1')
+    >>> pyvcf.gt_haspolyp('0/./1/1')
     True
     """
     gt = g.split(':')[0]
@@ -97,7 +97,7 @@ def gthaspolyp(g):
     else:
         return gt.count('|') > 1
 
-def gthasvar(g):
+def gt_hasvar(g):
     """Return True if the sample genotype has a variant call.
 
     Parameters
@@ -114,13 +114,13 @@ def gthasvar(g):
     --------
     Below are some simple examples:
 
-    >>> pyvcf.gthasvar('0/1:35:4')
+    >>> pyvcf.gt_hasvar('0/1:35:4')
     True
-    >>> pyvcf.gthasvar('0/0:61:2')
+    >>> pyvcf.gt_hasvar('0/0:61:2')
     False
-    >>> pyvcf.gthasvar('1|2:21:6:23,27')
+    >>> pyvcf.gt_hasvar('1|2:21:6:23,27')
     True
-    >>> pyvcf.gthasvar('0|0:48:1:51,51')
+    >>> pyvcf.gt_hasvar('0|0:48:1:51,51')
     False
     """
     if g.split(':')[0].replace('/', '').replace(
@@ -129,7 +129,7 @@ def gthasvar(g):
     else:
         return False
 
-def gtmissing(g):
+def gt_missing(g):
     """Return True if the sample genotype has a missing call.
 
     Parameters
@@ -146,18 +146,18 @@ def gtmissing(g):
     --------
     Below are some simple examples:
 
-    >>> pyvcf.gtmissing('0|0:48:1:51,51')
+    >>> pyvcf.gt_missing('0|0:48:1:51,51')
     False
-    >>> pyvcf.gtmissing('./.:.:.')
+    >>> pyvcf.gt_missing('./.:.:.')
     True
-    >>> pyvcf.gtmissing('.:.')
+    >>> pyvcf.gt_missing('.:.')
     True
-    >>> pyvcf.gtmissing('.')
+    >>> pyvcf.gt_missing('.')
     True
     """
     return '.' in g.split(':')[0]
 
-def gtunphase(g):
+def gt_unphase(g):
     """Unphase the sample genotype.
 
     Parameters
@@ -174,11 +174,11 @@ def gtunphase(g):
     --------
     Below are some simple examples:
 
-    >>> pyvcf.gtunphase('1|2:21:6:23,27')
+    >>> pyvcf.gt_unphase('1|2:21:6:23,27')
     '1/2:21:6:23,27'
-    >>> pyvcf.gtunphase('2|1:2:0:18,2')
+    >>> pyvcf.gt_unphase('2|1:2:0:18,2')
     '1/2:2:0:18,2'
-    >>> pyvcf.gtunphase('0/1:35:4')
+    >>> pyvcf.gt_unphase('0/1:35:4')
     '0/1:35:4'
     """
     l = g.split(':')
@@ -327,7 +327,7 @@ def read_file(fn, compression=False):
     f.close()
     return vf
 
-def rowhasindel(r):
+def row_hasindel(r):
     """Return True if the row has an indel.
 
     Parameters
@@ -362,7 +362,7 @@ def rowhasindel(r):
     1  chr1  101  .  CT     C    .      .    .     GT    0/1
     2  chr1  102  .   A  C,AT    .      .    .     GT    1/2
     3  chr1  103  .   C     A    .      .    .     GT    0/1
-    >>> vf.df.apply(pyvcf.rowhasindel, axis=1)
+    >>> vf.df.apply(pyvcf.row_hasindel, axis=1)
     0    False
     1     True
     2     True
@@ -373,7 +373,7 @@ def rowhasindel(r):
     alt_has = max([len(x) for x in r['ALT'].split(',')]) > 1
     return ref_has or alt_has
 
-def rowmissval(r):
+def row_missval(r):
     """Return the correctly formatted missing value for the row.
 
     Parameters
@@ -408,7 +408,7 @@ def rowmissval(r):
     1  chr1  101  .   T   C    .      .    .     GT:AD     0/1:14,15
     2  chr1  102  .   A   T    .      .    .  GT:AD:DP  0/1:13,19:32
     3  chrX  100  .   C   A    .      .    .        GT           0/1
-    >>> vf.df.apply(pyvcf.rowmissval, axis=1)
+    >>> vf.df.apply(pyvcf.row_missval, axis=1)
     0        ./.
     1      ./.:.
     2    ./.:.:.
@@ -613,8 +613,8 @@ class VcfFrame:
         a = a if isinstance(a, str) else self.samples[a]
         b = b if isinstance(b, str) else self.samples[b]
         def func(r):
-            a_has = gthasvar(r[a])
-            b_has = gthasvar(r[b])
+            a_has = gt_hasvar(r[a])
+            b_has = gt_hasvar(r[b])
             if a_has and not b_has:
                 return 'Ab'
             elif not a_has and b_has:
@@ -635,9 +635,9 @@ class VcfFrame:
         b = b if isinstance(b, str) else self.samples[b]
         c = c if isinstance(c, str) else self.samples[c]
         def func(r):
-            a_has = gthasvar(r[a])
-            b_has = gthasvar(r[b])
-            c_has = gthasvar(r[c])
+            a_has = gt_hasvar(r[a])
+            b_has = gt_hasvar(r[b])
+            c_has = gt_hasvar(r[c])
             if a_has and not b_has and not c_has:
                 return 'Abc'
             elif not a_has and b_has and not c_has:
@@ -721,8 +721,8 @@ class VcfFrame:
         a = a if isinstance(a, str) else self.samples[a]
         b = b if isinstance(b, str) else self.samples[b]
         def func(r):
-            a_has = gthasvar(r[a])
-            b_has = gthasvar(r[b])
+            a_has = gt_hasvar(r[a])
+            b_has = gt_hasvar(r[b])
             if a_has and b_has:
                 return r[a]
             elif a_has and not b_has:
@@ -1028,7 +1028,7 @@ class VcfFrame:
             all_alleles = [ref_allele] + alt_alleles
 
             def infunc(x, r_all_alleles, index_map):
-                if gtmissing(x):
+                if gt_missing(x):
                     return ''
                 old_fields = x.split(':')
                 old_gt = old_fields[0]
@@ -1077,7 +1077,7 @@ class VcfFrame:
             df2.INFO = df.INFO.unique()[0]
             df2.FORMAT = df.FORMAT.unique()[0]
             s = df2.squeeze()
-            s = s.replace('', rowmissval(s))
+            s = s.replace('', row_missval(s))
             return s
 
         for name, i in dups.items():
@@ -1323,9 +1323,9 @@ class VcfFrame:
             samples = self.samples
         def one_row(r):
             i = r.FORMAT.split(':').index('AD')
-            m = rowmissval(r)
+            m = row_missval(r)
             def one_gt(g):
-                if not full and not gthasvar(g):
+                if not full and not gt_hasvar(g):
                     return g
                 s = g.split(':')[i].split(',')[1]
                 if s == '.' or int(s) < threshold:
@@ -1412,9 +1412,9 @@ class VcfFrame:
             samples = self.samples
         def one_row(r):
             i = r.FORMAT.split(':').index('AF')
-            m = rowmissval(r)
+            m = row_missval(r)
             def one_gt(g):
-                if not full and not gthasvar(g):
+                if not full and not gt_hasvar(g):
                     return g
                 s = g.split(':')[i]
                 if s == '.' or float(s) < threshold:
@@ -1501,9 +1501,9 @@ class VcfFrame:
             samples = self.samples
         def one_row(r):
             i = r.FORMAT.split(':').index('DP')
-            m = rowmissval(r)
+            m = row_missval(r)
             def one_gt(g):
-                if not full and not gthasvar(g):
+                if not full and not gt_hasvar(g):
                     return g
                 s = g.split(':')[i]
                 if s == '.' or int(s) < threshold:
@@ -1668,7 +1668,7 @@ class VcfFrame:
         3    False
         dtype: bool
         """
-        f = lambda r: not all(r.iloc[9:].apply(gtmissing))
+        f = lambda r: not all(r.iloc[9:].apply(gt_missing))
         i = self.df.apply(f, axis=1)
         if opposite:
             i = ~i
@@ -1738,7 +1738,7 @@ class VcfFrame:
         3     True
         dtype: bool
         """
-        i = ~self.df.apply(rowhasindel, axis=1)
+        i = ~self.df.apply(row_hasindel, axis=1)
         if opposite:
             i = ~i
         if index:
@@ -1759,8 +1759,8 @@ class VcfFrame:
 
         Returns
         -------
-        VcfFrame
-            Filtered VcfFrame.
+        VcfFrame or pandas.Series
+            Filtered VcfFrame or boolean index array.
 
         See Also
         --------
@@ -1839,8 +1839,8 @@ class VcfFrame:
 
         Returns
         -------
-        VcfFrame
-            Filtered VcfFrame.
+        VcfFrame or pandas.Series
+            Filtered VcfFrame or boolean index array.
 
         See Also
         --------
@@ -1988,8 +1988,8 @@ class VcfFrame:
 
         Returns
         -------
-        VcfFrame
-            Filtered VcfFrame.
+        VcfFrame or pandas.Series
+            Filtered VcfFrame or boolean index array.
 
         Examples
         --------
@@ -2058,8 +2058,8 @@ class VcfFrame:
 
         Returns
         -------
-        VcfFrame
-            Filtered VcfFrame.
+        VcfFrame or pandas.Series
+            Filtered VcfFrame or boolean index array.
 
         Examples
         --------
@@ -2126,8 +2126,8 @@ class VcfFrame:
 
         Returns
         -------
-        VcfFrame
-            Filtered VcfFrame.
+        VcfFrame or pandas.Series
+            Filtered VcfFrame or boolean index array.
 
         Examples
         --------
@@ -2176,7 +2176,7 @@ class VcfFrame:
         3     True
         dtype: bool
         """
-        f = lambda r: not any([gthaspolyp(x) for x in r[9:]])
+        f = lambda r: not any([gt_haspolyp(x) for x in r[9:]])
         i = self.df.apply(f, axis=1)
         if opposite:
             i = ~i
@@ -2271,7 +2271,7 @@ class VcfFrame:
         else:
             samples = [x if isinstance(x, str) else self.samples[x]
                        for x in samples]
-        f = lambda r: all(r[samples].apply(gthasvar))
+        f = lambda r: all(r[samples].apply(gt_hasvar))
         i = self.df.apply(f, axis=1)
         if opposite:
             i = ~i
@@ -2365,7 +2365,7 @@ class VcfFrame:
         else:
             samples = [x if isinstance(x, str) else self.samples[x]
                        for x in samples]
-        f = lambda r: any(r[samples].apply(gthasvar))
+        f = lambda r: any(r[samples].apply(gt_hasvar))
         i = self.df.apply(f, axis=1)
         if opposite:
             i = ~i
@@ -2387,8 +2387,8 @@ class VcfFrame:
 
         Returns
         -------
-        VcfFrame
-            Filtered VcfFrame.
+        VcfFrame or pandas.Series
+            Filtered VcfFrame or boolean index array.
 
         Examples
         --------
@@ -2445,7 +2445,7 @@ class VcfFrame:
         dtype: bool
         """
         def f(r):
-            n = r[9:].apply(gthasvar).sum()
+            n = r[9:].apply(gt_hasvar).sum()
             if isinstance(threshold, int):
                 return n >= threshold
             else:
@@ -2514,9 +2514,9 @@ class VcfFrame:
         a = a if isinstance(a, str) else self.samples[a]
         b = b if isinstance(b, str) else self.samples[b]
         def func(r):
-            m = rowmissval(r)
-            a_has = gthasvar(r[a])
-            b_bas = gthasvar(r[b])
+            m = row_missval(r)
+            a_has = gt_hasvar(r[a])
+            b_bas = gt_hasvar(r[b])
             if a_has and b_bas:
                 return m
             elif a_has and not b_bas:
@@ -2679,7 +2679,7 @@ class VcfFrame:
         3  chr1  103  .   C   A    .      .    .     GT    0/1
         """
         def func(r):
-            r[9:] = r[9:].apply(gtunphase)
+            r[9:] = r[9:].apply(gt_unphase)
             return r
         df = self.df.apply(func, axis=1)
         vf = self.__class__(self.copy_meta(), df)
