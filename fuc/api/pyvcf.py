@@ -374,6 +374,57 @@ def row_hasindel(r):
     alt_has = max([len(x) for x in r['ALT'].split(',')]) > 1
     return ref_has or alt_has
 
+def row_parseinfo(r, key):
+    """Return INFO data in the row that match the given key.
+
+    Parameters
+    ----------
+    r : pandas.Series
+        VCF row.
+    key : str
+        INFO key.
+
+    Returns
+    -------
+    str
+        Requested INFO data. Empty string if the key is not found.
+
+    Examples
+    --------
+
+    >>> data = {
+    ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1'],
+    ...     'POS': [100, 101, 102, 103],
+    ...     'ID': ['.', '.', '.', '.'],
+    ...     'REF': ['G', 'T', 'A', 'C'],
+    ...     'ALT': ['A', 'C', 'T', 'A'],
+    ...     'QUAL': ['.', '.', '.', '.'],
+    ...     'FILTER': ['.', '.', '.', '.'],
+    ...     'INFO': ['DB;AC=0', 'DB;H2;AC=1', 'DB;H2;AC=1', '.'],
+    ...     'FORMAT': ['GT', 'GT', 'GT', 'GT'],
+    ...     'Steven': ['0/0', '0/1', '0/1', '0/0'],
+    ... }
+    >>>
+    >>> vf = pyvcf.VcfFrame.from_dict([], data)
+    >>> vf.df
+      CHROM  POS ID REF ALT QUAL FILTER        INFO FORMAT Steven
+    0  chr1  100  .   G   A    .      .     DB;AC=0     GT    0/0
+    1  chr1  101  .   T   C    .      .  DB;H2;AC=1     GT    0/1
+    2  chr1  102  .   A   T    .      .  DB;H2;AC=1     GT    0/1
+    3  chr1  103  .   C   A    .      .           .     GT    0/0
+    >>> vf.df.apply(pyvcf.row_parseinfo, args=('AC',), axis=1)
+    0    0
+    1    1
+    2    1
+    3
+    dtype: object
+    """
+    result = ''
+    for field in r.INFO.split(';'):
+        if field.startswith(f'{key}='):
+            result = field.strip(f'{key}=')
+    return result
+
 def row_missval(r):
     """Return the correctly formatted missing value for the row.
 

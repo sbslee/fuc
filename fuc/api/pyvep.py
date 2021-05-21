@@ -1,19 +1,13 @@
 """
 The pyvep submodule is designed for parsing VCF annotation data from
 the `Ensembl Variant Effect Predictor (VEP)
-<https://asia.ensembl.org/info/docs/tools/vep/index.html>`_. It should be
-used with ``pyvcf.VcfFrame``.
-
-More often than not, VEP returns more than one annotations for a given
-locus in the input VCF file for a variety of reasons. For example, if a
-locus is multiallelic, then VEP will return at least one annotation for each
-ALT allele. Additioanlly, if a locus overlaps with a region with
-multiple transcripts, it will also generate multiple annotations. Currently,
-The pyvep submodule is set up to use the first annotation only.
+<https://asia.ensembl.org/info/docs/tools/vep/index.html>`_. It is
+designed to be used with ``pyvcf.VcfFrame``.
 """
 
 import re
 import pandas as pd
+from . import pyvcf
 
 def _get_keys(vf):
     """Return existing annotation keys (e.g. Allele, IMPACT)."""
