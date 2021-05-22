@@ -23,8 +23,7 @@ For getting help on CLI:
        dfmerge      [TABLE] merge two table files
        dfsum        [TABLE] summarize a table file
        fuccompf     [FUC] compare contents of two files
-       fucdemux     [FUC] parse the Reports directory from bcl2fastq or
-                    bcl2fastq2
+       fucdemux     [FUC] parse Reports directory from bcl2fastq or bcl2fastq2
        fucexist     [FUC] check whether files/dirs exist
        fucfind      [FUC] find files with certain extension recursively
        qfcount      [FASTQ] count sequence reads in FASTQ files

@@ -12,6 +12,8 @@ Changelog
 * Update ``fuc.api.pyvep.filter_clinsig`` method.
 * Update ``fuc.api.pyvep.filter_impact`` method.
 * Add ``as_nan`` argument to ``fuc.api.pyvcf.VcfFrame.markmiss_ad/af/dp`` methods.
+* Deprecate ``fuc.api.pyvcf.update`` method.
+* Add ``fuc.api.pyvcf.row_updateinfo/row_parseinfo`` methods.
 
 0.6.0 (2021-05-16)
 ------------------

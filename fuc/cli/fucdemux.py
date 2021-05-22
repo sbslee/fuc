@@ -8,7 +8,7 @@ import os
 def create_parser(subparsers):
     parser = subparsers.add_parser(
         get_script_name(__file__),
-        help='[FUC] parse the Reports directory from bcl2fastq or bcl2fastq2',
+        help='[FUC] parse Reports directory from bcl2fastq or bcl2fastq2',
         description=
             'This command will parse the Reports directory from the '
             'bcl2fastq or bcl2fastq2 prograrm. In the output directory, the '

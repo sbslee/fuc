@@ -46,6 +46,19 @@ The main goal of the fuc package is to wrap some of the most frequently used com
 
 You can use fuc for both command line interface (CLI) and application programming interface (API) whose documentations are available at `Read the Docs <https://sbslee-fuc.readthedocs.io/en/latest/>`_.
 
+Currently, the following file formats are supported by fuc:
+
+    - Variant Call Format (VCF)
+    - Browser Extensible Data (BED)
+    - FASTQ
+    - delimiter-separated values format (e.g. comma-separated values or CSV format)
+
+Additionally, you can use fuc to parse output data from the following programs:
+
+    - Ensembl Variant Effect Predictor (VEP)
+    - SnpEff
+    - bcl2fastq and bcl2fastq2
+
 Your contributions (e.g. feature ideas, pull requests) are most welcome.
 
 | Author: Seung-been "Steven" Lee
@@ -73,7 +86,7 @@ To check whether a file exists in the operating system:
 
    $ fuc fucexist example.txt
 
-To find all VCF files within the current directory:
+To find all VCF files within the current directory recursively:
 
 .. code-block:: console
 
@@ -133,9 +146,7 @@ There are various ways you can install fuc. The easiest one would be to use pip:
 
    $ pip install fuc
 
-Above will automatically download and install all the dependencies as well.
-
-Alternatively, you can clone the GitHub repository and then install fuc this way:
+Above will automatically download and install all the dependencies as well. Alternatively, you can clone the GitHub repository and then install fuc this way:
 
 .. code-block:: console
 

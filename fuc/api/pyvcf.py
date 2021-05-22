@@ -6,7 +6,7 @@ manipulation. The submodule strictly adheres to the standard `VCF
 specification <https://samtools.github.io/hts-specs/VCFv4.3.pdf>`_.
 
 A VCF file contains metadata lines (prefixed with '##'), a header line
-(prefixed with '#'), and genotype lines that start with a chromosome
+(prefixed with '#'), and genotype lines that begin with a chromosome
 identifier (e.g. 'chr1'). See the VCF specification above for an example
 VCF file.
 
@@ -404,7 +404,6 @@ def row_parseinfo(r, key):
     ...     'FORMAT': ['GT', 'GT', 'GT', 'GT'],
     ...     'Steven': ['0/0', '0/1', '0/1', '0/0'],
     ... }
-    >>>
     >>> vf = pyvcf.VcfFrame.from_dict([], data)
     >>> vf.df
       CHROM  POS ID REF ALT QUAL FILTER        INFO FORMAT Steven
@@ -424,6 +423,59 @@ def row_parseinfo(r, key):
         if field.startswith(f'{key}='):
             result = field[len(key)+1:]
     return result
+
+def row_updateinfo(r, key, value):
+    """Update INFO data in the row that match the given key.
+
+    Parameters
+    ----------
+    r : pandas.Series
+        VCF row.
+    key : str
+        INFO key.
+    value : str
+        New value to be assigned.
+
+    Returns
+    -------
+    str
+        New INFO field.
+
+    Examples
+    --------
+
+    >>> data = {
+    ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1'],
+    ...     'POS': [100, 101, 102, 103],
+    ...     'ID': ['.', '.', '.', '.'],
+    ...     'REF': ['G', 'T', 'A', 'C'],
+    ...     'ALT': ['A', 'C', 'T', 'A'],
+    ...     'QUAL': ['.', '.', '.', '.'],
+    ...     'FILTER': ['.', '.', '.', '.'],
+    ...     'INFO': ['DB;AC=0', 'DB;H2;AC=1', 'DB;H2;AC=1', '.'],
+    ...     'FORMAT': ['GT', 'GT', 'GT', 'GT'],
+    ...     'Steven': ['0/0', '0/1', '0/1', '0/0'],
+    ... }
+    >>> vf = pyvcf.VcfFrame.from_dict([], data)
+    >>> vf.df
+      CHROM  POS ID REF ALT QUAL FILTER        INFO FORMAT Steven
+    0  chr1  100  .   G   A    .      .     DB;AC=0     GT    0/0
+    1  chr1  101  .   T   C    .      .  DB;H2;AC=1     GT    0/1
+    2  chr1  102  .   A   T    .      .  DB;H2;AC=1     GT    0/1
+    3  chr1  103  .   C   A    .      .           .     GT    0/0
+    >>> vf.df.apply(pyvcf.row_updateinfo, args=('AC', '4'), axis=1)
+    0       DB;AC=4
+    1    DB;H2;AC=4
+    2    DB;H2;AC=4
+    3             .
+    dtype: object
+    """
+    fields = r.INFO.split(';')
+    for i, field in enumerate(fields):
+        if field.startswith(f'{key}='):
+            fields[i] = field[:len(key)+1] + value
+            break
+    return ';'.join(fields)
 
 def row_missval(r):
     """Return the correctly formatted missing value for the row.
@@ -510,7 +562,6 @@ class VcfFrame:
     ...     'FORMAT': ['GT', 'GT', 'GT'],
     ...     'Steven': ['0/1', '0/1', '0/1'],
     ... }
-    >>>
     >>> df = pd.DataFrame(data)
     >>> vf = pyvcf.VcfFrame(['##fileformat=VCFv4.3'], df)
     >>> vf.meta
@@ -2779,50 +2830,6 @@ class VcfFrame:
         df = self.df.apply(func, axis=1)
         vf = self.__class__(self.copy_meta(), df)
         return vf
-
-    def update(self, other, headers=None, missing=True):
-        """Copy data from the other VcfFrame.
-
-        This method will copy and paste data from the other VcfFrame for
-        overlapping records. By default, the following VCF headers are
-        used: ID, QUAL, FILTER, and, INFO.
-
-        Parameters
-        ----------
-        other : VcfFrame
-            Other VcfFrame.
-        headers : list, optional
-            List of VCF headers to exclude.
-        missing : bool, default: True
-            If True, only fields with the missing value ('.') will be updated.
-
-        Returns
-        -------
-        VcfFrame
-            Updated VcfFrame.
-        """
-        targets = ['ID', 'QUAL', 'FILTER', 'INFO']
-        if headers is not None:
-            for header in headers:
-                targets.remove(header)
-        def func(r1):
-            r2 = other.df[(other.df['CHROM'] == r1['CHROM']) &
-                          (other.df['POS'] == r1['POS']) &
-                          (other.df['REF'] == r1['REF']) &
-                          (other.df['ALT'] == r1['ALT'])]
-            if r2.empty:
-                return r1
-            for target in targets:
-                if missing:
-                    if r1[target] == '.':
-                        r1[target] = r2.iloc[0][target]
-                    else:
-                        pass
-                else:
-                    r1[target] = r2.iloc[0][target]
-            return r1
-        df = self.df.apply(func, axis=1)
-        return self.__class__(self.copy_meta(), df)
 
     def slice(self, chrom, start=None, end=None):
         """Slice the VcfFrame for the given region.
