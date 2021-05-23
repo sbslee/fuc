@@ -1,8 +1,8 @@
 Changelog
 *********
 
-0.7.0 (in development)
-----------------------
+0.7.0 (2021-05-23)
+------------------
 
 * Add ``lxml`` package as dependency for parsing HTML files.
 * Add ``matplotlib`` and ``seaborn`` packages as dependency for creating figures.
