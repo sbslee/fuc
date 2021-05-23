@@ -42,7 +42,7 @@ autodoc_mock_imports = [
     'matplotlib',
     'numpy',
     'pandas',
-    'pyranges'
+    'pyranges',
     'seaborn',
 ]
 
