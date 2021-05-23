@@ -6,6 +6,7 @@ dependencies:
   - autodocsumm
   - biopython
   - cython
+  - lxml
   - matplotlib
   - notebook
   - numpy

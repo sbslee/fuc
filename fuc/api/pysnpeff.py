@@ -1,7 +1,7 @@
 """
 The pysnpeff submodule is designed for parsing VCF annotation data from
-the `SnpEff <https://pcingola.github.io/SnpEff/>`_ program. It should be
-used with ``pyvcf.VcfFrame``.
+the `SnpEff <https://pcingola.github.io/SnpEff/>`_ program. It is designed
+to be used with ``pyvcf.VcfFrame``.
 
 One VCF record can have several SnpEff annotations if, for example,
 the record is a multiallelic site or the variant is shared by
@@ -30,7 +30,7 @@ For each annotation, SnpEff provides the following data:
 17. INFO - Additional information.
 """
 
-def row_first_ann(r):
+def row_firstann(r):
     """Return the first SnpEff annotation for the row."""
     ann = [x for x in r.INFO.split(';') if 'ANN=' in x]
     if not ann:
@@ -56,7 +56,7 @@ def filter_ann(vf, targets, include=True):
         Filtered VcfFrame.
     """
     def func(r):
-        ann = row_first_ann(r)
+        ann = row_firstann(r)
         if not ann:
             return False
         ann = ann.split('|')[1]
@@ -70,7 +70,7 @@ def filter_ann(vf, targets, include=True):
     vf = vf.__class__(vf.copy_meta(), df)
     return vf
 
-def annparse(vf, idx, sep=' | '):
+def parseann(vf, idx, sep=' | '):
     """Parse SnpEff annotations.
 
     Parameters
@@ -88,7 +88,7 @@ def annparse(vf, idx, sep=' | '):
         Parsed annotations.
     """
     def func(r):
-        ann = row_first_ann(r)
+        ann = row_firstann(r)
         if not ann:
             return '.'
         ann = ann.split('|')

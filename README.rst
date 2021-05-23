@@ -18,6 +18,19 @@ The main goal of the fuc package is to wrap some of the most frequently used com
 
 You can use fuc for both command line interface (CLI) and application programming interface (API) whose documentations are available at `Read the Docs <https://sbslee-fuc.readthedocs.io/en/latest/>`_.
 
+Currently, the following file formats are supported by fuc:
+
+    - Variant Call Format (VCF)
+    - Browser Extensible Data (BED)
+    - FASTQ
+    - delimiter-separated values format (e.g. comma-separated values or CSV format)
+
+Additionally, you can use fuc to parse output data from the following programs:
+
+    - Ensembl Variant Effect Predictor (VEP)
+    - SnpEff
+    - bcl2fastq and bcl2fastq2
+
 Your contributions (e.g. feature ideas, pull requests) are most welcome.
 
 | Author: Seung-been "Steven" Lee
@@ -45,7 +58,7 @@ To check whether a file exists in the operating system:
 
    $ fuc fucexist example.txt
 
-To find all VCF files within the current directory:
+To find all VCF files within the current directory recursively:
 
 .. code-block:: console
 
@@ -105,9 +118,7 @@ There are various ways you can install fuc. The easiest one would be to use pip:
 
    $ pip install fuc
 
-Above will automatically download and install all the dependencies as well.
-
-Alternatively, you can clone the GitHub repository and then install fuc this way:
+Above will automatically download and install all the dependencies as well. Alternatively, you can clone the GitHub repository and then install fuc this way:
 
 .. code-block:: console
 
@@ -131,6 +142,7 @@ For getting help on CLI:
        dfmerge      [TABLE] merge two table files
        dfsum        [TABLE] summarize a table file
        fuccompf     [FUC] compare contents of two files
+       fucdemux     [FUC] parse Reports directory from bcl2fastq or bcl2fastq2
        fucexist     [FUC] check whether files/dirs exist
        fucfind      [FUC] find files with certain extension recursively
        qfcount      [FASTQ] count sequence reads in FASTQ files
@@ -153,9 +165,9 @@ Below is the list of submodules available in API:
 - **common** : The common submodule is used by other fuc submodules such as pyvcf and pybed. It also provides many day-to-day actions used in the field of bioinformatics.
 - **pybed** : The pybed submodule is designed for working with BED files. It implements ``pybed.BedFrame`` which stores BED data as ``pandas.DataFrame`` via the `pyranges <https://github.com/biocore-ntnu/pyranges>`_ package to allow fast computation and easy manipulation. The submodule strictly adheres to the standard `BED specification <https://genome.ucsc.edu/FAQ/FAQformat.html>`_.
 - **pyfq** : The pyfq submodule is designed for working with FASTQ files (both zipped and unzipped). It implements ``pyfq.FqFrame`` which stores FASTQ data as ``pandas.DataFrame`` to allow fast computation and easy manipulation.
-- **pysnpeff** : The pysnpeff submodule is designed for parsing VCF annotation data from the `SnpEff <https://pcingola.github.io/SnpEff/>`_ program. It should be used with ``pyvcf.VcfFrame``.
+- **pysnpeff** : The pysnpeff submodule is designed for parsing VCF annotation data from the `SnpEff <https://pcingola.github.io/SnpEff/>`_ program. It is designed to be used with ``pyvcf.VcfFrame``.
 - **pyvcf** : The pyvcf submodule is designed for working with Variant Call Format (VCF) files (both zipped and unzipped). It implements ``pyvcf.VcfFrame`` which stores VCF data as ``pandas.DataFrame`` to allow fast computation and easy manipulation. The submodule strictly adheres to the standard `VCF specification <https://samtools.github.io/hts-specs/VCFv4.3.pdf>`_.
-- **pyvep** : The pyvep submodule is designed for parsing VCF annotation data from the `Ensembl Variant Effect Predictor (VEP) <https://asia.ensembl.org/info/docs/tools/vep/index.html>`_. It should be used with ``pyvcf.VcfFrame``.
+- **pyvep** : The pyvep submodule is designed for parsing VCF annotation data from the `Ensembl Variant Effect Predictor (VEP) <https://asia.ensembl.org/info/docs/tools/vep/index.html>`_. It is designed to be used with ``pyvcf.VcfFrame``.
 
 For getting help on a specific module (e.g. pyvcf):
 

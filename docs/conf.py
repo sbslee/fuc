@@ -38,9 +38,12 @@ extensions = [
 
 autodoc_mock_imports = [
     'Bio',
+    'lxml',
+    'matplotlib',
     'numpy',
     'pandas',
     'pyranges'
+    'seaborn',
 ]
 
 autodoc_default_options = {
