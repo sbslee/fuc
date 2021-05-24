@@ -1,6 +1,11 @@
 Changelog
 *********
 
+0.8.0 (in development)
+----------------------
+
+* Add ``pysam`` package as dependency for working with BAM files.
+
 0.7.0 (2021-05-23)
 ------------------
 

@@ -43,6 +43,7 @@ autodoc_mock_imports = [
     'numpy',
     'pandas',
     'pyranges',
+    'pysam',
     'seaborn',
 ]
 
