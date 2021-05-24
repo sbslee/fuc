@@ -39,6 +39,18 @@ README
    :target: https://sbslee-fuc.readthedocs.io/en/latest/?badge=latest
    :alt: Documentation Status
 
+.. image:: https://anaconda.org/bioconda/fuc/badges/version.svg
+   :target: https://anaconda.org/bioconda/fuc
+
+.. image:: https://anaconda.org/bioconda/fuc/badges/license.svg
+   :target: https://anaconda.org/bioconda/fuc
+
+.. image:: https://anaconda.org/bioconda/fuc/badges/downloads.svg
+   :target: https://anaconda.org/bioconda/fuc
+
+.. image:: https://anaconda.org/bioconda/fuc/badges/installer/conda.svg
+   :target: https://conda.anaconda.org/bioconda
+
 Introduction
 ============
 
@@ -125,8 +137,8 @@ To remove indels from a VCF file:
    filtered_vf = vf.filter_indel()
    filtered_vf.to_file('no_indels.vcf')
 
-Required Packages
-=================
+Installation
+============
 
 The following packages are required to run fuc:
 
@@ -137,16 +149,19 @@ The following packages are required to run fuc:
    pandas
    pyranges
 
-Getting Started
-===============
+There are various ways you can install fuc. The recommended way is via conda:
 
-There are various ways you can install fuc. The easiest one would be to use pip:
+.. code-block:: console
+
+   $ conda install -c bioconda fuc
+
+Above will automatically download and install all the dependencies as well. Alternatively, you can use pip to install fuc and all of its dependencies:
 
 .. code-block:: console
 
    $ pip install fuc
 
-Above will automatically download and install all the dependencies as well. Alternatively, you can clone the GitHub repository and then install fuc this way:
+Finally, you can clone the GitHub repository and then install fuc this way:
 
 .. code-block:: console
 
@@ -154,7 +169,12 @@ Above will automatically download and install all the dependencies as well. Alte
    $ cd fuc
    $ pip install .
 
-Above will also allow you to install a development version that's not available in PyPI.
+The nice thing about this approach is that you will have access to a development version that's not available in Anaconda or PyPI.
+
+Getting Help
+============
+
+For detailed documentations on fuc's CLI and API, please refer to the `Read the Docs <https://sbslee-fuc.readthedocs.io/en/latest/>`_.
 
 For getting help on CLI:
 
