@@ -5,24 +5,44 @@ data as ``pandas.DataFrame`` to allow fast computation and easy manipulation.
 """
 
 import pysam
+import numpy as np
 import pandas as pd
 from io import StringIO
 from . import pybam
 
-def read_file(fn, region=None):
+def read_file(fn, zero=False, region=None):
     """Create CovFrame from a BAM file.
+
+    Parameters
+    ----------
+    fn : str
+        Path to the BAM file.
+    zero : bool, default: False
+        If True, output all positions (including those with zero depth).
+    region : str, optional
+        Region.
+
+    Returns
+    -------
+    list
+        SM tags.
     """
-    args = ['-a', '-Q', '1']
+    args = ['-Q', '1']
+    if zero:
+        args.append('-a')
     if region:
         args.append('-r')
         args.append(region)
     args.append(fn)
     s = pysam.depth(*args)
-    df = pd.read_csv(StringIO(s), sep='\t')
-    names = pybam.tag_sm(fn)
-    if len(names) > 1:
+    names = ['Chromosome', 'Position']
+    samples = pybam.tag_sm(fn)
+    if len(samples) > 1:
         raise ValueError('multiple sample names detected')
-    df.columns = ['Chromosome', 'Position', names[0]]
+    dtype = {'Chromosome': str,'Position': np.int32, samples[0]: np.int32}
+    names.append(samples[0])
+    df = pd.read_csv(StringIO(s), sep='\t', header=None, names=names,
+                     dtype=dtype)
     return CovFrame(df)
 
 class CovFrame:
