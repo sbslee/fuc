@@ -60,6 +60,9 @@ You can use fuc for both command line interface (CLI) and application programmin
 
 Currently, the following file formats are supported by fuc:
 
+    - Sequence Alignment/Map (SAM)
+    - Binary Alignment/Map (BAM)
+    - CRAM
     - Variant Call Format (VCF)
     - Browser Extensible Data (BED)
     - FASTQ
