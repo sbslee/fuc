@@ -12,7 +12,9 @@ This section describes application programming interface (API) for the fuc packa
 Below is the list of submodules available in API:
 
 - **common** : The common submodule is used by other fuc submodules such as pyvcf and pybed. It also provides many day-to-day actions used in the field of bioinformatics.
+- **pybam** : The pybam submodule is designed for working with BAM files.
 - **pybed** : The pybed submodule is designed for working with BED files. It implements ``pybed.BedFrame`` which stores BED data as ``pandas.DataFrame`` via the `pyranges <https://github.com/biocore-ntnu/pyranges>`_ package to allow fast computation and easy manipulation. The submodule strictly adheres to the standard `BED specification <https://genome.ucsc.edu/FAQ/FAQformat.html>`_.
+- **pycov** : The pycov submodule is designed for working with depth of coverage data from BAM files. It implements ``pycov.CovFrame`` which stores read depth data as ``pandas.DataFrame`` to allow fast computation and easy manipulation.
 - **pyfq** : The pyfq submodule is designed for working with FASTQ files (both zipped and unzipped). It implements ``pyfq.FqFrame`` which stores FASTQ data as ``pandas.DataFrame`` to allow fast computation and easy manipulation.
 - **pysnpeff** : The pysnpeff submodule is designed for parsing VCF annotation data from the `SnpEff <https://pcingola.github.io/SnpEff/>`_ program. It is designed to be used with ``pyvcf.VcfFrame``.
 - **pyvcf** : The pyvcf submodule is designed for working with Variant Call Format (VCF) files (both zipped and unzipped). It implements ``pyvcf.VcfFrame`` which stores VCF data as ``pandas.DataFrame`` to allow fast computation and easy manipulation. The submodule strictly adheres to the standard `VCF specification <https://samtools.github.io/hts-specs/VCFv4.3.pdf>`_.
@@ -31,10 +33,22 @@ fuc.api.common
 .. automodule:: fuc.api.common
    :members:
 
+fuc.api.pybam
+=============
+
+.. automodule:: fuc.api.pybam
+   :members:
+
 fuc.api.pybed
 =============
 
 .. automodule:: fuc.api.pybed
+   :members:
+
+fuc.api.pycov
+=============
+
+.. automodule:: fuc.api.pycov
    :members:
 
 fuc.api.pyfq

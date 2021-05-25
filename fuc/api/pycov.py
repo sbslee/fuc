@@ -10,8 +10,8 @@ import pandas as pd
 from io import StringIO
 from . import pybam
 
-def read_file(fn, zero=False, region=None):
-    """Create CovFrame from a BAM file.
+def read_file(fn, zero=False, region=None, map_qual=None):
+    """Create CovFrame from BAM files.
 
     Parameters
     ----------
@@ -20,19 +20,22 @@ def read_file(fn, zero=False, region=None):
     zero : bool, default: False
         If True, output all positions (including those with zero depth).
     region : str, optional
-        Region.
+        Only report depth in specified region (format: CHR:FROM-TO).
+    map_qual: int, optional
+        Only count reads with mapping quality greater than or equal to INT
 
     Returns
     -------
-    list
-        SM tags.
+    CovFrame
+        CovFrame.
     """
-    args = ['-Q', '1']
+    args = []
     if zero:
-        args.append('-a')
-    if region:
-        args.append('-r')
-        args.append(region)
+        args += ['-a']
+    if region is not None:
+        args += ['-r', region]
+    if map_qual is not None:
+        args += ['-Q', map_qual]
     args.append(fn)
     s = pysam.depth(*args)
     names = ['Chromosome', 'Position']
