@@ -184,6 +184,16 @@ class CovFrame:
         -------
         matplotlib.axes.Axes
             The matplotlib axes containing the plot.
+
+        Examples
+        --------
+
+        .. plot::
+
+           A plotting example:
+           
+           >>> import matplotlib.pyplot as plt
+           >>> plt.plot([1,2,3], [4,5,6])
         """
         if names is None:
             names = self.samples
