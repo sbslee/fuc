@@ -7,7 +7,8 @@ def create_parser(subparsers):
         help='[BAM] slice a BAM file',
         description=
             'This command will slice a BAM file. By default, the command '
-            'will create an index file (.bai) for the output BAM file.'
+            'will create a accompanying index file (.bai) for the output '
+            'BAM file.'
     )
     parser.add_argument(
         'input_bam',
