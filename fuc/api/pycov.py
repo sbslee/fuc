@@ -190,10 +190,16 @@ class CovFrame:
 
         .. plot::
 
-           A plotting example:
-           
-           >>> import matplotlib.pyplot as plt
-           >>> plt.plot([1,2,3], [4,5,6])
+            from fuc import pycov
+            import numpy as np
+            data = {
+                'Chromosome': ['chr1'] * 1000,
+                'Position': np.arange(1000, 2000),
+                'Steven': np.random.normal(35, 5, 1000),
+                'Jane': np.random.normal(25, 7, 1000)
+            }
+            cf = pycov.CovFrame.from_dict(data)
+            cf.plot()
         """
         if names is None:
             names = self.samples
@@ -205,3 +211,4 @@ class CovFrame:
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
         sns.lineplot(data=df, ax=ax, **lineplot_kwargs)
+        return ax
