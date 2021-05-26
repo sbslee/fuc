@@ -59,37 +59,37 @@ To find intersection between BED files:
 
 .. code-block:: console
 
-   $ fuc bfintxn 1.bed 2.bed 3.bed > intersect.bed
+   $ fuc bed_intxn 1.bed 2.bed 3.bed > intersect.bed
 
 To merge two tab-delimited files:
 
 .. code-block:: console
 
-   $ fuc dfmerge left.txt right.txt > merged.txt
+   $ fuc tbl_merge left.txt right.txt > merged.txt
 
 To check whether a file exists in the operating system:
 
 .. code-block:: console
 
-   $ fuc fucexist example.txt
+   $ fuc fuc_exist example.txt
 
 To find all VCF files within the current directory recursively:
 
 .. code-block:: console
 
-   $ fuc fucfind . vcf
+   $ fuc fuc_find . vcf
 
 To count sequence reads in a FASTQ file:
 
 .. code-block:: console
 
-   $ fuc qfcount example.fastq
+   $ fuc fq_count example.fastq
 
 To merge VCF files:
 
 .. code-block:: console
 
-   $ fuc vfmerge 1.vcf 2.vcf 3.vcf > merged.vcf
+   $ fuc vcf_merge 1.vcf 2.vcf 3.vcf > merged.vcf
 
 API Examples
 ============
@@ -98,19 +98,19 @@ To filter a VCF file based on a BED file:
 
 .. code:: python3
 
-   from fuc import pyvcf
-   vf = pyvcf.read_file('original.vcf')
-   filtered_vf = vf.filter_bed('targets.bed')
-   filtered_vf.to_file('filtered.vcf')
+   >>> from fuc import pyvcf
+   >>> vf = pyvcf.read_file('original.vcf')
+   >>> filtered_vf = vf.filter_bed('targets.bed')
+   >>> filtered_vf.to_file('filtered.vcf')
 
 To remove indels from a VCF file:
 
 .. code:: python3
 
-   from fuc import pyvcf
-   vf = pyvcf.read_file('with_indels.vcf')
-   filtered_vf = vf.filter_indel()
-   filtered_vf.to_file('no_indels.vcf')
+   >>> from fuc import pyvcf
+   >>> vf = pyvcf.read_file('with_indels.vcf')
+   >>> filtered_vf = vf.filter_indel()
+   >>> filtered_vf.to_file('no_indels.vcf')
 
 Installation
 ============
@@ -120,9 +120,13 @@ The following packages are required to run fuc:
 .. parsed-literal::
 
    biopython
+   lxml
+   matplotlib
    numpy
    pandas
    pyranges
+   pysam
+   seaborn
 
 There are various ways you can install fuc. The recommended way is via conda:
 
@@ -179,18 +183,18 @@ For getting help on CLI:
      -h, --help     show this help message and exit
      -v, --version  show the version number and exit
 
-For getting help on a specific command (e.g. vfmerge):
+For getting help on a specific command (e.g. vcf_merge):
 
 .. code-block:: console
 
-   $ fuc vfmerge -h
+   $ fuc vcf_merge -h
 
 Below is the list of submodules available in API:
 
 - **common** : The common submodule is used by other fuc submodules such as pyvcf and pybed. It also provides many day-to-day actions used in the field of bioinformatics.
 - **pybam** : The pybam submodule is designed for working with BAM files.
 - **pybed** : The pybed submodule is designed for working with BED files. It implements ``pybed.BedFrame`` which stores BED data as ``pandas.DataFrame`` via the `pyranges <https://github.com/biocore-ntnu/pyranges>`_ package to allow fast computation and easy manipulation. The submodule strictly adheres to the standard `BED specification <https://genome.ucsc.edu/FAQ/FAQformat.html>`_.
-- **pycov** : The pycov submodule is designed for working with depth of coverage data from BAM files. It implements ``pycov.CovFrame`` which stores read depth data as ``pandas.DataFrame`` to allow fast computation and easy manipulation.
+- **pycov** : The pycov submodule is designed for working with depth of coverage data from BAM files. It implements the ``pycov.CovFrame`` class which stores read depth data as ``pandas.DataFrame`` to allow fast computation and easy manipulation.
 - **pyfq** : The pyfq submodule is designed for working with FASTQ files (both zipped and unzipped). It implements ``pyfq.FqFrame`` which stores FASTQ data as ``pandas.DataFrame`` to allow fast computation and easy manipulation.
 - **pysnpeff** : The pysnpeff submodule is designed for parsing VCF annotation data from the `SnpEff <https://pcingola.github.io/SnpEff/>`_ program. It is designed to be used with ``pyvcf.VcfFrame``.
 - **pyvcf** : The pyvcf submodule is designed for working with Variant Call Format (VCF) files (both zipped and unzipped). It implements ``pyvcf.VcfFrame`` which stores VCF data as ``pandas.DataFrame`` to allow fast computation and easy manipulation. The submodule strictly adheres to the standard `VCF specification <https://samtools.github.io/hts-specs/VCFv4.3.pdf>`_.

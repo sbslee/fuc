@@ -87,37 +87,37 @@ To find intersection between BED files:
 
 .. code-block:: console
 
-   $ fuc bfintxn 1.bed 2.bed 3.bed > intersect.bed
+   $ fuc bed_intxn 1.bed 2.bed 3.bed > intersect.bed
 
 To merge two tab-delimited files:
 
 .. code-block:: console
 
-   $ fuc dfmerge left.txt right.txt > merged.txt
+   $ fuc tbl_merge left.txt right.txt > merged.txt
 
 To check whether a file exists in the operating system:
 
 .. code-block:: console
 
-   $ fuc fucexist example.txt
+   $ fuc fuc_exist example.txt
 
 To find all VCF files within the current directory recursively:
 
 .. code-block:: console
 
-   $ fuc fucfind . vcf
+   $ fuc fuc_find . vcf
 
 To count sequence reads in a FASTQ file:
 
 .. code-block:: console
 
-   $ fuc qfcount example.fastq
+   $ fuc fq_count example.fastq
 
 To merge VCF files:
 
 .. code-block:: console
 
-   $ fuc vfmerge 1.vcf 2.vcf 3.vcf > merged.vcf
+   $ fuc vcf_merge 1.vcf 2.vcf 3.vcf > merged.vcf
 
 API Examples
 ============
@@ -126,19 +126,19 @@ To filter a VCF file based on a BED file:
 
 .. code:: python3
 
-   from fuc import pyvcf
-   vf = pyvcf.read_file('original.vcf')
-   filtered_vf = vf.filter_bed('targets.bed')
-   filtered_vf.to_file('filtered.vcf')
+   >>> from fuc import pyvcf
+   >>> vf = pyvcf.read_file('original.vcf')
+   >>> filtered_vf = vf.filter_bed('targets.bed')
+   >>> filtered_vf.to_file('filtered.vcf')
 
 To remove indels from a VCF file:
 
 .. code:: python3
 
-   from fuc import pyvcf
-   vf = pyvcf.read_file('with_indels.vcf')
-   filtered_vf = vf.filter_indel()
-   filtered_vf.to_file('no_indels.vcf')
+   >>> from fuc import pyvcf
+   >>> vf = pyvcf.read_file('with_indels.vcf')
+   >>> filtered_vf = vf.filter_indel()
+   >>> filtered_vf.to_file('no_indels.vcf')
 
 Installation
 ============
@@ -148,9 +148,13 @@ The following packages are required to run fuc:
 .. parsed-literal::
 
    biopython
+   lxml
+   matplotlib
    numpy
    pandas
    pyranges
+   pysam
+   seaborn
 
 There are various ways you can install fuc. The recommended way is via conda:
 
@@ -186,11 +190,11 @@ For getting help on CLI:
    $ fuc -h
 {fuc_help}
 
-For getting help on a specific command (e.g. vfmerge):
+For getting help on a specific command (e.g. vcf_merge):
 
 .. code-block:: console
 
-   $ fuc vfmerge -h
+   $ fuc vcf_merge -h
 
 Below is the list of submodules available in API:
 
@@ -228,11 +232,11 @@ For getting help on CLI:
    $ fuc -h
 {fuc_help}
 
-For getting help on a specific command (e.g. vfmerge):
+For getting help on a specific command (e.g. vcf_merge):
 
 .. code-block:: console
 
-   $ fuc vfmerge -h
+   $ fuc vcf_merge -h
 
 """.format(**d)
 

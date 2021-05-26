@@ -2832,7 +2832,7 @@ class VcfFrame:
         return vf
 
     def slice(self, chrom, start=None, end=None):
-        """Slice the VcfFrame for the given region.
+        """Return a sliced VcfFrame for the given region.
 
         Parameters
         ----------
@@ -2851,6 +2851,7 @@ class VcfFrame:
         Examples
         --------
 
+        >>> from fuc import pyvcf
         >>> data = {
         ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr2'],
         ...     'POS': [100, 205, 297, 101],
@@ -2884,10 +2885,9 @@ class VcfFrame:
         0  chr1  100  .   G   A    .      .    .     GT    0/1
         1  chr1  205  .   T   C    .      .    .     GT    1/1
         """
-        i = (self.df.CHROM == chrom)
+        df = self.df[self.df.CHROM == chrom]
         if start:
-            i = i & (start <= self.df.POS)
+            df = df[df.POS >= start]
         if end:
-            i = i & (self.df.POS <= end)
-        df = self.df[i]
+            df = df[df.POS <= end]
         return self.__class__(self.copy_meta(), df)

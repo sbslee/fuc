@@ -107,7 +107,7 @@ class CovFrame:
     4       chr1      1004  35.641304  20.359149
     """
     def __init__(self, df):
-        self.df = df
+        self.df = df.reset_index(drop=True)
 
     @property
     def samples(self):
@@ -159,22 +159,28 @@ class CovFrame:
         """
         return cls(pd.DataFrame(data))
 
-    def plot(self, names=None, ax=None, figsize=None, kwargs=None):
+    def plot(
+        self, chrom, start=None, end=None, names=None, ax=None, figsize=None,
+        kwargs=None
+    ):
         """Plot read depth profile for all or selected samples.
 
         Parameters
         ----------
-        names : str or list
+        chrom : str
+            Chromosome.
+        start : int, optional
+            Start position.
+        end : int, optional
+            End position.
+        names : str or list, optional
             Sample name or list of sample names.
         ax : matplotlib.axes.Axes, optional
-            Axes object to draw the plot onto, otherwise uses the
-            current Axes.
+            Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
             Width, height in inches. Format: (float, float).
         kwargs: dict, optional
-            Keyword arguments that are passed down to either the
-            `seaborn.lineplot` method or the `matplotlib.axes.Axes.plot`
-            method.
+            Keyword arguments passed down to the `seaborn.lineplot` method.
 
         Returns
         -------
@@ -195,8 +201,9 @@ class CovFrame:
             ...    'Jane': np.random.normal(25, 7, 1000)
             ... }
             >>> cf = pycov.CovFrame.from_dict(data)
-            >>> cf.plot()
+            >>> cf.plot('chr1')
         """
+        cf = self.slice(chrom, start=start, end=end)
         if names is None:
             names = self.samples
         if isinstance(names, str):
@@ -211,3 +218,47 @@ class CovFrame:
         sns.lineplot(data=df, ax=ax, **kwargs)
         ax.set_ylabel('Depth')
         return ax
+
+    def slice(self, chrom, start=None, end=None):
+        """Return a sliced CovFrame for the given region.
+
+        Parameters
+        ----------
+        chrom : str
+            Chromosome.
+        start : int, optional
+            Start position.
+        end : int, optional
+            End position.
+
+        Returns
+        -------
+        CovFrame
+            Sliced CovFrame.
+
+        Examples
+        --------
+
+        >>> from fuc import pycov
+        >>> data = {
+        ...     'Chromosome': ['chr1']*500 + ['chr2']*500,
+        ...     'Position': np.arange(1000, 2000),
+        ...     'Steven': np.random.normal(35, 5, 1000),
+        ...     'Jane': np.random.normal(25, 7, 1000)
+        ... }
+        >>> cf = pycov.CovFrame.from_dict(data)
+        >>> cf.slice('chr2').df.head()
+          Chromosome  Position     Steven       Jane
+        0       chr2      1500  31.408382  20.409376
+        1       chr2      1501  36.173578  22.327581
+        2       chr2      1502  22.867945   9.962580
+        3       chr2      1503  29.047738  17.589284
+        4       chr2      1504  41.343270  26.612494
+        """
+
+        df = self.df[self.df.Chromosome == chrom]
+        if start:
+            df = df[df.Position >= start]
+        if end:
+            df = df[df.Position <= end]
+        return self.__class__(df)
