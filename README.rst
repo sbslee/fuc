@@ -166,6 +166,7 @@ For getting help on CLI:
      COMMAND        name of the command
        bam_head     [BAM] print the header of a BAM file
        bam_rename   [BAM] add a new sample name to a BAM file
+       bam_slice    [BAM] slice a BAM file
        bed_intxn    [BED] find intersection of two or more BED files
        bed_sum      [BED] summarize a BED file
        fq_count     [FASTQ] count sequence reads in FASTQ files

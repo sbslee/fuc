@@ -20,6 +20,7 @@ For getting help on CLI:
      COMMAND        name of the command
        bam_head     [BAM] print the header of a BAM file
        bam_rename   [BAM] add a new sample name to a BAM file
+       bam_slice    [BAM] slice a BAM file
        bed_intxn    [BED] find intersection of two or more BED files
        bed_sum      [BED] summarize a BED file
        fq_count     [FASTQ] count sequence reads in FASTQ files
@@ -76,6 +77,26 @@ bam_rename
    
    optional arguments:
      -h, --help  show this help message and exit
+
+bam_slice
+=========
+
+.. code-block:: console
+
+   $ fuc bam_slice -h
+   usage: fuc bam_slice [-h] [--no_index] input_bam region output_bam
+   
+   This command will slice a BAM file. By default, the command will create a
+   accompanying index file (.bai) for the output BAM file.
+   
+   positional arguments:
+     input_bam   input BAM file
+     region      target region
+     output_bam  output BAM file
+   
+   optional arguments:
+     -h, --help  show this help message and exit
+     --no_index  use to this flag to skip indexing
 
 bed_intxn
 =========
