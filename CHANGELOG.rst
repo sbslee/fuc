@@ -6,6 +6,8 @@ Changelog
 
 * Add ``pysam`` package as dependency for working with BAM files.
 * Add new submodules ``pybam`` and ``pycov``.
+* Rename the commands.
+* Add ``bam_head`` and ``bam_rename`` commands.
 
 0.7.0 (2021-05-23)
 ------------------

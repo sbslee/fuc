@@ -17,6 +17,8 @@ import matplotlib.pyplot as plt
 def read_file(fn, zero=False, region=None, map_qual=None):
     """Create CovFrame from one or more BAM files.
 
+    This method essentially wraps the ``samtools depth`` command.
+
     Parameters
     ----------
     fn : str or list
@@ -24,14 +26,23 @@ def read_file(fn, zero=False, region=None, map_qual=None):
     zero : bool, default: False
         If True, output all positions (including those with zero depth).
     region : str, optional
-        Only report depth in specified region (format: CHR:FROM-TO).
+        If provided, only report depth in specified region (format:
+        CHR:FROM-TO).
     map_qual: int, optional
-        Only count reads with mapping quality greater than or equal to INT
+        If provided, only count reads with mapping quality greater than or
+        equal to this number.
 
     Returns
     -------
     CovFrame
         CovFrame.
+
+    Examples
+    --------
+    >>> from fuc import pycov
+    >>> cf = pycov.read_file(bam)
+    >>> cf = pycov.read_file([bam1, bam2])
+    >>> cf = pycov.read_file(bam, region='19:41497204-41524301')
     """
     bam_files = []
     if isinstance(fn, str):
@@ -60,7 +71,7 @@ def read_file(fn, zero=False, region=None, map_qual=None):
     return CovFrame(df)
 
 class CovFrame:
-    """Class for storing read depth data.
+    """Class for storing read depth data from BAM files.
 
     Parameters
     ----------
