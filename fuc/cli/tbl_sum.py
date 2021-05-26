@@ -1,10 +1,10 @@
-from fuc.api.common import get_script_name
+from .. import api
 import pandas as pd
 from pandas.api.types import is_numeric_dtype
 
 def create_parser(subparsers):
     parser = subparsers.add_parser(
-        get_script_name(__file__),
+        api.common.script_name(__file__),
         help='[TABLE] summarize a table file',
         description='This command will summarize a table file. It '
                     'essentially wraps the `pandas.Series.describe` '

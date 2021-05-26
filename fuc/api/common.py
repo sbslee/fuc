@@ -8,9 +8,9 @@ import pathlib
 import re
 from difflib import SequenceMatcher
 
-def get_script_name(script):
+def script_name(fn):
     """Return the script name."""
-    return pathlib.Path(script).stem
+    return pathlib.Path(fn).stem
 
 def fuc_dir():
     """Return the path to the fuc directory."""

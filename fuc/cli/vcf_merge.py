@@ -1,9 +1,8 @@
-from fuc.api.common import get_script_name
-from fuc import pyvcf
+from .. import api
 
 def create_parser(subparsers):
     parser = subparsers.add_parser(
-        get_script_name(__file__),
+        api.common.script_name(__file__),
         help='[VCF] merge two or more VCF files',
         description='This command will merge multiple VCF files (both zipped '
                     'and unzipped). By default, only the GT subfield of '
@@ -27,7 +26,7 @@ def create_parser(subparsers):
     )
 
 def main(args):
-    vfs = [pyvcf.read_file(x) for x in args.vcf_files]
-    merged_vf = pyvcf.merge(vfs, format=args.format, how=args.how,
+    vfs = [api.pyvcf.read_file(x) for x in args.vcf_files]
+    merged_vf = api.pyvcf.merge(vfs, format=args.format, how=args.how,
         sort=args.sort, collapse=args.collapse)
     print(merged_vf.to_string())

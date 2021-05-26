@@ -1,9 +1,8 @@
-from fuc.api.common import get_script_name
-from fuc import pyfq
+from .. import api
 
 def create_parser(subparsers):
     parser = subparsers.add_parser(
-        get_script_name(__file__),
+        api.common.script_name(__file__),
         help='[FASTQ] summarize a FASTQ file',
         description='This command will output a summary of the input FASTQ '
             'file (both zipped and unqzipped). The summary includes '
@@ -13,7 +12,7 @@ def create_parser(subparsers):
     parser.add_argument('fastq_file', help='input FASTQ file')
 
 def main(args):
-    qf = pyfq.read_file(args.fastq_file)
+    qf = api.pyfq.read_file(args.fastq_file)
     print(f'# Total: {qf.shape[0]:,}')
     unique = qf.df.SEQ.nunique()
     duplicate = qf.shape[0] - unique
