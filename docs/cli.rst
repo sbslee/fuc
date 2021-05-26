@@ -18,18 +18,20 @@ For getting help on CLI:
    
    positional arguments:
      COMMAND        name of the command
-       bfintxn      [BED] find intersection of two or more BED files
-       bfsum        [BED] summarize a BED file
-       dfmerge      [TABLE] merge two table files
-       dfsum        [TABLE] summarize a table file
-       fuccompf     [FUC] compare contents of two files
-       fucdemux     [FUC] parse Reports directory from bcl2fastq or bcl2fastq2
-       fucexist     [FUC] check whether files/dirs exist
-       fucfind      [FUC] find files with certain extension recursively
-       qfcount      [FASTQ] count sequence reads in FASTQ files
-       qfsum        [FASTQ] summarize a FASTQ file
-       vfmerge      [VCF] merge two or more VCF files
-       vfslice      [VCF] slice a VCF file
+       bam_head     [BAM] print the header of a BAM file
+       bam_rename   [BAM] add a new sample name to a BAM file
+       bed_intxn    [BED] find intersection of two or more BED files
+       bed_sum      [BED] summarize a BED file
+       fq_count     [FASTQ] count sequence reads in FASTQ files
+       fq_sum       [FASTQ] summarize a FASTQ file
+       fuc_compf    [FUC] compare contents of two files
+       fuc_demux    [FUC] parse Reports directory from bcl2fastq or bcl2fastq2
+       fuc_exist    [FUC] check whether files/dirs exist
+       fuc_find     [FUC] find files with certain extension recursively
+       tbl_merge    [TABLE] merge two table files
+       tbl_sum      [TABLE] summarize a table file
+       vcf_merge    [VCF] merge two or more VCF files
+       vcf_slice    [VCF] slice a VCF file
    
    optional arguments:
      -h, --help     show this help message and exit
@@ -41,13 +43,47 @@ For getting help on a specific command (e.g. vfmerge):
 
    $ fuc vfmerge -h
 
-bfintxn
-=======
+bam_head
+========
 
 .. code-block:: console
 
-   $ fuc bfintxn -h
-   usage: fuc bfintxn [-h] bed_files [bed_files ...]
+   $ fuc bam_head -h
+   usage: fuc bam_head [-h] bam_file
+   
+   This command will print the header of a BAM file.
+   
+   positional arguments:
+     bam_file    BAM file
+   
+   optional arguments:
+     -h, --help  show this help message and exit
+
+bam_rename
+==========
+
+.. code-block:: console
+
+   $ fuc bam_rename -h
+   usage: fuc bam_rename [-h] input_bam name output_bam
+   
+   This command will add a new sample name to a BAM file.
+   
+   positional arguments:
+     input_bam   input BAM file
+     name        sample name
+     output_bam  output BAM file
+   
+   optional arguments:
+     -h, --help  show this help message and exit
+
+bed_intxn
+=========
+
+.. code-block:: console
+
+   $ fuc bed_intxn -h
+   usage: fuc bed_intxn [-h] bed_files [bed_files ...]
    
    This command will compute intersections beween multiple BED files. It
    essentially wraps the `pyranges.PyRanges.intersect` method.
@@ -58,13 +94,13 @@ bfintxn
    optional arguments:
      -h, --help  show this help message and exit
 
-bfsum
-=====
+bed_sum
+=======
 
 .. code-block:: console
 
-   $ fuc bfsum -h
-   usage: fuc bfsum [-h] [--bases INTEGER] [--decimals INTEGER] bed_file
+   $ fuc bed_sum -h
+   usage: fuc bed_sum [-h] [--bases INTEGER] [--decimals INTEGER] bed_file
    
    This command will compute summary statstics of the BED file. This includes the
    total numbers of probes and covered base pairs for each chromosome. By
@@ -79,16 +115,128 @@ bfsum
      --bases INTEGER     number used to divide the bases (default: 1)
      --decimals INTEGER  maximum number of decimals (default: 0)
 
-dfmerge
-=======
+fq_count
+========
 
 .. code-block:: console
 
-   $ fuc dfmerge -h
-   usage: fuc dfmerge [-h] [--how TEXT] [--on TEXT [TEXT ...]]
-                      [--left_delimiter TEXT] [--right_delimiter TEXT]
-                      [--output_delimiter TEXT]
-                      left_file right_file
+   $ fuc fq_count -h
+   usage: fuc fq_count [-h] [paths ...]
+   
+   This command will count sequence reads in FASTQ files (both zipped and
+   unzipped). It will look for stdin if there are no arguments (e.g. $ cat
+   files.list | fuc fq_count).
+   
+   positional arguments:
+     paths       FASTQ file paths (default: stdin)
+   
+   optional arguments:
+     -h, --help  show this help message and exit
+
+fq_sum
+======
+
+.. code-block:: console
+
+   $ fuc fq_sum -h
+   usage: fuc fq_sum [-h] fastq_file
+   
+   This command will output a summary of the input FASTQ file (both zipped and
+   unqzipped). The summary includes the total number of sequence reads, the
+   distribution of read lengths, and the numbers of unique and duplicate
+   sequences.
+   
+   positional arguments:
+     fastq_file  input FASTQ file
+   
+   optional arguments:
+     -h, --help  show this help message and exit
+
+fuc_compf
+=========
+
+.. code-block:: console
+
+   $ fuc fuc_compf -h
+   usage: fuc fuc_compf [-h] file1 file2
+   
+   This command will compare the contents of two files. It will return 'True' if
+   they are identical and 'False' otherwise.
+   
+   positional arguments:
+     file1       first file
+     file2       second file
+   
+   optional arguments:
+     -h, --help  show this help message and exit
+
+fuc_demux
+=========
+
+.. code-block:: console
+
+   $ fuc fuc_demux -h
+   usage: fuc fuc_demux [-h] reports_dir output_dir
+   
+   This command will parse the Reports directory from the bcl2fastq or bcl2fastq2
+   prograrm. In the output directory, the command will create four files:
+   flowcell_summary.csv, lane_summary.csv, top_unknown_barcodes.csv, and
+   reports.pdf.
+   
+   positional arguments:
+     reports_dir  Reports directory
+     output_dir   output directory
+   
+   optional arguments:
+     -h, --help   show this help message and exit
+
+fuc_exist
+=========
+
+.. code-block:: console
+
+   $ fuc fuc_exist -h
+   usage: fuc fuc_exist [-h] [paths ...]
+   
+   This command will check whether files/dirs exist. It will return 'True' if
+   they exist and 'False' otherwise. The command will look for stdin if there are
+   no arguments (e.g. $ cat files.list | fuc fuc_exist).
+   
+   positional arguments:
+     paths       file/dir paths (default: stdin)
+   
+   optional arguments:
+     -h, --help  show this help message and exit
+
+fuc_find
+========
+
+.. code-block:: console
+
+   $ fuc fuc_find -h
+   usage: fuc fuc_find [-h] path extension
+   
+   This command will recursively find files with a certain extension -- such as
+   '.txt' and '.vcf' -- within the given directory and return their absolute
+   paths.
+   
+   positional arguments:
+     path        directory path
+     extension   extension
+   
+   optional arguments:
+     -h, --help  show this help message and exit
+
+tbl_merge
+=========
+
+.. code-block:: console
+
+   $ fuc tbl_merge -h
+   usage: fuc tbl_merge [-h] [--how TEXT] [--on TEXT [TEXT ...]]
+                        [--left_delimiter TEXT] [--right_delimiter TEXT]
+                        [--output_delimiter TEXT]
+                        left_file right_file
    
    This command will merge two table files using one or more shared columns. This
    essentially wraps the `pandas.DataFrame.merge` method.
@@ -109,16 +257,16 @@ dfmerge
      --output_delimiter TEXT
                            output delimiter (default: '\t')
 
-dfsum
-=====
+tbl_sum
+=======
 
 .. code-block:: console
 
-   $ fuc dfsum -h
-   usage: fuc dfsum [-h] [--delimiter TEXT] [--skiprows TEXT]
-                    [--na_values TEXT [TEXT ...]] [--keep_default_na]
-                    [--query TEXT] [--columns TEXT [TEXT ...]]
-                    table_file
+   $ fuc tbl_sum -h
+   usage: fuc tbl_sum [-h] [--delimiter TEXT] [--skiprows TEXT]
+                      [--na_values TEXT [TEXT ...]] [--keep_default_na]
+                      [--query TEXT] [--columns TEXT [TEXT ...]]
+                      table_file
    
    This command will summarize a table file. It essentially wraps the
    `pandas.Series.describe` and `pandas.Series.value_counts` methods.
@@ -148,126 +296,14 @@ dfsum
                            columns to be summarized (by default, all columns will
                            be included)
 
-fuccompf
-========
+vcf_merge
+=========
 
 .. code-block:: console
 
-   $ fuc fuccompf -h
-   usage: fuc fuccompf [-h] file1 file2
-   
-   This command will compare the contents of two files. It will return 'True' if
-   they are identical and 'False' otherwise.
-   
-   positional arguments:
-     file1       first file
-     file2       second file
-   
-   optional arguments:
-     -h, --help  show this help message and exit
-
-fucdemux
-========
-
-.. code-block:: console
-
-   $ fuc fucdemux -h
-   usage: fuc fucdemux [-h] reports_dir output_dir
-   
-   This command will parse the Reports directory from the bcl2fastq or bcl2fastq2
-   prograrm. In the output directory, the command will create four files:
-   flowcell_summary.csv, lane_summary.csv, top_unknown_barcodes.csv, and
-   reports.pdf.
-   
-   positional arguments:
-     reports_dir  Reports directory
-     output_dir   output directory
-   
-   optional arguments:
-     -h, --help   show this help message and exit
-
-fucexist
-========
-
-.. code-block:: console
-
-   $ fuc fucexist -h
-   usage: fuc fucexist [-h] [paths ...]
-   
-   This command will check whether files/dirs exist. It will return 'True' if
-   they exist and 'False' otherwise. The command will look for stdin if there are
-   no arguments (e.g. $ cat files.list | fuc fucexist).
-   
-   positional arguments:
-     paths       file/dir paths (default: stdin)
-   
-   optional arguments:
-     -h, --help  show this help message and exit
-
-fucfind
-=======
-
-.. code-block:: console
-
-   $ fuc fucfind -h
-   usage: fuc fucfind [-h] path extension
-   
-   This command will recursively find files with a certain extension -- such as
-   '.txt' and '.vcf' -- within the given directory and return their absolute
-   paths.
-   
-   positional arguments:
-     path        directory path
-     extension   extension
-   
-   optional arguments:
-     -h, --help  show this help message and exit
-
-qfcount
-=======
-
-.. code-block:: console
-
-   $ fuc qfcount -h
-   usage: fuc qfcount [-h] [paths ...]
-   
-   This command will count sequence reads in FASTQ files (both zipped and
-   unzipped). It will look for stdin if there are no arguments (e.g. $ cat
-   files.list | fuc qfcount).
-   
-   positional arguments:
-     paths       FASTQ file paths (default: stdin)
-   
-   optional arguments:
-     -h, --help  show this help message and exit
-
-qfsum
-=====
-
-.. code-block:: console
-
-   $ fuc qfsum -h
-   usage: fuc qfsum [-h] fastq_file
-   
-   This command will output a summary of the input FASTQ file (both zipped and
-   unqzipped). The summary includes the total number of sequence reads, the
-   distribution of read lengths, and the numbers of unique and duplicate
-   sequences.
-   
-   positional arguments:
-     fastq_file  input FASTQ file
-   
-   optional arguments:
-     -h, --help  show this help message and exit
-
-vfmerge
-=======
-
-.. code-block:: console
-
-   $ fuc vfmerge -h
-   usage: fuc vfmerge [-h] [--how TEXT] [--format TEXT] [--sort] [--collapse]
-                      vcf_files [vcf_files ...]
+   $ fuc vcf_merge -h
+   usage: fuc vcf_merge [-h] [--how TEXT] [--format TEXT] [--sort] [--collapse]
+                        vcf_files [vcf_files ...]
    
    This command will merge multiple VCF files (both zipped and unzipped). By
    default, only the GT subfield of the FORMAT field will be included in the
@@ -286,13 +322,13 @@ vfmerge
      --sort         use this flag to turn off sorting of records (default: True)
      --collapse     use this flag to collapse duplicate records (default: False)
 
-vfslice
-=======
+vcf_slice
+=========
 
 .. code-block:: console
 
-   $ fuc vfslice -h
-   usage: fuc vfslice [-h] [--start INTEGER] [--end INTEGER] vcf_file chrom
+   $ fuc vcf_slice -h
+   usage: fuc vcf_slice [-h] [--start INTEGER] [--end INTEGER] vcf_file chrom
    
    This command will slice a VCF file (both zipped and unzipped).
    

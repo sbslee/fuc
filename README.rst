@@ -160,18 +160,20 @@ For getting help on CLI:
    
    positional arguments:
      COMMAND        name of the command
-       bfintxn      [BED] find intersection of two or more BED files
-       bfsum        [BED] summarize a BED file
-       dfmerge      [TABLE] merge two table files
-       dfsum        [TABLE] summarize a table file
-       fuccompf     [FUC] compare contents of two files
-       fucdemux     [FUC] parse Reports directory from bcl2fastq or bcl2fastq2
-       fucexist     [FUC] check whether files/dirs exist
-       fucfind      [FUC] find files with certain extension recursively
-       qfcount      [FASTQ] count sequence reads in FASTQ files
-       qfsum        [FASTQ] summarize a FASTQ file
-       vfmerge      [VCF] merge two or more VCF files
-       vfslice      [VCF] slice a VCF file
+       bam_head     [BAM] print the header of a BAM file
+       bam_rename   [BAM] add a new sample name to a BAM file
+       bed_intxn    [BED] find intersection of two or more BED files
+       bed_sum      [BED] summarize a BED file
+       fq_count     [FASTQ] count sequence reads in FASTQ files
+       fq_sum       [FASTQ] summarize a FASTQ file
+       fuc_compf    [FUC] compare contents of two files
+       fuc_demux    [FUC] parse Reports directory from bcl2fastq or bcl2fastq2
+       fuc_exist    [FUC] check whether files/dirs exist
+       fuc_find     [FUC] find files with certain extension recursively
+       tbl_merge    [TABLE] merge two table files
+       tbl_sum      [TABLE] summarize a table file
+       vcf_merge    [VCF] merge two or more VCF files
+       vcf_slice    [VCF] slice a VCF file
    
    optional arguments:
      -h, --help     show this help message and exit

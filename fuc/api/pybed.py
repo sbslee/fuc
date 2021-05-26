@@ -120,11 +120,12 @@ class BedFrame:
         Returns
         -------
         BedFrame
-            BedFrame
+            BedFrame.
 
         See Also
         --------
-        BedFrame : BedFrame object creation using constructor.
+        BedFrame
+            BedFrame object creation using constructor.
 
         Examples
         --------
