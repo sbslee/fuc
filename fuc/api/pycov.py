@@ -2,8 +2,7 @@
 The pycov submodule is designed for working with depth of coverage data
 from BAM files. It implements the ``pycov.CovFrame`` class which stores read
 depth data as ``pandas.DataFrame`` to allow fast computation and easy
-manipulation. The ``pycov.CovFrame`` class also provides many useful plotting
-methods.
+manipulation.
 """
 
 import pysam
@@ -22,7 +21,7 @@ def read_file(fn, zero=False, region=None, map_qual=None):
     Parameters
     ----------
     fn : str or list
-        Single BAM file path or list of multiple BAM file paths.
+        Single BAM file or list of multiple BAM files.
     zero : bool, default: False
         If True, output all positions (including those with zero depth).
     region : str, optional
@@ -160,24 +159,21 @@ class CovFrame:
         """
         return cls(pd.DataFrame(data))
 
-    def plot(
-            self, names=None, ax=None, figsize=None, lineplot_kwargs=None,
-            plot_kwargs=None
-    ):
-        """Plot read depth profile.
+    def plot(self, names=None, ax=None, figsize=None, kwargs=None):
+        """Plot read depth profile for all or selected samples.
 
         Parameters
         ----------
         names : str or list
-            Sample names.
+            Sample name or list of sample names.
         ax : matplotlib.axes.Axes, optional
-            Axes object to draw the plot onto, otherwise uses the current Axes.
+            Axes object to draw the plot onto, otherwise uses the
+            current Axes.
         figsize : tuple, optional
             Width, height in inches. Format: (float, float).
-        lineplot_kwargs: dict, optional
-            Keyword arguments passed down to the `seaborn.lineplot` method.
-        plot_kwargs: dict, optional
-            Keyword arguments passed down to the `matplotlib.axes.Axes.plot`
+        kwargs: dict, optional
+            Keyword arguments that are passed down to either the
+            `seaborn.lineplot` method or the `matplotlib.axes.Axes.plot`
             method.
 
         Returns
@@ -190,25 +186,28 @@ class CovFrame:
 
         .. plot::
 
-            from fuc import pycov
-            import numpy as np
-            data = {
-                'Chromosome': ['chr1'] * 1000,
-                'Position': np.arange(1000, 2000),
-                'Steven': np.random.normal(35, 5, 1000),
-                'Jane': np.random.normal(25, 7, 1000)
-            }
-            cf = pycov.CovFrame.from_dict(data)
-            cf.plot()
+            >>> from fuc import pycov
+            >>> import numpy as np
+            >>> data = {
+            ...    'Chromosome': ['chr1'] * 1000,
+            ...    'Position': np.arange(1000, 2000),
+            ...    'Steven': np.random.normal(35, 5, 1000),
+            ...    'Jane': np.random.normal(25, 7, 1000)
+            ... }
+            >>> cf = pycov.CovFrame.from_dict(data)
+            >>> cf.plot()
         """
         if names is None:
             names = self.samples
+        if isinstance(names, str):
+            names = [names]
         headers = ['Position'] + names
         df = self.df[headers]
         df = df.set_index('Position')
-        if lineplot_kwargs is None:
-            lineplot_kwargs = {}
+        if kwargs is None:
+            kwargs = {}
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
-        sns.lineplot(data=df, ax=ax, **lineplot_kwargs)
+        sns.lineplot(data=df, ax=ax, **kwargs)
+        ax.set_ylabel('Depth')
         return ax
