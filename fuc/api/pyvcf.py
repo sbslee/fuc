@@ -631,7 +631,7 @@ class VcfFrame:
         Returns
         -------
         VcfFrame
-            VcfFrame
+            VcfFrame.
 
         See Also
         --------
