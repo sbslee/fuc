@@ -83,62 +83,68 @@ Your contributions (e.g. feature ideas, pull requests) are most welcome.
 CLI Examples
 ============
 
-To find intersection between BED files:
+* To print the header of a BAM file:
 
-.. code-block:: console
+    .. code-block:: console
 
-   $ fuc bed_intxn 1.bed 2.bed 3.bed > intersect.bed
+       $ fuc bam_head example.bam
 
-To merge two tab-delimited files:
+* To find intersection between BED files:
 
-.. code-block:: console
+    .. code-block:: console
 
-   $ fuc tbl_merge left.txt right.txt > merged.txt
+       $ fuc bed_intxn 1.bed 2.bed 3.bed > intersect.bed
 
-To check whether a file exists in the operating system:
+* To count sequence reads in a FASTQ file:
 
-.. code-block:: console
+    .. code-block:: console
 
-   $ fuc fuc_exist example.txt
+       $ fuc fq_count example.fastq
 
-To find all VCF files within the current directory recursively:
+* To check whether a file exists in the operating system:
 
-.. code-block:: console
+    .. code-block:: console
 
-   $ fuc fuc_find . vcf
+       $ fuc fuc_exist example.txt
 
-To count sequence reads in a FASTQ file:
+* To find all VCF files within the current directory recursively:
 
-.. code-block:: console
+    .. code-block:: console
 
-   $ fuc fq_count example.fastq
+       $ fuc fuc_find . vcf
 
-To merge VCF files:
+* To merge two tab-delimited files:
 
-.. code-block:: console
+    .. code-block:: console
 
-   $ fuc vcf_merge 1.vcf 2.vcf 3.vcf > merged.vcf
+       $ fuc tbl_merge left.txt right.txt > merged.txt
+
+* To merge VCF files:
+
+    .. code-block:: console
+
+       $ fuc vcf_merge 1.vcf 2.vcf 3.vcf > merged.vcf
 
 API Examples
 ============
 
-To filter a VCF file based on a BED file:
+* To filter a VCF file based on a BED file:
 
-.. code:: python3
+    .. code:: python3
 
-   >>> from fuc import pyvcf
-   >>> vf = pyvcf.read_file('original.vcf')
-   >>> filtered_vf = vf.filter_bed('targets.bed')
-   >>> filtered_vf.to_file('filtered.vcf')
+       >>> from fuc import pyvcf
+       >>> vf = pyvcf.read_file('original.vcf')
+       >>> filtered_vf = vf.filter_bed('targets.bed')
+       >>> filtered_vf.to_file('filtered.vcf')
 
-To remove indels from a VCF file:
+* To remove indels from a VCF file:
 
-.. code:: python3
+    .. code:: python3
 
-   >>> from fuc import pyvcf
-   >>> vf = pyvcf.read_file('with_indels.vcf')
-   >>> filtered_vf = vf.filter_indel()
-   >>> filtered_vf.to_file('no_indels.vcf')
+       >>> from fuc import pyvcf
+       >>> vf = pyvcf.read_file('with_indels.vcf')
+       >>> filtered_vf = vf.filter_indel()
+       >>> filtered_vf.to_file('no_indels.vcf')
 
 Installation
 ============
@@ -176,7 +182,7 @@ Finally, you can clone the GitHub repository and then install fuc this way:
    $ cd fuc
    $ pip install .
 
-The nice thing about this approach is that you will have access to a development version that's not available in Anaconda or PyPI.
+The nice thing about this approach is that you will have access to a development version that's not available in Anaconda or PyPI. That is, you can access a development branch with the ``git checkout`` command.
 
 Getting Help
 ============

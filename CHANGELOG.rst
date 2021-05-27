@@ -7,7 +7,7 @@ Changelog
 * Add ``pysam`` package as dependency for working with BAM files.
 * Add new submodules ``pybam`` and ``pycov``.
 * Rename the commands (e.g. ``vfmerge`` to ``vcf_merge``).
-* Add new commands: ``bam_head``, ``bam_rename``, and `bam_slice`.
+* Add new commands ``bam_head/index/rename/slice``.
 
 0.7.0 (2021-05-23)
 ------------------

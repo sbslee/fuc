@@ -1,8 +1,12 @@
 """
 The pycov submodule is designed for working with depth of coverage data
-from BAM files. It implements the ``pycov.CovFrame`` class which stores read
-depth data as ``pandas.DataFrame`` to allow fast computation and easy
-manipulation.
+from sequence alingment files (i.e. SAM, BAM, and CRAM). It implements
+the ``pycov.CovFrame`` class which stores read depth data as
+``pandas.DataFrame`` to allow fast computation and easy manipulation.
+Although the documentation for pycov will primarily focus on the BAM format
+-- partly to avoid redundancy in explanations and partly because of its
+popularity compared to other formats, please note that you can still use
+the submodule to work with the SAM and CRAM formats as well.
 """
 
 import pysam
@@ -13,7 +17,7 @@ from . import pybam
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-def read_file(fn, zero=False, region=None, map_qual=None):
+def read_file(fn, zero=False, region=None, map_qual=None, names=None):
     """Create CovFrame from one or more BAM files.
 
     This method essentially wraps the ``samtools depth`` command.
@@ -25,11 +29,12 @@ def read_file(fn, zero=False, region=None, map_qual=None):
     zero : bool, default: False
         If True, output all positions (including those with zero depth).
     region : str, optional
-        If provided, only report depth in specified region (format:
-        CHR:FROM-TO).
+        Only report depth in specified region (format: CHR:FROM-TO).
     map_qual: int, optional
-        If provided, only count reads with mapping quality greater than or
-        equal to this number.
+        Only count reads with mapping quality greater than orequal to
+        this number.
+    names : list, optional
+        Use these as sample names instead of the SM tags.
 
     Returns
     -------
@@ -38,6 +43,7 @@ def read_file(fn, zero=False, region=None, map_qual=None):
 
     Examples
     --------
+
     >>> from fuc import pycov
     >>> cf = pycov.read_file(bam)
     >>> cf = pycov.read_file([bam1, bam2])
@@ -54,19 +60,23 @@ def read_file(fn, zero=False, region=None, map_qual=None):
     if region is not None:
         args += ['-r', region]
     if map_qual is not None:
-        args += ['-Q', map_qual]
+        args += ['-Q', str(map_qual)]
     args += bam_files
     s = pysam.depth(*args)
-    names = ['Chromosome', 'Position']
+    headers = ['Chromosome', 'Position']
     dtype = {'Chromosome': str,'Position': np.int32}
-    for bam_file in bam_files:
-        samples = pybam.tag_sm(bam_file)
-        if len(samples) > 1:
-            raise ValueError(f'multiple sample names detected: {bam_file}')
-        names.append(samples[0])
-        dtype[samples[0]] = np.int32
+    for i, bam_file in enumerate(bam_files):
+        if names:
+            name = names[i]
+        else:
+            samples = pybam.tag_sm(bam_file)
+            if len(samples) > 1:
+                raise ValueError(f'multiple sample names detected: {bam_file}')
+            name = samples[0]
+        headers.append(name)
+        dtype[name] = np.int32
     df = pd.read_csv(StringIO(s), sep='\t', header=None,
-                     names=names, dtype=dtype)
+                     names=headers, dtype=dtype)
     return CovFrame(df)
 
 class CovFrame:
@@ -140,6 +150,7 @@ class CovFrame:
 
         Examples
         --------
+
         >>> import numpy as np
         >>> from fuc import pycov
         >>> data = {
@@ -205,11 +216,11 @@ class CovFrame:
         """
         cf = self.slice(chrom, start=start, end=end)
         if names is None:
-            names = self.samples
+            names = cf.samples
         if isinstance(names, str):
             names = [names]
         headers = ['Position'] + names
-        df = self.df[headers]
+        df = cf.df[headers]
         df = df.set_index('Position')
         if kwargs is None:
             kwargs = {}
@@ -255,7 +266,6 @@ class CovFrame:
         3       chr2      1503  29.047738  17.589284
         4       chr2      1504  41.343270  26.612494
         """
-
         df = self.df[self.df.Chromosome == chrom]
         if start:
             df = df[df.Position >= start]
