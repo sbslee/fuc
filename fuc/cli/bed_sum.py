@@ -1,9 +1,8 @@
-from fuc.api.common import get_script_name
-from fuc import pybed
+from .. import api
 
 def create_parser(subparsers):
     parser = subparsers.add_parser(
-        get_script_name(__file__),
+        api.common.script_name(__file__),
         help='[BED] summarize a BED file',
         description='This command will compute summary statstics of the '
             'BED file. This includes the total numbers of probes and '
@@ -18,7 +17,7 @@ def create_parser(subparsers):
         help='maximum number of decimals (default: 0)')
 
 def main(args):
-    bf = pybed.read_file(args.bed_file)
+    bf = api.pybed.read_file(args.bed_file)
     chrom_dict = {}
     total = [0, 0]
     for i, r in bf.gr.df.iterrows():

@@ -1,11 +1,11 @@
+from .. import api
 import pandas as pd
-from fuc.api.common import get_script_name
 
 CHOICES = ['left', 'right', 'outer', 'inner', 'cross']
 
 def create_parser(subparsers):
     parser = subparsers.add_parser(
-        get_script_name(__file__),
+        api.common.script_name(__file__),
         help='[TABLE] merge two table files',
         description='This command will merge two table files using one '
                     'or more shared columns. This essentially wraps the '

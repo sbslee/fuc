@@ -12,6 +12,7 @@ dependencies:
   - numpy
   - pandas
   - pyranges
+  - pysam
   - seaborn
   - sphinx-issues
   - sphinx_rtd_theme

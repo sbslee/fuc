@@ -1,6 +1,14 @@
 Changelog
 *********
 
+0.8.0 (2021-05-27)
+------------------
+
+* Add ``pysam`` package as dependency for working with SAM/BAM/CRAM files.
+* Add new submodules ``pybam`` and ``pycov``.
+* Rename the commands (e.g. ``vfmerge`` to ``vcf_merge``).
+* Add new commands ``bam_head/index/rename/slice``.
+
 0.7.0 (2021-05-23)
 ------------------
 

@@ -1,9 +1,9 @@
 """
-The pyvcf submodule is designed for working with Variant Call Format (VCF)
-files (both zipped and unzipped). It implements ``pyvcf.VcfFrame`` which
-stores VCF data as ``pandas.DataFrame`` to allow fast computation and easy
-manipulation. The submodule strictly adheres to the standard `VCF
-specification <https://samtools.github.io/hts-specs/VCFv4.3.pdf>`_.
+The pyvcf submodule is designed for working with VCF files (both zipped and
+unzipped). It implements the ``pyvcf.VcfFrame`` class which stores VCF data
+as ``pandas.DataFrame`` to allow fast computation and easy manipulation. The
+submodule strictly adheres to the standard `VCF specification
+<https://samtools.github.io/hts-specs/VCFv4.3.pdf>`_.
 
 A VCF file contains metadata lines (prefixed with '##'), a header line
 (prefixed with '#'), and genotype lines that begin with a chromosome
@@ -81,6 +81,7 @@ def gt_haspolyp(g):
 
     Examples
     --------
+    >>> from fuc import pyvcf
     >>> pyvcf.gt_haspolyp('0/1')
     False
     >>> pyvcf.gt_haspolyp('1')
@@ -115,6 +116,7 @@ def gt_hasvar(g):
     --------
     Below are some simple examples:
 
+    >>> from fuc import pyvcf
     >>> pyvcf.gt_hasvar('0/1:35:4')
     True
     >>> pyvcf.gt_hasvar('0/0:61:2')
@@ -147,6 +149,7 @@ def gt_missing(g):
     --------
     Below are some simple examples:
 
+    >>> from fuc import pyvcf
     >>> pyvcf.gt_missing('0|0:48:1:51,51')
     False
     >>> pyvcf.gt_missing('./.:.:.')
@@ -175,6 +178,7 @@ def gt_unphase(g):
     --------
     Below are some simple examples:
 
+    >>> from fuc import pyvcf
     >>> pyvcf.gt_unphase('1|2:21:6:23,27')
     '1/2:21:6:23,27'
     >>> pyvcf.gt_unphase('2|1:2:0:18,2')
@@ -219,6 +223,7 @@ def merge(vfs, how='inner', format='GT', sort=True, collapse=False):
     --------
     Assume we have the following data:
 
+    >>> from fuc import pyvcf
     >>> data1 = {
     ...     'CHROM': ['chr1', 'chr1'],
     ...     'POS': [100, 101],
@@ -306,6 +311,8 @@ def read_file(fn, compression=False):
 
     Examples
     --------
+
+    >>> from fuc import pyvcf
     >>> pyvcf.read_file('example.vcf')
     >>> pyvcf.read_file('example.vcf.gz')
     >>> pyvcf.read_file('example.vcf.gz', compression=True)
@@ -344,6 +351,7 @@ def row_hasindel(r):
     Examples
     --------
 
+    >>> from fuc import pyvcf
     >>> data = {
     ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1'],
     ...     'POS': [100, 101, 102, 103],
@@ -392,6 +400,7 @@ def row_parseinfo(r, key):
     Examples
     --------
 
+    >>> from fuc import pyvcf
     >>> data = {
     ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1'],
     ...     'POS': [100, 101, 102, 103],
@@ -444,6 +453,7 @@ def row_updateinfo(r, key, value):
     Examples
     --------
 
+    >>> from fuc import pyvcf
     >>> data = {
     ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1'],
     ...     'POS': [100, 101, 102, 103],
@@ -493,6 +503,7 @@ def row_missval(r):
     Examples
     --------
 
+    >>> from fuc import pyvcf
     >>> data = {
     ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chrX'],
     ...     'POS': [100, 101, 102, 100],
@@ -550,6 +561,8 @@ class VcfFrame:
     --------
     Constructing VcfFrame from pandas DataFrame:
 
+    >>> from fuc import pyvcf
+    >>> import pandas as pd
     >>> data = {
     ...     'CHROM': ['chr1', 'chr1', 'chr1'],
     ...     'POS': [100, 101, 102],
@@ -629,6 +642,7 @@ class VcfFrame:
         --------
         Below is a simple example:
 
+        >>> from fuc import pyvcf
         >>> data = {
         ...     'CHROM': ['chr1', 'chr2'],
         ...     'POS': [100, 101],
@@ -675,6 +689,7 @@ class VcfFrame:
         --------
         Assume we have the following data:
 
+        >>> from fuc import pyvcf
         >>> data = {
         ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1'],
         ...     'POS': [100, 101, 102, 103],
@@ -787,6 +802,7 @@ class VcfFrame:
         --------
         Assume we have the following data:
 
+        >>> from fuc import pyvcf
         >>> data = {
         ...     'CHROM': ['chr1', 'chr1', 'chr2', 'chr2'],
         ...     'POS': [100, 100, 200, 200],
@@ -917,6 +933,7 @@ class VcfFrame:
         --------
         Assume we have the following data:
 
+        >>> from fuc import pyvcf
         >>> data = {
         ...     'CHROM': ['chr1', 'chr1', 'chr1'],
         ...     'POS': [100, 101, 102],
@@ -990,6 +1007,7 @@ class VcfFrame:
         Examples
         --------
 
+        >>> from fuc import pyvcf
         >>> data = {
         ...     'CHROM': ['chr1', 'chr2'],
         ...     'POS': [100, 101],
@@ -1025,6 +1043,7 @@ class VcfFrame:
         Examples
         --------
 
+        >>> from fuc import pyvcf
         >>> data = {
         ...     'CHROM': ['chr1', 'chr2'],
         ...     'POS': [100, 101],
@@ -1102,6 +1121,7 @@ class VcfFrame:
         --------
         Assume we have the following data:
 
+        >>> from fuc import pyvcf
         >>> data1 = {
         ...     'CHROM': ['chr1', 'chr1'],
         ...     'POS': [100, 101],
@@ -1209,6 +1229,7 @@ class VcfFrame:
         --------
         Assume we have the following data:
 
+        >>> from fuc import pyvcf
         >>> data = {
         ...     'CHROM': ['chr1', 'chr1', 'chr2', 'chr2'],
         ...     'POS': [100, 100, 200, 200],
@@ -1284,6 +1305,7 @@ class VcfFrame:
         --------
         Assume we have the following data:
 
+        >>> from fuc import pyvcf
         >>> data = {
         ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1'],
         ...     'POS': [100, 101, 102, 103],
@@ -1390,6 +1412,7 @@ class VcfFrame:
         --------
         Assume we have the following data:
 
+        >>> from fuc import pyvcf
         >>> data = {
         ...     'CHROM': ['chr1', 'chr1'],
         ...     'POS': [100, 101],
@@ -1491,6 +1514,7 @@ class VcfFrame:
         --------
         Assume we have the following data:
 
+        >>> from fuc import pyvcf
         >>> data = {
         ...     'CHROM': ['chr1', 'chr1'],
         ...     'POS': [100, 101],
@@ -1592,6 +1616,7 @@ class VcfFrame:
         --------
         Assume we have the following data:
 
+        >>> from fuc import pyvcf
         >>> data = {
         ...     'CHROM': ['chr1', 'chr1'],
         ...     'POS': [100, 101],
@@ -1682,6 +1707,7 @@ class VcfFrame:
         --------
         Assume we have the following data:
 
+        >>> from fuc import pybed, pyvcf
         >>> data = {
         ...     'Chromosome': ['chr1', 'chr2', 'chr3'],
         ...     'Start': [100, 400, 100],
@@ -1769,6 +1795,7 @@ class VcfFrame:
         --------
         Assume we have the following data:
 
+        >>> from fuc import pyvcf
         >>> data = {
         ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1'],
         ...     'POS': [100, 101, 102, 103],
@@ -1841,6 +1868,7 @@ class VcfFrame:
         --------
         Assume we have the following data:
 
+        >>> from fuc import pyvcf
         >>> data = {
         ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1'],
         ...     'POS': [100, 101, 102, 103],
@@ -1918,6 +1946,7 @@ class VcfFrame:
         --------
         Assume we have the following data:
 
+        >>> from fuc import pyvcf
         >>> data = {
         ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1'],
         ...     'POS': [100, 101, 102, 103],
@@ -1998,6 +2027,7 @@ class VcfFrame:
         --------
         Assume we have the following data:
 
+        >>> from fuc import pyvcf
         >>> data = {
         ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1'],
         ...     'POS': [100, 101, 102, 103],
@@ -2071,6 +2101,7 @@ class VcfFrame:
 
         Assume we have the following data:
 
+        >>> from fuc import pyvcf
         >>> data = {
         ...     'CHROM': ['chr1', 'chr1', 'chr2', 'chr2'],
         ...     'POS': [100, 100, 200, 200],
@@ -2141,6 +2172,7 @@ class VcfFrame:
         --------
         Assume we have the following data:
 
+        >>> from fuc import pyvcf
         >>> data = {
         ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1'],
         ...     'POS': [100, 101, 102, 103],
@@ -2211,6 +2243,7 @@ class VcfFrame:
         --------
         Assume we have the following data:
 
+        >>> from fuc import pyvcf
         >>> data = {
         ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1'],
         ...     'POS': [100, 101, 102, 103],
@@ -2279,6 +2312,7 @@ class VcfFrame:
         --------
         Assume we have the following data:
 
+        >>> from fuc import pyvcf
         >>> data = {
         ...     'CHROM': ['chr1', 'chr1', 'chr2', 'chr2'],
         ...     'POS': [100, 100, 200, 200],
@@ -2359,6 +2393,7 @@ class VcfFrame:
         --------
         Assume we have the following data:
 
+        >>> from fuc import pyvcf
         >>> data = {
         ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1'],
         ...     'POS': [100, 101, 102, 103],
@@ -2454,6 +2489,7 @@ class VcfFrame:
         --------
         Assume we have the following data:
 
+        >>> from fuc import pyvcf
         >>> data = {
         ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1'],
         ...     'POS': [100, 101, 102, 103],
@@ -2540,6 +2576,7 @@ class VcfFrame:
         --------
         Assume we have the following data:
 
+        >>> from fuc import pyvcf
         >>> data = {
         ...     'CHROM': ['chr1', 'chr1', 'chr1'],
         ...     'POS': [100, 101, 102],
@@ -2626,6 +2663,7 @@ class VcfFrame:
         --------
         Assume we have the following data:
 
+        >>> from fuc import pyvcf
         >>> data = {
         ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1'],
         ...     'POS': [100, 101, 102, 103],
@@ -2686,6 +2724,7 @@ class VcfFrame:
         --------
         Assume we have the following data:
 
+        >>> from fuc import pyvcf
         >>> data = {
         ...     'CHROM': ['chr10', 'chr2', 'chr1', 'chr2'],
         ...     'POS': [100, 101, 102, 90],
@@ -2742,6 +2781,7 @@ class VcfFrame:
         --------
         Assume we have the following data:
 
+        >>> from fuc import pyvcf
         >>> data = {
         ...     'CHROM': ['chr1', 'chr1'],
         ...     'POS': [100, 101],
@@ -2795,6 +2835,7 @@ class VcfFrame:
         --------
         Assume we have the following data:
 
+        >>> from fuc import pyvcf
         >>> data = {
         ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1'],
         ...     'POS': [100, 101, 102, 103],
@@ -2832,7 +2873,7 @@ class VcfFrame:
         return vf
 
     def slice(self, chrom, start=None, end=None):
-        """Slice the VcfFrame for the given region.
+        """Return a sliced VcfFrame for the given region.
 
         Parameters
         ----------
@@ -2851,6 +2892,7 @@ class VcfFrame:
         Examples
         --------
 
+        >>> from fuc import pyvcf
         >>> data = {
         ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr2'],
         ...     'POS': [100, 205, 297, 101],
@@ -2884,10 +2926,9 @@ class VcfFrame:
         0  chr1  100  .   G   A    .      .    .     GT    0/1
         1  chr1  205  .   T   C    .      .    .     GT    1/1
         """
-        i = (self.df.CHROM == chrom)
+        df = self.df[self.df.CHROM == chrom]
         if start:
-            i = i & (start <= self.df.POS)
+            df = df[df.POS >= start]
         if end:
-            i = i & (self.df.POS <= end)
-        df = self.df[i]
+            df = df[df.POS <= end]
         return self.__class__(self.copy_meta(), df)

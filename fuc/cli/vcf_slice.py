@@ -1,9 +1,8 @@
-from fuc.api.common import get_script_name
-from fuc import pyvcf
+from .. import api
 
 def create_parser(subparsers):
     parser = subparsers.add_parser(
-        get_script_name(__file__),
+        api.common.script_name(__file__),
         help='[VCF] slice a VCF file',
         description='This command will slice a VCF file (both zipped '
                     'and unzipped).'
@@ -16,6 +15,6 @@ def create_parser(subparsers):
         help='end position')
 
 def main(args):
-    vf = pyvcf.read_file(args.vcf_file)
+    vf = api.pyvcf.read_file(args.vcf_file)
     sliced_vf = vf.slice(args.chrom, start=args.start, end=args.end)
     print(sliced_vf.to_string())

@@ -33,17 +33,14 @@ extensions = [
     'sphinx.ext.linkcode',
     'sphinx_rtd_theme',
     'sphinx_issues',
-    'autodocsumm'
+    'autodocsumm',
+    'matplotlib.sphinxext.plot_directive'
 ]
 
 autodoc_mock_imports = [
     'Bio',
     'lxml',
-    'matplotlib',
-    'numpy',
-    'pandas',
     'pyranges',
-    'seaborn',
 ]
 
 autodoc_default_options = {
@@ -51,6 +48,12 @@ autodoc_default_options = {
 }
 
 issues_github_path = 'sbslee/fuc'
+
+# Include the example source for plots in API docs
+plot_include_source = True
+plot_formats = [('png', 90)]
+plot_html_show_formats = False
+plot_html_show_source_link = False
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
