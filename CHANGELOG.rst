@@ -1,8 +1,8 @@
 Changelog
 *********
 
-0.8.0 (in development)
-----------------------
+0.8.0 (2021-05-27)
+------------------
 
 * Add ``pysam`` package as dependency for working with BAM files.
 * Add new submodules ``pybam`` and ``pycov``.

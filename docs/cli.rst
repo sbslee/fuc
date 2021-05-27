@@ -19,6 +19,7 @@ For getting help on CLI:
    positional arguments:
      COMMAND        name of the command
        bam_head     [BAM] print the header of a BAM file
+       bam_index    [BAM] index a BAM file
        bam_rename   [BAM] add a new sample name to a BAM file
        bam_slice    [BAM] slice a BAM file
        bed_intxn    [BED] find intersection of two or more BED files
@@ -53,6 +54,22 @@ bam_head
    usage: fuc bam_head [-h] bam_file
    
    This command will print the header of a BAM file.
+   
+   positional arguments:
+     bam_file    BAM file
+   
+   optional arguments:
+     -h, --help  show this help message and exit
+
+bam_index
+=========
+
+.. code-block:: console
+
+   $ fuc bam_index -h
+   usage: fuc bam_index [-h] bam_file
+   
+   This command will index a BAM file.
    
    positional arguments:
      bam_file    BAM file
