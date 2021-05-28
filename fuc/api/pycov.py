@@ -207,8 +207,9 @@ class CovFrame:
 
         .. plot::
 
-            >>> from fuc import pycov
+            >>> import matplotlib.pyplot as plt
             >>> import numpy as np
+            >>> from fuc import pycov
             >>> data = {
             ...    'Chromosome': ['chr1'] * 1000,
             ...    'Position': np.arange(1000, 2000),
@@ -217,6 +218,7 @@ class CovFrame:
             ... }
             >>> cf = pycov.CovFrame.from_dict(data)
             >>> cf.plot('chr1')
+            >>> plt.tight_layout()
         """
         cf = self.slice(chrom, start=start, end=end)
         if names is None:

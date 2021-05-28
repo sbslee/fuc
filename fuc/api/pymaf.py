@@ -60,6 +60,18 @@ class MafFrame:
         -------
         matplotlib.axes.Axes
             The matplotlib axes containing the plot.
+
+        Examples
+        --------
+
+        .. plot::
+
+            >>> import matplotlib.pyplot as plt
+            >>> from fuc import common, pymaf
+            >>> common.load_dataset('tcga-laml')
+            >>> mf = pymaf.MafFrame.from_file('~/fuc-data/tcga-laml/tcga_laml.maf.gz')
+            >>> mf.plot_varcls()
+            >>> plt.tight_layout()
         """
         df = self.df.Variant_Classification.value_counts().to_frame()
         if ax is None:

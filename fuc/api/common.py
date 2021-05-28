@@ -6,7 +6,10 @@ bioinformatics.
 
 import pathlib
 import re
+import os
 from difflib import SequenceMatcher
+from urllib.request import urlretrieve
+from pathlib import Path
 
 def script_name(fn):
     """Return the script name."""
@@ -45,3 +48,21 @@ def sumstat(fp, fn, tp, tn):
         'acc': (tp + tn) / (tp + tn + fp + fn),
     }
     return d
+
+def load_dataset(name):
+    home_dir = str(Path.home()) + '/fuc-data'
+    data_dir = f'{home_dir}/{name}'
+    if not os.path.exists(home_dir):
+        os.makedirs(home_dir)
+    if not os.path.exists(data_dir):
+        os.makedirs(data_dir)
+    datasets = {
+        'tcga-laml': [
+            'tcga_cohort.txt.gz',
+            'tcga_laml.maf.gz',
+            'tcga_laml_annot.tsv'
+        ]
+    }
+    base_url = ('https://raw.githubusercontent.com/sbslee/fuc-data/main')
+    for f in datasets[name]:
+        urlretrieve(f'{base_url}/{name}/{f}', f'{data_dir}/{f}')
