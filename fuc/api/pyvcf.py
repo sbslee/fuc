@@ -1,8 +1,8 @@
 """
-The pyvcf submodule is designed for working with VCF files (both zipped and
-unzipped). It implements the ``pyvcf.VcfFrame`` class which stores VCF data
-as ``pandas.DataFrame`` to allow fast computation and easy manipulation. The
-submodule strictly adheres to the standard `VCF specification
+The pyvcf submodule is designed for working with VCF files. It implements
+the ``pyvcf.VcfFrame`` class which stores VCF data as ``pandas.DataFrame``
+to allow fast computation and easy manipulation. The submodule strictly
+adheres to the standard `VCF specification
 <https://samtools.github.io/hts-specs/VCFv4.3.pdf>`_.
 
 A VCF file contains metadata lines (prefixed with '##'), a header line
@@ -631,7 +631,7 @@ class VcfFrame:
         Parameters
         ----------
         fn : str
-            Path to a zipped or unzipped VCF file.
+            VCF file path (zipped or unzipped).
         compression : bool, default: False
             If True, use the BGZF decompression regardless of file name.
 

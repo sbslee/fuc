@@ -1,7 +1,7 @@
 """
-The pyfq submodule is designed for working with FASTQ files (both zipped
-and unzipped). It implements the ``pyfq.FqFrame`` class which stores FASTQ
-data as ``pandas.DataFrame`` to allow fast computation and easy manipulation.
+The pyfq submodule is designed for working with FASTQ files. It implements
+the ``pyfq.FqFrame`` class which stores FASTQ data as ``pandas.DataFrame``
+to allow fast computation and easy manipulation.
 """
 
 import gzip
@@ -35,7 +35,7 @@ class FqFrame:
         Parameters
         ----------
         fn : str
-            Path to a zipped or unzipped FASTQ file.
+            FASTQ file path (zipped or unzipped).
 
         Returns
         -------
