@@ -195,7 +195,7 @@ class CovFrame:
         figsize : tuple, optional
             Width, height in inches. Format: (float, float).
         kwargs: dict, optional
-            Keyword arguments passed down to the `seaborn.lineplot` method.
+            Keyword arguments passed down to the ``seaborn.lineplot`` method.
 
         Returns
         -------
