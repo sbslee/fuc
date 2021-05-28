@@ -14,7 +14,7 @@ class FqFrame:
 
     @property
     def shape(self):
-        """Return the size of the FqFrame."""
+        """int : Number of sequence reads in the FqFrame."""
         return self.df.shape
 
     def to_file(self, file_path):

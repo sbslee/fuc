@@ -49,7 +49,16 @@ def sumstat(fp, fn, tp, tn):
     }
     return d
 
-def load_dataset(name):
+def load_dataset(name, force=False):
+    """Load an example dataset from the online repository (requires internet).
+
+    Parameters
+    ----------
+    name : str
+        Name of the dataset in https://github.com/sbslee/fuc-data.
+    force : bool, default: False
+        If True, overwrite the existing files.
+    """
     home_dir = str(Path.home()) + '/fuc-data'
     data_dir = f'{home_dir}/{name}'
     if not os.path.exists(home_dir):
@@ -65,4 +74,15 @@ def load_dataset(name):
     }
     base_url = ('https://raw.githubusercontent.com/sbslee/fuc-data/main')
     for f in datasets[name]:
-        urlretrieve(f'{base_url}/{name}/{f}', f'{data_dir}/{f}')
+        file_url = f'{base_url}/{name}/{f}'
+        file_path = f'{data_dir}/{f}'
+        download = False
+        if force:
+            download = True
+        else:
+            if os.path.exists(file_path):
+                pass
+            else:
+                download = True
+        if download:
+            urlretrieve(file_url, file_path)

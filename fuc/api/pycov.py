@@ -61,7 +61,7 @@ class CovFrame:
 
     @property
     def shape(self):
-        """Return the size of the CovFrame."""
+        """Return the size of CovFrame."""
         return self.df.shape
 
     @classmethod
@@ -174,11 +174,11 @@ class CovFrame:
                          names=headers, dtype=dtype)
         return cls(df)
 
-    def plot(
-        self, chrom, start=None, end=None, names=None, ax=None, figsize=None,
-        kwargs=None
+    def plot_region(
+        self, chrom, start=None, end=None, names=None, ax=None,
+        figsize=None, **kwargs
     ):
-        """Plot read depth profile for all or selected samples.
+        """Create a read depth profile for the given region.
 
         Parameters
         ----------
@@ -194,8 +194,9 @@ class CovFrame:
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
             Width, height in inches. Format: (float, float).
-        kwargs: dict, optional
-            Keyword arguments passed down to the ``seaborn.lineplot`` method.
+        kwargs : key, value mappings
+            Other keyword arguments will be passed down to
+            :meth:`matplotlib.axes.Axes.plot` and :meth:`seaborn.lineplot`.
 
         Returns
         -------
@@ -217,7 +218,7 @@ class CovFrame:
             ...    'Jane': np.random.normal(25, 7, 1000)
             ... }
             >>> cf = pycov.CovFrame.from_dict(data)
-            >>> cf.plot('chr1')
+            >>> cf.plot_region('chr1')
             >>> plt.tight_layout()
         """
         cf = self.slice(chrom, start=start, end=end)

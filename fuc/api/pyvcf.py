@@ -565,12 +565,12 @@ class VcfFrame:
 
     @property
     def samples(self):
-        """list : List of the sample IDs."""
+        """list : List of the sample names."""
         return self.df.columns[9:].to_list()
 
     @property
     def shape(self):
-        """tuple : Tuple representing the dimensionality of the VcfFrame."""
+        """tuple : Dimensionality of VcfFrame (variants, samples)."""
         return (self.df.shape[0], len(self.samples))
 
     @classmethod
