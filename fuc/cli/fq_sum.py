@@ -12,7 +12,7 @@ def create_parser(subparsers):
     parser.add_argument('fastq_file', help='input FASTQ file')
 
 def main(args):
-    qf = api.pyfq.read_file(args.fastq_file)
+    qf = api.pyfq.FqFrame.from_file(args.fastq_file)
     print(f'# Total: {qf.shape[0]:,}')
     unique = qf.df.SEQ.nunique()
     duplicate = qf.shape[0] - unique

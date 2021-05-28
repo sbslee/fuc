@@ -64,7 +64,7 @@ class TestPybed(unittest.TestCase):
 class TestPyfq(unittest.TestCase):
 
     def test_shape(self):
-        qf = pyfq.read_file(f'{fuc_dir}/data/fq/1.fastq')
+        qf = pyfq.FqFrame.from_file(f'{fuc_dir}/data/fq/1.fastq')
         self.assertEqual(qf.shape, (5, 4))
 
 class TestCli(unittest.TestCase):

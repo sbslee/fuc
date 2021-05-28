@@ -22,5 +22,5 @@ def main(args):
     else:
         raise ValueError('no input files detected')
     for path in paths:
-        qf = api.pyfq.read_file(path)
+        qf = api.pyfq.FqFrame.from_file(path)
         print(qf.df.shape[0])
