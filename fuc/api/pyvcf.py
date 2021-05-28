@@ -1782,8 +1782,7 @@ class VcfFrame:
             i = ~i
         if index:
             return i
-        vf = self.__class__(self.copy_meta(), self.df[i])
-        return vf
+        return self.__class__(self.copy_meta(), self.df[i])
 
     def filter_empty(self, opposite=False, index=False):
         """Remove rows with no genotype calls at all.

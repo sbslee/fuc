@@ -39,6 +39,15 @@ VARCLS = {
     'lincRNA': {'NONSYN': False},
 }
 
+SNVCLS = {
+    'A>G': 'T>C', 'T>C': 'T>C',
+    'C>T': 'C>T', 'G>A': 'C>T',
+    'A>T': 'T>A', 'T>A': 'T>A',
+    'A>C': 'T>G', 'T>G': 'T>G',
+    'C>A': 'C>A', 'G>T': 'C>A',
+    'C>G': 'C>G', 'G>C': 'C>G'
+}
+
 class MafFrame:
     """Class for storing MAF data.
 
@@ -70,11 +79,28 @@ class MafFrame:
         """list : List of the genes."""
         return list(self.df.Hugo_Symbol.unique())
 
-    def filter_nonsyn(self):
-        """Filter non synonymous variants."""
+    def filter_nonsyn(self, opposite=False, index=False):
+        """Select rows with a nonsynonymous variant.
+
+        Parameters
+        ----------
+        opposite : bool, default: False
+            If True, return rows that don't meet the said criteria.
+        index : bool, default: False
+            If True, return boolean index array instead of MafFrame.
+
+        Returns
+        -------
+        MafFrame or pandas.Series
+            Filtered MafFrame or boolean index array.
+        """
         nonsyn_list = [k for k, v in VARCLS.items() if v['NONSYN']]
-        f = lambda r: r.Variant_Classification in nonsyn_list
-        i = self.df.apply(f, axis=1)
+        one_row = lambda r: r.Variant_Classification in nonsyn_list
+        i = self.df.apply(one_row, axis=1)
+        if opposite:
+            i = ~i
+        if index:
+            return i
         return self.__class__(self.df[i])
 
     @classmethod
@@ -227,8 +253,9 @@ class MafFrame:
                 len(ref) != 1 or
                 ref == alt):
                 return np.nan
-            return f'{ref}>{alt}'
+            return SNVCLS[f'{ref}>{alt}']
         s = self.df.apply(one_row, axis=1).value_counts()
+        s = s.reindex(index=['T>G', 'T>A', 'T>C', 'C>T', 'C>G', 'C>A'])
         df = s.to_frame().reset_index()
         df.columns = ['SNV', 'Count']
         if ax is None:
