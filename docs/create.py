@@ -133,7 +133,7 @@ API Examples
     .. code:: python3
 
        >>> from fuc import pyvcf
-       >>> vf = pyvcf.read_file('original.vcf')
+       >>> vf = pyvcf.VcfFrame.from_file('original.vcf')
        >>> filtered_vf = vf.filter_bed('targets.bed')
        >>> filtered_vf.to_file('filtered.vcf')
 
@@ -142,7 +142,7 @@ API Examples
     .. code:: python3
 
        >>> from fuc import pyvcf
-       >>> vf = pyvcf.read_file('with_indels.vcf')
+       >>> vf = pyvcf.VcfFrame.from_file('with_indels.vcf')
        >>> filtered_vf = vf.filter_indel()
        >>> filtered_vf.to_file('no_indels.vcf')
 

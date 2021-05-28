@@ -291,50 +291,6 @@ def merge(vfs, how='inner', format='GT', sort=True, collapse=False):
             collapse=collapse)
     return merged_vf
 
-def read_file(fn, compression=False):
-    """Read a VCF file into VcfFrame.
-
-    If the file name ends with '.gz', the method will automatically use the
-    BGZF decompression when reading the file.
-
-    Parameters
-    ----------
-    fn : str
-        Path to a zipped or unzipped VCF file.
-    compression : bool, default: False
-        If True, use the BGZF decompression.
-
-    Returns
-    -------
-    VcfFrame
-        VcfFrame.
-
-    Examples
-    --------
-
-    >>> from fuc import pyvcf
-    >>> pyvcf.read_file('example.vcf')
-    >>> pyvcf.read_file('example.vcf.gz')
-    >>> pyvcf.read_file('example.vcf.gz', compression=True)
-    """
-    meta = []
-    skip_rows = 0
-    if fn.endswith('.gz') or compression:
-        f = bgzf.open(fn, 'rt')
-    else:
-        f = open(fn)
-    for line in f:
-        if line.startswith('##'):
-            meta.append(line.strip())
-            skip_rows += 1
-        else:
-            break
-    df = pd.read_table(fn, skiprows=skip_rows)
-    df = df.rename(columns={'#CHROM': 'CHROM'})
-    vf = VcfFrame(meta, df)
-    f.close()
-    return vf
-
 def row_hasindel(r):
     """Return True if the row has an indel.
 
@@ -554,8 +510,8 @@ class VcfFrame:
     --------
     VcfFrame.from_dict
         Construct VcfFrame from dict of array-like or dicts.
-    read_file
-        Read a VCF file into VcfFrame.
+    VcfFrame.from_file
+        Construct VcfFrame from a VCF file.
 
     Examples
     --------
@@ -662,6 +618,50 @@ class VcfFrame:
         1  chr2  101  .   T   C    .      .    .     GT    1/1
         """
         return cls(meta, pd.DataFrame(data))
+
+    @classmethod
+    def from_file(cls, fn, compression=False):
+        """Construct VcfFrame from a VCF file.
+
+        If the file name ends with '.gz', the method will automatically
+        use the BGZF decompression when reading the file.
+
+        Parameters
+        ----------
+        fn : str
+            Path to a zipped or unzipped VCF file.
+        compression : bool, default: False
+            If True, use the BGZF decompression.
+
+        Returns
+        -------
+        VcfFrame
+            VcfFrame.
+
+        Examples
+        --------
+
+        >>> from fuc import pyvcf
+        >>> pyvcf.VcfFrame.from_file('example.vcf')
+        >>> pyvcf.VcfFrame.from_file('example.vcf.gz')
+        >>> pyvcf.VcfFrame.from_file('example.vcf.gz', compression=True)
+        """
+        meta = []
+        skip_rows = 0
+        if fn.endswith('.gz') or compression:
+            f = bgzf.open(fn, 'rt')
+        else:
+            f = open(fn)
+        for line in f:
+            if line.startswith('##'):
+                meta.append(line.strip())
+                skip_rows += 1
+            else:
+                break
+        df = pd.read_table(fn, skiprows=skip_rows)
+        df = df.rename(columns={'#CHROM': 'CHROM'})
+        f.close()
+        return cls(meta, df)
 
     def compare(self, a, b, c=None):
         """Compare genotype data between Samples A & B or Samples A, B, & C.

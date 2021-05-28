@@ -15,6 +15,6 @@ def create_parser(subparsers):
         help='end position')
 
 def main(args):
-    vf = api.pyvcf.read_file(args.vcf_file)
+    vf = api.pyvcf.VcfFrame.from_file(args.vcf_file)
     sliced_vf = vf.slice(args.chrom, start=args.start, end=args.end)
     print(sliced_vf.to_string())

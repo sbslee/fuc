@@ -26,7 +26,7 @@ def create_parser(subparsers):
     )
 
 def main(args):
-    vfs = [api.pyvcf.read_file(x) for x in args.vcf_files]
+    vfs = [api.pyvcf.VcfFrame.from_file(x) for x in args.vcf_files]
     merged_vf = api.pyvcf.merge(vfs, format=args.format, how=args.how,
         sort=args.sort, collapse=args.collapse)
     print(merged_vf.to_string())

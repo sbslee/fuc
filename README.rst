@@ -105,7 +105,7 @@ API Examples
     .. code:: python3
 
        >>> from fuc import pyvcf
-       >>> vf = pyvcf.read_file('original.vcf')
+       >>> vf = pyvcf.VcfFrame.from_file('original.vcf')
        >>> filtered_vf = vf.filter_bed('targets.bed')
        >>> filtered_vf.to_file('filtered.vcf')
 
@@ -114,7 +114,7 @@ API Examples
     .. code:: python3
 
        >>> from fuc import pyvcf
-       >>> vf = pyvcf.read_file('with_indels.vcf')
+       >>> vf = pyvcf.VcfFrame.from_file('with_indels.vcf')
        >>> filtered_vf = vf.filter_indel()
        >>> filtered_vf.to_file('no_indels.vcf')
 
@@ -204,6 +204,7 @@ Below is the list of submodules available in API:
 - **pybed** : The pybed submodule is designed for working with BED files. It implements the ``pybed.BedFrame`` class which stores BED data as ``pandas.DataFrame`` via the `pyranges <https://github.com/biocore-ntnu/pyranges>`_ package to allow fast computation and easy manipulation. The submodule strictly adheres to the standard `BED specification <https://genome.ucsc.edu/FAQ/FAQformat.html>`_.
 - **pycov** : The pycov submodule is designed for working with depth of coverage data from sequence alingment files (i.e. SAM, BAM, and CRAM). It implements the ``pycov.CovFrame`` class which stores read depth data as ``pandas.DataFrame`` to allow fast computation and easy manipulation. Although the documentation for pycov will primarily focus on the BAM format, partly to avoid redundancy in explanations and partly because of its popularity compared to other formats, please note that you can still use the submodule to work with the SAM and CRAM formats as well.
 - **pyfq** : The pyfq submodule is designed for working with FASTQ files (both zipped and unzipped). It implements the ``pyfq.FqFrame`` class which stores FASTQ data as ``pandas.DataFrame`` to allow fast computation and easy manipulation.
+- **pymaf** : The pymaf submodule is designed for working with MAF files (both zipped and unzipped). It implements the ``pymaf.MafFrame`` class which stores MAF data as ``pandas.DataFrame`` to allow fast computation and easy manipulation.
 - **pysnpeff** : The pysnpeff submodule is designed for parsing VCF annotation data from the `SnpEff <https://pcingola.github.io/SnpEff/>`_ program. It is designed to be used with ``pyvcf.VcfFrame``.
 - **pyvcf** : The pyvcf submodule is designed for working with VCF files (both zipped and unzipped). It implements the ``pyvcf.VcfFrame`` class which stores VCF data as ``pandas.DataFrame`` to allow fast computation and easy manipulation. The submodule strictly adheres to the standard `VCF specification <https://samtools.github.io/hts-specs/VCFv4.3.pdf>`_.
 - **pyvep** : The pyvep submodule is designed for parsing VCF annotation data from the `Ensembl VEP <https://asia.ensembl.org/info/docs/tools/vep/index.html>`_. It is designed to be used with ``pyvcf.VcfFrame``.
