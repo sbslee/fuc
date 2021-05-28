@@ -28,7 +28,7 @@ class TestPyvcf(unittest.TestCase):
 
     def test_filter_bed(self):
         vf = pyvcf.VcfFrame.from_file(vcf_file1)
-        bf = pybed.read_file(f'{fuc_dir}/data/bed/1.bed')
+        bf = pybed.BedFrame.from_file(f'{fuc_dir}/data/bed/1.bed')
         vf = vf.filter_bed(bf)
         self.assertEqual(vf.df.shape, (3, 13))
 
@@ -55,9 +55,9 @@ class TestPyvcf(unittest.TestCase):
 class TestPybed(unittest.TestCase):
 
     def test_intersect(self):
-        bf1 = pybed.read_file(f'{fuc_dir}/data/bed/1.bed')
-        bf2 = pybed.read_file(f'{fuc_dir}/data/bed/2.bed')
-        bf3 = pybed.read_file(f'{fuc_dir}/data/bed/3.bed')
+        bf1 = pybed.BedFrame.from_file(f'{fuc_dir}/data/bed/1.bed')
+        bf2 = pybed.BedFrame.from_file(f'{fuc_dir}/data/bed/2.bed')
+        bf3 = pybed.BedFrame.from_file(f'{fuc_dir}/data/bed/3.bed')
         bf4 = bf1.intersect(bf2)
         self.assertEqual(bf3.to_string(), bf4.to_string())
 

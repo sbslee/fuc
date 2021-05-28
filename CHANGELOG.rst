@@ -5,8 +5,8 @@ Changelog
 ----------------------
 
 * Add new submodule ``pymaf``.
-* Deprecate ``fuc.api.pyvcf.read_file`` method.
-* Add ``fuc.api.pyvcf.VcfFrame.from_file`` method.
+* Deprecate ``fuc.api.pyvcf.read_file`` method and add ``fuc.api.pyvcf.VcfFrame.from_file`` method.
+* Deprecate ``fuc.api.pybed.read_file`` method and add ``fuc.api.pybed.VcfFrame.from_file`` method.
 
 0.8.0 (2021-05-27)
 ------------------

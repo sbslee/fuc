@@ -17,7 +17,7 @@ def create_parser(subparsers):
         help='maximum number of decimals (default: 0)')
 
 def main(args):
-    bf = api.pybed.read_file(args.bed_file)
+    bf = api.pybed.BedFrame.from_file(args.bed_file)
     chrom_dict = {}
     total = [0, 0]
     for i, r in bf.gr.df.iterrows():

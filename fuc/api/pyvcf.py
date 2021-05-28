@@ -593,6 +593,8 @@ class VcfFrame:
         --------
         VcfFrame
             VcfFrame object creation using constructor.
+        VcfFrame.from_file
+            Construct VcfFrame from a VCF file.
 
         Examples
         --------
@@ -631,12 +633,19 @@ class VcfFrame:
         fn : str
             Path to a zipped or unzipped VCF file.
         compression : bool, default: False
-            If True, use the BGZF decompression.
+            If True, use the BGZF decompression regardless of file name.
 
         Returns
         -------
         VcfFrame
             VcfFrame.
+
+        See Also
+        --------
+        VcfFrame
+            VcfFrame object creation using constructor.
+        VcfFrame.from_dict
+            Construct VcfFrame from dict of array-like or dicts.
 
         Examples
         --------
@@ -644,7 +653,7 @@ class VcfFrame:
         >>> from fuc import pyvcf
         >>> pyvcf.VcfFrame.from_file('example.vcf')
         >>> pyvcf.VcfFrame.from_file('example.vcf.gz')
-        >>> pyvcf.VcfFrame.from_file('example.vcf.gz', compression=True)
+        >>> pyvcf.VcfFrame.from_file('example.vcf', compression=True)
         """
         meta = []
         skip_rows = 0
@@ -1766,7 +1775,7 @@ class VcfFrame:
         if isinstance(bed, pybed.BedFrame):
             bf = bed
         else:
-            bf = pybed.read_file(bed)
+            bf = pybed.BedFrame.from_file(bed)
         f = lambda r: not bf.gr[r.CHROM, r.POS:r.POS+1].empty
         i = self.df.apply(f, axis=1)
         if opposite:

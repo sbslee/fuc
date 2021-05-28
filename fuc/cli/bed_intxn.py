@@ -11,7 +11,7 @@ def create_parser(subparsers):
     parser.add_argument('bed_files', help='BED files', nargs='+')
 
 def main(args):
-    bfs = [api.pybed.read_file(x) for x in args.bed_files]
+    bfs = [api.pybed.BedFrame.from_file(x) for x in args.bed_files]
     final_bf = bfs[0]
     for bf in bfs[1:]:
         final_bf = final_bf.intersect(bf)
