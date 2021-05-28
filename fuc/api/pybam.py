@@ -1,10 +1,8 @@
 """
 The pybam submodule is designed for working with sequence alignment files
-(i.e. SAM, BAM, and CRAM). Although the documentation for pybam will
-primarily focus on the BAM format, partly to avoid redundancy in explanations
-and partly because of its popularity compared to other formats, please note
-that you can still use the submodule to work with the SAM and CRAM formats
-as well.
+(SAM/BAM/CRAM). It essentially wraps the `pysam
+<https://pysam.readthedocs.io/en/latest/api.html>`_ package to allow fast
+computation and easy manipulation.
 """
 
 import pysam

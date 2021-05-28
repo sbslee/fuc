@@ -1,12 +1,9 @@
 """
 The pycov submodule is designed for working with depth of coverage data
-from sequence alingment files (i.e. SAM, BAM, and CRAM). It implements
-the ``pycov.CovFrame`` class which stores read depth data as
-``pandas.DataFrame`` to allow fast computation and easy manipulation.
-Although the documentation for pycov will primarily focus on the BAM format,
-partly to avoid redundancy in explanations and partly because of its
-popularity compared to other formats, please note that you can still use
-the submodule to work with the SAM and CRAM formats as well.
+from sequence alingment files (SAM/BAM/CRAM). It implements the
+``pycov.CovFrame`` class which stores read depth data as ``pandas.DataFrame``
+via the `pysam <https://pysam.readthedocs.io/en/latest/api.html>`_ package
+to allow fast computation and easy manipulation.
 """
 
 import pysam
@@ -17,70 +14,8 @@ from . import pybam
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-def read_file(fn, zero=False, region=None, map_qual=None, names=None):
-    """Create CovFrame from one or more BAM files.
-
-    This method essentially wraps the ``samtools depth`` command.
-
-    Parameters
-    ----------
-    fn : str or list
-        Single BAM file or list of multiple BAM files.
-    zero : bool, default: False
-        If True, output all positions (including those with zero depth).
-    region : str, optional
-        Only report depth in specified region (format: CHR:FROM-TO).
-    map_qual: int, optional
-        Only count reads with mapping quality greater than orequal to
-        this number.
-    names : list, optional
-        Use these as sample names instead of the SM tags.
-
-    Returns
-    -------
-    CovFrame
-        CovFrame.
-
-    Examples
-    --------
-
-    >>> from fuc import pycov
-    >>> cf = pycov.read_file(bam)
-    >>> cf = pycov.read_file([bam1, bam2])
-    >>> cf = pycov.read_file(bam, region='19:41497204-41524301')
-    """
-    bam_files = []
-    if isinstance(fn, str):
-        bam_files.append(fn)
-    else:
-        bam_files += fn
-    args = []
-    if zero:
-        args += ['-a']
-    if region is not None:
-        args += ['-r', region]
-    if map_qual is not None:
-        args += ['-Q', str(map_qual)]
-    args += bam_files
-    s = pysam.depth(*args)
-    headers = ['Chromosome', 'Position']
-    dtype = {'Chromosome': str,'Position': np.int32}
-    for i, bam_file in enumerate(bam_files):
-        if names:
-            name = names[i]
-        else:
-            samples = pybam.tag_sm(bam_file)
-            if len(samples) > 1:
-                raise ValueError(f'multiple sample names detected: {bam_file}')
-            name = samples[0]
-        headers.append(name)
-        dtype[name] = np.int32
-    df = pd.read_csv(StringIO(s), sep='\t', header=None,
-                     names=headers, dtype=dtype)
-    return CovFrame(df)
-
 class CovFrame:
-    """Class for storing read depth data from BAM files.
+    """Class for storing read depth data from one or more SAM/BAM/CRAM files.
 
     Parameters
     ----------
@@ -91,8 +26,8 @@ class CovFrame:
     --------
     CovFrame.from_dict
         Construct CovFrame from dict of array-like or dicts.
-    read_file
-        Read one or more BAM files into CovFrame.
+    CovFrame.from_file
+        Construct CovFrame from one or more SAM/BAM/CRAM files.
 
     Examples
     --------
@@ -147,6 +82,8 @@ class CovFrame:
         --------
         CovFrame
             BedFrame object creation using constructor.
+        CovFrame.from_file
+            Construct CovFrame from one or more SAM/BAM/CRAM files.
 
         Examples
         --------
@@ -169,6 +106,73 @@ class CovFrame:
         4       chr1      1004  34.395085  29.066962
         """
         return cls(pd.DataFrame(data))
+
+    def from_file(
+        cls, fn, zero=False, region=None, map_qual=None, names=None
+    ):
+        """Construct CovFrame from one or more SAM/BAM/CRAM files.
+
+        This method essentially wraps the ``samtools depth`` command.
+
+        Parameters
+        ----------
+        fn : str or list
+            SAM/BAM/CRAM file path(s).
+        zero : bool, default: False
+            If True, output all positions (including those with zero depth).
+        region : str, optional
+            Only report depth in specified region (format: CHR:FROM-TO).
+        map_qual: int, optional
+            Only count reads with mapping quality greater than orequal to
+            this number.
+        names : list, optional
+            Use these as sample names instead of the SM tags.
+
+        Returns
+        -------
+        CovFrame
+            CovFrame.
+        CovFrame.from_dict
+            Construct CovFrame from dict of array-like or dicts.
+
+        Examples
+        --------
+
+        >>> from fuc import pycov
+        >>> cf = pycov.CovFrame.from_file(bam)
+        >>> cf = pycov.CovFrame.from_file([bam1, bam2])
+        >>> cf = pycov.CovFrame.from_file(bam, region='19:41497204-41524301')
+        """
+        bam_files = []
+        if isinstance(fn, str):
+            bam_files.append(fn)
+        else:
+            bam_files += fn
+        args = []
+        if zero:
+            args += ['-a']
+        if region is not None:
+            args += ['-r', region]
+        if map_qual is not None:
+            args += ['-Q', str(map_qual)]
+        args += bam_files
+        s = pysam.depth(*args)
+        headers = ['Chromosome', 'Position']
+        dtype = {'Chromosome': str,'Position': np.int32}
+        for i, bam_file in enumerate(bam_files):
+            if names:
+                name = names[i]
+            else:
+                samples = pybam.tag_sm(bam_file)
+                if len(samples) > 1:
+                    m = f'multiple sample names detected: {bam_file}'
+                    raise ValueError(m)
+                name = samples[0]
+            headers.append(name)
+            dtype[name] = np.int32
+        df = pd.read_csv(StringIO(s), sep='\t', header=None,
+                         names=headers, dtype=dtype)
+        return cls(df)
 
     def plot(
         self, chrom, start=None, end=None, names=None, ax=None, figsize=None,

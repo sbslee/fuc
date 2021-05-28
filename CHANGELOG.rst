@@ -8,6 +8,7 @@ Changelog
 * Deprecate ``fuc.api.pyvcf.read_file`` method and add ``fuc.api.pyvcf.VcfFrame.from_file`` method.
 * Deprecate ``fuc.api.pybed.read_file`` method and add ``fuc.api.pybed.BedFrame.from_file`` method.
 * Deprecate ``fuc.api.pyfq.read_file`` method and add ``fuc.api.pyfq.FqFrame.from_file`` method.
+* Deprecate ``fuc.api.pycov.read_file`` method and add ``fuc.api.pycov.CovFrame.from_file`` method.
 
 0.8.0 (2021-05-27)
 ------------------
