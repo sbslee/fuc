@@ -11,41 +11,50 @@ import seaborn as sns
 import numpy as np
 import matplotlib.pyplot as plt
 
-VARCLS = {
-    "3'Flank": {'NONSYN': False},
-    "3'UTR": {'NONSYN': False},
-    "5'Flank": {'NONSYN': False},
-    "5'UTR": {'NONSYN': False},
-    'De_novo_Start_InFrame': {'NONSYN': False},
-    'De_novo_Start_OutOfFrame': {'NONSYN': False},
-    'Frame_Shift_Del': {'NONSYN': True},
-    'Frame_Shift_Ins': {'NONSYN': True},
-    'IGR': {'NONSYN': False},
-    'In_Frame_Del': {'NONSYN': True},
-    'In_Frame_Ins': {'NONSYN': True},
-    'Intron': {'NONSYN': False},
-    'Missense_Mutation': {'NONSYN': True},
-    'Nonsense_Mutation': {'NONSYN': True},
-    'Nonstop_Mutation': {'NONSYN': True},
-    'RNA': {'NONSYN': False},
-    'Silent': {'NONSYN': False},
-    'Splice_Region': {'NONSYN': False},
-    'Splice_Site': {'NONSYN': True},
-    'Start_Codon_Ins': {'NONSYN': False},
-    'Start_Codon_SNP': {'NONSYN': False},
-    'Stop_Codon_Del': {'NONSYN': False},
-    'Targeted_Region': {'NONSYN': False},
-    'Translation_Start_Site': {'NONSYN': False},
-    'lincRNA': {'NONSYN': False},
+VARCLS_DICT = {
+    "3'Flank": {'NONSYN': False, 'COLOR': None},
+    "3'UTR": {'NONSYN': False, 'COLOR': None},
+    "5'Flank": {'NONSYN': False, 'COLOR': None},
+    "5'UTR": {'NONSYN': False, 'COLOR': None},
+    'De_novo_Start_InFrame': {'NONSYN': False, 'COLOR': None},
+    'De_novo_Start_OutOfFrame': {'NONSYN': False, 'COLOR': None},
+    'Frame_Shift_Del': {'NONSYN': True, 'COLOR': 'tab:blue'},
+    'Frame_Shift_Ins': {'NONSYN': True, 'COLOR': 'tab:purple'},
+    'IGR': {'NONSYN': False, 'COLOR': None},
+    'In_Frame_Del': {'NONSYN': True, 'COLOR': 'tab:olive'},
+    'In_Frame_Ins': {'NONSYN': True, 'COLOR': 'tab:gray'},
+    'Intron': {'NONSYN': False, 'COLOR': None},
+    'Missense_Mutation': {'NONSYN': True, 'COLOR': 'tab:green'},
+    'Nonsense_Mutation': {'NONSYN': True, 'COLOR': 'tab:red'},
+    'Nonstop_Mutation': {'NONSYN': True, 'COLOR': 'tab:pink'},
+    'RNA': {'NONSYN': False, 'COLOR': None},
+    'Silent': {'NONSYN': False, 'COLOR': None},
+    'Splice_Region': {'NONSYN': False, 'COLOR': None},
+    'Splice_Site': {'NONSYN': True, 'COLOR': 'tab:orange'},
+    'Start_Codon_Ins': {'NONSYN': False, 'COLOR': None},
+    'Start_Codon_SNP': {'NONSYN': False, 'COLOR': None},
+    'Stop_Codon_Del': {'NONSYN': False, 'COLOR': None},
+    'Targeted_Region': {'NONSYN': False, 'COLOR': None},
+    'Translation_Start_Site': {'NONSYN': True, 'COLOR': 'tab:brown'},
+    'lincRNA': {'NONSYN': False, 'COLOR': None},
 }
 
+NONSYN_NAMES = sorted([k for k,v in VARCLS_DICT.items() if v['NONSYN']])
+NONSYN_COLORS = [VARCLS_DICT[x]['COLOR'] for x in NONSYN_NAMES]
+
 SNVCLS = {
-    'A>G': 'T>C', 'T>C': 'T>C',
-    'C>T': 'C>T', 'G>A': 'C>T',
-    'A>T': 'T>A', 'T>A': 'T>A',
-    'A>C': 'T>G', 'T>G': 'T>G',
-    'C>A': 'C>A', 'G>T': 'C>A',
-    'C>G': 'C>G', 'G>C': 'C>G'
+    'A>C': {'REP': 'T>G'},
+    'A>G': {'REP': 'T>C'},
+    'A>T': {'REP': 'T>A'},
+    'C>A': {'REP': 'C>A'},
+    'C>G': {'REP': 'C>G'},
+    'C>T': {'REP': 'C>T'},
+    'G>A': {'REP': 'C>T'},
+    'G>C': {'REP': 'C>G'},
+    'G>T': {'REP': 'C>A'},
+    'T>A': {'REP': 'T>A'},
+    'T>C': {'REP': 'T>C'},
+    'T>G': {'REP': 'T>G'},
 }
 
 class MafFrame:
@@ -94,7 +103,7 @@ class MafFrame:
         MafFrame or pandas.Series
             Filtered MafFrame or boolean index array.
         """
-        nonsyn_list = [k for k, v in VARCLS.items() if v['NONSYN']]
+        nonsyn_list = [k for k, v in VARCLS_DICT.items() if v['NONSYN']]
         one_row = lambda r: r.Variant_Classification in nonsyn_list
         i = self.df.apply(one_row, axis=1)
         if opposite:
@@ -125,7 +134,7 @@ class MafFrame:
         return cls(pd.read_table(fn))
 
     def plot_genenum(self, count=None, ax=None, figsize=None, **kwargs):
-        """Create a bar plot for viaration type.
+        """Create a bar plot for mutated genes.
 
         Parameters
         ----------
@@ -207,9 +216,12 @@ class MafFrame:
             fig, ax = plt.subplots(figsize=figsize)
         if kwargs is None:
             kwargs = {}
-        sns.barplot(x='index', y='Tumor_Sample_Barcode', data=df, **kwargs)
+        df.plot.bar(
+            x='index', y='Tumor_Sample_Barcode', ax=ax, width=1.0,
+            legend=False, **kwargs
+        )
         ax.set_xlabel('Samples')
-        ax.set_ylabel('')
+        ax.set_ylabel('Count')
         ax.set_xticks([])
         return ax
 
@@ -253,23 +265,23 @@ class MafFrame:
                 len(ref) != 1 or
                 ref == alt):
                 return np.nan
-            return SNVCLS[f'{ref}>{alt}']
+            return SNVCLS[f'{ref}>{alt}']['REP']
         s = self.df.apply(one_row, axis=1).value_counts()
-        s = s.reindex(index=['T>G', 'T>A', 'T>C', 'C>T', 'C>G', 'C>A'])
+        i = sorted(set([v['REP'] for k, v in SNVCLS.items()]))
+        s = s.reindex(index=i)
         df = s.to_frame().reset_index()
         df.columns = ['SNV', 'Count']
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
         if kwargs is None:
             kwargs = {}
-        sns.barplot(x='Count', y='SNV', data=df.reset_index(),
-                    ax=ax, **kwargs)
+        sns.barplot(x='Count', y='SNV', data=df, ax=ax, **kwargs)
         ax.set_xlabel('Count')
         ax.set_ylabel('')
         return ax
 
     def plot_varcls(self, ax=None, figsize=None, **kwargs):
-        """Create a bar plot for viaration class.
+        """Create a bar plot for the nonsynonymous variant classes.
 
         Parameters
         ----------
@@ -299,15 +311,22 @@ class MafFrame:
             >>> mf.plot_varcls()
             >>> plt.tight_layout()
         """
-        s = self.df.Variant_Classification.value_counts()
+        d = self.df.Variant_Classification.value_counts().to_dict()
+        counts = {}
+        for varcls in NONSYN_NAMES:
+            if varcls in d:
+                counts[varcls] = d[varcls]
+            else:
+                counts[varcls] = 0
+        s = pd.Series(counts).reindex(index=NONSYN_NAMES)
         df = s.to_frame().reset_index()
+        df.columns = ['Variant_Classification', 'Count']
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
         if kwargs is None:
             kwargs = {}
-        sns.barplot(x='Variant_Classification', y='index', data=df,
-                    ax=ax, **kwargs)
-        ax.set_xlabel('Count')
+        sns.barplot(x='Count', y='Variant_Classification', data=df,
+                    ax=ax, palette=NONSYN_COLORS, **kwargs)
         ax.set_ylabel('')
         return ax
 
@@ -348,8 +367,7 @@ class MafFrame:
             fig, ax = plt.subplots(figsize=figsize)
         if kwargs is None:
             kwargs = {}
-        sns.barplot(x='Variant_Type', y='index',
-                    data=df, ax=ax, **kwargs)
+        sns.barplot(x='Variant_Type', y='index', data=df, ax=ax, **kwargs)
         ax.set_xlabel('Count')
         ax.set_ylabel('')
         return ax
