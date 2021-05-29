@@ -12,34 +12,39 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 VARCLS_DICT = {
-    "3'Flank": {'NONSYN': False, 'COLOR': None},
-    "3'UTR": {'NONSYN': False, 'COLOR': None},
-    "5'Flank": {'NONSYN': False, 'COLOR': None},
-    "5'UTR": {'NONSYN': False, 'COLOR': None},
-    'De_novo_Start_InFrame': {'NONSYN': False, 'COLOR': None},
-    'De_novo_Start_OutOfFrame': {'NONSYN': False, 'COLOR': None},
+    "3'Flank": {'COLOR': None},
+    "3'UTR": {'COLOR': None},
+    "5'Flank": {'COLOR': None},
+    "5'UTR": {'COLOR': None},
+    'De_novo_Start_InFrame': {'COLOR': None},
+    'De_novo_Start_OutOfFrame': {'COLOR': None},
     'Frame_Shift_Del': {'NONSYN': True, 'COLOR': 'tab:blue'},
     'Frame_Shift_Ins': {'NONSYN': True, 'COLOR': 'tab:purple'},
-    'IGR': {'NONSYN': False, 'COLOR': None},
+    'IGR': {'COLOR': None},
     'In_Frame_Del': {'NONSYN': True, 'COLOR': 'tab:olive'},
     'In_Frame_Ins': {'NONSYN': True, 'COLOR': 'tab:gray'},
-    'Intron': {'NONSYN': False, 'COLOR': None},
+    'Intron': {'COLOR': None},
     'Missense_Mutation': {'NONSYN': True, 'COLOR': 'tab:green'},
     'Nonsense_Mutation': {'NONSYN': True, 'COLOR': 'tab:red'},
     'Nonstop_Mutation': {'NONSYN': True, 'COLOR': 'tab:pink'},
-    'RNA': {'NONSYN': False, 'COLOR': None},
-    'Silent': {'NONSYN': False, 'COLOR': None},
-    'Splice_Region': {'NONSYN': False, 'COLOR': None},
+    'RNA': {'COLOR': None},
+    'Silent': {'COLOR': None},
+    'Splice_Region': {'COLOR': None},
     'Splice_Site': {'NONSYN': True, 'COLOR': 'tab:orange'},
-    'Start_Codon_Ins': {'NONSYN': False, 'COLOR': None},
-    'Start_Codon_SNP': {'NONSYN': False, 'COLOR': None},
-    'Stop_Codon_Del': {'NONSYN': False, 'COLOR': None},
-    'Targeted_Region': {'NONSYN': False, 'COLOR': None},
+    'Start_Codon_Ins': {'COLOR': None},
+    'Start_Codon_SNP': {'COLOR': None},
+    'Stop_Codon_Del': {'COLOR': None},
+    'Targeted_Region': {'COLOR': None},
     'Translation_Start_Site': {'NONSYN': True, 'COLOR': 'tab:brown'},
-    'lincRNA': {'NONSYN': False, 'COLOR': None},
+    'lincRNA': {'COLOR': None},
 }
 
-NONSYN_NAMES = sorted([k for k,v in VARCLS_DICT.items() if v['NONSYN']])
+NONSYN_NAMES = [
+    'Missense_Mutation', 'Frame_Shift_Del', 'Frame_Shift_Ins',
+    'In_Frame_Del', 'In_Frame_Ins', 'Nonsense_Mutation',
+    'Nonstop_Mutation', 'Splice_Site', 'Translation_Start_Site'
+]
+
 NONSYN_COLORS = [VARCLS_DICT[x]['COLOR'] for x in NONSYN_NAMES]
 
 SNVCLS = {
@@ -88,30 +93,6 @@ class MafFrame:
         """list : List of the genes."""
         return list(self.df.Hugo_Symbol.unique())
 
-    def filter_nonsyn(self, opposite=False, index=False):
-        """Select rows with a nonsynonymous variant.
-
-        Parameters
-        ----------
-        opposite : bool, default: False
-            If True, return rows that don't meet the said criteria.
-        index : bool, default: False
-            If True, return boolean index array instead of MafFrame.
-
-        Returns
-        -------
-        MafFrame or pandas.Series
-            Filtered MafFrame or boolean index array.
-        """
-        nonsyn_list = [k for k, v in VARCLS_DICT.items() if v['NONSYN']]
-        one_row = lambda r: r.Variant_Classification in nonsyn_list
-        i = self.df.apply(one_row, axis=1)
-        if opposite:
-            i = ~i
-        if index:
-            return i
-        return self.__class__(self.df[i])
-
     @classmethod
     def from_file(cls, fn):
         """Construct MafFrame from a MAF file.
@@ -133,13 +114,13 @@ class MafFrame:
         """
         return cls(pd.read_table(fn))
 
-    def plot_genenum(self, count=None, ax=None, figsize=None, **kwargs):
+    def plot_genes(self, count=10, ax=None, figsize=None, **kwargs):
         """Create a bar plot for mutated genes.
 
         Parameters
         ----------
-        count : int, optional
-            Number of top genes to display.
+        count : int, default: 10
+            Number of top mutated genes to display.
         ax : matplotlib.axes.Axes, optional
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
@@ -163,23 +144,35 @@ class MafFrame:
             >>> common.load_dataset('tcga-laml')
             >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
             >>> mf = pymaf.MafFrame.from_file(f)
-            >>> mf.plot_genenum(count=5)
+            >>> mf.plot_genes()
             >>> plt.tight_layout()
         """
-        s = self.df.Hugo_Symbol.value_counts()
-        if count is not None:
-            s = s[:count]
-        df = s.to_frame().reset_index()
+        df = self.df[self.df.Variant_Classification.isin(NONSYN_NAMES)]
+        df = df.groupby('Hugo_Symbol')['Variant_Classification'].value_counts().to_frame()
+        df.columns = ['Count']
+        df = df.reset_index()
+        df = df.pivot(index='Hugo_Symbol', columns='Variant_Classification', values='Count')
+        df = df.fillna(0)
+        for varcls in NONSYN_NAMES:
+            if varcls not in df.columns:
+                df[varcls] = 0
+        i = df.sum(axis=1).sort_values(ascending=False).index
+        df = df.reindex(index=i)
+        df = df[NONSYN_NAMES]
+        df = df[:count]
+        df = df.iloc[::-1]
+        df = df.rename_axis(None, axis=1)
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
         if kwargs is None:
             kwargs = {}
-        sns.barplot(x='Hugo_Symbol', y='index', data=df, ax=ax, **kwargs)
+        #sns.barplot(x='Hugo_Symbol', y='index', data=df, ax=ax, **kwargs)
+        df.plot.barh(stacked=True, ax=ax, color=NONSYN_COLORS)
         ax.set_xlabel('Count')
         ax.set_ylabel('')
         return ax
 
-    def plot_sampnum(self, ax=None, figsize=None, **kwargs):
+    def plot_samples(self, ax=None, figsize=None, **kwargs):
         """Create a bar plot for variants per sample.
 
         Parameters
@@ -207,19 +200,27 @@ class MafFrame:
             >>> common.load_dataset('tcga-laml')
             >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
             >>> mf = pymaf.MafFrame.from_file(f)
-            >>> mf.plot_sampnum()
+            >>> mf.plot_samples()
             >>> plt.tight_layout()
         """
-        s = self.df.Tumor_Sample_Barcode.value_counts()
-        df = s.to_frame().reset_index()
+        df = self.df[self.df.Variant_Classification.isin(NONSYN_NAMES)]
+        df = df.groupby('Tumor_Sample_Barcode')['Variant_Classification'].value_counts().to_frame()
+        df.columns = ['Count']
+        df = df.reset_index()
+        df = df.pivot(index='Tumor_Sample_Barcode', columns='Variant_Classification', values='Count')
+        df = df.fillna(0)
+        for varcls in NONSYN_NAMES:
+            if varcls not in df.columns:
+                df[varcls] = 0
+        i = df.sum(axis=1).sort_values(ascending=False).index
+        df = df.reindex(index=i)
+        df = df[NONSYN_NAMES]
+        df = df.rename_axis(None, axis=1)
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
         if kwargs is None:
             kwargs = {}
-        df.plot.bar(
-            x='index', y='Tumor_Sample_Barcode', ax=ax, width=1.0,
-            legend=False, **kwargs
-        )
+        df.plot.bar(stacked=True, ax=ax, width=1.0, color=NONSYN_COLORS, **kwargs)
         ax.set_xlabel('Samples')
         ax.set_ylabel('Count')
         ax.set_xticks([])
