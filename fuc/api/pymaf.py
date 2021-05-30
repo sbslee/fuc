@@ -9,7 +9,9 @@ adheres to the standard `MAF specification
 import pandas as pd
 import seaborn as sns
 import numpy as np
+import re
 import matplotlib.pyplot as plt
+from . import pyvcf
 
 VARCLS_DICT = {
     "3'Flank": {'COLOR': None},
@@ -61,6 +63,78 @@ SNVCLS = {
     'T>C': {'REP': 'T>C'},
     'T>G': {'REP': 'T>G'},
 }
+
+def vcf2maf(fn):
+    """Convert a VCF file to a MAF file.
+
+    Parameters
+    ----------
+    fn : str
+        VCF file path.
+    """
+    vf = pyvcf.VcfFrame.from_file(fn)
+
+    # Get the NCBI_Build data.
+    for line in vf.meta:
+        if line.startswith('##VEP'):
+            ncbi_build = re.search(r'assembly="(.*?)"', line).group(1)
+
+    # Define the conversion algorithm.
+    def one_row(r):
+        fields = r.INFO.replace('CSQ=', '').split(',')[0].split('|')
+        strand = '+' if fields[19] == '1' else '-'
+
+        # Get the Variant_Type data.
+        if len(r.REF) == len(r.ALT) == 1:
+            variant_type = 'SNP'
+        elif len(r.REF) > len(r.ALT):
+            variant_type = 'DEL'
+        else:
+            variant_type = 'INS'
+
+        # Get the Tumor_Sample_Barcode data.
+        s = r[9:].apply(pyvcf.gt_hasvar)
+        tumor_sample_barcode = ','.join(s[s].index.to_list())
+
+        # Get the Protein_Change data.
+        if fields[14]:
+            pos = fields[14]
+            aa = fields[15].split('/')
+            protein_change = f'p.{aa[0]}{pos}{aa[1]}'
+        else:
+            protein_change = '.'
+
+        d = dict(
+            Hugo_Symbol = fields[3],
+            Entrez_Gene_Id = fields[4],
+            Center = '.',
+            NCBI_Build = ncbi_build,
+            Chromosome = r.CHROM,
+            Start_Position = r.POS,
+            End_Position = r.POS,
+            Strand = strand,
+            Variant_Classification = fields[1],
+            Variant_Type = variant_type,
+            Reference_Allele = r.REF,
+            Tumor_Seq_Allele1 = r.ALT,
+            Tumor_Seq_Allele2 = r.ALT,
+            Tumor_Sample_Barcode = tumor_sample_barcode,
+            Protein_Change = protein_change,
+        )
+
+        return pd.Series(d)
+
+    # Apply the conversion algorithm.
+    df = vf.df.apply(one_row, axis=1)
+
+    # Expand the Tumor_Sample_Barcode column to multiple rows.
+    s = df['Tumor_Sample_Barcode'].str.split(',').apply(pd.Series, 1).stack()
+    s.index = s.index.droplevel(-1)
+    s.name = 'Tumor_Sample_Barcode'
+    del df['Tumor_Sample_Barcode']
+    df = df.join(s)
+
+    return MafFrame(df)
 
 class MafFrame:
     """Class for storing MAF data.
