@@ -390,7 +390,7 @@ class MafFrame:
             Width, height in inches. Format: (float, float).
         kwargs
             Other keyword arguments will be passed down to
-            :meth:`matplotlib.axes.Axes.pcolormesh()` and 
+            :meth:`matplotlib.axes.Axes.pcolormesh()` and
             :meth:`seaborn.heatmap`.
 
         Returns
@@ -447,7 +447,7 @@ class MafFrame:
             kwargs = {}
         colors = list(reversed(NONSYN_COLORS + ['k', 'lightgray']))
         sns.heatmap(df, cmap=colors, ax=ax, xticklabels=False, **kwargs)
-        ax.set_xlabel('')
+        ax.set_xlabel('Samples')
         ax.set_ylabel('')
 
         # Modify the colorbar.
