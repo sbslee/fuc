@@ -92,6 +92,53 @@ def vcf2maf(fn):
         else:
             variant_type = 'INS'
 
+        # Get the Variant_Classification data.
+        consequence = fields[1].split('&')[0]
+        if consequence == 'missense_variant':
+            variant_classification = 'Missense_Mutation'
+        elif consequence in ['splice_acceptor_variant',
+            'splice_donor_variant', 'transcript_ablation']:
+            variant_classification = 'Splice_Site'
+        elif consequence == 'splice_region_variant':
+            variant_classification = 'Splice_Region'
+        elif consequence == 'stop_gained':
+            variant_classification = 'Nonsense_Mutation'
+        elif consequence == 'stop_lost':
+            variant_classification = 'Nonstop_Mutation'
+        elif consequence == 'frameshift_variant' and  variant_type == 'DEL':
+            variant_classification = 'Frame_Shift_Del'
+        elif consequence == 'frameshift_variant' and  variant_type == 'INS':
+            variant_classification = 'Frame_Shift_Ins'
+        elif consequence in ['initiator_codon_variant', 'start_lost']:
+            variant_classification = 'Translation_Start_Site'
+        elif consequence == 'inframe_insertion':
+            variant_classification = 'In_Frame_Ins'
+        elif consequence == 'inframe_deletion':
+            variant_classification = 'In_Frame_Del'
+        elif consequence in ['transcript_amplification', 'intron_variant']:
+            variant_classification = 'Intron'
+        elif consequence in ['incomplete_terminal_codon_variant',
+            'synonymous_variant', 'stop_retained_variant',
+            'NMD_transcript_variant']:
+            variant_classification = 'Silent'
+        elif consequence in ['mature_miRNA_variant',
+            'non_coding_transcript_exon_variant',
+            'non_coding_transcript_variant']:
+            variant_classification = 'RNA'
+        elif consequence == '5_prime_UTR_variant':
+            variant_classification = "5'UTR"
+        elif consequence == '3_prime_UTR_variant':
+            variant_classification = "3'UTR"
+        elif consequence in ['TF_binding_site_variant',
+            'regulatory_region_variant', 'intergenic_variant']:
+            variant_classification = 'IGR'
+        elif consequence == 'upstream_gene_variant':
+            variant_classification = "5'Flank"
+        elif consequence == 'downstream_gene_variant':
+            variant_classification = "3'Flank"
+        else:
+            raise ValueError(f'Unknown consequence found: {consequence}')
+
         # Get the Tumor_Sample_Barcode data.
         s = r[9:].apply(pyvcf.gt_hasvar)
         tumor_sample_barcode = ','.join(s[s].index.to_list())
@@ -113,7 +160,7 @@ def vcf2maf(fn):
             Start_Position = r.POS,
             End_Position = r.POS,
             Strand = strand,
-            Variant_Classification = fields[1],
+            Variant_Classification = variant_classification,
             Variant_Type = variant_type,
             Reference_Allele = r.REF,
             Tumor_Seq_Allele1 = r.ALT,
