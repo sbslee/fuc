@@ -18,24 +18,24 @@ VARCLS_DICT = {
     "5'UTR": {'COLOR': None},
     'De_novo_Start_InFrame': {'COLOR': None},
     'De_novo_Start_OutOfFrame': {'COLOR': None},
-    'Frame_Shift_Del': {'NONSYN': True, 'COLOR': 'tab:blue'},
-    'Frame_Shift_Ins': {'NONSYN': True, 'COLOR': 'tab:purple'},
+    'Frame_Shift_Del': {'COLOR': 'tab:blue'},
+    'Frame_Shift_Ins': {'COLOR': 'tab:purple'},
     'IGR': {'COLOR': None},
-    'In_Frame_Del': {'NONSYN': True, 'COLOR': 'tab:olive'},
-    'In_Frame_Ins': {'NONSYN': True, 'COLOR': 'tab:gray'},
+    'In_Frame_Del': {'COLOR': 'tab:olive'},
+    'In_Frame_Ins': {'COLOR': 'tab:red'},
     'Intron': {'COLOR': None},
-    'Missense_Mutation': {'NONSYN': True, 'COLOR': 'tab:green'},
-    'Nonsense_Mutation': {'NONSYN': True, 'COLOR': 'tab:red'},
-    'Nonstop_Mutation': {'NONSYN': True, 'COLOR': 'tab:pink'},
+    'Missense_Mutation': {'COLOR': 'tab:green'},
+    'Nonsense_Mutation': {'COLOR': 'tab:cyan'},
+    'Nonstop_Mutation': {'COLOR': 'tab:pink'},
     'RNA': {'COLOR': None},
     'Silent': {'COLOR': None},
     'Splice_Region': {'COLOR': None},
-    'Splice_Site': {'NONSYN': True, 'COLOR': 'tab:orange'},
+    'Splice_Site': {'COLOR': 'tab:orange'},
     'Start_Codon_Ins': {'COLOR': None},
     'Start_Codon_SNP': {'COLOR': None},
     'Stop_Codon_Del': {'COLOR': None},
     'Targeted_Region': {'COLOR': None},
-    'Translation_Start_Site': {'NONSYN': True, 'COLOR': 'tab:brown'},
+    'Translation_Start_Site': {'COLOR': 'tab:brown'},
     'lincRNA': {'COLOR': None},
 }
 
@@ -125,9 +125,9 @@ class MafFrame:
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
             Width, height in inches. Format: (float, float).
-        kwargs : key, value mappings
+        kwargs
             Other keyword arguments will be passed down to
-            :meth:`matplotlib.axes.Axes.bar` and :meth:`seaborn.barplot`.
+            :meth:`pandas.DataFrame.plot.barh`.
 
         Returns
         -------
@@ -148,10 +148,12 @@ class MafFrame:
             >>> plt.tight_layout()
         """
         df = self.df[self.df.Variant_Classification.isin(NONSYN_NAMES)]
-        df = df.groupby('Hugo_Symbol')['Variant_Classification'].value_counts().to_frame()
+        df = df.groupby('Hugo_Symbol')[
+            'Variant_Classification'].value_counts().to_frame()
         df.columns = ['Count']
         df = df.reset_index()
-        df = df.pivot(index='Hugo_Symbol', columns='Variant_Classification', values='Count')
+        df = df.pivot(index='Hugo_Symbol', columns='Variant_Classification',
+            values='Count')
         df = df.fillna(0)
         for varcls in NONSYN_NAMES:
             if varcls not in df.columns:
@@ -166,7 +168,6 @@ class MafFrame:
             fig, ax = plt.subplots(figsize=figsize)
         if kwargs is None:
             kwargs = {}
-        #sns.barplot(x='Hugo_Symbol', y='index', data=df, ax=ax, **kwargs)
         df.plot.barh(stacked=True, ax=ax, color=NONSYN_COLORS)
         ax.set_xlabel('Count')
         ax.set_ylabel('')
@@ -181,9 +182,9 @@ class MafFrame:
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
             Width, height in inches. Format: (float, float).
-        kwargs : key, value mappings
+        kwargs
             Other keyword arguments will be passed down to
-            :meth:`matplotlib.axes.Axes.bar` and :meth:`seaborn.barplot`.
+            :meth:`pandas.DataFrame.plot.barh`.
 
         Returns
         -------
@@ -204,10 +205,12 @@ class MafFrame:
             >>> plt.tight_layout()
         """
         df = self.df[self.df.Variant_Classification.isin(NONSYN_NAMES)]
-        df = df.groupby('Tumor_Sample_Barcode')['Variant_Classification'].value_counts().to_frame()
+        df = df.groupby('Tumor_Sample_Barcode')[
+            'Variant_Classification'].value_counts().to_frame()
         df.columns = ['Count']
         df = df.reset_index()
-        df = df.pivot(index='Tumor_Sample_Barcode', columns='Variant_Classification', values='Count')
+        df = df.pivot(index='Tumor_Sample_Barcode',
+            columns='Variant_Classification', values='Count')
         df = df.fillna(0)
         for varcls in NONSYN_NAMES:
             if varcls not in df.columns:
@@ -220,7 +223,8 @@ class MafFrame:
             fig, ax = plt.subplots(figsize=figsize)
         if kwargs is None:
             kwargs = {}
-        df.plot.bar(stacked=True, ax=ax, width=1.0, color=NONSYN_COLORS, **kwargs)
+        df.plot.bar(stacked=True, ax=ax, width=1.0,
+            color=NONSYN_COLORS, **kwargs)
         ax.set_xlabel('Samples')
         ax.set_ylabel('Count')
         ax.set_xticks([])
@@ -235,7 +239,7 @@ class MafFrame:
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
             Width, height in inches. Format: (float, float).
-        kwargs : key, value mappings
+        kwargs
             Other keyword arguments will be passed down to
             :meth:`matplotlib.axes.Axes.bar` and :meth:`seaborn.barplot`.
 
@@ -290,7 +294,7 @@ class MafFrame:
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
             Width, height in inches. Format: (float, float).
-        kwargs : key, value mappings
+        kwargs
             Other keyword arguments will be passed down to
             :meth:`matplotlib.axes.Axes.bar` and :meth:`seaborn.barplot`.
 
@@ -340,7 +344,7 @@ class MafFrame:
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
             Width, height in inches. Format: (float, float).
-        kwargs : key, value mappings
+        kwargs
             Other keyword arguments will be passed down to
             :meth:`matplotlib.axes.Axes.bar` and :meth:`seaborn.barplot`.
 
@@ -371,6 +375,87 @@ class MafFrame:
         sns.barplot(x='Variant_Type', y='index', data=df, ax=ax, **kwargs)
         ax.set_xlabel('Count')
         ax.set_ylabel('')
+        return ax
+
+    def plot_waterfall(self, count=10, ax=None, figsize=None, **kwargs):
+        """Create a waterfall plot (oncoplot).
+
+        Parameters
+        ----------
+        count : int, default: 10
+            Number of top mutated genes to display.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+        kwargs
+            Other keyword arguments will be passed down to
+            :meth:`matplotlib.axes.Axes.bar` and :meth:`seaborn.barplot`.
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+
+        Examples
+        --------
+
+        .. plot::
+
+            >>> import matplotlib.pyplot as plt
+            >>> from fuc import common, pymaf
+            >>> common.load_dataset('tcga-laml')
+            >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+            >>> mf = pymaf.MafFrame.from_file(f)
+            >>> mf.plot_waterfall(figsize=(10, 5), linewidths=0.5)
+            >>> plt.tight_layout()
+        """
+        df = self.df[self.df.Variant_Classification.isin(NONSYN_NAMES)]
+        f = lambda x: ''.join(x) if len(x) == 1 else 'Multi_Hit'
+        df = df.groupby(['Hugo_Symbol', 'Tumor_Sample_Barcode'])[
+            'Variant_Classification'].apply(f).to_frame()
+        df = df.reset_index()
+        df = df.pivot(index='Hugo_Symbol', columns='Tumor_Sample_Barcode',
+            values='Variant_Classification')
+
+        # Sort the rows (genes).
+        i = df.isnull().sum(axis=1).sort_values(ascending=True).index
+        df = df.reindex(index=i)
+
+        # Select the top mutated genes.
+        df = df[:count]
+
+        # Remove columns (samples) with all NaN's.
+        df = df.dropna(axis=1, how='all')
+
+        # Sort the columns (samples).
+        c = df.applymap(lambda x: 0 if pd.isnull(x) else 1).sort_values(
+            df.index.to_list(), axis=1, ascending=False).columns
+        df = df[c]
+
+        # Apply the mapping between items and integers.
+        df = df.fillna('None')
+        l = reversed(NONSYN_NAMES + ['Multi_Hit', 'None'])
+        d = {k: v for v, k in enumerate(l)}
+        df = df.applymap(lambda x: d[x])
+
+        # Plot the heatmap.
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+        if kwargs is None:
+            kwargs = {}
+        colors = list(reversed(NONSYN_COLORS + ['k', 'lightgray']))
+        sns.heatmap(df, cmap=colors, ax=ax, xticklabels=False, **kwargs)
+        ax.set_xlabel('')
+        ax.set_ylabel('')
+
+        # Modify the colorbar.
+        cbar = ax.collections[0].colorbar
+        r = cbar.vmax - cbar.vmin
+        n = len(d)
+        cbar.set_ticks([cbar.vmin + r / n * (0.5 + i) for i in range(n)])
+        cbar.set_ticklabels(list(d.keys()))
+
         return ax
 
 class AnnFrame:

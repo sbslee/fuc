@@ -194,7 +194,7 @@ class CovFrame:
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
             Width, height in inches. Format: (float, float).
-        kwargs : key, value mappings
+        kwargs
             Other keyword arguments will be passed down to
             :meth:`matplotlib.axes.Axes.plot` and :meth:`seaborn.lineplot`.
 
