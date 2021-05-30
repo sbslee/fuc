@@ -390,7 +390,8 @@ class MafFrame:
             Width, height in inches. Format: (float, float).
         kwargs
             Other keyword arguments will be passed down to
-            :meth:`matplotlib.axes.Axes.bar` and :meth:`seaborn.barplot`.
+            :meth:`matplotlib.axes.Axes.pcolormesh()` and 
+            :meth:`seaborn.heatmap`.
 
         Returns
         -------
