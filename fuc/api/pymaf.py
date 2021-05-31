@@ -453,7 +453,8 @@ class MafFrame:
             fig, ax = plt.subplots(figsize=figsize)
         if kwargs is None:
             kwargs = {}
-        sns.barplot(x='Count', y='SNV', data=df, ax=ax, **kwargs)
+        sns.barplot(x='Count', y='SNV', data=df, ax=ax,
+            palette='pastel', **kwargs)
         ax.set_xlabel('Count')
         ax.set_ylabel('')
         return ax
