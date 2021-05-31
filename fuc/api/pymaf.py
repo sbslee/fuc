@@ -2,8 +2,8 @@
 The pymaf submodule is designed for working with MAF files. It implements
 :class:`pymaf.MafFrame` which stores MAF data as :class:`pandas.DataFrame`
 to allow fast computation and easy manipulation. The class also contains
-many useful plotting methods such as :meth:`pymaf.MafFrame.plot_varcls` and
-:meth:`pymaf.MafFrame.plot_waterfall`. The submodule strictly adheres to the
+many useful plotting methods such as :meth:`MafFrame.plot_varcls` and
+:meth:`MafFrame.plot_waterfall`. The submodule strictly adheres to the
 standard `MAF specification
 <https://docs.gdc.cancer.gov/Data/File_Formats/MAF_Format/>`_.
 """
@@ -13,7 +13,9 @@ import seaborn as sns
 import numpy as np
 import re
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 from . import pyvcf
+import copy
 
 # Below is the list of calculated variant consequences from Ensemble VEP:
 # https://m.ensembl.org/info/genome/variation/prediction/predicted_data.html
@@ -114,6 +116,70 @@ SNVCLS = {
     'T>C': {'REP': 'T>C'},
     'T>G': {'REP': 'T>G'},
 }
+
+def plot_legend(name='regular', ax=None, figsize=None, **kwargs):
+    """Create one of the pre-defined legends.
+
+    Parameters
+    ----------
+    name : {'regaulr', 'waterfall'}, default: 'regular'
+        Type of legend to be drawn.
+    ax : matplotlib.axes.Axes, optional
+        Pre-existing axes for the plot. Otherwise, crete a new one.
+    figsize : tuple, optional
+        Width, height in inches. Format: (float, float).
+    kwargs
+        Other keyword arguments will be passed down to
+        :meth:`Axes.legend`.
+
+    Returns
+    -------
+    matplotlib.axes.Axes
+        The matplotlib axes containing the plot.
+
+    Examples
+    --------
+    We can add legend for the :meth:`MafFrame.plot_genes` method:
+
+    .. plot::
+        :context: close-figs
+
+        >>> import matplotlib.pyplot as plt
+        >>> from fuc import common, pymaf
+        >>> common.load_dataset('tcga-laml')
+        >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+        >>> mf = pymaf.MafFrame.from_file(f)
+        >>> fig, [ax1, ax2] = plt.subplots(1, 2, figsize=(10, 6),
+        ...     gridspec_kw={'width_ratios': [10, 1]})
+        >>> mf.plot_genes(ax=ax1)
+        >>> pymaf.plot_legend(name='regular', ax=ax2, loc='center left')
+        >>> plt.tight_layout()
+
+    We can also add legend for :meth:`MafFrame.plot_waterfall` method:
+
+    .. plot::
+        :context: close-figs
+
+        >>> fig, [ax1, ax2] = plt.subplots(2, 1, figsize=(10, 6),
+        ...     gridspec_kw={'height_ratios': [10, 1]})
+        >>> mf.plot_waterfall(ax=ax1, linewidths=0.5)
+        >>> pymaf.plot_legend(name='waterfall', ax=ax2, ncol=4,
+        ...     loc='upper center')
+        >>> plt.tight_layout()
+    """
+    if ax is None:
+        fig, ax = plt.subplots(figsize=figsize)
+    h = []
+    labels = copy.deepcopy(NONSYN_NAMES)
+    colors = copy.deepcopy(NONSYN_COLORS)
+    if name == 'waterfall':
+        labels += ['Multi_Hit', 'None']
+        colors += ['k', 'lightgray']
+    for i, label in enumerate(labels):
+        h.append(mpatches.Patch(color=colors[i], label=label))
+    ax.legend(handles=h, **kwargs)
+    ax.axis('off')
+    return ax
 
 class MafFrame:
     """Class for storing MAF data.
@@ -288,7 +354,7 @@ class MafFrame:
         return cls(df)
 
     def plot_genes(self, count=10, ax=None, figsize=None, **kwargs):
-        """Create a bar plot for mutated genes.
+        """Create a bar plot for top mutated genes.
 
         Parameters
         ----------
@@ -339,9 +405,8 @@ class MafFrame:
         df = df.rename_axis(None, axis=1)
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
-        if kwargs is None:
-            kwargs = {}
-        df.plot.barh(stacked=True, ax=ax, color=NONSYN_COLORS)
+        df.plot.barh(stacked=True, ax=ax, color=NONSYN_COLORS,
+            legend=False, **kwargs)
         ax.set_xlabel('Count')
         ax.set_ylabel('')
         return ax
@@ -394,9 +459,7 @@ class MafFrame:
         df = df.rename_axis(None, axis=1)
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
-        if kwargs is None:
-            kwargs = {}
-        df.plot.bar(stacked=True, ax=ax, width=1.0,
+        df.plot.bar(stacked=True, ax=ax, width=1.0, legend=False,
             color=NONSYN_COLORS, **kwargs)
         ax.set_xlabel('Samples')
         ax.set_ylabel('Count')
@@ -451,8 +514,6 @@ class MafFrame:
         df.columns = ['SNV', 'Count']
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
-        if kwargs is None:
-            kwargs = {}
         sns.barplot(x='Count', y='SNV', data=df, ax=ax,
             palette='pastel', **kwargs)
         ax.set_xlabel('Count')
@@ -502,8 +563,6 @@ class MafFrame:
         df.columns = ['Variant_Classification', 'Count']
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
-        if kwargs is None:
-            kwargs = {}
         sns.barplot(x='Count', y='Variant_Classification', data=df,
                     ax=ax, palette=NONSYN_COLORS, **kwargs)
         ax.set_ylabel('')
@@ -544,9 +603,8 @@ class MafFrame:
         df = s.to_frame().reset_index()
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
-        if kwargs is None:
-            kwargs = {}
-        sns.barplot(x='Variant_Type', y='index', data=df, ax=ax, **kwargs)
+        sns.barplot(x='Variant_Type', y='index', data=df, ax=ax,
+            palette='pastel', **kwargs)
         ax.set_xlabel('Count')
         ax.set_ylabel('')
         return ax
@@ -582,7 +640,7 @@ class MafFrame:
             >>> common.load_dataset('tcga-laml')
             >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
             >>> mf = pymaf.MafFrame.from_file(f)
-            >>> mf.plot_waterfall(figsize=(10, 5), linewidths=0.5)
+            >>> mf.plot_waterfall(linewidths=0.5)
             >>> plt.tight_layout()
         """
         df = self.df[self.df.Variant_Classification.isin(NONSYN_NAMES)]
@@ -617,19 +675,11 @@ class MafFrame:
         # Plot the heatmap.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
-        if kwargs is None:
-            kwargs = {}
         colors = list(reversed(NONSYN_COLORS + ['k', 'lightgray']))
-        sns.heatmap(df, cmap=colors, ax=ax, xticklabels=False, **kwargs)
+        sns.heatmap(df, cmap=colors, ax=ax, xticklabels=False,
+            cbar=False, **kwargs)
         ax.set_xlabel('Samples')
         ax.set_ylabel('')
-
-        # Modify the colorbar.
-        cbar = ax.collections[0].colorbar
-        r = cbar.vmax - cbar.vmin
-        n = len(d)
-        cbar.set_ticks([cbar.vmin + r / n * (0.5 + i) for i in range(n)])
-        cbar.set_ticklabels(list(d.keys()))
 
         return ax
 
