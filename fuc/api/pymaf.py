@@ -172,9 +172,13 @@ def plot_legend(name='regular', ax=None, figsize=None, **kwargs):
     h = []
     labels = copy.deepcopy(NONSYN_NAMES)
     colors = copy.deepcopy(NONSYN_COLORS)
-    if name == 'waterfall':
-        labels += ['Multi_Hit', 'None']
-        colors += ['k', 'lightgray']
+    if name == 'regular':
+        pass
+    elif name == 'waterfall':
+        labels += ['Multi_Hit']
+        colors += ['k']
+    else:
+        raise ValueError(f'Found incorrect name: {name}')
     for i, label in enumerate(labels):
         h.append(mpatches.Patch(color=colors[i], label=label))
     ax.legend(handles=h, **kwargs)
@@ -353,7 +357,39 @@ class MafFrame:
 
         return cls(df)
 
-    def plot_genes(self, count=10, ax=None, figsize=None, **kwargs):
+    def compute_genes(self, count, mode='variants'):
+        if mode == 'variants':
+            df = self.df[self.df.Variant_Classification.isin(NONSYN_NAMES)]
+            df = df.groupby('Hugo_Symbol')[
+                'Variant_Classification'].value_counts().to_frame()
+            df.columns = ['Count']
+            df = df.reset_index()
+            df = df.pivot(index='Hugo_Symbol', columns='Variant_Classification',
+                values='Count')
+            df = df.fillna(0)
+            for varcls in NONSYN_NAMES:
+                if varcls not in df.columns:
+                    df[varcls] = 0
+            i = df.sum(axis=1).sort_values(ascending=False).index
+            df = df.reindex(index=i)
+            df = df[NONSYN_NAMES]
+            df = df[:count]
+            df = df.rename_axis(None, axis=1)
+        elif mode == 'samples':
+            df = self.compute_waterfall(count)
+            df = df.apply(lambda r: r.value_counts(), axis=1)
+            for varcls in NONSYN_NAMES + ['Multi_Hit']:
+                if varcls not in df.columns:
+                    df[varcls] = np.nan
+            df = df[NONSYN_NAMES + ['Multi_Hit']]
+            df = df.fillna(0)
+        else:
+            raise ValueError(f'Found incorrect mode: {mode}')
+        return df
+
+    def plot_genes(
+        self, count=10, mode='variants', ax=None, figsize=None, **kwargs
+    ):
         """Create a bar plot for top mutated genes.
 
         Parameters
@@ -377,22 +413,53 @@ class MafFrame:
         --------
 
         .. plot::
+            :context: close-figs
 
             >>> import matplotlib.pyplot as plt
             >>> from fuc import common, pymaf
             >>> common.load_dataset('tcga-laml')
             >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
             >>> mf = pymaf.MafFrame.from_file(f)
-            >>> mf.plot_genes()
+            >>> mf.plot_genes(mode='variants')
+            >>> plt.tight_layout()
+
+        .. plot::
+            :context: close-figs
+
+            >>> mf.plot_genes(mode='samples')
             >>> plt.tight_layout()
         """
+        if mode == 'variants':
+            colors = NONSYN_COLORS
+        elif mode == 'samples':
+            colors = NONSYN_COLORS + ['k']
+        else:
+            raise ValueError(f'Found incorrect mode: {mode}')
+        df = self.compute_genes(count, mode=mode)
+        df = df.iloc[::-1]
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+        df.plot.barh(stacked=True, ax=ax, color=colors,
+            legend=False, **kwargs)
+        ax.set_xlabel('Count')
+        ax.set_ylabel('')
+        return ax
+
+    def compute_tmb(self):
+        """Compute tumor mutational burden (TMB) per sample.
+
+        Returns
+        -------
+        pandas.DataFrame
+            Dataframe containing TMB data.
+        """
         df = self.df[self.df.Variant_Classification.isin(NONSYN_NAMES)]
-        df = df.groupby('Hugo_Symbol')[
+        df = df.groupby('Tumor_Sample_Barcode')[
             'Variant_Classification'].value_counts().to_frame()
         df.columns = ['Count']
         df = df.reset_index()
-        df = df.pivot(index='Hugo_Symbol', columns='Variant_Classification',
-            values='Count')
+        df = df.pivot(index='Tumor_Sample_Barcode',
+            columns='Variant_Classification', values='Count')
         df = df.fillna(0)
         for varcls in NONSYN_NAMES:
             if varcls not in df.columns:
@@ -400,19 +467,46 @@ class MafFrame:
         i = df.sum(axis=1).sort_values(ascending=False).index
         df = df.reindex(index=i)
         df = df[NONSYN_NAMES]
-        df = df[:count]
-        df = df.iloc[::-1]
         df = df.rename_axis(None, axis=1)
-        if ax is None:
-            fig, ax = plt.subplots(figsize=figsize)
-        df.plot.barh(stacked=True, ax=ax, color=NONSYN_COLORS,
-            legend=False, **kwargs)
-        ax.set_xlabel('Count')
-        ax.set_ylabel('')
-        return ax
+        return df
 
-    def plot_samples(self, ax=None, figsize=None, **kwargs):
-        """Create a bar plot for variants per sample.
+    def compute_waterfall(self, count):
+        """Compute waterfall data.
+
+        Returns
+        -------
+        pandas.DataFrame
+            Dataframe containing waterfall data.
+        """
+        df = self.df[self.df.Variant_Classification.isin(NONSYN_NAMES)]
+        f = lambda x: ''.join(x) if len(x) == 1 else 'Multi_Hit'
+        df = df.groupby(['Hugo_Symbol', 'Tumor_Sample_Barcode'])[
+            'Variant_Classification'].apply(f).to_frame()
+        df = df.reset_index()
+        df = df.pivot(index='Hugo_Symbol', columns='Tumor_Sample_Barcode',
+            values='Variant_Classification')
+
+        # Sort the rows (genes).
+        i = df.isnull().sum(axis=1).sort_values(ascending=True).index
+        df = df.reindex(index=i)
+
+        # Select the top mutated genes.
+        df = df[:count]
+
+        # Remove columns (samples) with all NaN's.
+        df = df.dropna(axis=1, how='all')
+
+        # Sort the columns (samples).
+        c = df.applymap(lambda x: 0 if pd.isnull(x) else 1).sort_values(
+            df.index.to_list(), axis=1, ascending=False).columns
+        df = df[c]
+        df = df.fillna('None')
+        df = df.rename_axis(None, axis=1)
+
+        return df
+
+    def plot_tmb(self, ax=None, figsize=None, samples=None, **kwargs):
+        """Create a bar plot for tumor mutational burden (TMB) per sample.
 
         Parameters
         ----------
@@ -420,6 +514,8 @@ class MafFrame:
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
             Width, height in inches. Format: (float, float).
+        samples : list, optional
+            Samples to be drawn (in the exact order).
         kwargs
             Other keyword arguments will be passed down to
             :meth:`pandas.DataFrame.plot.barh`.
@@ -439,24 +535,12 @@ class MafFrame:
             >>> common.load_dataset('tcga-laml')
             >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
             >>> mf = pymaf.MafFrame.from_file(f)
-            >>> mf.plot_samples()
+            >>> mf.plot_tmb()
             >>> plt.tight_layout()
         """
-        df = self.df[self.df.Variant_Classification.isin(NONSYN_NAMES)]
-        df = df.groupby('Tumor_Sample_Barcode')[
-            'Variant_Classification'].value_counts().to_frame()
-        df.columns = ['Count']
-        df = df.reset_index()
-        df = df.pivot(index='Tumor_Sample_Barcode',
-            columns='Variant_Classification', values='Count')
-        df = df.fillna(0)
-        for varcls in NONSYN_NAMES:
-            if varcls not in df.columns:
-                df[varcls] = 0
-        i = df.sum(axis=1).sort_values(ascending=False).index
-        df = df.reindex(index=i)
-        df = df[NONSYN_NAMES]
-        df = df.rename_axis(None, axis=1)
+        df = self.compute_tmb()
+        if samples is not None:
+            df = df.loc[samples]
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
         df.plot.bar(stacked=True, ax=ax, width=1.0, legend=False,
@@ -643,31 +727,9 @@ class MafFrame:
             >>> mf.plot_waterfall(linewidths=0.5)
             >>> plt.tight_layout()
         """
-        df = self.df[self.df.Variant_Classification.isin(NONSYN_NAMES)]
-        f = lambda x: ''.join(x) if len(x) == 1 else 'Multi_Hit'
-        df = df.groupby(['Hugo_Symbol', 'Tumor_Sample_Barcode'])[
-            'Variant_Classification'].apply(f).to_frame()
-        df = df.reset_index()
-        df = df.pivot(index='Hugo_Symbol', columns='Tumor_Sample_Barcode',
-            values='Variant_Classification')
-
-        # Sort the rows (genes).
-        i = df.isnull().sum(axis=1).sort_values(ascending=True).index
-        df = df.reindex(index=i)
-
-        # Select the top mutated genes.
-        df = df[:count]
-
-        # Remove columns (samples) with all NaN's.
-        df = df.dropna(axis=1, how='all')
-
-        # Sort the columns (samples).
-        c = df.applymap(lambda x: 0 if pd.isnull(x) else 1).sort_values(
-            df.index.to_list(), axis=1, ascending=False).columns
-        df = df[c]
+        df = self.compute_waterfall(count)
 
         # Apply the mapping between items and integers.
-        df = df.fillna('None')
         l = reversed(NONSYN_NAMES + ['Multi_Hit', 'None'])
         d = {k: v for v, k in enumerate(l)}
         df = df.applymap(lambda x: d[x])
