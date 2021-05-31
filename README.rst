@@ -36,6 +36,7 @@ Currently, the following file formats are supported by fuc:
     - Binary Alignment/Map (BAM)
     - CRAM
     - Variant Call Format (VCF)
+    - Mutation Annotation Format (MAF)
     - Browser Extensible Data (BED)
     - FASTQ
     - delimiter-separated values format (e.g. comma-separated values or CSV format)
@@ -117,6 +118,17 @@ API Examples
        >>> vf = pyvcf.VcfFrame.from_file('with_indels.vcf')
        >>> filtered_vf = vf.filter_indel()
        >>> filtered_vf.to_file('no_indels.vcf')
+
+* To create an oncoplot from a MAF file:
+
+    .. plot::
+
+        >>> import matplotlib.pyplot as plt
+        >>> from fuc import common, pymaf
+        >>> common.load_dataset('tcga-laml')
+        >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+        >>> mf = pymaf.MafFrame.from_file(f)
+        >>> mf.plot_oncoplot(fontsize=14)
 
 Installation
 ============
@@ -204,7 +216,7 @@ Below is the list of submodules available in API:
 - **pybed** : The pybed submodule is designed for working with BED files. It implements :class:`pybed.BedFrame` which stores BED data as :class:`pandas.DataFrame` via the `pyranges <https://github.com/biocore-ntnu/pyranges>`_ package to allow fast computation and easy manipulation. The submodule strictly adheres to the standard `BED specification <https://genome.ucsc.edu/FAQ/FAQformat.html>`_.
 - **pycov** : The pycov submodule is designed for working with depth of coverage data from sequence alingment files (SAM/BAM/CRAM). It implements :class:`pycov.CovFrame` which stores read depth data as :class:`pandas.DataFrame` via the `pysam <https://pysam.readthedocs.io/en/latest/api.html>`_ package to allow fast computation and easy manipulation.
 - **pyfq** : The pyfq submodule is designed for working with FASTQ files. It implements the :class:`pyfq.FqFrame` which stores FASTQ data as :class:`pandas.DataFrame` to allow fast computation and easy manipulation.
-- **pymaf** : The pymaf submodule is designed for working with MAF files. It implements :class:`pymaf.MafFrame` which stores MAF data as :class:`pandas.DataFrame` to allow fast computation and easy manipulation. The class also contains many useful plotting methods such as :meth:`pymaf.MafFrame.plot_varcls` and :meth:`pymaf.MafFrame.plot_waterfall`. The submodule strictly adheres to the standard `MAF specification <https://docs.gdc.cancer.gov/Data/File_Formats/MAF_Format/>`_.
+- **pymaf** : The pymaf submodule is designed for working with MAF files. It implements :class:`pymaf.MafFrame` which stores MAF data as :class:`pandas.DataFrame` to allow fast computation and easy manipulation. The class also contains many useful plotting methods such as :meth:`MafFrame.plot_varcls` and :meth:`MafFrame.plot_waterfall`. The submodule strictly adheres to the standard `MAF specification <https://docs.gdc.cancer.gov/Data/File_Formats/MAF_Format/>`_.
 - **pysnpeff** : The pysnpeff submodule is designed for parsing VCF annotation data from the `SnpEff <https://pcingola.github.io/SnpEff/>`_ program. It is designed to be used with :class:`pyvcf.VcfFrame`.
 - **pyvcf** : The pyvcf submodule is designed for working with VCF files. It implements :class:`pyvcf.VcfFrame` class which stores VCF data as :class:`pandas.DataFrame` to allow fast computation and easy manipulation. The submodule strictly adheres to the standard `VCF specification <https://samtools.github.io/hts-specs/VCFv4.3.pdf>`_.
 - **pyvep** : The pyvep submodule is designed for parsing VCF annotation data from the `Ensembl VEP <https://asia.ensembl.org/info/docs/tools/vep/index.html>`_. It is designed to be used with :class:`pyvcf.VcfFrame`.

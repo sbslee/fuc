@@ -694,7 +694,7 @@ class MafFrame:
         return ax
 
     def plot_waterfall(self, count=10, ax=None, figsize=None, **kwargs):
-        """Create a waterfall plot (oncoplot).
+        """Create a waterfall plot.
 
         Parameters
         ----------
@@ -754,6 +754,74 @@ class MafFrame:
             VCF file path.
         """
         self.df.to_csv(fn, index=False, sep='\t')
+
+    def plot_oncoplot(self, count=10, figsize=(15, 10), fontsize=10):
+        """Create an oncoplot.
+
+        Parameters
+        ----------
+        count : int, default: 10
+            Number of top mutated genes to display.
+        figsize : tuple, default: (15, 10)
+            Width, height in inches. Format: (float, float).
+        fontsize : int, default: 10
+            Font size.
+
+        Examples
+        --------
+
+        .. plot::
+
+            >>> import matplotlib.pyplot as plt
+            >>> from fuc import common, pymaf
+            >>> common.load_dataset('tcga-laml')
+            >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+            >>> mf = pymaf.MafFrame.from_file(f)
+            >>> mf.plot_oncoplot(fontsize=14)
+        """
+        samples = list(self.compute_waterfall(count).columns)
+
+        plt.rc('font', size=fontsize)
+        fig, axes = plt.subplots(3, 2, figsize=figsize,
+            gridspec_kw={'height_ratios': [1, 10, 1],
+                         'width_ratios': [10, 1]})
+        [[ax1, ax2], [ax3, ax4], [ax5, ax6]] = axes
+
+        # Create the TMB plot.
+        self.plot_tmb(ax=ax1, samples=samples)
+        ax1.set_xlabel('')
+        ax1.spines['right'].set_visible(False)
+        ax1.spines['top'].set_visible(False)
+        ax1.spines['bottom'].set_visible(False)
+        ax1.set_ylabel('TMB')
+        ax1.set_yticks([0, self.compute_tmb().sum(axis=1).max()])
+
+        # Remove the top right plot.
+        ax2.remove()
+
+        # Create the waterfall plot.
+        self.plot_waterfall(ax=ax3, linewidths=1)
+        ax3.set_xlabel('')
+
+        # Create the genes plot.
+        self.plot_genes(ax=ax4, mode='samples', width=0.95)
+        ax4.spines['right'].set_visible(False)
+        ax4.spines['left'].set_visible(False)
+        ax4.spines['top'].set_visible(False)
+        ax4.set_yticks([])
+        ax4.set_xlabel('Samples')
+        ax4.set_xticks([0, self.compute_genes(
+            10, mode='samples').sum(axis=1).max()])
+        ax4.set_ylim(-0.5, count-0.5)
+
+        # Create the legend.
+        plot_legend(name='waterfall', ax=ax5, ncol=4, loc='upper center')
+
+        # Remove the bottom right plot.
+        ax6.remove()
+
+        plt.tight_layout()
+        plt.subplots_adjust(wspace=0.01, hspace=0.01)
 
 class AnnFrame:
     """Class for storing annotation data.

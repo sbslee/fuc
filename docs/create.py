@@ -64,6 +64,7 @@ Currently, the following file formats are supported by fuc:
     - Binary Alignment/Map (BAM)
     - CRAM
     - Variant Call Format (VCF)
+    - Mutation Annotation Format (MAF)
     - Browser Extensible Data (BED)
     - FASTQ
     - delimiter-separated values format (e.g. comma-separated values or CSV format)
@@ -145,6 +146,17 @@ API Examples
        >>> vf = pyvcf.VcfFrame.from_file('with_indels.vcf')
        >>> filtered_vf = vf.filter_indel()
        >>> filtered_vf.to_file('no_indels.vcf')
+
+* To create an oncoplot from a MAF file:
+
+    .. plot::
+
+        >>> import matplotlib.pyplot as plt
+        >>> from fuc import common, pymaf
+        >>> common.load_dataset('tcga-laml')
+        >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+        >>> mf = pymaf.MafFrame.from_file(f)
+        >>> mf.plot_oncoplot(fontsize=14)
 
 Installation
 ============
