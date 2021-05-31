@@ -4,7 +4,8 @@ def create_parser(subparsers):
     parser = subparsers.add_parser(
         api.common.script_name(__file__),
         help='[FASTQ] summarize a FASTQ file',
-        description='This command will output a summary of the input FASTQ '
+        description=
+            'This command will output a summary of the input FASTQ '
             'file (both zipped and unqzipped). The summary includes '
             'the total number of sequence reads, the distribution of read '
             'lengths, and the numbers of unique and duplicate sequences.'

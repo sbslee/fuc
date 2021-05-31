@@ -4,8 +4,9 @@ def create_parser(subparsers):
     parser = subparsers.add_parser(
         api.common.script_name(__file__),
         help='[VCF] slice a VCF file',
-        description='This command will slice a VCF file (both zipped '
-                    'and unzipped).'
+        description=
+            'This command will slice a VCF file (both zipped '
+            'and unzipped).'
     )
     parser.add_argument('vcf_file', help='VCF file')
     parser.add_argument('chrom', help='chromosome')

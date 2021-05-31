@@ -357,7 +357,19 @@ class MafFrame:
 
         return cls(df)
 
-    def compute_genes(self, count, mode='variants'):
+    def compute_genes(self, count=10, mode='variants'):
+        """Compute a matrix of counts for genes and variant classifications.
+
+        Parameters
+        ----------
+        count : int, default: 10
+            Number of top mutated genes to display.
+
+        Returns
+        -------
+        pandas.DataFrame
+            Dataframe containing TMB data.
+        """
         if mode == 'variants':
             df = self.df[self.df.Variant_Classification.isin(NONSYN_NAMES)]
             df = df.groupby('Hugo_Symbol')[
@@ -385,6 +397,71 @@ class MafFrame:
             df = df.fillna(0)
         else:
             raise ValueError(f'Found incorrect mode: {mode}')
+        return df
+
+    def compute_tmb(self):
+        """Compute a matrix of counts for samples and variant classifications.
+
+        Returns
+        -------
+        pandas.DataFrame
+            Dataframe containing TMB data.
+        """
+        df = self.df[self.df.Variant_Classification.isin(NONSYN_NAMES)]
+        df = df.groupby('Tumor_Sample_Barcode')[
+            'Variant_Classification'].value_counts().to_frame()
+        df.columns = ['Count']
+        df = df.reset_index()
+        df = df.pivot(index='Tumor_Sample_Barcode',
+            columns='Variant_Classification', values='Count')
+        df = df.fillna(0)
+        for varcls in NONSYN_NAMES:
+            if varcls not in df.columns:
+                df[varcls] = 0
+        i = df.sum(axis=1).sort_values(ascending=False).index
+        df = df.reindex(index=i)
+        df = df[NONSYN_NAMES]
+        df = df.rename_axis(None, axis=1)
+        return df
+
+    def compute_waterfall(self, count=10):
+        """Compute a matrix of variant classifications for genes and samples.
+
+        Parameters
+        ----------
+        count : int, default: 10
+            Number of top mutated genes to display.
+
+        Returns
+        -------
+        pandas.DataFrame
+            Dataframe containing waterfall data.
+        """
+        df = self.df[self.df.Variant_Classification.isin(NONSYN_NAMES)]
+        f = lambda x: ''.join(x) if len(x) == 1 else 'Multi_Hit'
+        df = df.groupby(['Hugo_Symbol', 'Tumor_Sample_Barcode'])[
+            'Variant_Classification'].apply(f).to_frame()
+        df = df.reset_index()
+        df = df.pivot(index='Hugo_Symbol', columns='Tumor_Sample_Barcode',
+            values='Variant_Classification')
+
+        # Sort the rows (genes).
+        i = df.isnull().sum(axis=1).sort_values(ascending=True).index
+        df = df.reindex(index=i)
+
+        # Select the top mutated genes.
+        df = df[:count]
+
+        # Remove columns (samples) with all NaN's.
+        df = df.dropna(axis=1, how='all')
+
+        # Sort the columns (samples).
+        c = df.applymap(lambda x: 0 if pd.isnull(x) else 1).sort_values(
+            df.index.to_list(), axis=1, ascending=False).columns
+        df = df[c]
+        df = df.fillna('None')
+        df = df.rename_axis(None, axis=1)
+
         return df
 
     def plot_genes(
@@ -445,85 +522,17 @@ class MafFrame:
         ax.set_ylabel('')
         return ax
 
-    def compute_tmb(self):
-        """Compute tumor mutational burden (TMB) per sample.
-
-        Returns
-        -------
-        pandas.DataFrame
-            Dataframe containing TMB data.
-        """
-        df = self.df[self.df.Variant_Classification.isin(NONSYN_NAMES)]
-        df = df.groupby('Tumor_Sample_Barcode')[
-            'Variant_Classification'].value_counts().to_frame()
-        df.columns = ['Count']
-        df = df.reset_index()
-        df = df.pivot(index='Tumor_Sample_Barcode',
-            columns='Variant_Classification', values='Count')
-        df = df.fillna(0)
-        for varcls in NONSYN_NAMES:
-            if varcls not in df.columns:
-                df[varcls] = 0
-        i = df.sum(axis=1).sort_values(ascending=False).index
-        df = df.reindex(index=i)
-        df = df[NONSYN_NAMES]
-        df = df.rename_axis(None, axis=1)
-        return df
-
-    def compute_waterfall(self, count):
-        """Compute waterfall data.
-
-        Returns
-        -------
-        pandas.DataFrame
-            Dataframe containing waterfall data.
-        """
-        df = self.df[self.df.Variant_Classification.isin(NONSYN_NAMES)]
-        f = lambda x: ''.join(x) if len(x) == 1 else 'Multi_Hit'
-        df = df.groupby(['Hugo_Symbol', 'Tumor_Sample_Barcode'])[
-            'Variant_Classification'].apply(f).to_frame()
-        df = df.reset_index()
-        df = df.pivot(index='Hugo_Symbol', columns='Tumor_Sample_Barcode',
-            values='Variant_Classification')
-
-        # Sort the rows (genes).
-        i = df.isnull().sum(axis=1).sort_values(ascending=True).index
-        df = df.reindex(index=i)
-
-        # Select the top mutated genes.
-        df = df[:count]
-
-        # Remove columns (samples) with all NaN's.
-        df = df.dropna(axis=1, how='all')
-
-        # Sort the columns (samples).
-        c = df.applymap(lambda x: 0 if pd.isnull(x) else 1).sort_values(
-            df.index.to_list(), axis=1, ascending=False).columns
-        df = df[c]
-        df = df.fillna('None')
-        df = df.rename_axis(None, axis=1)
-
-        return df
-
-    def plot_tmb(self, ax=None, figsize=None, samples=None, **kwargs):
-        """Create a bar plot for tumor mutational burden (TMB) per sample.
+    def plot_oncoplot(self, count=10, figsize=(15, 10), fontsize=10):
+        """Create an oncoplot.
 
         Parameters
         ----------
-        ax : matplotlib.axes.Axes, optional
-            Pre-existing axes for the plot. Otherwise, crete a new one.
-        figsize : tuple, optional
+        count : int, default: 10
+            Number of top mutated genes to display.
+        figsize : tuple, default: (15, 10)
             Width, height in inches. Format: (float, float).
-        samples : list, optional
-            Samples to be drawn (in the exact order).
-        kwargs
-            Other keyword arguments will be passed down to
-            :meth:`pandas.DataFrame.plot.barh`.
-
-        Returns
-        -------
-        matplotlib.axes.Axes
-            The matplotlib axes containing the plot.
+        fontsize : int, default: 10
+            Font size.
 
         Examples
         --------
@@ -535,20 +544,51 @@ class MafFrame:
             >>> common.load_dataset('tcga-laml')
             >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
             >>> mf = pymaf.MafFrame.from_file(f)
-            >>> mf.plot_tmb()
-            >>> plt.tight_layout()
+            >>> mf.plot_oncoplot(fontsize=14)
         """
-        df = self.compute_tmb()
-        if samples is not None:
-            df = df.loc[samples]
-        if ax is None:
-            fig, ax = plt.subplots(figsize=figsize)
-        df.plot.bar(stacked=True, ax=ax, width=1.0, legend=False,
-            color=NONSYN_COLORS, **kwargs)
-        ax.set_xlabel('Samples')
-        ax.set_ylabel('Count')
-        ax.set_xticks([])
-        return ax
+        samples = list(self.compute_waterfall(count).columns)
+
+        plt.rc('font', size=fontsize)
+        fig, axes = plt.subplots(3, 2, figsize=figsize,
+            gridspec_kw={'height_ratios': [1, 10, 1],
+                         'width_ratios': [10, 1]})
+        [[ax1, ax2], [ax3, ax4], [ax5, ax6]] = axes
+
+        # Create the TMB plot.
+        self.plot_tmb(ax=ax1, samples=samples)
+        ax1.set_xlabel('')
+        ax1.spines['right'].set_visible(False)
+        ax1.spines['top'].set_visible(False)
+        ax1.spines['bottom'].set_visible(False)
+        ax1.set_ylabel('TMB')
+        ax1.set_yticks([0, self.compute_tmb().sum(axis=1).max()])
+
+        # Remove the top right plot.
+        ax2.remove()
+
+        # Create the waterfall plot.
+        self.plot_waterfall(ax=ax3, linewidths=1)
+        ax3.set_xlabel('')
+
+        # Create the genes plot.
+        self.plot_genes(ax=ax4, mode='samples', width=0.95)
+        ax4.spines['right'].set_visible(False)
+        ax4.spines['left'].set_visible(False)
+        ax4.spines['top'].set_visible(False)
+        ax4.set_yticks([])
+        ax4.set_xlabel('Samples')
+        ax4.set_xticks([0, self.compute_genes(
+            10, mode='samples').sum(axis=1).max()])
+        ax4.set_ylim(-0.5, count-0.5)
+
+        # Create the legend.
+        plot_legend(name='waterfall', ax=ax5, ncol=4, loc='upper center')
+
+        # Remove the bottom right plot.
+        ax6.remove()
+
+        plt.tight_layout()
+        plt.subplots_adjust(wspace=0.01, hspace=0.01)
 
     def plot_snvcls(self, ax=None, figsize=None, **kwargs):
         """Create a bar plot for SNV class.
@@ -602,6 +642,51 @@ class MafFrame:
             palette='pastel', **kwargs)
         ax.set_xlabel('Count')
         ax.set_ylabel('')
+        return ax
+
+    def plot_tmb(self, ax=None, figsize=None, samples=None, **kwargs):
+        """Create a bar plot for tumor mutational burden (TMB) per sample.
+
+        Parameters
+        ----------
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+        samples : list, optional
+            Samples to be drawn (in the exact order).
+        kwargs
+            Other keyword arguments will be passed down to
+            :meth:`pandas.DataFrame.plot.barh`.
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+
+        Examples
+        --------
+
+        .. plot::
+
+            >>> import matplotlib.pyplot as plt
+            >>> from fuc import common, pymaf
+            >>> common.load_dataset('tcga-laml')
+            >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+            >>> mf = pymaf.MafFrame.from_file(f)
+            >>> mf.plot_tmb()
+            >>> plt.tight_layout()
+        """
+        df = self.compute_tmb()
+        if samples is not None:
+            df = df.loc[samples]
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+        df.plot.bar(stacked=True, ax=ax, width=1.0, legend=False,
+            color=NONSYN_COLORS, **kwargs)
+        ax.set_xlabel('Samples')
+        ax.set_ylabel('Count')
+        ax.set_xticks([])
         return ax
 
     def plot_varcls(self, ax=None, figsize=None, **kwargs):
@@ -754,74 +839,6 @@ class MafFrame:
             VCF file path.
         """
         self.df.to_csv(fn, index=False, sep='\t')
-
-    def plot_oncoplot(self, count=10, figsize=(15, 10), fontsize=10):
-        """Create an oncoplot.
-
-        Parameters
-        ----------
-        count : int, default: 10
-            Number of top mutated genes to display.
-        figsize : tuple, default: (15, 10)
-            Width, height in inches. Format: (float, float).
-        fontsize : int, default: 10
-            Font size.
-
-        Examples
-        --------
-
-        .. plot::
-
-            >>> import matplotlib.pyplot as plt
-            >>> from fuc import common, pymaf
-            >>> common.load_dataset('tcga-laml')
-            >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
-            >>> mf = pymaf.MafFrame.from_file(f)
-            >>> mf.plot_oncoplot(fontsize=14)
-        """
-        samples = list(self.compute_waterfall(count).columns)
-
-        plt.rc('font', size=fontsize)
-        fig, axes = plt.subplots(3, 2, figsize=figsize,
-            gridspec_kw={'height_ratios': [1, 10, 1],
-                         'width_ratios': [10, 1]})
-        [[ax1, ax2], [ax3, ax4], [ax5, ax6]] = axes
-
-        # Create the TMB plot.
-        self.plot_tmb(ax=ax1, samples=samples)
-        ax1.set_xlabel('')
-        ax1.spines['right'].set_visible(False)
-        ax1.spines['top'].set_visible(False)
-        ax1.spines['bottom'].set_visible(False)
-        ax1.set_ylabel('TMB')
-        ax1.set_yticks([0, self.compute_tmb().sum(axis=1).max()])
-
-        # Remove the top right plot.
-        ax2.remove()
-
-        # Create the waterfall plot.
-        self.plot_waterfall(ax=ax3, linewidths=1)
-        ax3.set_xlabel('')
-
-        # Create the genes plot.
-        self.plot_genes(ax=ax4, mode='samples', width=0.95)
-        ax4.spines['right'].set_visible(False)
-        ax4.spines['left'].set_visible(False)
-        ax4.spines['top'].set_visible(False)
-        ax4.set_yticks([])
-        ax4.set_xlabel('Samples')
-        ax4.set_xticks([0, self.compute_genes(
-            10, mode='samples').sum(axis=1).max()])
-        ax4.set_ylim(-0.5, count-0.5)
-
-        # Create the legend.
-        plot_legend(name='waterfall', ax=ax5, ncol=4, loc='upper center')
-
-        # Remove the bottom right plot.
-        ax6.remove()
-
-        plt.tight_layout()
-        plt.subplots_adjust(wspace=0.01, hspace=0.01)
 
 class AnnFrame:
     """Class for storing annotation data.

@@ -4,7 +4,8 @@ def create_parser(subparsers):
     parser = subparsers.add_parser(
         api.common.script_name(__file__),
         help='[BED] summarize a BED file',
-        description='This command will compute summary statstics of the '
+        description=
+            'This command will compute summary statstics of the '
             'BED file. This includes the total numbers of probes and '
             'covered base pairs for each chromosome. By default, covered '
             'base paris are displayed in bp, but if you prefer you can, '

@@ -60,20 +60,20 @@ You can use fuc for both command line interface (CLI) and application programmin
 
 Currently, the following file formats are supported by fuc:
 
-    - Sequence Alignment/Map (SAM)
-    - Binary Alignment/Map (BAM)
-    - CRAM
-    - Variant Call Format (VCF)
-    - Mutation Annotation Format (MAF)
-    - Browser Extensible Data (BED)
-    - FASTQ
-    - delimiter-separated values format (e.g. comma-separated values or CSV format)
+- Sequence Alignment/Map (SAM)
+- Binary Alignment/Map (BAM)
+- CRAM
+- Variant Call Format (VCF)
+- Mutation Annotation Format (MAF)
+- Browser Extensible Data (BED)
+- FASTQ
+- delimiter-separated values format (e.g. comma-separated values or CSV format)
 
 Additionally, you can use fuc to parse output data from the following programs:
 
-    - Ensembl Variant Effect Predictor (VEP)
-    - SnpEff
-    - bcl2fastq and bcl2fastq2
+- Ensembl Variant Effect Predictor (VEP)
+- SnpEff
+- bcl2fastq and bcl2fastq2
 
 Your contributions (e.g. feature ideas, pull requests) are most welcome.
 
@@ -84,79 +84,79 @@ Your contributions (e.g. feature ideas, pull requests) are most welcome.
 CLI Examples
 ============
 
-* To print the header of a BAM file:
+To print the header of a BAM file:
 
-    .. code-block:: console
+.. code-block:: console
 
-       $ fuc bam_head example.bam
+   $ fuc bam_head example.bam
 
-* To find intersection between BED files:
+To find intersection between BED files:
 
-    .. code-block:: console
+.. code-block:: console
 
-       $ fuc bed_intxn 1.bed 2.bed 3.bed > intersect.bed
+   $ fuc bed_intxn 1.bed 2.bed 3.bed > intersect.bed
 
-* To count sequence reads in a FASTQ file:
+To count sequence reads in a FASTQ file:
 
-    .. code-block:: console
+.. code-block:: console
 
-       $ fuc fq_count example.fastq
+   $ fuc fq_count example.fastq
 
-* To check whether a file exists in the operating system:
+To check whether a file exists in the operating system:
 
-    .. code-block:: console
+.. code-block:: console
 
-       $ fuc fuc_exist example.txt
+   $ fuc fuc_exist example.txt
 
-* To find all VCF files within the current directory recursively:
+To find all VCF files within the current directory recursively:
 
-    .. code-block:: console
+.. code-block:: console
 
-       $ fuc fuc_find . vcf
+   $ fuc fuc_find . vcf
 
-* To merge two tab-delimited files:
+To merge two tab-delimited files:
 
-    .. code-block:: console
+.. code-block:: console
 
-       $ fuc tbl_merge left.txt right.txt > merged.txt
+   $ fuc tbl_merge left.txt right.txt > merged.txt
 
-* To merge VCF files:
+To merge VCF files:
 
-    .. code-block:: console
+.. code-block:: console
 
-       $ fuc vcf_merge 1.vcf 2.vcf 3.vcf > merged.vcf
+   $ fuc vcf_merge 1.vcf 2.vcf 3.vcf > merged.vcf
 
 API Examples
 ============
 
-* To filter a VCF file based on a BED file:
+To filter a VCF file based on a BED file:
 
-    .. code:: python3
+.. code:: python3
 
-       >>> from fuc import pyvcf
-       >>> vf = pyvcf.VcfFrame.from_file('original.vcf')
-       >>> filtered_vf = vf.filter_bed('targets.bed')
-       >>> filtered_vf.to_file('filtered.vcf')
+   >>> from fuc import pyvcf
+   >>> vf = pyvcf.VcfFrame.from_file('original.vcf')
+   >>> filtered_vf = vf.filter_bed('targets.bed')
+   >>> filtered_vf.to_file('filtered.vcf')
 
-* To remove indels from a VCF file:
+To remove indels from a VCF file:
 
-    .. code:: python3
+.. code:: python3
 
-       >>> from fuc import pyvcf
-       >>> vf = pyvcf.VcfFrame.from_file('with_indels.vcf')
-       >>> filtered_vf = vf.filter_indel()
-       >>> filtered_vf.to_file('no_indels.vcf')
+   >>> from fuc import pyvcf
+   >>> vf = pyvcf.VcfFrame.from_file('with_indels.vcf')
+   >>> filtered_vf = vf.filter_indel()
+   >>> filtered_vf.to_file('no_indels.vcf')
 
-* To create an oncoplot from a MAF file:
+To create an oncoplot from a MAF file:
 
-    .. code:: python3
+.. code:: python3
 
-        >>> import matplotlib.pyplot as plt
-        >>> from fuc import common, pymaf
-        >>> common.load_dataset('tcga-laml')
-        >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
-        >>> mf = pymaf.MafFrame.from_file(f)
-        >>> mf.plot_oncoplot(fontsize=14)
+    >>> import matplotlib.pyplot as plt
+    >>> from fuc import common, pymaf
+    >>> common.load_dataset('tcga-laml')
+    >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+    >>> mf = pymaf.MafFrame.from_file(f)
+    >>> mf.plot_oncoplot(fontsize=14)
 
 .. image:: https://raw.githubusercontent.com/sbslee/fuc-data/main/images/oncoplot.png
 
@@ -196,7 +196,7 @@ Finally, you can clone the GitHub repository and then install fuc this way:
    $ cd fuc
    $ pip install .
 
-The nice thing about this approach is that you will have access to a development version that's not available in Anaconda or PyPI. That is, you can access a development branch with the ``git checkout`` command.
+The nice thing about this approach is that you will have access to a development version that's not available in Anaconda or PyPI. For example, you can access a development branch with the ``git checkout`` command.
 
 Getting Help
 ============

@@ -4,11 +4,12 @@ def create_parser(subparsers):
     parser = subparsers.add_parser(
         api.common.script_name(__file__),
         help='[VCF] merge two or more VCF files',
-        description='This command will merge multiple VCF files (both zipped '
-                    'and unzipped). By default, only the GT subfield of '
-                    'the FORMAT field will be included in the merged VCF. '
-                    "Use '--format' to include additional FORMAT "
-                    'subfields such as AD and DP.'
+        description=
+            'This command will merge multiple VCF files (both zipped '
+            'and unzipped). By default, only the GT subfield of '
+            'the FORMAT field will be included in the merged VCF. '
+            "Use '--format' to include additional FORMAT "
+            'subfields such as AD and DP.'
     )
     parser.add_argument('vcf_files', help='VCF files', nargs='+')
     parser.add_argument('--how', metavar='TEXT', default='inner',

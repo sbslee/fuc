@@ -30,6 +30,8 @@ For getting help on CLI:
        fuc_demux    [FUC] parse Reports directory from bcl2fastq or bcl2fastq2
        fuc_exist    [FUC] check whether files/dirs exist
        fuc_find     [FUC] find files with certain extension recursively
+       maf_oncoplt  [MAF] create an oncoplot from a MAF file
+       maf_vcf2maf  [MAF] convert an annotated VCF file to a MAF file
        tbl_merge    [TABLE] merge two table files
        tbl_sum      [TABLE] summarize a table file
        vcf_merge    [VCF] merge two or more VCF files
@@ -255,12 +257,46 @@ fuc_find
    usage: fuc fuc_find [-h] path extension
    
    This command will recursively find files with a certain extension -- such as
-   '.txt' and '.vcf' -- within the given directory and return their absolute
+   '.txt' and '.vcf' -- withinthe given directory and return their absolute
    paths.
    
    positional arguments:
      path        directory path
      extension   extension
+   
+   optional arguments:
+     -h, --help  show this help message and exit
+
+maf_oncoplt
+===========
+
+.. code-block:: console
+
+   $ fuc maf_oncoplt -h
+   usage: fuc maf_oncoplt [-h] maf_file plot_file
+   
+   This command will create an oncoplot from a MAF file.
+   
+   positional arguments:
+     maf_file    input MAF file
+     plot_file   output plot file
+   
+   optional arguments:
+     -h, --help  show this help message and exit
+
+maf_vcf2maf
+===========
+
+.. code-block:: console
+
+   $ fuc maf_vcf2maf -h
+   usage: fuc maf_vcf2maf [-h] vcf maf
+   
+   This command will convert an annotated VCF file to a MAF file.
+   
+   positional arguments:
+     vcf         annotated VCF file
+     maf         MAF file
    
    optional arguments:
      -h, --help  show this help message and exit

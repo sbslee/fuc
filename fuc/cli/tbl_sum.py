@@ -6,9 +6,10 @@ def create_parser(subparsers):
     parser = subparsers.add_parser(
         api.common.script_name(__file__),
         help='[TABLE] summarize a table file',
-        description='This command will summarize a table file. It '
-                    'essentially wraps the `pandas.Series.describe` '
-                    'and `pandas.Series.value_counts` methods.'
+        description=
+            'This command will summarize a table file. It '
+            'essentially wraps the `pandas.Series.describe` '
+            'and `pandas.Series.value_counts` methods.'
     )
     parser.add_argument(
         'table_file',
