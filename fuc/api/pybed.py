@@ -1,7 +1,7 @@
 """
 The pybed submodule is designed for working with BED files. It
-implements the ``pybed.BedFrame`` class which stores BED data as
-``pandas.DataFrame`` via the `pyranges
+implements :class:`pybed.BedFrame` which stores BED data as
+:class:`pandas.DataFrame` via the `pyranges
 <https://github.com/biocore-ntnu/pyranges>`_ package to allow fast
 computation and easy manipulation. The submodule strictly adheres to the
 standard `BED specification <https://genome.ucsc.edu/FAQ/FAQformat.html>`_.

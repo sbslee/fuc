@@ -1,8 +1,10 @@
 """
 The pymaf submodule is designed for working with MAF files. It implements
-the ``pymaf.MafFrame`` class which stores MAF data as ``pandas.DataFrame``
-to allow fast computation and easy manipulation. The submodule strictly
-adheres to the standard `MAF specification
+:class:`pymaf.MafFrame` which stores MAF data as :class:`pandas.DataFrame`
+to allow fast computation and easy manipulation. The class also contains
+many useful plotting methods such as :meth:`pymaf.MafFrame.plot_varcls` and
+:meth:`pymaf.MafFrame.plot_waterfall`. The submodule strictly adheres to the
+standard `MAF specification
 <https://docs.gdc.cancer.gov/Data/File_Formats/MAF_Format/>`_.
 """
 
@@ -13,33 +15,79 @@ import re
 import matplotlib.pyplot as plt
 from . import pyvcf
 
-VARCLS_DICT = {
-    "3'Flank": {'COLOR': None},
-    "3'UTR": {'COLOR': None},
-    "5'Flank": {'COLOR': None},
-    "5'UTR": {'COLOR': None},
-    'De_novo_Start_InFrame': {'COLOR': None},
-    'De_novo_Start_OutOfFrame': {'COLOR': None},
-    'Frame_Shift_Del': {'COLOR': 'tab:blue'},
-    'Frame_Shift_Ins': {'COLOR': 'tab:purple'},
-    'IGR': {'COLOR': None},
-    'In_Frame_Del': {'COLOR': 'tab:olive'},
-    'In_Frame_Ins': {'COLOR': 'tab:red'},
-    'Intron': {'COLOR': None},
-    'Missense_Mutation': {'COLOR': 'tab:green'},
-    'Nonsense_Mutation': {'COLOR': 'tab:cyan'},
-    'Nonstop_Mutation': {'COLOR': 'tab:pink'},
-    'RNA': {'COLOR': None},
-    'Silent': {'COLOR': None},
-    'Splice_Region': {'COLOR': None},
-    'Splice_Site': {'COLOR': 'tab:orange'},
-    'Start_Codon_Ins': {'COLOR': None},
-    'Start_Codon_SNP': {'COLOR': None},
-    'Stop_Codon_Del': {'COLOR': None},
-    'Targeted_Region': {'COLOR': None},
-    'Translation_Start_Site': {'COLOR': 'tab:brown'},
-    'lincRNA': {'COLOR': None},
+# Below is the list of calculated variant consequences from Ensemble VEP:
+# https://m.ensembl.org/info/genome/variation/prediction/predicted_data.html
+# (accessed on 2021-05-31)
+#
+# Note that both frameshift_variant and protein_altering_variant require
+# additional information to find their correct Variant_Classification.
+
+VEP_CONSEQUENCES = {
+    'transcript_ablation':                'Splice_Site',
+    'splice_acceptor_variant':            'Splice_Site',
+    'splice_donor_variant':               'Splice_Site',
+    'stop_gained':                        'Nonsense_Mutation',
+    'frameshift_variant':                 'AMBIGUOUS',
+    'stop_lost':                          'Nonstop_Mutation',
+    'start_lost':                         'Translation_Start_Site',
+    'transcript_amplification':           'Intron',
+    'inframe_insertion':                  'In_Frame_Ins',
+    'inframe_deletion':                   'In_Frame_Del',
+    'missense_variant':                   'Missense_Mutation',
+    'protein_altering_variant':           'AMBIGUOUS',
+    'splice_region_variant':              'Splice_Region',
+    'incomplete_terminal_codon_variant':  'Silent',
+    'start_retained_variant':             'Silent',
+    'stop_retained_variant':              'Silent',
+    'synonymous_variant':                 'Silent',
+    'coding_sequence_variant':            'Missense_Mutation',
+    'mature_miRNA_variant':               'RNA',
+    '5_prime_UTR_variant':                "5'UTR",
+    '3_prime_UTR_variant':                "3'UTR",
+    'non_coding_transcript_exon_variant': 'RNA',
+    'intron_variant':                     'Intron',
+    'NMD_transcript_variant':             'Silent',
+    'non_coding_transcript_variant':      'RNA',
+    'upstream_gene_variant':              "5'Flank",
+    'downstream_gene_variant':            "3'Flank",
+    'TFBS_ablation':                      'Targeted_Region',
+    'TFBS_amplification':                 'Targeted_Region',
+    'TF_binding_site_variant':            'IGR',
+    'regulatory_region_ablation':         'Targeted_Region',
+    'regulatory_region_amplification':    'Targeted_Region',
+    'feature_elongation':                 'Targeted_Region',
+    'regulatory_region_variant':          'IGR',
+    'feature_truncation':                 'Targeted_Region',
+    'intergenic_variant':                 'IGR',
 }
+
+VARCLS_LIST = [
+    "3'Flank",
+    "3'UTR",
+    "5'Flank",
+    "5'UTR",
+    'De_novo_Start_InFrame',
+    'De_novo_Start_OutOfFrame',
+    'Frame_Shift_Del',
+    'Frame_Shift_Ins',
+    'IGR',
+    'In_Frame_Del',
+    'In_Frame_Ins',
+    'Intron',
+    'Missense_Mutation',
+    'Nonsense_Mutation',
+    'Nonstop_Mutation',
+    'RNA',
+    'Silent',
+    'Splice_Region',
+    'Splice_Site',
+    'Start_Codon_Ins',
+    'Start_Codon_SNP',
+    'Stop_Codon_Del',
+    'Targeted_Region',
+    'Translation_Start_Site',
+    'lincRNA',
+]
 
 NONSYN_NAMES = [
     'Missense_Mutation', 'Frame_Shift_Del', 'Frame_Shift_Ins',
@@ -47,7 +95,10 @@ NONSYN_NAMES = [
     'Nonstop_Mutation', 'Splice_Site', 'Translation_Start_Site'
 ]
 
-NONSYN_COLORS = [VARCLS_DICT[x]['COLOR'] for x in NONSYN_NAMES]
+NONSYN_COLORS = [
+    'tab:green', 'tab:blue', 'tab:purple', 'tab:olive', 'tab:red',
+    'tab:cyan', 'tab:pink', 'tab:orange', 'tab:brown'
+]
 
 SNVCLS = {
     'A>C': {'REP': 'T>G'},
@@ -63,125 +114,6 @@ SNVCLS = {
     'T>C': {'REP': 'T>C'},
     'T>G': {'REP': 'T>G'},
 }
-
-def vcf2maf(fn):
-    """Convert a VCF file to a MAF file.
-
-    Parameters
-    ----------
-    fn : str
-        VCF file path.
-    """
-    vf = pyvcf.VcfFrame.from_file(fn)
-
-    # Get the NCBI_Build data.
-    for line in vf.meta:
-        if line.startswith('##VEP'):
-            ncbi_build = re.search(r'assembly="(.*?)"', line).group(1)
-
-    # Define the conversion algorithm.
-    def one_row(r):
-        fields = r.INFO.replace('CSQ=', '').split(',')[0].split('|')
-        strand = '+' if fields[19] == '1' else '-'
-
-        # Get the Variant_Type data.
-        if len(r.REF) == len(r.ALT) == 1:
-            variant_type = 'SNP'
-        elif len(r.REF) > len(r.ALT):
-            variant_type = 'DEL'
-        else:
-            variant_type = 'INS'
-
-        # Get the Variant_Classification data.
-        consequence = fields[1].split('&')[0]
-        if consequence == 'missense_variant':
-            variant_classification = 'Missense_Mutation'
-        elif consequence in ['splice_acceptor_variant',
-            'splice_donor_variant', 'transcript_ablation']:
-            variant_classification = 'Splice_Site'
-        elif consequence == 'splice_region_variant':
-            variant_classification = 'Splice_Region'
-        elif consequence == 'stop_gained':
-            variant_classification = 'Nonsense_Mutation'
-        elif consequence == 'stop_lost':
-            variant_classification = 'Nonstop_Mutation'
-        elif consequence == 'frameshift_variant' and  variant_type == 'DEL':
-            variant_classification = 'Frame_Shift_Del'
-        elif consequence == 'frameshift_variant' and  variant_type == 'INS':
-            variant_classification = 'Frame_Shift_Ins'
-        elif consequence in ['initiator_codon_variant', 'start_lost']:
-            variant_classification = 'Translation_Start_Site'
-        elif consequence == 'inframe_insertion':
-            variant_classification = 'In_Frame_Ins'
-        elif consequence == 'inframe_deletion':
-            variant_classification = 'In_Frame_Del'
-        elif consequence in ['transcript_amplification', 'intron_variant']:
-            variant_classification = 'Intron'
-        elif consequence in ['incomplete_terminal_codon_variant',
-            'synonymous_variant', 'stop_retained_variant',
-            'NMD_transcript_variant']:
-            variant_classification = 'Silent'
-        elif consequence in ['mature_miRNA_variant',
-            'non_coding_transcript_exon_variant',
-            'non_coding_transcript_variant']:
-            variant_classification = 'RNA'
-        elif consequence == '5_prime_UTR_variant':
-            variant_classification = "5'UTR"
-        elif consequence == '3_prime_UTR_variant':
-            variant_classification = "3'UTR"
-        elif consequence in ['TF_binding_site_variant',
-            'regulatory_region_variant', 'intergenic_variant']:
-            variant_classification = 'IGR'
-        elif consequence == 'upstream_gene_variant':
-            variant_classification = "5'Flank"
-        elif consequence == 'downstream_gene_variant':
-            variant_classification = "3'Flank"
-        else:
-            raise ValueError(f'Unknown consequence found: {consequence}')
-
-        # Get the Tumor_Sample_Barcode data.
-        s = r[9:].apply(pyvcf.gt_hasvar)
-        tumor_sample_barcode = ','.join(s[s].index.to_list())
-
-        # Get the Protein_Change data.
-        if fields[14]:
-            pos = fields[14]
-            aa = fields[15].split('/')
-            protein_change = f'p.{aa[0]}{pos}{aa[1]}'
-        else:
-            protein_change = '.'
-
-        d = dict(
-            Hugo_Symbol = fields[3],
-            Entrez_Gene_Id = fields[4],
-            Center = '.',
-            NCBI_Build = ncbi_build,
-            Chromosome = r.CHROM,
-            Start_Position = r.POS,
-            End_Position = r.POS,
-            Strand = strand,
-            Variant_Classification = variant_classification,
-            Variant_Type = variant_type,
-            Reference_Allele = r.REF,
-            Tumor_Seq_Allele1 = r.ALT,
-            Tumor_Seq_Allele2 = r.ALT,
-            Tumor_Sample_Barcode = tumor_sample_barcode,
-            Protein_Change = protein_change,
-        )
-
-        return pd.Series(d)
-
-    # Apply the conversion algorithm.
-    df = vf.df.apply(one_row, axis=1)
-
-    # Expand the Tumor_Sample_Barcode column to multiple rows.
-    s = df['Tumor_Sample_Barcode'].str.split(',').apply(pd.Series, 1).stack()
-    s.index = s.index.droplevel(-1)
-    s.name = 'Tumor_Sample_Barcode'
-    del df['Tumor_Sample_Barcode']
-    df = df.join(s)
-
-    return MafFrame(df)
 
 class MafFrame:
     """Class for storing MAF data.
@@ -234,6 +166,126 @@ class MafFrame:
             MafFrame object creation using constructor.
         """
         return cls(pd.read_table(fn))
+
+    @classmethod
+    def from_vcf(cls, vcf):
+        """Construct MafFrame from a VCF file or VcfFrame.
+
+        Parameters
+        ----------
+        vcf : str or VcfFrame
+            VCF file path or VcfFrame.
+        """
+        # Parse the input VCF.
+        if isinstance(vcf, str):
+            vf = pyvcf.VcfFrame.from_file(vcf)
+        else:
+            vf = vcf
+
+        # Get the NCBI_Build data.
+        for line in vf.meta:
+            if line.startswith('##VEP'):
+                ncbi_build = re.search(r'assembly="(.*?)"', line).group(1)
+
+        # Define the conversion algorithm.
+        def one_row(r):
+            fields = r.INFO.replace('CSQ=', '').split(',')[0].split('|')
+
+            # Get the sequence data.
+            inframe = abs(len(r.REF) - len(r.ALT)) / 3 == 0
+            if len(r.REF) == len(r.ALT) == 1:
+                variant_type = 'SNP'
+                start_position = r.POS
+                end_position = r.POS
+                reference_allele = r.REF
+                tumor_seq_allele1 = r.ALT
+                tumor_seq_allele2 = r.ALT
+            elif len(r.REF) > len(r.ALT):
+                variant_type = 'DEL'
+                start_position = r.POS + 1
+                end_position = r.POS + len(r.REF) - len(r.ALT)
+                reference_allele = r.REF[1:]
+                tumor_seq_allele1 = '-'
+                tumor_seq_allele2 = '-'
+            else:
+                variant_type = 'INS'
+                start_position = r.POS
+                end_position = r.POS + 1
+                reference_allele = '-'
+                tumor_seq_allele1 = r.ALT[1:]
+                tumor_seq_allele2 = r.ALT[1:]
+
+            # Get the Strand data.
+            strand = '+' if fields[19] == '1' else '-'
+
+            # Get the Variant_Classification data.
+            consequence = fields[1].split('&')[0]
+            if consequence == 'frameshift_variant':
+                if variant_type == 'DEL':
+                    variant_classification = 'Frame_Shift_Del'
+                else:
+                    variant_classification = 'Frame_Shift_Ins'
+            elif consequence == 'protein_altering_variant':
+                if inframe:
+                    if variant_type == 'DEL':
+                        variant_classification = 'In_Frame_Del'
+                    else:
+                        variant_classification = 'In_Frame_Ins'
+                else:
+                    if variant_type == 'DEL':
+                        variant_classification = 'Frame_Shift_Del'
+                    else:
+                        variant_classification = 'Frame_Shift_Ins'
+            elif consequence in VEP_CONSEQUENCES:
+                variant_classification = VEP_CONSEQUENCES[consequence]
+            else:
+                m = f'Found unknown Ensemble VEP consequence: {consequence}'
+                raise ValueError(m)
+
+            # Get the Tumor_Sample_Barcode data.
+            s = r[9:].apply(pyvcf.gt_hasvar)
+            tumor_sample_barcode = ','.join(s[s].index.to_list())
+
+            # Get the Protein_Change data.
+            if fields[14]:
+                pos = fields[14]
+                aa = fields[15].split('/')
+                protein_change = f'p.{aa[0]}{pos}{aa[1]}'
+            else:
+                protein_change = '.'
+
+            d = dict(
+                Hugo_Symbol = fields[3],
+                Entrez_Gene_Id = fields[4],
+                Center = '.',
+                NCBI_Build = ncbi_build,
+                Chromosome = r.CHROM,
+                Start_Position = start_position,
+                End_Position = end_position,
+                Strand = strand,
+                Variant_Classification = variant_classification,
+                Variant_Type = variant_type,
+                Reference_Allele = reference_allele,
+                Tumor_Seq_Allele1 = tumor_seq_allele1,
+                Tumor_Seq_Allele2 = tumor_seq_allele2,
+                Tumor_Sample_Barcode = tumor_sample_barcode,
+                Protein_Change = protein_change,
+            )
+
+            return pd.Series(d)
+
+        # Apply the conversion algorithm.
+        df = vf.df.apply(one_row, axis=1)
+
+        # Expand the Tumor_Sample_Barcode column to multiple rows.
+        s = df['Tumor_Sample_Barcode'].str.split(',').apply(
+            pd.Series, 1).stack()
+        s.index = s.index.droplevel(-1)
+        s.name = 'Tumor_Sample_Barcode'
+        del df['Tumor_Sample_Barcode']
+        df = df.join(s)
+
+        return cls(df)
 
     def plot_genes(self, count=10, ax=None, figsize=None, **kwargs):
         """Create a bar plot for mutated genes.
@@ -579,6 +631,16 @@ class MafFrame:
         cbar.set_ticklabels(list(d.keys()))
 
         return ax
+
+    def to_file(self, fn):
+        """Write MafFrame to a MAF file.
+
+        Parameters
+        ----------
+        fn : str
+            VCF file path.
+        """
+        self.df.to_csv(fn, index=False, sep='\t')
 
 class AnnFrame:
     """Class for storing annotation data.
