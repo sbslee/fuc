@@ -86,3 +86,21 @@ def load_dataset(name, force=False):
                 download = True
         if download:
             urlretrieve(file_url, file_path)
+
+def parse_region(region):
+    """Parse the given region.
+
+    Parameters
+    ----------
+    region : str
+        Region to be parsed (format: CHROM:START-END).
+
+    Returns
+    -------
+    tuple
+        (CHROM, START, END) which has data types of (str, int, int).
+    """
+    chrom = region.split(':')[0]
+    start = int(region.split(':')[1].split('-')[0])
+    end = int(region.split(':')[1].split('-')[1])
+    return (chrom, start, end)

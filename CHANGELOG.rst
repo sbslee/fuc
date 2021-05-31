@@ -1,14 +1,15 @@
 Changelog
 *********
 
-0.9.0 (in development)
-----------------------
+0.9.0 (2021-06-01)
+------------------
 
 * Add new submodule ``pymaf``.
 * Deprecate :meth:`pyvcf.read_file` method and add :meth:`pyvcf.VcfFrame.from_file` method.
 * Deprecate :meth:`pybed.read_file` method and add :meth:`pybed.BedFrame.from_file` method.
 * Deprecate :meth:`pyfq.read_file` method and add :meth:`pyfq.FqFrame.from_file` method.
 * Deprecate :meth:`pycov.read_file` method and add :meth:`pycov.CovFrame.from_file` method.
+* Add new method :meth:`common.parse_region`.
 
 0.8.0 (2021-05-27)
 ------------------

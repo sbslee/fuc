@@ -132,6 +132,18 @@ To create an oncoplot from a MAF file:
 
 .. image:: https://raw.githubusercontent.com/sbslee/fuc-data/main/images/oncoplot.png
 
+To create read depth profile of a region from a CRAM file:
+
+.. code:: python3
+
+    >>> import matplotlib.pyplot as plt
+    >>> from fuc import pycov
+    >>> cf = pycov.CovFrame.from_file('HG00525.final.cram', zero=True,
+    ...    region='chr12:21161194-21239796', names=['HG00525'])
+    >>> cf.plot_region('chr12', start=21161194, end=21239796)
+
+.. image:: https://raw.githubusercontent.com/sbslee/fuc-data/main/images/coverage.png
+
 Installation
 ============
 

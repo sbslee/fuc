@@ -108,6 +108,7 @@ class CovFrame:
         """
         return cls(pd.DataFrame(data))
 
+    @classmethod
     def from_file(
         cls, fn, zero=False, region=None, map_qual=None, names=None
     ):
