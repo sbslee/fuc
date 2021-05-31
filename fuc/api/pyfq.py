@@ -1,38 +1,11 @@
 """
-The pyfq submodule is designed for working with FASTQ files (both zipped
-and unzipped). It implements the ``pyfq.FqFrame`` class which stores FASTQ
-data as ``pandas.DataFrame`` to allow fast computation and easy manipulation.
+The pyfq submodule is designed for working with FASTQ files. It implements
+the :class:`pyfq.FqFrame` which stores FASTQ data as
+:class:`pandas.DataFrame` to allow fast computation and easy manipulation.
 """
 
 import gzip
 import pandas as pd
-
-def read_file(fn):
-    """Create a FqFrame from a FASTQ file (both zipped and unzipped)."""
-    if fn.endswith('.gz'):
-        f = gzip.open(fn, 'rt')
-    else:
-        f = open(fn)
-    data = {'ID': [], 'SEQ': [], 'EXT': [], 'QUAL': []}
-    n = 0
-    for line in f:
-        x = line.strip()
-        if n == 0:
-            data['ID'].append(x)
-            n += 1
-        elif n == 1:
-            data['SEQ'].append(x)
-            n += 1
-        elif n == 2:
-            data['EXT'].append(x)
-            n += 1
-        else:
-            data['QUAL'].append(x)
-            n = 0
-    df = pd.DataFrame.from_dict(data)
-    qf = FqFrame(df)
-    f.close()
-    return qf
 
 class FqFrame:
     """Class for storing FASTQ data."""
@@ -41,7 +14,7 @@ class FqFrame:
 
     @property
     def shape(self):
-        """Return the size of the FqFrame."""
+        """int : Number of sequence reads in the FqFrame."""
         return self.df.shape
 
     def to_file(self, file_path):
@@ -54,3 +27,46 @@ class FqFrame:
         """Return a dictionary of read lengths and their counts."""
         return self.df.apply(lambda r: len(r.SEQ), axis=1
             ).value_counts().to_dict()
+
+    @classmethod
+    def from_file(cls, fn):
+        """Construct FqFrame from a FASTQ file.
+
+        Parameters
+        ----------
+        fn : str
+            FASTQ file path (zipped or unzipped).
+
+        Returns
+        -------
+        FqFrame
+            FqFrame.
+
+        See Also
+        --------
+        FqFrame
+            FqFrame object creation using constructor.
+        """
+        if fn.endswith('.gz'):
+            f = gzip.open(fn, 'rt')
+        else:
+            f = open(fn)
+        data = {'ID': [], 'SEQ': [], 'EXT': [], 'QUAL': []}
+        n = 0
+        for line in f:
+            x = line.strip()
+            if n == 0:
+                data['ID'].append(x)
+                n += 1
+            elif n == 1:
+                data['SEQ'].append(x)
+                n += 1
+            elif n == 2:
+                data['EXT'].append(x)
+                n += 1
+            else:
+                data['QUAL'].append(x)
+                n = 0
+        df = pd.DataFrame.from_dict(data)
+        f.close()
+        return cls(df)

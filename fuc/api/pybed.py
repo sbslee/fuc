@@ -1,7 +1,7 @@
 """
 The pybed submodule is designed for working with BED files. It
-implements the ``pybed.BedFrame`` class which stores BED data as
-``pandas.DataFrame`` via the `pyranges
+implements :class:`pybed.BedFrame` which stores BED data as
+:class:`pandas.DataFrame` via the `pyranges
 <https://github.com/biocore-ntnu/pyranges>`_ package to allow fast
 computation and easy manipulation. The submodule strictly adheres to the
 standard `BED specification <https://genome.ucsc.edu/FAQ/FAQformat.html>`_.
@@ -44,22 +44,6 @@ from copy import deepcopy
 HEADERS = ['Chromosome', 'Start', 'End', 'Name',
            'Score', 'Strand', 'ThickStart', 'ThickEnd',
            'ItemRGB', 'BlockCount', 'BlockSizes', 'BlockStarts']
-
-def read_file(fn):
-    """Read a BED file into BedFrame."""
-    meta = []
-    skip_rows = 0
-    with open(fn, 'r') as f:
-        for line in f:
-            if 'browser' in line or 'track' in line:
-                meta.append(line.strip())
-                skip_rows += 1
-            else:
-                headers = HEADERS[:len(line.strip().split())]
-                break
-    df = pd.read_table(fn, header=None, names=headers, skiprows=skip_rows)
-    bf = BedFrame(meta, pr.PyRanges(df))
-    return bf
 
 class BedFrame:
     """Class for storing BED data."""
@@ -144,3 +128,19 @@ class BedFrame:
         2       chr3    100  200
         """
         return cls(meta, pr.PyRanges(pd.DataFrame(data)))
+
+    @classmethod
+    def from_file(cls, fn):
+        """Construct BedFrame from a BED file."""
+        meta = []
+        skip_rows = 0
+        with open(fn, 'r') as f:
+            for line in f:
+                if 'browser' in line or 'track' in line:
+                    meta.append(line.strip())
+                    skip_rows += 1
+                else:
+                    headers = HEADERS[:len(line.strip().split())]
+                    break
+        df = pd.read_table(fn, header=None, names=headers, skiprows=skip_rows)
+        return cls(meta, pr.PyRanges(df))

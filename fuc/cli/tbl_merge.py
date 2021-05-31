@@ -7,9 +7,10 @@ def create_parser(subparsers):
     parser = subparsers.add_parser(
         api.common.script_name(__file__),
         help='[TABLE] merge two table files',
-        description='This command will merge two table files using one '
-                    'or more shared columns. This essentially wraps the '
-                    '`pandas.DataFrame.merge` method.'
+        description=
+            'This command will merge two table files using one '
+            'or more shared columns. This essentially wraps the '
+            '`pandas.DataFrame.merge` method.'
     )
     parser.add_argument('left_file', help='left table file')
     parser.add_argument('right_file', help='right table file')

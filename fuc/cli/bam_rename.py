@@ -4,7 +4,7 @@ def create_parser(subparsers):
     parser = subparsers.add_parser(
         api.common.script_name(__file__),
         help='[BAM] add a new sample name to a BAM file',
-        description= 'This command will add a new sample name to a BAM file.'
+        description='This command will add a new sample name to a BAM file.'
     )
     parser.add_argument('input_bam', help='input BAM file')
     parser.add_argument('name', help='sample name')

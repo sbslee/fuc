@@ -18,53 +18,53 @@ text_file2 = f'{fuc_dir}/data/text/2.txt'
 class TestPyvcf(unittest.TestCase):
 
     def test_shape(self):
-        vf = pyvcf.read_file(vcf_file1)
+        vf = pyvcf.VcfFrame.from_file(vcf_file1)
         self.assertEqual(vf.shape, (5, 4))
 
     def test_filter_empty(self):
-        vf = pyvcf.read_file(vcf_file2)
+        vf = pyvcf.VcfFrame.from_file(vcf_file2)
         vf = vf.filter_empty()
         self.assertEqual(vf.df.shape, (4, 11))
 
     def test_filter_bed(self):
-        vf = pyvcf.read_file(vcf_file1)
-        bf = pybed.read_file(f'{fuc_dir}/data/bed/1.bed')
+        vf = pyvcf.VcfFrame.from_file(vcf_file1)
+        bf = pybed.BedFrame.from_file(f'{fuc_dir}/data/bed/1.bed')
         vf = vf.filter_bed(bf)
         self.assertEqual(vf.df.shape, (3, 13))
 
     def test_merge(self):
-        vf1 = pyvcf.read_file(vcf_file1)
-        vf2 = pyvcf.read_file(vcf_file2)
+        vf1 = pyvcf.VcfFrame.from_file(vcf_file1)
+        vf2 = pyvcf.VcfFrame.from_file(vcf_file2)
         vf3 = vf1.merge(vf2, how='outer', format='GT:DP')
         self.assertEqual(vf3.df.shape, (9, 15))
 
     def test_compare(self):
-        vf = pyvcf.read_file(vcf_file1)
+        vf = pyvcf.VcfFrame.from_file(vcf_file1)
         self.assertEqual(vf.compare('Steven', 'Sarah'), (1, 1, 0, 3))
 
     def test_filter_multialt(self):
-        vf = pyvcf.read_file(vcf_file1)
+        vf = pyvcf.VcfFrame.from_file(vcf_file1)
         vf = vf.filter_multialt()
         self.assertEqual(vf.shape[0], 4)
 
     def test_subset(self):
-        vf = pyvcf.read_file(vcf_file1)
+        vf = pyvcf.VcfFrame.from_file(vcf_file1)
         vf = vf.subset(['Sarah', 'John'])
         self.assertEqual(len(vf.samples), 2)
 
 class TestPybed(unittest.TestCase):
 
     def test_intersect(self):
-        bf1 = pybed.read_file(f'{fuc_dir}/data/bed/1.bed')
-        bf2 = pybed.read_file(f'{fuc_dir}/data/bed/2.bed')
-        bf3 = pybed.read_file(f'{fuc_dir}/data/bed/3.bed')
+        bf1 = pybed.BedFrame.from_file(f'{fuc_dir}/data/bed/1.bed')
+        bf2 = pybed.BedFrame.from_file(f'{fuc_dir}/data/bed/2.bed')
+        bf3 = pybed.BedFrame.from_file(f'{fuc_dir}/data/bed/3.bed')
         bf4 = bf1.intersect(bf2)
         self.assertEqual(bf3.to_string(), bf4.to_string())
 
 class TestPyfq(unittest.TestCase):
 
     def test_shape(self):
-        qf = pyfq.read_file(f'{fuc_dir}/data/fq/1.fastq')
+        qf = pyfq.FqFrame.from_file(f'{fuc_dir}/data/fq/1.fastq')
         self.assertEqual(qf.shape, (5, 4))
 
 class TestCli(unittest.TestCase):

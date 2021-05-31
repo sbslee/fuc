@@ -5,7 +5,8 @@ def create_parser(subparsers):
     parser = subparsers.add_parser(
         api.common.script_name(__file__),
         help='[FASTQ] count sequence reads in FASTQ files',
-        description='This command will count sequence reads in FASTQ '
+        description=
+            'This command will count sequence reads in FASTQ '
             'files (both zipped and unzipped). It will look for stdin '
             'if there are no arguments (e.g. $ cat files.list | fuc '
             f'{api.common.script_name(__file__)}).'
@@ -22,5 +23,5 @@ def main(args):
     else:
         raise ValueError('no input files detected')
     for path in paths:
-        qf = api.pyfq.read_file(path)
+        qf = api.pyfq.FqFrame.from_file(path)
         print(qf.df.shape[0])
