@@ -121,7 +121,7 @@ API Examples
 
 * To create an oncoplot from a MAF file:
 
-    .. plot::
+    .. code:: python3
 
         >>> import matplotlib.pyplot as plt
         >>> from fuc import common, pymaf
@@ -129,6 +129,8 @@ API Examples
         >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
         >>> mf = pymaf.MafFrame.from_file(f)
         >>> mf.plot_oncoplot(fontsize=14)
+
+.. image:: https://raw.githubusercontent.com/sbslee/fuc-data/main/images/oncoplot.png
 
 Installation
 ============
