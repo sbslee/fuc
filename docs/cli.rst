@@ -31,6 +31,7 @@ For getting help on CLI:
        fuc_exist    [FUC] check whether files/dirs exist
        fuc_find     [FUC] find files with certain extension recursively
        maf_oncoplt  [MAF] create an oncoplot from a MAF file
+       maf_sumplt   [MAF] create a summary plot for a MAF file
        maf_vcf2maf  [MAF] convert an annotated VCF file to a MAF file
        tbl_merge    [TABLE] merge two table files
        tbl_sum      [TABLE] summarize a table file
@@ -273,16 +274,43 @@ maf_oncoplt
 .. code-block:: console
 
    $ fuc maf_oncoplt -h
-   usage: fuc maf_oncoplt [-h] maf_file plot_file
+   usage: fuc maf_oncoplt [-h] maf_file output_file
    
-   This command will create an oncoplot from a MAF file.
+   This command will create an oncoplot from a MAF file. The format of output
+   image (PDF/PNG/JPEG/SVG) will be automatically determined by the output file's
+   extension. This command essentially wraps the `pymaf.plot_oncoplot` method.
+   Visit the method's documentation (https://sbslee-
+   fuc.readthedocs.io/en/latest/api.html#fuc.api.pymaf.MafFrame.plot_oncoplot) to
+   see example plots.
    
    positional arguments:
-     maf_file    input MAF file
-     plot_file   output plot file
+     maf_file     input MAF file
+     output_file  output inage file
    
    optional arguments:
-     -h, --help  show this help message and exit
+     -h, --help   show this help message and exit
+
+maf_sumplt
+==========
+
+.. code-block:: console
+
+   $ fuc maf_sumplt -h
+   usage: fuc maf_sumplt [-h] maf_file output_file
+   
+   This command will create a summary plot for a MAF file. The format of output
+   image (PDF/PNG/JPEG/SVG) will be automatically determined by the output file's
+   extension. This command essentially wraps the `pymaf.plot_summary` method.
+   Visit the method's documentation (https://sbslee-
+   fuc.readthedocs.io/en/latest/api.html#fuc.api.pymaf.MafFrame.plot_summary) to
+   see example plots.
+   
+   positional arguments:
+     maf_file     input MAF file
+     output_file  output image file
+   
+   optional arguments:
+     -h, --help   show this help message and exit
 
 maf_vcf2maf
 ===========
