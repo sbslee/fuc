@@ -8,6 +8,7 @@ Changelog
 * Update :meth:`pymaf.plot_legend` method.
 * Add new command :command:`maf_sumplt`.
 * Add new method :meth:`pymaf.to_string`.
+* Update :command:`maf_oncoplt` command.
 
 0.9.0 (2021-06-01)
 ------------------
