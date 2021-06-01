@@ -43,10 +43,10 @@ README
    :target: https://anaconda.org/bioconda/fuc
 
 .. image:: https://anaconda.org/bioconda/fuc/badges/license.svg
-   :target: https://anaconda.org/bioconda/fuc
+   :target: https://github.com/sbslee/fuc/blob/main/LICENSE
 
 .. image:: https://anaconda.org/bioconda/fuc/badges/downloads.svg
-   :target: https://anaconda.org/bioconda/fuc
+   :target: https://anaconda.org/bioconda/fuc/files
 
 .. image:: https://anaconda.org/bioconda/fuc/badges/installer/conda.svg
    :target: https://conda.anaconda.org/bioconda
@@ -159,6 +159,19 @@ To create an oncoplot from a MAF file:
     >>> mf.plot_oncoplot(fontsize=14)
 
 .. image:: https://raw.githubusercontent.com/sbslee/fuc-data/main/images/oncoplot.png
+
+To create a summary figure for a MAF file:
+
+.. code:: python3
+
+    >>> import matplotlib.pyplot as plt
+    >>> from fuc import common, pymaf
+    >>> common.load_dataset('tcga-laml')
+    >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+    >>> mf = pymaf.MafFrame.from_file(f)
+    >>> mf.plot_summary()
+
+.. image:: https://raw.githubusercontent.com/sbslee/fuc-data/main/images/maf_summary.png
 
 To create read depth profile of a region from a CRAM file:
 

@@ -117,17 +117,17 @@ SNVCLS = {
     'T>G': {'REP': 'T>G'},
 }
 
-def plot_legend(name='regular', ax=None, figsize=None, **kwargs):
+def plot_legend(name='regular', ax=None, ignore=True, **kwargs):
     """Create one of the pre-defined legends.
 
     Parameters
     ----------
     name : {'regaulr', 'waterfall'}, default: 'regular'
-        Type of legend to be drawn.
+        Type of legend to be drawn. See the examples below for details.
     ax : matplotlib.axes.Axes, optional
         Pre-existing axes for the plot. Otherwise, crete a new one.
-    figsize : tuple, optional
-        Width, height in inches. Format: (float, float).
+    ignore : bool, default: True
+        If True, the method will clear the underlying matplotlib axes.
     kwargs
         Other keyword arguments will be passed down to
         :meth:`Axes.legend`.
@@ -139,23 +139,20 @@ def plot_legend(name='regular', ax=None, figsize=None, **kwargs):
 
     Examples
     --------
-    We can add legend for the :meth:`MafFrame.plot_genes` method:
+    There are currently two types of legends:
 
     .. plot::
         :context: close-figs
 
         >>> import matplotlib.pyplot as plt
-        >>> from fuc import common, pymaf
-        >>> common.load_dataset('tcga-laml')
-        >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
-        >>> mf = pymaf.MafFrame.from_file(f)
-        >>> fig, [ax1, ax2] = plt.subplots(1, 2, figsize=(10, 6),
-        ...     gridspec_kw={'width_ratios': [10, 1]})
-        >>> mf.plot_genes(ax=ax1)
-        >>> pymaf.plot_legend(name='regular', ax=ax2, loc='center left')
-        >>> plt.tight_layout()
+        >>> from fuc import pymaf
+        >>> fig, [ax1, ax2] = plt.subplots(1, 2)
+        >>> pymaf.plot_legend(name='regular', ax=ax1, loc='upper center')
+        >>> pymaf.plot_legend(name='waterfall', ax=ax2, loc='upper center')
+        >>> ax1.set_title('name=regular')
+        >>> ax2.set_title('name=waterfall')
 
-    We can also add legend for :meth:`MafFrame.plot_waterfall` method:
+    A common way of adding a legend is as follows:
 
     .. plot::
         :context: close-figs
@@ -166,9 +163,23 @@ def plot_legend(name='regular', ax=None, figsize=None, **kwargs):
         >>> pymaf.plot_legend(name='waterfall', ax=ax2, ncol=4,
         ...     loc='upper center')
         >>> plt.tight_layout()
+
+    You can also insert a legend directly to an existing plot with
+    ``ignore=False``:
+
+    .. plot::
+        :context: close-figs
+
+        >>> from fuc import common
+        >>> common.load_dataset('tcga-laml')
+        >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+        >>> mf = pymaf.MafFrame.from_file(f)
+        >>> ax = mf.plot_genes()
+        >>> pymaf.plot_legend(name='regular', ax=ax, ignore=False)
+        >>> plt.tight_layout()
     """
     if ax is None:
-        fig, ax = plt.subplots(figsize=figsize)
+        fig, ax = plt.subplots()
     h = []
     labels = copy.deepcopy(NONSYN_NAMES)
     colors = copy.deepcopy(NONSYN_COLORS)
@@ -182,8 +193,46 @@ def plot_legend(name='regular', ax=None, figsize=None, **kwargs):
     for i, label in enumerate(labels):
         h.append(mpatches.Patch(color=colors[i], label=label))
     ax.legend(handles=h, **kwargs)
-    ax.axis('off')
+    if ignore:
+        ax.axis('off')
     return ax
+
+class AnnFrame:
+    """Class for storing annotation data.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        DataFrame containing annotation data.
+
+    See Also
+    --------
+    AnnFrame.from_file
+        Construct AnnFrame from an annotation file.
+    """
+    def __init__(self, df):
+        self.df = df.reset_index(drop=True)
+
+    @classmethod
+    def from_file(cls, fn):
+        """Construct AnnFrame from an annotation file.
+
+        Parameters
+        ----------
+        fn : str
+            Annotation file path (zipped or unzipped).
+
+        Returns
+        -------
+        AnnFrame
+            AnnFrame.
+
+        See Also
+        --------
+        AnnFrame
+            AnnFrame object creation using constructor.
+        """
+        return cls(pd.read_table(fn))
 
 class MafFrame:
     """Class for storing MAF data.
@@ -644,6 +693,93 @@ class MafFrame:
         ax.set_ylabel('')
         return ax
 
+    def plot_summary(
+        self, title_fontsize=16.0, legend_fontsize=12.0,
+        ticklabels_fontsize=12.0, figsize=(15, 10),
+    ):
+        """Create a summary figure for MafFrame.
+
+        Parameters
+        ----------
+        title_fontsize : float, default: 20.0
+            Font size of subplot titles.
+        legend_fontsize : float, default: 12.0
+            Font size of legend texts.
+        ticklabels_fontsize : float, default: 12.0
+            Font size of tick labels.
+        figsize : tuple, default: (15, 10)
+            Width, height in inches. Format: (float, float).
+
+        Examples
+        --------
+
+        .. plot::
+
+            >>> import matplotlib.pyplot as plt
+            >>> from fuc import common, pymaf
+            >>> common.load_dataset('tcga-laml')
+            >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+            >>> mf = pymaf.MafFrame.from_file(f)
+            >>> mf.plot_summary()
+        """
+        fig, axes = plt.subplots(2, 3, figsize=figsize)
+        [[ax1, ax2, ax3], [ax4, ax5, ax6]] = axes
+
+        # Create the 'Variant classification (variants)' figure.
+        self.plot_varcls(ax=ax1)
+        ax1.set_yticks([])
+        ax1.set_title('Variant classification (variants)',
+                      fontsize=title_fontsize)
+        plot_legend(name='regular', ax=ax1, ignore=False,
+                    fontsize=legend_fontsize)
+        ax1.set_xlabel('')
+        ax1.tick_params(axis='x', which='major',
+                        labelsize=ticklabels_fontsize)
+
+        # Create the 'Variant type' figure.
+        self.plot_vartype(ax=ax2)
+        ax2.set_title('Variant type', fontsize=title_fontsize)
+        ax2.set_xlabel('')
+        ax2.tick_params(axis='x', which='major',
+                        labelsize=ticklabels_fontsize)
+
+        # Create the 'SNV class' figure.
+        self.plot_snvcls(ax=ax3)
+        ax3.set_title('SNV class', fontsize=title_fontsize)
+        ax3.set_xlabel('')
+        ax3.tick_params(axis='x', which='major',
+                        labelsize=ticklabels_fontsize)
+
+        # Create the 'Variants per sample' figure.
+        median = self.compute_tmb().sum(axis=1).median()
+        self.plot_tmb(ax=ax4)
+        ax4.set_title(f'Variants per sample (median={median:.1f})',
+                      fontsize=title_fontsize)
+        ax4.set_xlabel('')
+        ax4.set_ylabel('')
+        ax4.tick_params(axis='y', which='major',
+                        labelsize=ticklabels_fontsize)
+
+        ax4.axhline(y=median, color='red', linestyle='dashed')
+
+        # Create the 'Variant classification (samples)' figure.
+        self.plot_varsum(ax=ax5)
+        ax5.set_title('Variant classification (samples)',
+                      fontsize=title_fontsize)
+        ax5.set_yticks([])
+        ax5.set_xlabel('')
+        ax5.tick_params(axis='x', which='major',
+                        labelsize=ticklabels_fontsize)
+
+        # Create the 'Top 10 mutated genes' figure.
+        self.plot_genes(ax=ax6)
+        ax6.set_title('Top 10 mutated genes', fontsize=title_fontsize)
+        ax6.set_xlabel('')
+        ax6.tick_params(axis='x', which='major',
+                        labelsize=ticklabels_fontsize)
+
+        plt.tight_layout()
+
     def plot_tmb(self, ax=None, figsize=None, samples=None, **kwargs):
         """Create a bar plot for tumor mutational burden (TMB) per sample.
 
@@ -735,6 +871,39 @@ class MafFrame:
         sns.barplot(x='Count', y='Variant_Classification', data=df,
                     ax=ax, palette=NONSYN_COLORS, **kwargs)
         ax.set_ylabel('')
+        return ax
+
+    def plot_varsum(self, horizontal=False, ax=None, figsize=None):
+        """Create a summary box plot for variant classifications.
+
+        Parameters
+        ----------
+        horizontal : bool, default: False
+            If True, orientation of the plot will be set to horizontal.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+        """
+        df = self.compute_tmb()
+        df = pd.melt(df, value_vars=df.columns)
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+        if horizontal:
+            x, y = 'variable', 'value'
+            xlabel, ylabel = '', 'Samples'
+        else:
+            x, y = 'value', 'variable'
+            xlabel, ylabel = 'Samples', ''
+        sns.boxplot(x=x, y=y, data=df, ax=ax, showfliers=False,
+            palette=NONSYN_COLORS)
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
         return ax
 
     def plot_vartype(self, ax=None, figsize=None, **kwargs):
@@ -839,40 +1008,3 @@ class MafFrame:
             VCF file path.
         """
         self.df.to_csv(fn, index=False, sep='\t')
-
-class AnnFrame:
-    """Class for storing annotation data.
-
-    Parameters
-    ----------
-    df : pandas.DataFrame
-        DataFrame containing annotation data.
-
-    See Also
-    --------
-    AnnFrame.from_file
-        Construct AnnFrame from an annotation file.
-    """
-    def __init__(self, df):
-        self.df = df.reset_index(drop=True)
-
-    @classmethod
-    def from_file(cls, fn):
-        """Construct AnnFrame from an annotation file.
-
-        Parameters
-        ----------
-        fn : str
-            Annotation file path (zipped or unzipped).
-
-        Returns
-        -------
-        AnnFrame
-            AnnFrame.
-
-        See Also
-        --------
-        AnnFrame
-            AnnFrame object creation using constructor.
-        """
-        return cls(pd.read_table(fn))
