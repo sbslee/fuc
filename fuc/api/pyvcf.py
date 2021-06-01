@@ -2372,6 +2372,84 @@ class VcfFrame:
             return i
         return self.__class__(self.copy_meta(), self.df[i])
 
+    def filter_qual(self, threshold, opposite=False, index=False):
+        """Select rows with minimum QUAL value.
+
+        Parameters
+        ----------
+        threshold : float
+            Minimum QUAL value.
+        opposite : bool, default: False
+            If True, return rows that don't meet the said criteria.
+        index : bool, default: False
+            If True, return boolean index array instead of VcfFrame.
+
+        Returns
+        -------
+        VcfFrame or pandas.Series
+            Filtered VcfFrame or boolean index array.
+
+        Examples
+        --------
+        Assume we have the following data:
+
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102, 103, 104],
+        ...     'ID': ['.', '.', '.', '.', '.'],
+        ...     'REF': ['G', 'T', 'A', 'C', 'C'],
+        ...     'ALT': ['A', 'C', 'T', 'A', 'T'],
+        ...     'QUAL': ['.', 30, 19, 41, 29],
+        ...     'FILTER': ['.', '.', '.', '.', '.'],
+        ...     'INFO': ['.', '.', '.', '.', '.'],
+        ...     'FORMAT': ['GT', 'GT', 'GT', 'GT', 'GT'],
+        ...     'Steven': ['0/1', '1/1', '0/1', '0/1', '1/1'],
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
+        0  chr1  100  .   G   A    .      .    .     GT    0/1
+        1  chr1  101  .   T   C   30      .    .     GT    1/1
+        2  chr1  102  .   A   T   19      .    .     GT    0/1
+        3  chr1  103  .   C   A   41      .    .     GT    0/1
+        4  chr1  104  .   C   T   29      .    .     GT    1/1
+
+        We can select rows with minimum QUAL value of 30:
+
+        >>> vf.filter_qual(30).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
+        0  chr1  101  .   T   C   30      .    .     GT    1/1
+        1  chr1  103  .   C   A   41      .    .     GT    0/1
+
+        We can also remove those rows:
+
+        >>> vf.filter_qual(30, opposite=True).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
+        0  chr1  100  .   G   A    .      .    .     GT    0/1
+        1  chr1  102  .   A   T   19      .    .     GT    0/1
+        2  chr1  104  .   C   T   29      .    .     GT    1/1
+
+        Finally, we can return boolean index array from the filtering:
+
+        >>> vf.filter_qual(30, index=True)
+        0    False
+        1     True
+        2    False
+        3     True
+        4    False
+        dtype: bool
+        """
+        def one_row(r):
+            if isinstance(r.QUAL, str):
+                return False
+            return r.QUAL >= threshold
+        i = self.df.apply(one_row, axis=1)
+        if opposite:
+            i = ~i
+        if index:
+            return i
+        return self.__class__(self.copy_meta(), self.df[i])
+
     def filter_sampall(self, samples=None, opposite=False, index=False):
         """Select rows if all of the given samples have the variant.
 

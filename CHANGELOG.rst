@@ -4,11 +4,12 @@ Changelog
 0.10.0 (in development)
 -----------------------
 
-* Add new methods :meth:`pymaf.plot_summary` and :meth:`pymaf.plot_varsum`.
+* Add new methods :meth:`pymaf.plot_summary/varsum`.
 * Update :meth:`pymaf.plot_legend` method.
 * Add new command :command:`maf_sumplt`.
-* Add new method :meth:`pymaf.to_string`.
+* Add new method :meth:`pymaf.MafFrame.to_string`.
 * Update :command:`maf_oncoplt` command.
+* Add new method :meth:`pyvcf.VcfFrame.filter_qual`.
 
 0.9.0 (2021-06-01)
 ------------------
