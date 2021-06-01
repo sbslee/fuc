@@ -1,10 +1,9 @@
 """
 The pycov submodule is designed for working with depth of coverage data
 from sequence alingment files (SAM/BAM/CRAM). It implements
-:class:`pycov.CovFrame` which stores read depth data as
-:class:`pandas.DataFrame` via the `pysam
-<https://pysam.readthedocs.io/en/latest/api.html>`_ package to allow fast
-computation and easy manipulation.
+``pycov.CovFrame`` which stores read depth data as ``pandas.DataFrame`` via
+the `pysam <https://pysam.readthedocs.io/en/latest/api.html>`_ package to
+allow fast computation and easy manipulation.
 """
 
 import pysam

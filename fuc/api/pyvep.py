@@ -1,7 +1,7 @@
 """
 The pyvep submodule is designed for parsing VCF annotation data from the
 `Ensembl VEP <https://asia.ensembl.org/info/docs/tools/vep/index.html>`_.
-It is designed to be used with :class:`pyvcf.VcfFrame`.
+It is designed to be used with ``pyvcf.VcfFrame``.
 """
 
 import re

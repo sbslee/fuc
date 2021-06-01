@@ -1,7 +1,7 @@
 """
 The pyvcf submodule is designed for working with VCF files. It implements
-:class:`pyvcf.VcfFrame` class which stores VCF data as
-:class:`pandas.DataFrame` to allow fast computation and easy manipulation.
+``pyvcf.VcfFrame`` class which stores VCF data as
+``pandas.DataFrame`` to allow fast computation and easy manipulation.
 The submodule strictly adheres to the standard `VCF specification
 <https://samtools.github.io/hts-specs/VCFv4.3.pdf>`_.
 
