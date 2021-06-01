@@ -156,7 +156,7 @@ To create an oncoplot from a MAF file:
     >>> common.load_dataset('tcga-laml')
     >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
     >>> mf = pymaf.MafFrame.from_file(f)
-    >>> mf.plot_oncoplot(fontsize=14)
+    >>> mf.plot_oncoplot()
 
 .. image:: https://raw.githubusercontent.com/sbslee/fuc-data/main/images/oncoplot.png
 

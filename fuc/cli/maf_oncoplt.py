@@ -20,5 +20,5 @@ def create_parser(subparsers):
 
 def main(args):
     mf = api.pymaf.MafFrame.from_file(args.maf_file)
-    mf.plot_oncoplot(fontsize=14)
+    mf.plot_oncoplot()
     plt.savefig(args.output_file)

@@ -571,7 +571,10 @@ class MafFrame:
         ax.set_ylabel('')
         return ax
 
-    def plot_oncoplot(self, count=10, figsize=(15, 10), fontsize=10):
+    def plot_oncoplot(
+        self, count=10, figsize=(15, 10), label_fontsize=15,
+        ticklabels_fontsize=15, legend_fontsize=15
+    ):
         """Create an oncoplot.
 
         Parameters
@@ -580,8 +583,12 @@ class MafFrame:
             Number of top mutated genes to display.
         figsize : tuple, default: (15, 10)
             Width, height in inches. Format: (float, float).
-        fontsize : int, default: 10
-            Font size.
+        label_fontsize : float, default: 15
+            Font size of labels.
+        ticklabels_fontsize : float, default: 15
+            Font size of tick labels.
+        legend_fontsize : float, default: 15
+            Font size of legend texts.
 
         Examples
         --------
@@ -593,45 +600,49 @@ class MafFrame:
             >>> common.load_dataset('tcga-laml')
             >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
             >>> mf = pymaf.MafFrame.from_file(f)
-            >>> mf.plot_oncoplot(fontsize=14)
+            >>> mf.plot_oncoplot()
         """
-        samples = list(self.compute_waterfall(count).columns)
-
-        plt.rc('font', size=fontsize)
-        fig, axes = plt.subplots(3, 2, figsize=figsize,
-            gridspec_kw={'height_ratios': [1, 10, 1],
-                         'width_ratios': [10, 1]})
+        g = {'height_ratios': [1, 10, 1], 'width_ratios': [10, 1]}
+        fig, axes = plt.subplots(3, 2, figsize=figsize, gridspec_kw=g)
         [[ax1, ax2], [ax3, ax4], [ax5, ax6]] = axes
 
         # Create the TMB plot.
+        samples = list(self.compute_waterfall(count).columns)
         self.plot_tmb(ax=ax1, samples=samples)
         ax1.set_xlabel('')
         ax1.spines['right'].set_visible(False)
         ax1.spines['top'].set_visible(False)
         ax1.spines['bottom'].set_visible(False)
-        ax1.set_ylabel('TMB')
+        ax1.set_ylabel('TMB', fontsize=label_fontsize)
         ax1.set_yticks([0, self.compute_tmb().sum(axis=1).max()])
+        ax1.tick_params(axis='y', which='major',
+                        labelsize=ticklabels_fontsize)
 
         # Remove the top right plot.
         ax2.remove()
 
         # Create the waterfall plot.
-        self.plot_waterfall(ax=ax3, linewidths=1)
+        self.plot_waterfall(count=count, ax=ax3, linewidths=1)
         ax3.set_xlabel('')
+        ax3.tick_params(axis='y', which='major',
+                        labelsize=ticklabels_fontsize)
 
         # Create the genes plot.
-        self.plot_genes(ax=ax4, mode='samples', width=0.95)
+        self.plot_genes(count=count, ax=ax4, mode='samples', width=0.95)
         ax4.spines['right'].set_visible(False)
         ax4.spines['left'].set_visible(False)
         ax4.spines['top'].set_visible(False)
         ax4.set_yticks([])
-        ax4.set_xlabel('Samples')
+        ax4.set_xlabel('Samples', fontsize=label_fontsize)
         ax4.set_xticks([0, self.compute_genes(
             10, mode='samples').sum(axis=1).max()])
         ax4.set_ylim(-0.5, count-0.5)
+        ax4.tick_params(axis='x', which='major',
+                        labelsize=ticklabels_fontsize)
 
         # Create the legend.
-        plot_legend(name='waterfall', ax=ax5, ncol=4, loc='upper center')
+        plot_legend(name='waterfall', ax=ax5, ncol=4, loc='upper center',
+                    fontsize=legend_fontsize)
 
         # Remove the bottom right plot.
         ax6.remove()
@@ -694,21 +705,22 @@ class MafFrame:
         return ax
 
     def plot_summary(
-        self, title_fontsize=16.0, legend_fontsize=12.0,
-        ticklabels_fontsize=12.0, figsize=(15, 10),
+        self, figsize=(15, 10), title_fontsize=16, ticklabels_fontsize=12,
+        legend_fontsize=12
+
     ):
         """Create a summary figure for MafFrame.
 
         Parameters
         ----------
-        title_fontsize : float, default: 20.0
-            Font size of subplot titles.
-        legend_fontsize : float, default: 12.0
-            Font size of legend texts.
-        ticklabels_fontsize : float, default: 12.0
-            Font size of tick labels.
         figsize : tuple, default: (15, 10)
             Width, height in inches. Format: (float, float).
+        title_fontsize : float, default: 16
+            Font size of subplot titles.
+        ticklabels_fontsize : float, default: 12
+            Font size of tick labels.
+        legend_fontsize : float, default: 12
+            Font size of legend texts.
 
         Examples
         --------
@@ -740,14 +752,14 @@ class MafFrame:
         self.plot_vartype(ax=ax2)
         ax2.set_title('Variant type', fontsize=title_fontsize)
         ax2.set_xlabel('')
-        ax2.tick_params(axis='x', which='major',
+        ax2.tick_params(axis='both', which='major',
                         labelsize=ticklabels_fontsize)
 
         # Create the 'SNV class' figure.
         self.plot_snvcls(ax=ax3)
         ax3.set_title('SNV class', fontsize=title_fontsize)
         ax3.set_xlabel('')
-        ax3.tick_params(axis='x', which='major',
+        ax3.tick_params(axis='both', which='major',
                         labelsize=ticklabels_fontsize)
 
         # Create the 'Variants per sample' figure.
@@ -775,7 +787,7 @@ class MafFrame:
         self.plot_genes(ax=ax6)
         ax6.set_title('Top 10 mutated genes', fontsize=title_fontsize)
         ax6.set_xlabel('')
-        ax6.tick_params(axis='x', which='major',
+        ax6.tick_params(axis='both', which='major',
                         labelsize=ticklabels_fontsize)
 
         plt.tight_layout()
