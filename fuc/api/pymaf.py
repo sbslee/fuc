@@ -367,9 +367,9 @@ class MafFrame:
             tumor_sample_barcode = ','.join(s[s].index.to_list())
 
             # Get the Protein_Change data.
-            if fields[14]:
-                pos = fields[14]
-                aa = fields[15].split('/')
+            pos = fields[14]
+            aa = fields[15].split('/')
+            if len(aa) > 1:
                 protein_change = f'p.{aa[0]}{pos}{aa[1]}'
             else:
                 protein_change = '.'
