@@ -14,6 +14,7 @@ import numpy as np
 import re
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+import matplotlib.gridspec as gridspec
 from . import pyvcf
 import copy
 
@@ -624,7 +625,7 @@ class MafFrame:
         # Create the waterfall plot.
         self.plot_waterfall(count=count, ax=ax3, linewidths=1)
         ax3.set_xlabel('')
-        ax3.tick_params(axis='y', which='major',
+        ax3.tick_params(axis='y', which='major', labelrotation=0,
                         labelsize=ticklabels_fontsize)
 
         # Create the genes plot.
@@ -734,16 +735,19 @@ class MafFrame:
             >>> mf = pymaf.MafFrame.from_file(f)
             >>> mf.plot_summary()
         """
-        fig, axes = plt.subplots(2, 3, figsize=figsize)
-        [[ax1, ax2, ax3], [ax4, ax5, ax6]] = axes
+        g = {'height_ratios': [10, 10, 1]}
+        fig, axes = plt.subplots(3, 3, figsize=figsize, gridspec_kw=g)
+        [[ax1, ax2, ax3], [ax4, ax5, ax6], [ax7, ax8, ax9]] = axes
+        gs = axes[2, 0].get_gridspec()
+        for ax in axes[2, :]:
+            ax.remove()
+        axbig = fig.add_subplot(gs[2, :])
 
         # Create the 'Variant classification (variants)' figure.
         self.plot_varcls(ax=ax1)
         ax1.set_yticks([])
         ax1.set_title('Variant classification (variants)',
                       fontsize=title_fontsize)
-        plot_legend(name='regular', ax=ax1, ignore=False,
-                    fontsize=legend_fontsize)
         ax1.set_xlabel('')
         ax1.tick_params(axis='x', which='major',
                         labelsize=ticklabels_fontsize)
@@ -789,6 +793,10 @@ class MafFrame:
         ax6.set_xlabel('')
         ax6.tick_params(axis='both', which='major',
                         labelsize=ticklabels_fontsize)
+
+        # Add the legend.
+        plot_legend(ax=axbig, ncol=3, loc='upper center',
+                    fontsize=legend_fontsize)
 
         plt.tight_layout()
 

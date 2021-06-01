@@ -318,13 +318,12 @@ maf_vcf2maf
 .. code-block:: console
 
    $ fuc maf_vcf2maf -h
-   usage: fuc maf_vcf2maf [-h] vcf maf
+   usage: fuc maf_vcf2maf [-h] vcf_file
    
    This command will convert an annotated VCF file to a MAF file.
    
    positional arguments:
-     vcf         annotated VCF file
-     maf         MAF file
+     vcf_file    annotated VCF file
    
    optional arguments:
      -h, --help  show this help message and exit
