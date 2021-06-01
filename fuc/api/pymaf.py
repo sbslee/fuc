@@ -1017,6 +1017,17 @@ class MafFrame:
         Parameters
         ----------
         fn : str
-            VCF file path.
+            MAF file path.
         """
-        self.df.to_csv(fn, index=False, sep='\t')
+        with open(fn, 'w') as f:
+            f.write(self.to_string())
+
+    def to_string(self):
+        """Render MafFrame to a console-friendly tabular output.
+
+        Returns
+        -------
+        str
+            String representation of MafFrame.
+        """
+        return self.df.to_csv(index=False, sep='\t')

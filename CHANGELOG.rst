@@ -7,6 +7,7 @@ Changelog
 * Add new methods :meth:`pymaf.plot_summary` and :meth:`pymaf.plot_varsum`.
 * Update :meth:`pymaf.plot_legend` method.
 * Add new command :command:`maf_sumplt`.
+* Add new method :meth:`pymaf.to_string`.
 
 0.9.0 (2021-06-01)
 ------------------

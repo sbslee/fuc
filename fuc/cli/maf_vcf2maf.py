@@ -8,9 +8,8 @@ def create_parser(subparsers):
             'This command will convert an annotated VCF '
             'file to a MAF file.'
     )
-    parser.add_argument('vcf', help='annotated VCF file')
-    parser.add_argument('maf', help='MAF file')
+    parser.add_argument('vcf_file', help='annotated VCF file')
 
 def main(args):
-    mf = api.pymaf.MafFrame.from_vcf(args.vcf)
-    mf.to_file(args.maf)
+    mf = api.pymaf.MafFrame.from_vcf(args.vcf_file)
+    print(mf.to_string())
