@@ -143,8 +143,8 @@ def legend_handles(name='regular'):
         >>> fig, ax = plt.subplots()
         >>> handles1 = pymaf.legend_handles(name='regular')
         >>> handles2 = pymaf.legend_handles(name='waterfall')
-        >>> leg1 = ax.legend(handles=handles1, title='name=regular', loc='center left')
-        >>> leg2 = ax.legend(handles=handles2, title='name=waterfall', loc='center right')
+        >>> leg1 = ax.legend(handles=handles1, title="name='regular'", loc='center left')
+        >>> leg2 = ax.legend(handles=handles2, title="name='waterfall'", loc='center right')
         >>> ax.add_artist(leg1)
         >>> ax.add_artist(leg2)
         >>> plt.tight_layout()
@@ -227,7 +227,7 @@ class AnnFrame:
         """
         return cls(pd.read_table(fn, index_col='Tumor_Sample_Barcode'))
 
-    def legend_handles(self, col, samples=None, cmap='Pastel1'):
+    def legend_handles(self, col, numeric=False, segments=5, samples=None, decimals=0, cmap='Pastel1'):
         """Return legend handles for the given column.
 
         Parameters
@@ -263,23 +263,39 @@ class AnnFrame:
             >>> ax.add_artist(leg2)
             >>> plt.tight_layout()
         """
-        s = self.df[col].fillna('None')
-        if samples is not None:
-            s = s[samples]
-        labels = sorted(list(s.unique()))
-        colors = plt.cm.get_cmap(cmap)(np.linspace(0, 1, len(labels)))
+        s, l = self._get_col(col, numeric=numeric, segments=segments, samples=samples)
+        colors = plt.cm.get_cmap(cmap)(np.linspace(0, 1, len(l)))
         handles = []
-        for i, label in enumerate(labels):
+        for i, label in enumerate(l):
             handles.append(mpatches.Patch(color=colors[i], label=label))
         return handles
 
-    def plot_annot(self, col, samples=None, cmap='Pastel1', ax=None, figsize=None, **kwargs):
-        s = self.df[col].fillna('None')
+    def _get_col(self, col, numeric=False, segments=5, samples=None, decimals=0):
+        s = self.df[col]
+        s = s.replace([np.inf, -np.inf], np.nan)
+        if numeric:
+            boundaries = list(np.linspace(s.min(), s.max(), segments+1, endpoint=True))
+            intervals = list(zip(boundaries[:-1], boundaries[1:]))
+            def f(x):
+                if pd.isna(x):
+                    return x
+                for i, interval in enumerate(intervals):
+                    a, b = interval
+                    if a <= x <= b:
+                        return f'G{i} ({a:.{decimals}f} - {b:.{decimals}f})'
+            s = s.apply(f)
         if samples is not None:
             s = s[samples]
-        labels = sorted(list(s.unique()))
-        d = {k: v for v, k in enumerate(labels)}
-        df = s.to_frame().applymap(lambda x: d[x])
+        l = sorted([x for x in s.unique() if x == x])
+        return s, l
+
+    def plot_annot(
+        self, col, numeric=False, segments=5, samples=None, decimals=0, cmap='Pastel1', ax=None,
+        figsize=None, **kwargs
+    ):
+        s, l = self._get_col(col, numeric=numeric, segments=segments, samples=samples)
+        d = {k: v for v, k in enumerate(l)}
+        df = s.to_frame().applymap(lambda x: x if pd.isna(x) else d[x])
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
         sns.heatmap(df.T, ax=ax, cmap=cmap, cbar=False, **kwargs)
