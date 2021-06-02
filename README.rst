@@ -193,7 +193,7 @@ Finally, you can clone the GitHub repository and then install fuc this way:
    $ cd fuc
    $ pip install .
 
-The nice thing about this approach is that you will have access to a development version that's not available in Anaconda or PyPI. For example, you can access a development branch with the ``git checkout`` command.
+The nice thing about this approach is that you will have access to development versions that are not available in Anaconda or PyPI. For example, you can access a development branch with the ``git checkout`` command.
 
 Getting Help
 ============

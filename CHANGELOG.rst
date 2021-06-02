@@ -10,6 +10,8 @@ Changelog
 * Add new method :meth:`pymaf.MafFrame.to_string`.
 * Update :command:`maf_oncoplt` command.
 * Add new method :meth:`pyvcf.VcfFrame.filter_qual`.
+* Deprecate :meth:`pymaf.plot_legend` method and add :meth:`pymaf.legend_handles` method.
+* Add new methods :meth:`pymaf.AnnFrame.legend_handles/plot_annot`. 
 
 0.9.0 (2021-06-01)
 ------------------

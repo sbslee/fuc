@@ -118,25 +118,18 @@ SNVCLS = {
     'T>G': {'REP': 'T>G'},
 }
 
-def plot_legend(name='regular', ax=None, ignore=True, **kwargs):
-    """Create one of the pre-defined legends.
+def legend_handles(name='regular'):
+    """Return legend handles for one of the pre-defined legends.
 
     Parameters
     ----------
     name : {'regaulr', 'waterfall'}, default: 'regular'
         Type of legend to be drawn. See the examples below for details.
-    ax : matplotlib.axes.Axes, optional
-        Pre-existing axes for the plot. Otherwise, crete a new one.
-    ignore : bool, default: True
-        If True, the method will clear the underlying matplotlib axes.
-    kwargs
-        Other keyword arguments will be passed down to
-        :meth:`Axes.legend`.
 
     Returns
     -------
-    matplotlib.axes.Axes
-        The matplotlib axes containing the plot.
+    list
+        Legend handles.
 
     Examples
     --------
@@ -147,41 +140,41 @@ def plot_legend(name='regular', ax=None, ignore=True, **kwargs):
 
         >>> import matplotlib.pyplot as plt
         >>> from fuc import pymaf
-        >>> fig, [ax1, ax2] = plt.subplots(1, 2)
-        >>> pymaf.plot_legend(name='regular', ax=ax1, loc='upper center')
-        >>> pymaf.plot_legend(name='waterfall', ax=ax2, loc='upper center')
-        >>> ax1.set_title('name=regular')
-        >>> ax2.set_title('name=waterfall')
+        >>> fig, ax = plt.subplots()
+        >>> handles1 = pymaf.legend_handles(name='regular')
+        >>> handles2 = pymaf.legend_handles(name='waterfall')
+        >>> leg1 = ax.legend(handles=handles1, title='name=regular', loc='center left')
+        >>> leg2 = ax.legend(handles=handles2, title='name=waterfall', loc='center right')
+        >>> ax.add_artist(leg1)
+        >>> ax.add_artist(leg2)
+        >>> plt.tight_layout()
 
     A common way of adding a legend is as follows:
 
     .. plot::
         :context: close-figs
 
-        >>> fig, [ax1, ax2] = plt.subplots(2, 1, figsize=(10, 6),
-        ...     gridspec_kw={'height_ratios': [10, 1]})
+        >>> from fuc import common
+        >>> common.load_dataset('tcga-laml')
+        >>> mf = pymaf.MafFrame.from_file('~/fuc-data/tcga-laml/tcga_laml.maf.gz')
+        >>> fig, [ax1, ax2] = plt.subplots(2, 1, figsize=(10, 6), gridspec_kw={'height_ratios': [10, 1]})
         >>> mf.plot_waterfall(ax=ax1, linewidths=0.5)
-        >>> pymaf.plot_legend(name='waterfall', ax=ax2, ncol=4,
-        ...     loc='upper center')
+        >>> handles = pymaf.legend_handles(name='waterfall')
+        >>> ax2.legend(handles=handles, ncol=4, loc='upper center', title='Variant_Classification')
+        >>> ax2.axis('off')
         >>> plt.tight_layout()
 
-    You can also insert a legend directly to an existing plot with
-    ``ignore=False``:
+    Alternatively, you can insert a legend directly to an existing plot:
 
     .. plot::
         :context: close-figs
 
-        >>> from fuc import common
-        >>> common.load_dataset('tcga-laml')
-        >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
-        >>> mf = pymaf.MafFrame.from_file(f)
         >>> ax = mf.plot_genes()
-        >>> pymaf.plot_legend(name='regular', ax=ax, ignore=False)
+        >>> handles = pymaf.legend_handles(name='regular')
+        >>> ax.legend(handles=handles, title='Variant_Classification')
         >>> plt.tight_layout()
     """
-    if ax is None:
-        fig, ax = plt.subplots()
-    h = []
+    handles = []
     labels = copy.deepcopy(NONSYN_NAMES)
     colors = copy.deepcopy(NONSYN_COLORS)
     if name == 'regular':
@@ -192,11 +185,8 @@ def plot_legend(name='regular', ax=None, ignore=True, **kwargs):
     else:
         raise ValueError(f'Found incorrect name: {name}')
     for i, label in enumerate(labels):
-        h.append(mpatches.Patch(color=colors[i], label=label))
-    ax.legend(handles=h, **kwargs)
-    if ignore:
-        ax.axis('off')
-    return ax
+        handles.append(mpatches.Patch(color=colors[i], label=label))
+    return handles
 
 class AnnFrame:
     """Class for storing annotation data.
@@ -204,7 +194,8 @@ class AnnFrame:
     Parameters
     ----------
     df : pandas.DataFrame
-        DataFrame containing annotation data.
+        DataFrame containing annotation data. The index must be
+        'Tumor_Sample_Barcode'.
 
     See Also
     --------
@@ -212,7 +203,7 @@ class AnnFrame:
         Construct AnnFrame from an annotation file.
     """
     def __init__(self, df):
-        self.df = df.reset_index(drop=True)
+        self.df = df
 
     @classmethod
     def from_file(cls, fn):
@@ -221,7 +212,8 @@ class AnnFrame:
         Parameters
         ----------
         fn : str
-            Annotation file path (zipped or unzipped).
+            Annotation file path (zipped or unzipped). The file must contain
+            the 'Tumor_Sample_Barcode' column.
 
         Returns
         -------
@@ -233,7 +225,69 @@ class AnnFrame:
         AnnFrame
             AnnFrame object creation using constructor.
         """
-        return cls(pd.read_table(fn))
+        return cls(pd.read_table(fn, index_col='Tumor_Sample_Barcode'))
+
+    def legend_handles(self, col, samples=None, cmap='Pastel1'):
+        """Return legend handles for the given column.
+
+        Parameters
+        ----------
+        col : str
+            Column name.
+        samples : list, optional
+            If provided, these samples will be used to create legend handles.
+        cmap : str, default: 'Pastel1'
+            Color map.
+
+        Returns
+        -------
+        list
+            Legend handles.
+
+        Examples
+        --------
+
+        .. plot::
+
+            >>> import matplotlib.pyplot as plt
+            >>> from fuc import common, pymaf
+            >>> common.load_dataset('tcga-laml')
+            >>> f = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
+            >>> af = pymaf.AnnFrame.from_file(f)
+            >>> fig, ax = plt.subplots()
+            >>> handles1 = af.legend_handles('FAB_classification')
+            >>> handles2 = af.legend_handles('Overall_Survival_Status')
+            >>> leg1 = ax.legend(handles=handles1, title='FAB_classification', loc='center left')
+            >>> leg2 = ax.legend(handles=handles2, title='Overall_Survival_Status', loc='center right')
+            >>> ax.add_artist(leg1)
+            >>> ax.add_artist(leg2)
+            >>> plt.tight_layout()
+        """
+        s = self.df[col].fillna('None')
+        if samples is not None:
+            s = s[samples]
+        labels = sorted(list(s.unique()))
+        colors = plt.cm.get_cmap(cmap)(np.linspace(0, 1, len(labels)))
+        handles = []
+        for i, label in enumerate(labels):
+            handles.append(mpatches.Patch(color=colors[i], label=label))
+        return handles
+
+    def plot_annot(self, col, samples=None, cmap='Pastel1', ax=None, figsize=None, **kwargs):
+        s = self.df[col].fillna('None')
+        if samples is not None:
+            s = s[samples]
+        labels = sorted(list(s.unique()))
+        d = {k: v for v, k in enumerate(labels)}
+        df = s.to_frame().applymap(lambda x: d[x])
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+        sns.heatmap(df.T, ax=ax, cmap=cmap, cbar=False, **kwargs)
+        ax.set_xlabel('Samples')
+        ax.set_ylabel(s.index.name)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        return ax
 
 class MafFrame:
     """Class for storing MAF data.
@@ -642,8 +696,13 @@ class MafFrame:
                         labelsize=ticklabels_fontsize)
 
         # Create the legend.
-        plot_legend(name='waterfall', ax=ax5, ncol=4, loc='upper center',
-                    fontsize=legend_fontsize)
+        ax5.legend(handles=legend_handles('waterfall'),
+                   title='Variant_Classification',
+                   loc='upper center',
+                   ncol=4,
+                   fontsize=legend_fontsize,
+                   title_fontsize=legend_fontsize)
+        ax5.axis('off')
 
         # Remove the bottom right plot.
         ax6.remove()
@@ -795,8 +854,13 @@ class MafFrame:
                         labelsize=ticklabels_fontsize)
 
         # Add the legend.
-        plot_legend(ax=axbig, ncol=3, loc='upper center',
-                    fontsize=legend_fontsize)
+        axbig.legend(handles=legend_handles('regular'),
+                     title='Variant_Classification',
+                     loc='upper center',
+                     ncol=3,
+                     fontsize=legend_fontsize,
+                     title_fontsize=legend_fontsize)
+        axbig.axis('off')
 
         plt.tight_layout()
 
