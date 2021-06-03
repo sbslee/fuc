@@ -213,14 +213,20 @@ class AnnFrame:
         self.df = df
 
     @classmethod
-    def from_file(cls, fn):
+    def from_file(cls, fn, sep='\t', sample_col=None):
         """Construct AnnFrame from an annotation file.
+
+        The input text file must contain a column that corresponds to
+        'Tumor_Sample_Barcode'.
 
         Parameters
         ----------
         fn : str
-            Annotation file path (zipped or unzipped). The file must contain
-            the 'Tumor_Sample_Barcode' column.
+            Annotation file path (zipped or unzipped).
+        sep : str, default: '\t'
+            Delimiter to use.
+        sample_col : str, optional
+            If provided, use this column as 'Tumor_Sample_Barcode'.
 
         Returns
         -------
@@ -232,7 +238,12 @@ class AnnFrame:
         AnnFrame
             AnnFrame object creation using constructor.
         """
-        return cls(pd.read_table(fn, index_col='Tumor_Sample_Barcode'))
+
+        df = pd.read_table(fn, sep=sep)
+        if sample_col is not None:
+            df = df.rename(columns={sample_col: 'Tumor_Sample_Barcode'})
+        df = df.set_index('Tumor_Sample_Barcode')
+        return cls(df)
 
     def legend_handles(self, col, numeric=False, segments=5, samples=None, decimals=0, cmap='Pastel1'):
         """Return legend handles for the given column.
