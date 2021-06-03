@@ -27,7 +27,7 @@ import copy
 
 MAF_HEADERS = [
     'Hugo_Symbol', 'Entrez_Gene_Id', 'Center', 'NCBI_Build', 'Chromosome',
-    'Start_Position', 'End_position', 'Strand', 'Variant_Classification',
+    'Start_Position', 'End_Position', 'Strand', 'Variant_Classification',
     'Variant_Type', 'Reference_Allele', 'Tumor_Seq_Allele1',
     'Tumor_Seq_Allele2', 'Tumor_Sample_Barcode', 'Protein_Change'
 ]
@@ -365,7 +365,7 @@ class MafFrame:
         df = pd.read_table(fn)
         if not all(x in df.columns for x in MAF_HEADERS):
             m = ('One or more required headers were not found: '
-                 f"{MAF_HEADERS}. Are you sure '{fn}' is a MAF file?")
+                 f"{MAF_HEADERS}. Please make sure '{fn}' is a MAF file.")
             raise ValueError(m)
         return cls(df)
 
