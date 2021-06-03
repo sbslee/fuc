@@ -13,9 +13,8 @@ Changelog
 * Add new methods :meth:`pymaf.AnnFrame.legend_handles/plot_annot`.
 * Add new method :meth:`pyvcf.VcfFrame.expand`.
 * Rename methods :meth:`pyvcf.gt_missing/haspolyp` to :meth:`pyvcf.gt_miss/polyp`.
-* Add new method :meth:`pyvcf.VcfFrame.to_bed`.
 * Add new method :meth:`pybed.BedFrame.from_frame`.
-* Add new command :command:`vcf_vcf2bed`.
+* :issue:`14`: Add new method :meth:`pyvcf.VcfFrame.to_bed` and new command :command:`vcf_vcf2bed`.
 
 0.9.0 (2021-06-01)
 ------------------
