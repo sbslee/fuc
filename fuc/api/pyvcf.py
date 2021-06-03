@@ -667,9 +667,9 @@ class VcfFrame:
         --------
 
         >>> from fuc import pyvcf
-        >>> pyvcf.VcfFrame.from_file('example.vcf')
-        >>> pyvcf.VcfFrame.from_file('example.vcf.gz')
-        >>> pyvcf.VcfFrame.from_file('example.vcf', compression=True)
+        >>> vf = pyvcf.VcfFrame.from_file('unzipped.vcf')
+        >>> vf = pyvcf.VcfFrame.from_file('zipped.vcf.gz')
+        >>> vf = pyvcf.VcfFrame.from_file('zipped.vcf', compression=True)
         """
         meta = []
         skip_rows = 0
@@ -3146,7 +3146,7 @@ class VcfFrame:
         4  chr1  104  .  ACGT       A    .      .    .  GT:DP  0/0:31  0/1:27
 
         We can construct BedFrame from the VcfFrame:
-        
+
         >>> bf = vf.to_bed()
         >>> bf.gr.df
           Chromosome  Start  End
