@@ -473,7 +473,7 @@ vcf_vcf2bed
    $ fuc vcf_vcf2bed -h
    usage: fuc vcf_vcf2bed [-h] vcf_file
    
-   This command will convert a VCF file to a BED file
+   This command will convert a VCF file to a BED file.
    
    positional arguments:
      vcf_file    VCF file

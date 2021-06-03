@@ -1,8 +1,8 @@
 Changelog
 *********
 
-0.10.0 (in development)
------------------------
+0.10.0 (2021-06-03)
+-------------------
 
 * Add new methods :meth:`pymaf.plot_summary/varsum`.
 * Add new command :command:`maf_sumplt`.
