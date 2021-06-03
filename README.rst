@@ -119,7 +119,7 @@ To remove indels from a VCF file:
    >>> filtered_vf = vf.filter_indel()
    >>> filtered_vf.to_file('no_indels.vcf')
 
-To create an oncoplot from a MAF file:
+To create an oncoplot with a MAF file:
 
 .. code:: python3
 
@@ -131,6 +131,10 @@ To create an oncoplot from a MAF file:
     >>> mf.plot_oncoplot()
 
 .. image:: https://raw.githubusercontent.com/sbslee/fuc-data/main/images/oncoplot.png
+
+To create a customized oncoplot with a MAF file, see the 'Create customized oncoplot' tutorial:
+
+.. image:: https://raw.githubusercontent.com/sbslee/fuc-data/main/images/customized_oncoplot.png
 
 To create a summary figure for a MAF file:
 
