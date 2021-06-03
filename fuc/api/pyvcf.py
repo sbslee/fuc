@@ -1711,6 +1711,81 @@ class VcfFrame:
         vf = self.__class__(self.copy_meta(), df)
         return vf
 
+    def expand(self):
+        """Expand each multiallelic locus to multiple rows.
+
+        Only the GT subfield of FORMAT will be retained.
+
+        Returns
+        -------
+        VcfFrame
+            Expanded VcfFrame.
+
+        See Also
+        --------
+        collapse
+            Collapse duplicate records in the VcfFrame.
+
+        Examples
+        --------
+        Assume we have the following data:
+
+        >>> from fuc import pyvcf
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102, 103],
+        ...     'ID': ['.', '.', '.', '.'],
+        ...     'REF': ['A', 'A', 'C', 'C'],
+        ...     'ALT': ['C', 'T,G', 'G', 'A,G,CT'],
+        ...     'QUAL': ['.', '.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.', '.'],
+        ...     'INFO': ['.', '.', '.', '.'],
+        ...     'FORMAT': ['GT:DP', 'GT:DP', 'GT:DP', 'GT:DP'],
+        ...     'Steven': ['0/1:32', './.:.', '0/1:27', '0/2:34'],
+        ...     'Sara': ['0/0:28', '1/2:30', '1/1:29', '1/2:38'],
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF     ALT QUAL FILTER INFO FORMAT  Steven    Sara
+        0  chr1  100  .   A       C    .      .    .  GT:DP  0/1:32  0/0:28
+        1  chr1  101  .   A     T,G    .      .    .  GT:DP   ./.:.  1/2:30
+        2  chr1  102  .   C       G    .      .    .  GT:DP  0/1:27  1/1:29
+        3  chr1  103  .   C  A,G,CT    .      .    .  GT:DP  0/2:34  1/2:38
+
+        We can expand each of the multiallelic loci:
+
+        >>> vf.expand().df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven Sara
+        0  chr1  100  .   A   C    .      .    .     GT    0/1  0/0
+        1  chr1  101  .   A   T    .      .    .     GT    ./.  0/1
+        2  chr1  101  .   A   G    .      .    .     GT    ./.  0/1
+        3  chr1  102  .   C   G    .      .    .     GT    0/1  1/1
+        4  chr1  103  .   C   A    .      .    .     GT    0/0  0/1
+        5  chr1  103  .   C   G    .      .    .     GT    0/1  0/1
+        6  chr1  103  .   C  CT    .      .    .     GT    0/0  0/0
+        """
+        data = []
+        def one_gt(g, i):
+            if gt_miss(g):
+                return g
+            l = g.split('/')
+            l = ['1' if x == str(i+1) else '0' for x in l]
+            l = sorted(l)
+            return '/'.join(l)
+        for i, r in self.df.iterrows():
+            r.FORMAT = 'GT'
+            r[9:] = r[9:].apply(lambda x: x.split(':')[0])
+            alt_alleles = r.ALT.split(',')
+            if len(alt_alleles) == 1:
+                data.append(r)
+                continue
+            for i, alt_allele in enumerate(alt_alleles):
+                s = r.copy()
+                s.ALT = alt_allele
+                s[9:] = s[9:].apply(one_gt, args=(i,))
+                data.append(s)
+        return self.__class__(self.copy_meta(), pd.concat(data, axis=1).T)
+
     def filter_bed(self, bed, opposite=False, index=False):
         """Select rows that overlap with the given BED data.
 
@@ -3035,20 +3110,13 @@ class VcfFrame:
             df = df[df.POS <= end]
         return self.__class__(self.copy_meta(), df)
 
-    def expand(self):
-        """Expand each multiallelic locus to multiple rows.
-
-        Only the GT subfield of FORMAT will be retained.
+    def to_bed(self):
+        """Write BedFrame from the VcfFrame.
 
         Returns
         -------
-        VcfFrame
-            Expanded VcfFrame.
-
-        See Also
-        --------
-        collapse
-            Collapse duplicate records in the VcfFrame.
+        BedFrame
+            BedFrame.
 
         Examples
         --------
@@ -3056,56 +3124,52 @@ class VcfFrame:
 
         >>> from fuc import pyvcf
         >>> data = {
-        ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1'],
-        ...     'POS': [100, 101, 102, 103],
-        ...     'ID': ['.', '.', '.', '.'],
-        ...     'REF': ['A', 'A', 'C', 'C'],
-        ...     'ALT': ['C', 'T,G', 'G', 'A,G,CT'],
-        ...     'QUAL': ['.', '.', '.', '.'],
-        ...     'FILTER': ['.', '.', '.', '.'],
-        ...     'INFO': ['.', '.', '.', '.'],
-        ...     'FORMAT': ['GT:DP', 'GT:DP', 'GT:DP', 'GT:DP'],
-        ...     'Steven': ['0/1:32', './.:.', '0/1:27', '0/2:34'],
-        ...     'Sara': ['0/0:28', '1/2:30', '1/1:29', '1/2:38'],
+        ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102, 103, 104],
+        ...     'ID': ['.', '.', '.', '.', '.'],
+        ...     'REF': ['A', 'A', 'C', 'C', 'ACGT'],
+        ...     'ALT': ['C', 'T,G', 'G', 'A,G,CT', 'A'],
+        ...     'QUAL': ['.', '.', '.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.', '.', '.'],
+        ...     'INFO': ['.', '.', '.', '.', '.'],
+        ...     'FORMAT': ['GT:DP', 'GT:DP', 'GT:DP', 'GT:DP', 'GT:DP'],
+        ...     'Steven': ['0/1:32', './.:.', '0/1:27', '0/2:34', '0/0:31'],
+        ...     'Sara': ['0/0:28', '1/2:30', '1/1:29', '1/2:38', '0/1:27'],
         ... }
         >>> vf = pyvcf.VcfFrame.from_dict([], data)
         >>> vf.df
-          CHROM  POS ID REF     ALT QUAL FILTER INFO FORMAT  Steven    Sara
-        0  chr1  100  .   A       C    .      .    .  GT:DP  0/1:32  0/0:28
-        1  chr1  101  .   A     T,G    .      .    .  GT:DP   ./.:.  1/2:30
-        2  chr1  102  .   C       G    .      .    .  GT:DP  0/1:27  1/1:29
-        3  chr1  103  .   C  A,G,CT    .      .    .  GT:DP  0/2:34  1/2:38
+          CHROM  POS ID   REF     ALT QUAL FILTER INFO FORMAT  Steven    Sara
+        0  chr1  100  .     A       C    .      .    .  GT:DP  0/1:32  0/0:28
+        1  chr1  101  .     A     T,G    .      .    .  GT:DP   ./.:.  1/2:30
+        2  chr1  102  .     C       G    .      .    .  GT:DP  0/1:27  1/1:29
+        3  chr1  103  .     C  A,G,CT    .      .    .  GT:DP  0/2:34  1/2:38
+        4  chr1  104  .  ACGT       A    .      .    .  GT:DP  0/0:31  0/1:27
 
-        We can expand each of the multiallelic loci:
-
-        >>> vf.expand().df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven Sara
-        0  chr1  100  .   A   C    .      .    .     GT    0/1  0/0
-        1  chr1  101  .   A   T    .      .    .     GT    ./.  0/1
-        2  chr1  101  .   A   G    .      .    .     GT    ./.  0/1
-        3  chr1  102  .   C   G    .      .    .     GT    0/1  1/1
-        4  chr1  103  .   C   A    .      .    .     GT    0/0  0/1
-        5  chr1  103  .   C   G    .      .    .     GT    0/1  0/1
-        6  chr1  103  .   C  CT    .      .    .     GT    0/0  0/0
+        We can construct BedFrame from the VcfFrame:
+        
+        >>> bf = vf.to_bed()
+        >>> bf.gr.df
+          Chromosome  Start  End
+        0       chr1    100  100
+        1       chr1    101  101
+        2       chr1    102  102
+        3       chr1    103  103
+        4       chr1    103  104
+        5       chr1    105  107
         """
-        data = []
-        def one_gt(g, i):
-            if gt_miss(g):
-                return g
-            l = g.split('/')
-            l = ['1' if x == str(i+1) else '0' for x in l]
-            l = sorted(l)
-            return '/'.join(l)
-        for i, r in self.df.iterrows():
-            r.FORMAT = 'GT'
-            r[9:] = r[9:].apply(lambda x: x.split(':')[0])
-            alt_alleles = r.ALT.split(',')
-            if len(alt_alleles) == 1:
-                data.append(r)
-                continue
-            for i, alt_allele in enumerate(alt_alleles):
-                s = r.copy()
-                s.ALT = alt_allele
-                s[9:] = s[9:].apply(one_gt, args=(i,))
-                data.append(s)
-        return self.__class__(self.copy_meta(), pd.concat(data, axis=1).T)
+        def one_row(r):
+            if len(r.REF) == len(r.ALT) == 1:
+                start = r.POS
+                end = r.POS
+            elif len(r.REF) > len(r.ALT):
+                start = r.POS + 1
+                end = r.POS + len(r.REF) - len(r.ALT)
+            else:
+                start = r.POS
+                end = r.POS + 1
+            return pd.Series([r.CHROM, start, end])
+        df = self.expand().df.apply(one_row, axis=1)
+        df.columns = ['Chromosome', 'Start', 'End']
+        df = df.drop_duplicates()
+        bf = pybed.BedFrame.from_frame([], df)
+        return bf

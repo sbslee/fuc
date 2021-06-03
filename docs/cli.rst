@@ -37,6 +37,7 @@ For getting help on CLI:
        tbl_sum      [TABLE] summarize a table file
        vcf_merge    [VCF] merge two or more VCF files
        vcf_slice    [VCF] slice a VCF file
+       vcf_vcf2bed  [VCF] convert a VCF file to a BED file
    
    optional arguments:
      -h, --help     show this help message and exit
@@ -463,4 +464,20 @@ vcf_slice
      -h, --help       show this help message and exit
      --start INTEGER  start position
      --end INTEGER    end position
+
+vcf_vcf2bed
+===========
+
+.. code-block:: console
+
+   $ fuc vcf_vcf2bed -h
+   usage: fuc vcf_vcf2bed [-h] vcf_file
+   
+   This command will convert a VCF file to a BED file
+   
+   positional arguments:
+     vcf_file    VCF file
+   
+   optional arguments:
+     -h, --help  show this help message and exit
 

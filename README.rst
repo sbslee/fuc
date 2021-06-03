@@ -232,6 +232,7 @@ For getting help on CLI:
        tbl_sum      [TABLE] summarize a table file
        vcf_merge    [VCF] merge two or more VCF files
        vcf_slice    [VCF] slice a VCF file
+       vcf_vcf2bed  [VCF] convert a VCF file to a BED file
    
    optional arguments:
      -h, --help     show this help message and exit

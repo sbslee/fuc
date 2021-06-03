@@ -97,7 +97,7 @@ class BedFrame:
         Parameters
         ----------
         meta : list
-            List of the metadata lines.
+            Metadata lines.
         data : dict
             Of the form {field : array-like} or {field : dict}.
 
@@ -105,6 +105,8 @@ class BedFrame:
         -------
         BedFrame
             BedFrame.
+        BedFrame.from_frame
+            Construct BedFrame from DataFrame.
 
         See Also
         --------
@@ -128,6 +130,49 @@ class BedFrame:
         2       chr3    100  200
         """
         return cls(meta, pr.PyRanges(pd.DataFrame(data)))
+
+    @classmethod
+    def from_frame(cls, meta, data):
+        """Construct BedFrame from DataFrame.
+
+        Parameters
+        ----------
+        meta : list
+            Metadata lines.
+        data : pandas.DataFrame
+            DataFrame containing BED data.
+
+        Returns
+        -------
+        BedFrame
+            BedFrame.
+
+        See Also
+        --------
+        BedFrame
+            BedFrame object creation using constructor.
+        BedFrame.from_dict
+            Construct BedFrame from dict of array-like or dicts.
+
+        Examples
+        --------
+
+        >>> import pandas as pd
+        >>> from fuc import pybed
+        >>> data = {
+        ...     'Chromosome': ['chr1', 'chr2', 'chr3'],
+        ...     'Start': [100, 400, 100],
+        ...     'End': [200, 500, 200]
+        ... }
+        >>> df = pd.DataFrame(data)
+        >>> bf = pybed.BedFrame.from_frame([], df)
+        >>> bf.gr.df
+          Chromosome  Start  End
+        0       chr1    100  200
+        1       chr2    400  500
+        2       chr3    100  200
+        """
+        return cls(meta, pr.PyRanges(data))
 
     @classmethod
     def from_file(cls, fn):
