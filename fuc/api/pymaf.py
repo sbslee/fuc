@@ -25,6 +25,13 @@ import copy
 # Note that both frameshift_variant and protein_altering_variant require
 # additional information to find their correct Variant_Classification.
 
+MAF_HEADERS = [
+    'Hugo_Symbol', 'Entrez_Gene_Id', 'Center', 'NCBI_Build', 'Chromosome',
+    'Start_Position', 'End_position', 'Strand', 'Variant_Classification',
+    'Variant_Type', 'Reference_Allele', 'Tumor_Seq_Allele1',
+    'Tumor_Seq_Allele2', 'Tumor_Sample_Barcode', 'Protein_Change'
+]
+
 VEP_CONSEQUENCES = {
     'transcript_ablation':                'Splice_Site',
     'splice_acceptor_variant':            'Splice_Site',
@@ -282,7 +289,7 @@ class AnnFrame:
                 for i, interval in enumerate(intervals):
                     a, b = interval
                     if a <= x <= b:
-                        return f'G{i} ({a:.{decimals}f} - {b:.{decimals}f})'
+                        return f'G{i} ({b:.{decimals}f})'
             s = s.apply(f)
         if samples is not None:
             s = s[samples]
@@ -300,7 +307,7 @@ class AnnFrame:
             fig, ax = plt.subplots(figsize=figsize)
         sns.heatmap(df.T, ax=ax, cmap=cmap, cbar=False, **kwargs)
         ax.set_xlabel('Samples')
-        ax.set_ylabel(s.index.name)
+        ax.set_ylabel(col)
         ax.set_xticks([])
         ax.set_yticks([])
         return ax
@@ -355,7 +362,12 @@ class MafFrame:
         MafFrame
             MafFrame object creation using constructor.
         """
-        return cls(pd.read_table(fn))
+        df = pd.read_table(fn)
+        if not all(x in df.columns for x in MAF_HEADERS):
+            m = ('One or more required headers were not found: '
+                 f"{MAF_HEADERS}. Are you sure '{fn}' is a MAF file?")
+            raise ValueError(m)
+        return cls(df)
 
     @classmethod
     def from_vcf(cls, vcf):
