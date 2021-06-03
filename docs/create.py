@@ -43,10 +43,10 @@ README
    :target: https://anaconda.org/bioconda/fuc
 
 .. image:: https://anaconda.org/bioconda/fuc/badges/license.svg
-   :target: https://anaconda.org/bioconda/fuc
+   :target: https://github.com/sbslee/fuc/blob/main/LICENSE
 
 .. image:: https://anaconda.org/bioconda/fuc/badges/downloads.svg
-   :target: https://anaconda.org/bioconda/fuc
+   :target: https://anaconda.org/bioconda/fuc/files
 
 .. image:: https://anaconda.org/bioconda/fuc/badges/installer/conda.svg
    :target: https://conda.anaconda.org/bioconda
@@ -147,7 +147,7 @@ To remove indels from a VCF file:
    >>> filtered_vf = vf.filter_indel()
    >>> filtered_vf.to_file('no_indels.vcf')
 
-To create an oncoplot from a MAF file:
+To create an oncoplot with a MAF file:
 
 .. code:: python3
 
@@ -156,9 +156,26 @@ To create an oncoplot from a MAF file:
     >>> common.load_dataset('tcga-laml')
     >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
     >>> mf = pymaf.MafFrame.from_file(f)
-    >>> mf.plot_oncoplot(fontsize=14)
+    >>> mf.plot_oncoplot()
 
 .. image:: https://raw.githubusercontent.com/sbslee/fuc-data/main/images/oncoplot.png
+
+To create a customized oncoplot with a MAF file, see the 'Create customized oncoplot' tutorial:
+
+.. image:: https://raw.githubusercontent.com/sbslee/fuc-data/main/images/customized_oncoplot.png
+
+To create a summary figure for a MAF file:
+
+.. code:: python3
+
+    >>> import matplotlib.pyplot as plt
+    >>> from fuc import common, pymaf
+    >>> common.load_dataset('tcga-laml')
+    >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+    >>> mf = pymaf.MafFrame.from_file(f)
+    >>> mf.plot_summary()
+
+.. image:: https://raw.githubusercontent.com/sbslee/fuc-data/main/images/maf_summary.png
 
 To create read depth profile of a region from a CRAM file:
 
@@ -208,7 +225,7 @@ Finally, you can clone the GitHub repository and then install fuc this way:
    $ cd fuc
    $ pip install .
 
-The nice thing about this approach is that you will have access to a development version that's not available in Anaconda or PyPI. For example, you can access a development branch with the ``git checkout`` command.
+The nice thing about this approach is that you will have access to development versions that are not available in Anaconda or PyPI. For example, you can access a development branch with the ``git checkout`` command.
 
 Getting Help
 ============

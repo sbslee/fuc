@@ -14,6 +14,7 @@ import numpy as np
 import re
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+import matplotlib.gridspec as gridspec
 from . import pyvcf
 import copy
 
@@ -23,6 +24,13 @@ import copy
 #
 # Note that both frameshift_variant and protein_altering_variant require
 # additional information to find their correct Variant_Classification.
+
+MAF_HEADERS = [
+    'Hugo_Symbol', 'Entrez_Gene_Id', 'Center', 'NCBI_Build', 'Chromosome',
+    'Start_Position', 'End_Position', 'Strand', 'Variant_Classification',
+    'Variant_Type', 'Reference_Allele', 'Tumor_Seq_Allele1',
+    'Tumor_Seq_Allele2', 'Tumor_Sample_Barcode', 'Protein_Change'
+]
 
 VEP_CONSEQUENCES = {
     'transcript_ablation':                'Splice_Site',
@@ -117,59 +125,63 @@ SNVCLS = {
     'T>G': {'REP': 'T>G'},
 }
 
-def plot_legend(name='regular', ax=None, figsize=None, **kwargs):
-    """Create one of the pre-defined legends.
+def legend_handles(name='regular'):
+    """Return legend handles for one of the pre-defined legends.
 
     Parameters
     ----------
     name : {'regaulr', 'waterfall'}, default: 'regular'
-        Type of legend to be drawn.
-    ax : matplotlib.axes.Axes, optional
-        Pre-existing axes for the plot. Otherwise, crete a new one.
-    figsize : tuple, optional
-        Width, height in inches. Format: (float, float).
-    kwargs
-        Other keyword arguments will be passed down to
-        :meth:`Axes.legend`.
+        Type of legend to be drawn. See the examples below for details.
 
     Returns
     -------
-    matplotlib.axes.Axes
-        The matplotlib axes containing the plot.
+    list
+        Legend handles.
 
     Examples
     --------
-    We can add legend for the :meth:`MafFrame.plot_genes` method:
+    There are currently two types of legends:
 
     .. plot::
         :context: close-figs
 
         >>> import matplotlib.pyplot as plt
-        >>> from fuc import common, pymaf
-        >>> common.load_dataset('tcga-laml')
-        >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
-        >>> mf = pymaf.MafFrame.from_file(f)
-        >>> fig, [ax1, ax2] = plt.subplots(1, 2, figsize=(10, 6),
-        ...     gridspec_kw={'width_ratios': [10, 1]})
-        >>> mf.plot_genes(ax=ax1)
-        >>> pymaf.plot_legend(name='regular', ax=ax2, loc='center left')
+        >>> from fuc import pymaf
+        >>> fig, ax = plt.subplots()
+        >>> handles1 = pymaf.legend_handles(name='regular')
+        >>> handles2 = pymaf.legend_handles(name='waterfall')
+        >>> leg1 = ax.legend(handles=handles1, title="name='regular'", loc='center left')
+        >>> leg2 = ax.legend(handles=handles2, title="name='waterfall'", loc='center right')
+        >>> ax.add_artist(leg1)
+        >>> ax.add_artist(leg2)
         >>> plt.tight_layout()
 
-    We can also add legend for :meth:`MafFrame.plot_waterfall` method:
+    A common way of adding a legend is as follows:
 
     .. plot::
         :context: close-figs
 
-        >>> fig, [ax1, ax2] = plt.subplots(2, 1, figsize=(10, 6),
-        ...     gridspec_kw={'height_ratios': [10, 1]})
+        >>> from fuc import common
+        >>> common.load_dataset('tcga-laml')
+        >>> mf = pymaf.MafFrame.from_file('~/fuc-data/tcga-laml/tcga_laml.maf.gz')
+        >>> fig, [ax1, ax2] = plt.subplots(2, 1, figsize=(10, 6), gridspec_kw={'height_ratios': [10, 1]})
         >>> mf.plot_waterfall(ax=ax1, linewidths=0.5)
-        >>> pymaf.plot_legend(name='waterfall', ax=ax2, ncol=4,
-        ...     loc='upper center')
+        >>> handles = pymaf.legend_handles(name='waterfall')
+        >>> ax2.legend(handles=handles, ncol=4, loc='upper center', title='Variant_Classification')
+        >>> ax2.axis('off')
+        >>> plt.tight_layout()
+
+    Alternatively, you can insert a legend directly to an existing plot:
+
+    .. plot::
+        :context: close-figs
+
+        >>> ax = mf.plot_genes()
+        >>> handles = pymaf.legend_handles(name='regular')
+        >>> ax.legend(handles=handles, title='Variant_Classification')
         >>> plt.tight_layout()
     """
-    if ax is None:
-        fig, ax = plt.subplots(figsize=figsize)
-    h = []
+    handles = []
     labels = copy.deepcopy(NONSYN_NAMES)
     colors = copy.deepcopy(NONSYN_COLORS)
     if name == 'regular':
@@ -180,10 +192,136 @@ def plot_legend(name='regular', ax=None, figsize=None, **kwargs):
     else:
         raise ValueError(f'Found incorrect name: {name}')
     for i, label in enumerate(labels):
-        h.append(mpatches.Patch(color=colors[i], label=label))
-    ax.legend(handles=h, **kwargs)
-    ax.axis('off')
-    return ax
+        handles.append(mpatches.Patch(color=colors[i], label=label))
+    return handles
+
+class AnnFrame:
+    """Class for storing annotation data.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        DataFrame containing annotation data. The index must be
+        'Tumor_Sample_Barcode'.
+
+    See Also
+    --------
+    AnnFrame.from_file
+        Construct AnnFrame from an annotation file.
+    """
+    def __init__(self, df):
+        self.df = df
+
+    @classmethod
+    def from_file(cls, fn, sep='\t', sample_col=None):
+        """Construct AnnFrame from an annotation file.
+
+        The input text file must contain a column that corresponds to
+        'Tumor_Sample_Barcode'.
+
+        Parameters
+        ----------
+        fn : str
+            Annotation file path (zipped or unzipped).
+        sep : str, default: '\t'
+            Delimiter to use.
+        sample_col : str, optional
+            If provided, use this column as 'Tumor_Sample_Barcode'.
+
+        Returns
+        -------
+        AnnFrame
+            AnnFrame.
+
+        See Also
+        --------
+        AnnFrame
+            AnnFrame object creation using constructor.
+        """
+
+        df = pd.read_table(fn, sep=sep)
+        if sample_col is not None:
+            df = df.rename(columns={sample_col: 'Tumor_Sample_Barcode'})
+        df = df.set_index('Tumor_Sample_Barcode')
+        return cls(df)
+
+    def legend_handles(self, col, numeric=False, segments=5, samples=None, decimals=0, cmap='Pastel1'):
+        """Return legend handles for the given column.
+
+        Parameters
+        ----------
+        col : str
+            Column name.
+        samples : list, optional
+            If provided, these samples will be used to create legend handles.
+        cmap : str, default: 'Pastel1'
+            Color map.
+
+        Returns
+        -------
+        list
+            Legend handles.
+
+        Examples
+        --------
+
+        .. plot::
+
+            >>> import matplotlib.pyplot as plt
+            >>> from fuc import common, pymaf
+            >>> common.load_dataset('tcga-laml')
+            >>> f = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
+            >>> af = pymaf.AnnFrame.from_file(f)
+            >>> fig, ax = plt.subplots()
+            >>> handles1 = af.legend_handles('FAB_classification')
+            >>> handles2 = af.legend_handles('Overall_Survival_Status')
+            >>> leg1 = ax.legend(handles=handles1, title='FAB_classification', loc='center left')
+            >>> leg2 = ax.legend(handles=handles2, title='Overall_Survival_Status', loc='center right')
+            >>> ax.add_artist(leg1)
+            >>> ax.add_artist(leg2)
+            >>> plt.tight_layout()
+        """
+        s, l = self._get_col(col, numeric=numeric, segments=segments, samples=samples)
+        colors = plt.cm.get_cmap(cmap)(np.linspace(0, 1, len(l)))
+        handles = []
+        for i, label in enumerate(l):
+            handles.append(mpatches.Patch(color=colors[i], label=label))
+        return handles
+
+    def _get_col(self, col, numeric=False, segments=5, samples=None, decimals=0):
+        s = self.df[col]
+        s = s.replace([np.inf, -np.inf], np.nan)
+        if numeric:
+            boundaries = list(np.linspace(s.min(), s.max(), segments+1, endpoint=True))
+            intervals = list(zip(boundaries[:-1], boundaries[1:]))
+            def f(x):
+                if pd.isna(x):
+                    return x
+                for i, interval in enumerate(intervals):
+                    a, b = interval
+                    if a <= x <= b:
+                        return f'G{i} ({b:.{decimals}f})'
+            s = s.apply(f)
+        if samples is not None:
+            s = s[samples]
+        l = sorted([x for x in s.unique() if x == x])
+        return s, l
+
+    def plot_annot(
+        self, col, numeric=False, segments=5, samples=None, decimals=0, cmap='Pastel1', ax=None,
+        figsize=None, **kwargs
+    ):
+        s, l = self._get_col(col, numeric=numeric, segments=segments, samples=samples)
+        d = {k: v for v, k in enumerate(l)}
+        df = s.to_frame().applymap(lambda x: x if pd.isna(x) else d[x])
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+        sns.heatmap(df.T, ax=ax, cmap=cmap, cbar=False, **kwargs)
+        ax.set_xlabel('Samples')
+        ax.set_ylabel(col)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        return ax
 
 class MafFrame:
     """Class for storing MAF data.
@@ -235,7 +373,29 @@ class MafFrame:
         MafFrame
             MafFrame object creation using constructor.
         """
-        return cls(pd.read_table(fn))
+        # Read the MAF file.
+        df = pd.read_table(fn)
+
+        # Check the required columns. Letter case matters.
+        case_dict = {}
+        for c1 in MAF_HEADERS:
+            found = False
+            for c2 in df.columns:
+                if c1 == c2:
+                    found = True
+                    break
+                if c1.lower() == c2.lower():
+                    found = True
+                    case_dict[c2] = c1
+                    break
+            if not found:
+                raise ValueError(f"Required column '{c1}' is not found.")
+
+        # If necessary, match the letter case.
+        if case_dict:
+            df = df.rename(columns=case_dict)
+
+        return cls(df)
 
     @classmethod
     def from_vcf(cls, vcf):
@@ -317,9 +477,9 @@ class MafFrame:
             tumor_sample_barcode = ','.join(s[s].index.to_list())
 
             # Get the Protein_Change data.
-            if fields[14]:
-                pos = fields[14]
-                aa = fields[15].split('/')
+            pos = fields[14]
+            aa = fields[15].split('/')
+            if len(aa) > 1:
                 protein_change = f'p.{aa[0]}{pos}{aa[1]}'
             else:
                 protein_change = '.'
@@ -522,7 +682,10 @@ class MafFrame:
         ax.set_ylabel('')
         return ax
 
-    def plot_oncoplot(self, count=10, figsize=(15, 10), fontsize=10):
+    def plot_oncoplot(
+        self, count=10, figsize=(15, 10), label_fontsize=15,
+        ticklabels_fontsize=15, legend_fontsize=15
+    ):
         """Create an oncoplot.
 
         Parameters
@@ -531,8 +694,12 @@ class MafFrame:
             Number of top mutated genes to display.
         figsize : tuple, default: (15, 10)
             Width, height in inches. Format: (float, float).
-        fontsize : int, default: 10
-            Font size.
+        label_fontsize : float, default: 15
+            Font size of labels.
+        ticklabels_fontsize : float, default: 15
+            Font size of tick labels.
+        legend_fontsize : float, default: 15
+            Font size of legend texts.
 
         Examples
         --------
@@ -544,45 +711,54 @@ class MafFrame:
             >>> common.load_dataset('tcga-laml')
             >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
             >>> mf = pymaf.MafFrame.from_file(f)
-            >>> mf.plot_oncoplot(fontsize=14)
+            >>> mf.plot_oncoplot()
         """
-        samples = list(self.compute_waterfall(count).columns)
-
-        plt.rc('font', size=fontsize)
-        fig, axes = plt.subplots(3, 2, figsize=figsize,
-            gridspec_kw={'height_ratios': [1, 10, 1],
-                         'width_ratios': [10, 1]})
+        g = {'height_ratios': [1, 10, 1], 'width_ratios': [10, 1]}
+        fig, axes = plt.subplots(3, 2, figsize=figsize, gridspec_kw=g)
         [[ax1, ax2], [ax3, ax4], [ax5, ax6]] = axes
 
         # Create the TMB plot.
+        samples = list(self.compute_waterfall(count).columns)
         self.plot_tmb(ax=ax1, samples=samples)
         ax1.set_xlabel('')
         ax1.spines['right'].set_visible(False)
         ax1.spines['top'].set_visible(False)
         ax1.spines['bottom'].set_visible(False)
-        ax1.set_ylabel('TMB')
+        ax1.set_ylabel('TMB', fontsize=label_fontsize)
         ax1.set_yticks([0, self.compute_tmb().sum(axis=1).max()])
+        ax1.tick_params(axis='y', which='major',
+                        labelsize=ticklabels_fontsize)
 
         # Remove the top right plot.
         ax2.remove()
 
         # Create the waterfall plot.
-        self.plot_waterfall(ax=ax3, linewidths=1)
+        self.plot_waterfall(count=count, ax=ax3, linewidths=1)
         ax3.set_xlabel('')
+        ax3.tick_params(axis='y', which='major', labelrotation=0,
+                        labelsize=ticklabels_fontsize)
 
         # Create the genes plot.
-        self.plot_genes(ax=ax4, mode='samples', width=0.95)
+        self.plot_genes(count=count, ax=ax4, mode='samples', width=0.95)
         ax4.spines['right'].set_visible(False)
         ax4.spines['left'].set_visible(False)
         ax4.spines['top'].set_visible(False)
         ax4.set_yticks([])
-        ax4.set_xlabel('Samples')
+        ax4.set_xlabel('Samples', fontsize=label_fontsize)
         ax4.set_xticks([0, self.compute_genes(
             10, mode='samples').sum(axis=1).max()])
         ax4.set_ylim(-0.5, count-0.5)
+        ax4.tick_params(axis='x', which='major',
+                        labelsize=ticklabels_fontsize)
 
         # Create the legend.
-        plot_legend(name='waterfall', ax=ax5, ncol=4, loc='upper center')
+        ax5.legend(handles=legend_handles('waterfall'),
+                   title='Variant_Classification',
+                   loc='upper center',
+                   ncol=4,
+                   fontsize=legend_fontsize,
+                   title_fontsize=legend_fontsize)
+        ax5.axis('off')
 
         # Remove the bottom right plot.
         ax6.remove()
@@ -643,6 +819,106 @@ class MafFrame:
         ax.set_xlabel('Count')
         ax.set_ylabel('')
         return ax
+
+    def plot_summary(
+        self, figsize=(15, 10), title_fontsize=16, ticklabels_fontsize=12,
+        legend_fontsize=12
+
+    ):
+        """Create a summary figure for MafFrame.
+
+        Parameters
+        ----------
+        figsize : tuple, default: (15, 10)
+            Width, height in inches. Format: (float, float).
+        title_fontsize : float, default: 16
+            Font size of subplot titles.
+        ticklabels_fontsize : float, default: 12
+            Font size of tick labels.
+        legend_fontsize : float, default: 12
+            Font size of legend texts.
+
+        Examples
+        --------
+
+        .. plot::
+
+            >>> import matplotlib.pyplot as plt
+            >>> from fuc import common, pymaf
+            >>> common.load_dataset('tcga-laml')
+            >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+            >>> mf = pymaf.MafFrame.from_file(f)
+            >>> mf.plot_summary()
+        """
+        g = {'height_ratios': [10, 10, 1]}
+        fig, axes = plt.subplots(3, 3, figsize=figsize, gridspec_kw=g)
+        [[ax1, ax2, ax3], [ax4, ax5, ax6], [ax7, ax8, ax9]] = axes
+        gs = axes[2, 0].get_gridspec()
+        for ax in axes[2, :]:
+            ax.remove()
+        axbig = fig.add_subplot(gs[2, :])
+
+        # Create the 'Variant classification (variants)' figure.
+        self.plot_varcls(ax=ax1)
+        ax1.set_yticks([])
+        ax1.set_title('Variant classification (variants)',
+                      fontsize=title_fontsize)
+        ax1.set_xlabel('')
+        ax1.tick_params(axis='x', which='major',
+                        labelsize=ticklabels_fontsize)
+
+        # Create the 'Variant type' figure.
+        self.plot_vartype(ax=ax2)
+        ax2.set_title('Variant type', fontsize=title_fontsize)
+        ax2.set_xlabel('')
+        ax2.tick_params(axis='both', which='major',
+                        labelsize=ticklabels_fontsize)
+
+        # Create the 'SNV class' figure.
+        self.plot_snvcls(ax=ax3)
+        ax3.set_title('SNV class', fontsize=title_fontsize)
+        ax3.set_xlabel('')
+        ax3.tick_params(axis='both', which='major',
+                        labelsize=ticklabels_fontsize)
+
+        # Create the 'Variants per sample' figure.
+        median = self.compute_tmb().sum(axis=1).median()
+        self.plot_tmb(ax=ax4)
+        ax4.set_title(f'Variants per sample (median={median:.1f})',
+                      fontsize=title_fontsize)
+        ax4.set_xlabel('')
+        ax4.set_ylabel('')
+        ax4.tick_params(axis='y', which='major',
+                        labelsize=ticklabels_fontsize)
+
+        ax4.axhline(y=median, color='red', linestyle='dashed')
+
+        # Create the 'Variant classification (samples)' figure.
+        self.plot_varsum(ax=ax5)
+        ax5.set_title('Variant classification (samples)',
+                      fontsize=title_fontsize)
+        ax5.set_yticks([])
+        ax5.set_xlabel('')
+        ax5.tick_params(axis='x', which='major',
+                        labelsize=ticklabels_fontsize)
+
+        # Create the 'Top 10 mutated genes' figure.
+        self.plot_genes(ax=ax6)
+        ax6.set_title('Top 10 mutated genes', fontsize=title_fontsize)
+        ax6.set_xlabel('')
+        ax6.tick_params(axis='both', which='major',
+                        labelsize=ticklabels_fontsize)
+
+        # Add the legend.
+        axbig.legend(handles=legend_handles('regular'),
+                     title='Variant_Classification',
+                     loc='upper center',
+                     ncol=3,
+                     fontsize=legend_fontsize,
+                     title_fontsize=legend_fontsize)
+        axbig.axis('off')
+
+        plt.tight_layout()
 
     def plot_tmb(self, ax=None, figsize=None, samples=None, **kwargs):
         """Create a bar plot for tumor mutational burden (TMB) per sample.
@@ -735,6 +1011,39 @@ class MafFrame:
         sns.barplot(x='Count', y='Variant_Classification', data=df,
                     ax=ax, palette=NONSYN_COLORS, **kwargs)
         ax.set_ylabel('')
+        return ax
+
+    def plot_varsum(self, horizontal=False, ax=None, figsize=None):
+        """Create a summary box plot for variant classifications.
+
+        Parameters
+        ----------
+        horizontal : bool, default: False
+            If True, orientation of the plot will be set to horizontal.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+        """
+        df = self.compute_tmb()
+        df = pd.melt(df, value_vars=df.columns)
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+        if horizontal:
+            x, y = 'variable', 'value'
+            xlabel, ylabel = '', 'Samples'
+        else:
+            x, y = 'value', 'variable'
+            xlabel, ylabel = 'Samples', ''
+        sns.boxplot(x=x, y=y, data=df, ax=ax, showfliers=False,
+            palette=NONSYN_COLORS)
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
         return ax
 
     def plot_vartype(self, ax=None, figsize=None, **kwargs):
@@ -836,43 +1145,17 @@ class MafFrame:
         Parameters
         ----------
         fn : str
-            VCF file path.
+            MAF file path.
         """
-        self.df.to_csv(fn, index=False, sep='\t')
+        with open(fn, 'w') as f:
+            f.write(self.to_string())
 
-class AnnFrame:
-    """Class for storing annotation data.
-
-    Parameters
-    ----------
-    df : pandas.DataFrame
-        DataFrame containing annotation data.
-
-    See Also
-    --------
-    AnnFrame.from_file
-        Construct AnnFrame from an annotation file.
-    """
-    def __init__(self, df):
-        self.df = df.reset_index(drop=True)
-
-    @classmethod
-    def from_file(cls, fn):
-        """Construct AnnFrame from an annotation file.
-
-        Parameters
-        ----------
-        fn : str
-            Annotation file path (zipped or unzipped).
+    def to_string(self):
+        """Render MafFrame to a console-friendly tabular output.
 
         Returns
         -------
-        AnnFrame
-            AnnFrame.
-
-        See Also
-        --------
-        AnnFrame
-            AnnFrame object creation using constructor.
+        str
+            String representation of MafFrame.
         """
-        return cls(pd.read_table(fn))
+        return self.df.to_csv(index=False, sep='\t')

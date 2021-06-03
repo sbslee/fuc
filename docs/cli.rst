@@ -31,11 +31,13 @@ For getting help on CLI:
        fuc_exist    [FUC] check whether files/dirs exist
        fuc_find     [FUC] find files with certain extension recursively
        maf_oncoplt  [MAF] create an oncoplot from a MAF file
+       maf_sumplt   [MAF] create a summary plot for a MAF file
        maf_vcf2maf  [MAF] convert an annotated VCF file to a MAF file
        tbl_merge    [TABLE] merge two table files
        tbl_sum      [TABLE] summarize a table file
        vcf_merge    [VCF] merge two or more VCF files
        vcf_slice    [VCF] slice a VCF file
+       vcf_vcf2bed  [VCF] convert a VCF file to a BED file
    
    optional arguments:
      -h, --help     show this help message and exit
@@ -273,16 +275,65 @@ maf_oncoplt
 .. code-block:: console
 
    $ fuc maf_oncoplt -h
-   usage: fuc maf_oncoplt [-h] maf_file plot_file
+   usage: fuc maf_oncoplt [-h] [--count INTEGER] [--figsize FLOAT FLOAT]
+                          [--label_fontsize FLOAT] [--ticklabels_fontsize FLOAT]
+                          [--legend_fontsize FLOAT]
+                          maf_file output_file
    
-   This command will create an oncoplot from a MAF file.
+   This command will create an oncoplot from a MAF file. The format of output
+   image (PDF/PNG/JPEG/SVG) will be automatically determined by the output file's
+   extension. This command essentially wraps the `pymaf.plot_oncoplot` method.
+   Visit the method's documentation (https://sbslee-
+   fuc.readthedocs.io/en/latest/api.html#fuc.api.pymaf.MafFrame.plot_oncoplot) to
+   see example plots.
    
    positional arguments:
-     maf_file    input MAF file
-     plot_file   output plot file
+     maf_file              input MAF file
+     output_file           output inage file
    
    optional arguments:
-     -h, --help  show this help message and exit
+     -h, --help            show this help message and exit
+     --count INTEGER       number of top mutated genes to display (default: 10)
+     --figsize FLOAT FLOAT
+                           width, height in inches (default: [15, 10])
+     --label_fontsize FLOAT
+                           font size of labels (default: 15)
+     --ticklabels_fontsize FLOAT
+                           font size of tick labels (default: 15)
+     --legend_fontsize FLOAT
+                           font size of legend texts (default: 15)
+
+maf_sumplt
+==========
+
+.. code-block:: console
+
+   $ fuc maf_sumplt -h
+   usage: fuc maf_sumplt [-h] [--figsize FLOAT FLOAT] [--title_fontsize FLOAT]
+                         [--ticklabels_fontsize FLOAT] [--legend_fontsize FLOAT]
+                         maf_file output_file
+   
+   This command will create a summary plot for a MAF file. The format of output
+   image (PDF/PNG/JPEG/SVG) will be automatically determined by the output file's
+   extension. This command essentially wraps the `pymaf.plot_summary` method.
+   Visit the method's documentation (https://sbslee-
+   fuc.readthedocs.io/en/latest/api.html#fuc.api.pymaf.MafFrame.plot_summary) to
+   see example plots.
+   
+   positional arguments:
+     maf_file              input MAF file
+     output_file           output image file
+   
+   optional arguments:
+     -h, --help            show this help message and exit
+     --figsize FLOAT FLOAT
+                           width, height in inches (default: [15, 10])
+     --title_fontsize FLOAT
+                           font size of subplot titles (default: 16)
+     --ticklabels_fontsize FLOAT
+                           font size of tick labels (default: 12)
+     --legend_fontsize FLOAT
+                           font size of legend texts (default: 12)
 
 maf_vcf2maf
 ===========
@@ -290,13 +341,12 @@ maf_vcf2maf
 .. code-block:: console
 
    $ fuc maf_vcf2maf -h
-   usage: fuc maf_vcf2maf [-h] vcf maf
+   usage: fuc maf_vcf2maf [-h] vcf_file
    
    This command will convert an annotated VCF file to a MAF file.
    
    positional arguments:
-     vcf         annotated VCF file
-     maf         MAF file
+     vcf_file    annotated VCF file
    
    optional arguments:
      -h, --help  show this help message and exit
@@ -414,4 +464,20 @@ vcf_slice
      -h, --help       show this help message and exit
      --start INTEGER  start position
      --end INTEGER    end position
+
+vcf_vcf2bed
+===========
+
+.. code-block:: console
+
+   $ fuc vcf_vcf2bed -h
+   usage: fuc vcf_vcf2bed [-h] vcf_file
+   
+   This command will convert a VCF file to a BED file.
+   
+   positional arguments:
+     vcf_file    VCF file
+   
+   optional arguments:
+     -h, --help  show this help message and exit
 

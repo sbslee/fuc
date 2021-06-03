@@ -41,19 +41,57 @@ import pandas as pd
 import pyranges as pr
 from copy import deepcopy
 
-HEADERS = ['Chromosome', 'Start', 'End', 'Name',
-           'Score', 'Strand', 'ThickStart', 'ThickEnd',
-           'ItemRGB', 'BlockCount', 'BlockSizes', 'BlockStarts']
+HEADERS = [
+    'Chromosome', 'Start', 'End', 'Name', 'Score', 'Strand', 'ThickStart',
+    'ThickEnd', 'ItemRGB', 'BlockCount', 'BlockSizes', 'BlockStarts'
+]
 
 class BedFrame:
-    """Class for storing BED data."""
+    """Class for storing BED data.
+
+    Parameters
+    ----------
+    meta : list
+        Metadata lines.
+    gr : pyranges.PyRanges
+        PyRanges object containing BED data.
+
+    See Also
+    --------
+    BedFrame.from_dict
+        Construct BedFrame from dict of array-like or dicts.
+    BedFrame.from_file
+        Construct BedFrame from a BED file.
+    BedFrame.from_frame
+        Construct BedFrame from DataFrame.
+
+    Examples
+    --------
+
+    >>> import pandas as pd
+    >>> import pyranges as pr
+    >>> from fuc import pybed
+    >>> data = {
+    ...     'Chromosome': ['chr1', 'chr2', 'chr3'],
+    ...     'Start': [100, 400, 100],
+    ...     'End': [200, 500, 200]
+    ... }
+    >>> df = pd.DataFrame(data)
+    >>> gr = pr.PyRanges(df)
+    >>> bf = pybed.BedFrame([], gr)
+    >>> bf.gr.df
+      Chromosome  Start  End
+    0       chr1    100  200
+    1       chr2    400  500
+    2       chr3    100  200
+    """
     def __init__(self, meta, gr):
         self._meta = meta
         self._gr = gr
 
     @property
     def meta(self):
-        """list : List of metadata lines."""
+        """list : Metadata lines."""
         return self._meta
 
     @meta.setter
@@ -97,7 +135,7 @@ class BedFrame:
         Parameters
         ----------
         meta : list
-            List of the metadata lines.
+            Metadata lines.
         data : dict
             Of the form {field : array-like} or {field : dict}.
 
@@ -110,6 +148,10 @@ class BedFrame:
         --------
         BedFrame
             BedFrame object creation using constructor.
+        BedFrame.from_file
+            Construct BedFrame from a BED file.
+        BedFrame.from_frame
+            Construct BedFrame from DataFrame.
 
         Examples
         --------
@@ -131,7 +173,33 @@ class BedFrame:
 
     @classmethod
     def from_file(cls, fn):
-        """Construct BedFrame from a BED file."""
+        """Construct BedFrame from a BED file.
+
+        Parameters
+        ----------
+        fn : str
+            BED file path.
+
+        Returns
+        -------
+        BedFrame
+            BedFrame.
+
+        See Also
+        --------
+        BedFrame
+            BedFrame object creation using constructor.
+        BedFrame.from_dict
+            Construct BedFrame from dict of array-like or dicts.
+        BedFrame.from_frame
+            Construct BedFrame from DataFrame.
+
+        Examples
+        --------
+
+        >>> from fuc import pybed
+        >>> bf = pybed.BedFrame.from_file('example.bed')
+        """
         meta = []
         skip_rows = 0
         with open(fn, 'r') as f:
@@ -144,3 +212,48 @@ class BedFrame:
                     break
         df = pd.read_table(fn, header=None, names=headers, skiprows=skip_rows)
         return cls(meta, pr.PyRanges(df))
+
+    @classmethod
+    def from_frame(cls, meta, data):
+        """Construct BedFrame from DataFrame.
+
+        Parameters
+        ----------
+        meta : list
+            Metadata lines.
+        data : pandas.DataFrame
+            DataFrame containing BED data.
+
+        Returns
+        -------
+        BedFrame
+            BedFrame.
+
+        See Also
+        --------
+        BedFrame
+            BedFrame object creation using constructor.
+        BedFrame.from_dict
+            Construct BedFrame from dict of array-like or dicts.
+        BedFrame.from_file
+            Construct BedFrame from a BED file.
+
+        Examples
+        --------
+
+        >>> import pandas as pd
+        >>> from fuc import pybed
+        >>> data = {
+        ...     'Chromosome': ['chr1', 'chr2', 'chr3'],
+        ...     'Start': [100, 400, 100],
+        ...     'End': [200, 500, 200]
+        ... }
+        >>> df = pd.DataFrame(data)
+        >>> bf = pybed.BedFrame.from_frame([], df)
+        >>> bf.gr.df
+          Chromosome  Start  End
+        0       chr1    100  200
+        1       chr2    400  500
+        2       chr3    100  200
+        """
+        return cls(meta, pr.PyRanges(data))

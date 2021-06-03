@@ -13,6 +13,7 @@ Welcome to fuc's documentation!
    readme
    cli
    api
+   tutorials
    changelog
 
 
