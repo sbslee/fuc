@@ -373,11 +373,28 @@ class MafFrame:
         MafFrame
             MafFrame object creation using constructor.
         """
+        # Read the MAF file.
         df = pd.read_table(fn)
-        if not all(x in df.columns for x in MAF_HEADERS):
-            m = ('One or more required headers were not found: '
-                 f"{MAF_HEADERS}. Please make sure '{fn}' is a MAF file.")
-            raise ValueError(m)
+
+        # Check the required columns. Letter case matters.
+        case_dict = {}
+        for c1 in MAF_HEADERS:
+            found = False
+            for c2 in df.columns:
+                if c1 == c2:
+                    found = True
+                    break
+                if c1.lower() == c2.lower():
+                    found = True
+                    case_dict[c2] = c1
+                    break
+            if not found:
+                raise ValueError(f"Required column '{c1}' is not found.")
+
+        # If necessary, match the letter case.
+        if case_dict:
+            df = df.rename(columns=case_dict)
+
         return cls(df)
 
     @classmethod
