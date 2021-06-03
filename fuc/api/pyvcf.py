@@ -62,12 +62,8 @@ CONTIGS = [
     'chrX', 'chrY', 'chrM'
 ]
 
-# -- Private methods ---------------------------------------------------------
-
-# -- Public methods ----------------------------------------------------------
-
-def gt_haspolyp(g):
-    """Return True if the sample genotype has a polyploid call.
+def gt_miss(g):
+    """Return True if sample genotype is missing.
 
     Parameters
     ----------
@@ -77,20 +73,55 @@ def gt_haspolyp(g):
     Returns
     -------
     bool
-        True if the genotype has a polyploid call.
+        True if sample genotype is missing.
 
     Examples
     --------
+
     >>> from fuc import pyvcf
-    >>> pyvcf.gt_haspolyp('0/1')
+    >>> pyvcf.gt_miss('0')
     False
-    >>> pyvcf.gt_haspolyp('1')
+    >>> pyvcf.gt_miss('0/0')
     False
-    >>> pyvcf.gt_haspolyp('0/1/1')
+    >>> pyvcf.gt_miss('0/1')
+    False
+    >>> pyvcf.gt_miss('0|0:48:1:51,51')
+    False
+    >>> pyvcf.gt_miss('./.:.:.')
     True
-    >>> pyvcf.gt_haspolyp('1|0|1')
+    >>> pyvcf.gt_miss('.:.')
     True
-    >>> pyvcf.gt_haspolyp('0/./1/1')
+    >>> pyvcf.gt_miss('.')
+    True
+    """
+    return '.' in g.split(':')[0]
+
+def gt_polyp(g):
+    """Return True if sample genotype has a polyploid call.
+
+    Parameters
+    ----------
+    g : str
+        Sample genotype.
+
+    Returns
+    -------
+    bool
+        True if sample genotype has a polyploid call.
+
+    Examples
+    --------
+
+    >>> from fuc import pyvcf
+    >>> pyvcf.gt_polyp('1')
+    False
+    >>> pyvcf.gt_polyp('0/1')
+    False
+    >>> pyvcf.gt_polyp('0/1/1')
+    True
+    >>> pyvcf.gt_polyp('1|0|1')
+    True
+    >>> pyvcf.gt_polyp('0/./1/1')
     True
     """
     gt = g.split(':')[0]
@@ -100,7 +131,7 @@ def gt_haspolyp(g):
         return gt.count('|') > 1
 
 def gt_hasvar(g):
-    """Return True if the sample genotype has a variant call.
+    """Return True if sample genotype has a variant call.
 
     Parameters
     ----------
@@ -110,21 +141,28 @@ def gt_hasvar(g):
     Returns
     -------
     bool
-        True if the genotype has a variant call.
+        True if sample genotype has a variant call.
 
     Examples
     --------
-    Below are some simple examples:
 
     >>> from fuc import pyvcf
-    >>> pyvcf.gt_hasvar('0/1:35:4')
-    True
-    >>> pyvcf.gt_hasvar('0/0:61:2')
+    >>> pyvcf.gt_hasvar('0')
     False
+    >>> pyvcf.gt_hasvar('0/0')
+    False
+    >>> pyvcf.gt_hasvar('./.')
+    False
+    >>> pyvcf.gt_hasvar('1')
+    True
+    >>> pyvcf.gt_hasvar('0/1')
+    True
+    >>> pyvcf.gt_hasvar('1/2')
+    True
+    >>> pyvcf.gt_hasvar('1|0')
+    True
     >>> pyvcf.gt_hasvar('1|2:21:6:23,27')
     True
-    >>> pyvcf.gt_hasvar('0|0:48:1:51,51')
-    False
     """
     if g.split(':')[0].replace('/', '').replace(
         '|', '').replace('.', '').replace('0', ''):
@@ -132,37 +170,8 @@ def gt_hasvar(g):
     else:
         return False
 
-def gt_missing(g):
-    """Return True if the sample genotype has a missing call.
-
-    Parameters
-    ----------
-    g : str
-        Sample genotype.
-
-    Returns
-    -------
-    bool
-        True if the genotype has a missing call.
-
-    Examples
-    --------
-    Below are some simple examples:
-
-    >>> from fuc import pyvcf
-    >>> pyvcf.gt_missing('0|0:48:1:51,51')
-    False
-    >>> pyvcf.gt_missing('./.:.:.')
-    True
-    >>> pyvcf.gt_missing('.:.')
-    True
-    >>> pyvcf.gt_missing('.')
-    True
-    """
-    return '.' in g.split(':')[0]
-
 def gt_unphase(g):
-    """Unphase the sample genotype.
+    """Return unphased sample genotype.
 
     Parameters
     ----------
@@ -172,19 +181,26 @@ def gt_unphase(g):
     Returns
     -------
     str
-        Unphased genotype.
+        Unphased sample genotype.
 
     Examples
     --------
-    Below are some simple examples:
 
     >>> from fuc import pyvcf
-    >>> pyvcf.gt_unphase('1|2:21:6:23,27')
-    '1/2:21:6:23,27'
-    >>> pyvcf.gt_unphase('2|1:2:0:18,2')
-    '1/2:2:0:18,2'
+    >>> pyvcf.gt_unphase('1')
+    '1'
+    >>> pyvcf.gt_unphase('0/0')
+    '0/0'
+    >>> pyvcf.gt_unphase('0/1')
+    '0/1'
     >>> pyvcf.gt_unphase('0/1:35:4')
     '0/1:35:4'
+    >>> pyvcf.gt_unphase('0|1')
+    '0/1'
+    >>> pyvcf.gt_unphase('1|0')
+    '0/1'
+    >>> pyvcf.gt_unphase('2|1:2:0:18,2')
+    '1/2:2:0:18,2'
     """
     l = g.split(':')
     gt = l[0]
@@ -859,7 +875,7 @@ class VcfFrame:
             all_alleles = [ref_allele] + alt_alleles
 
             def infunc(x, r_all_alleles, index_map):
-                if gt_missing(x):
+                if gt_miss(x):
                     return ''
                 old_fields = x.split(':')
                 old_gt = old_fields[0]
@@ -1849,7 +1865,7 @@ class VcfFrame:
         3    False
         dtype: bool
         """
-        f = lambda r: not all(r.iloc[9:].apply(gt_missing))
+        f = lambda r: not all(r.iloc[9:].apply(gt_miss))
         i = self.df.apply(f, axis=1)
         if opposite:
             i = ~i
@@ -2364,7 +2380,7 @@ class VcfFrame:
         3     True
         dtype: bool
         """
-        f = lambda r: not any([gt_haspolyp(x) for x in r[9:]])
+        f = lambda r: not any([gt_polyp(x) for x in r[9:]])
         i = self.df.apply(f, axis=1)
         if opposite:
             i = ~i
@@ -3018,3 +3034,78 @@ class VcfFrame:
         if end:
             df = df[df.POS <= end]
         return self.__class__(self.copy_meta(), df)
+
+    def expand(self):
+        """Expand each multiallelic locus to multiple rows.
+
+        Only the GT subfield of FORMAT will be retained.
+
+        Returns
+        -------
+        VcfFrame
+            Expanded VcfFrame.
+
+        See Also
+        --------
+        collapse
+            Collapse duplicate records in the VcfFrame.
+
+        Examples
+        --------
+        Assume we have the following data:
+
+        >>> from fuc import pyvcf
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102, 103],
+        ...     'ID': ['.', '.', '.', '.'],
+        ...     'REF': ['A', 'A', 'C', 'C'],
+        ...     'ALT': ['C', 'T,G', 'G', 'A,G,CT'],
+        ...     'QUAL': ['.', '.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.', '.'],
+        ...     'INFO': ['.', '.', '.', '.'],
+        ...     'FORMAT': ['GT:DP', 'GT:DP', 'GT:DP', 'GT:DP'],
+        ...     'Steven': ['0/1:32', './.:.', '0/1:27', '0/2:34'],
+        ...     'Sara': ['0/0:28', '1/2:30', '1/1:29', '1/2:38'],
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF     ALT QUAL FILTER INFO FORMAT  Steven    Sara
+        0  chr1  100  .   A       C    .      .    .  GT:DP  0/1:32  0/0:28
+        1  chr1  101  .   A     T,G    .      .    .  GT:DP   ./.:.  1/2:30
+        2  chr1  102  .   C       G    .      .    .  GT:DP  0/1:27  1/1:29
+        3  chr1  103  .   C  A,G,CT    .      .    .  GT:DP  0/2:34  1/2:38
+
+        We can expand each of the multiallelic loci:
+
+        >>> vf.expand().df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven Sara
+        0  chr1  100  .   A   C    .      .    .     GT    0/1  0/0
+        1  chr1  101  .   A   T    .      .    .     GT    ./.  0/1
+        2  chr1  101  .   A   G    .      .    .     GT    ./.  0/1
+        3  chr1  102  .   C   G    .      .    .     GT    0/1  1/1
+        4  chr1  103  .   C   A    .      .    .     GT    0/0  0/1
+        5  chr1  103  .   C   G    .      .    .     GT    0/1  0/1
+        6  chr1  103  .   C  CT    .      .    .     GT    0/0  0/0
+        """
+        data = []
+        def one_gt(g, i):
+            if gt_miss(g):
+                return g
+            l = g.split('/')
+            l = ['1' if x == str(i+1) else '0' for x in l]
+            l = sorted(l)
+            return '/'.join(l)
+        for i, r in self.df.iterrows():
+            r.FORMAT = 'GT'
+            r[9:] = r[9:].apply(lambda x: x.split(':')[0])
+            alt_alleles = r.ALT.split(',')
+            if len(alt_alleles) == 1:
+                data.append(r)
+                continue
+            for i, alt_allele in enumerate(alt_alleles):
+                s = r.copy()
+                s.ALT = alt_allele
+                s[9:] = s[9:].apply(one_gt, args=(i,))
+                data.append(s)
+        return self.__class__(self.copy_meta(), pd.concat(data, axis=1).T)

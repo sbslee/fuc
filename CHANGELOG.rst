@@ -5,13 +5,14 @@ Changelog
 -----------------------
 
 * Add new methods :meth:`pymaf.plot_summary/varsum`.
-* Update :meth:`pymaf.plot_legend` method.
 * Add new command :command:`maf_sumplt`.
 * Add new method :meth:`pymaf.MafFrame.to_string`.
 * Update :command:`maf_oncoplt` command.
 * Add new method :meth:`pyvcf.VcfFrame.filter_qual`.
 * Deprecate :meth:`pymaf.plot_legend` method and add :meth:`pymaf.legend_handles` method.
-* Add new methods :meth:`pymaf.AnnFrame.legend_handles/plot_annot`. 
+* Add new methods :meth:`pymaf.AnnFrame.legend_handles/plot_annot`.
+* Add new method :meth:`pyvcf.VcfFrame.expand`.
+* Rename methods :meth:`pyvcf.gt_missing/haspolyp` to :meth:`pyvcf.gt_miss/polyp`.
 
 0.9.0 (2021-06-01)
 ------------------
