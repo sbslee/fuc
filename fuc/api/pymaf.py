@@ -401,10 +401,22 @@ class MafFrame:
     def from_vcf(cls, vcf):
         """Construct MafFrame from a VCF file or VcfFrame.
 
+        The input VCF should already contain functional annotation data
+        from a tool such as Ensemble VEP, SnpEff, and ANNOVAR. The
+        recommended method is Ensemble VEP with "RefSeq transcripts" as the
+        transcript database and the filtering option "Show one selected
+        consequence per variant".
+
         Parameters
         ----------
         vcf : str or VcfFrame
-            VCF file path or VcfFrame.
+            VCF file or VcfFrame.
+
+        Examples
+        --------
+
+        >>> from fuc import pymaf
+        >>> mf = pymaf.MafFrame.from_vcf('annotated.vcf')
         """
         # Parse the input VCF.
         if isinstance(vcf, str):
