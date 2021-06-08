@@ -589,6 +589,207 @@ class VcfFrame:
         """tuple : Dimensionality of VcfFrame (variants, samples)."""
         return (self.df.shape[0], len(self.samples))
 
+    def cfilter_empty(self, opposite=False, as_list=False):
+        """Remove samples whose genotype calls are all missing.
+
+        Parameters
+        ----------
+        opposite : bool, default: False
+            If True, return samples that don't meet the said criteria.
+        as_list : bool, default: False
+             If True, return a list of sample names instead of a VcfFrame.
+
+        Returns
+        -------
+        VcfFrame
+            Filtered VcfFrame.
+
+        Examples
+        --------
+        Assume we have the following data:
+
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102, 103],
+        ...     'ID': ['.', '.', '.', '.'],
+        ...     'REF': ['G', 'T', 'G', 'T'],
+        ...     'ALT': ['A', 'C', 'C', 'C'],
+        ...     'QUAL': ['.', '.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.', '.'],
+        ...     'INFO': ['.', '.', '.', '.'],
+        ...     'FORMAT': ['GT', 'GT', 'GT', 'GT'],
+        ...     'Steven': ['0/1', '1/1', '1/1', '1/1'],
+        ...     'Rachel': ['./.', './.', './.', './.'],
+        ...     'John': ['0/0', './.', '0/0', '0/0'],
+        ...     'Sara': ['./.', './.', './.', './.'],
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven Rachel John Sara
+        0  chr1  100  .   G   A    .      .    .     GT    0/1    ./.  0/0  ./.
+        1  chr1  101  .   T   C    .      .    .     GT    1/1    ./.  ./.  ./.
+        2  chr1  102  .   G   C    .      .    .     GT    1/1    ./.  0/0  ./.
+        3  chr1  103  .   T   C    .      .    .     GT    1/1    ./.  0/0  ./.
+
+        We can remove samples whose genotypes are all missing:
+
+        >>> vf.cfilter_empty().df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven John
+        0  chr1  100  .   G   A    .      .    .     GT    0/1  0/0
+        1  chr1  101  .   T   C    .      .    .     GT    1/1  ./.
+        2  chr1  102  .   G   C    .      .    .     GT    1/1  0/0
+        3  chr1  103  .   T   C    .      .    .     GT    1/1  0/0
+
+        We can also select those samples:
+
+        >>> vf.cfilter_empty(opposite=True).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Rachel Sara
+        0  chr1  100  .   G   A    .      .    .     GT    ./.  ./.
+        1  chr1  101  .   T   C    .      .    .     GT    ./.  ./.
+        2  chr1  102  .   G   C    .      .    .     GT    ./.  ./.
+        3  chr1  103  .   T   C    .      .    .     GT    ./.  ./.
+
+        Finally, we can return a list of sample names from the filtering:
+
+        >>> vf.cfilter_empty(as_list=True)
+        ['Steven', 'John']
+        """
+        f = lambda r: r[9:].apply(gt_miss)
+        s = self.df.apply(f, axis=1).all()
+        if opposite:
+            s = s[s == True]
+        else:
+            s = s[s == False]
+        l = s.index.to_list()
+        if as_list:
+            return l
+        return self.subset(l)
+
+    def collapse(self):
+        """Collapse duplicate records in the VcfFrame.
+
+        Duplicate records have the identical values for CHROM, POS, and REF.
+        They can result from merging two VCF files.
+
+        .. note::
+           The method will sort the order of ALT alleles.
+
+        Returns
+        -------
+        VcfFrame
+            Collapsed VcfFrame.
+
+        Examples
+        --------
+        Assume we have the following data:
+
+        >>> from fuc import pyvcf
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr2', 'chr2'],
+        ...     'POS': [100, 100, 200, 200],
+        ...     'ID': ['.', '.', '.', '.'],
+        ...     'REF': ['A', 'A', 'C', 'C'],
+        ...     'ALT': ['C', 'T', 'G', 'G,A'],
+        ...     'QUAL': ['.', '.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.', '.'],
+        ...     'INFO': ['.', '.', '.', '.'],
+        ...     'FORMAT': ['GT:AD', 'GT:AD', 'GT:AD', 'GT:AD'],
+        ...     'Steven': ['0/1:12,15', './.:.', '0/1:16,12', './.:.'],
+        ...     'Sara': ['./.:.', '0/1:14,15', './.:.', '1/2:0,11,17'],
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF  ALT QUAL FILTER INFO FORMAT     Steven         Sara
+        0  chr1  100  .   A    C    .      .    .  GT:AD  0/1:12,15        ./.:.
+        1  chr1  100  .   A    T    .      .    .  GT:AD      ./.:.    0/1:14,15
+        2  chr2  200  .   C    G    .      .    .  GT:AD  0/1:16,12        ./.:.
+        3  chr2  200  .   C  G,A    .      .    .  GT:AD      ./.:.  1/2:0,11,17
+
+        We collapse the VcfFrame:
+
+        >>> vf.collapse().df
+          CHROM  POS ID REF  ALT QUAL FILTER INFO FORMAT       Steven         Sara
+        0  chr1  100  .   A  C,T    .      .    .  GT:AD  0/1:12,15,0  0/2:14,0,15
+        2  chr2  200  .   C  A,G    .      .    .  GT:AD  0/2:16,0,12  1/2:0,17,11
+        """
+        df = self.df.copy()
+        dup_idx = df.duplicated(['CHROM', 'POS', 'REF'], keep=False)
+        dups = {}
+        for i, r in df[dup_idx].iterrows():
+            name = f'{r.CHROM}:{r.POS}:{r.REF}'
+            if name not in dups:
+                dups[name] = []
+            dups[name].append(i)
+
+        def collapse_one(df):
+            ref_allele = df.REF.unique()[0]
+            alt_alleles = []
+            for i, r in df.iterrows():
+                alt_alleles += r.ALT.split(',')
+            alt_alleles = sorted(list(set(alt_alleles)),
+                                 key=lambda x: (len(x), x))
+            all_alleles = [ref_allele] + alt_alleles
+
+            def infunc(x, r_all_alleles, index_map):
+                if gt_miss(x):
+                    return ''
+                old_fields = x.split(':')
+                old_gt = old_fields[0]
+                new_gt = '/'.join([str(x) for x in
+                    sorted([index_map[int(i)] for i in old_gt.split('/')])
+                ])
+                new_fields = [new_gt]
+                for old_field in old_fields[1:]:
+                    old_subfields = old_field.split(',')
+                    new_subfields = ['0' for x in all_alleles]
+                    if len(old_subfields) == len(r_all_alleles):
+                        for i, old_subfield in enumerate(old_subfields):
+                            new_subfields[index_map[i]] = old_subfield
+                        new_fields.append(','.join(new_subfields))
+                    else:
+                        new_fields.append(old_field)
+                return ':'.join(new_fields)
+
+            def outfunc(r):
+                r_alt_alleles = r.ALT.split(',')
+                r_all_alleles = [r.REF] + r_alt_alleles
+                old_indicies = [i for i in range(len(r_all_alleles))]
+                new_indicies = [all_alleles.index(x) for x in r_all_alleles]
+                index_map = dict(zip(old_indicies, new_indicies))
+                r[9:] = r[9:].apply(infunc, args=(r_all_alleles, index_map))
+                return r
+
+            df2 = df.apply(outfunc, axis=1)
+
+            def raise_error(c):
+                if sum(c.values != '') > 1:
+                    message = ('cannot collapse following '
+                               f'records:\n{df.loc[c.index]}')
+                    raise ValueError(message)
+
+            df2.iloc[:, 9:].apply(raise_error)
+            df2 = df2.groupby(['CHROM', 'POS', 'REF']).agg(''.join)
+            df2 = df2.reset_index()
+            cols = list(df2)
+            cols[2], cols[3] = cols[3], cols[2]
+            df2 = df2[cols]
+            df2.ID = df.ID.unique()[0]
+            df2.ALT = ','.join(alt_alleles)
+            df2.QUAL = df.QUAL.unique()[0]
+            df2.FILTER = df.FILTER.unique()[0]
+            df2.INFO = df.INFO.unique()[0]
+            df2.FORMAT = df.FORMAT.unique()[0]
+            s = df2.squeeze()
+            s = s.replace('', row_missval(s))
+            return s
+
+        for name, i in dups.items():
+            df.iloc[i] = collapse_one(df.iloc[i])
+        df.drop_duplicates(subset=['CHROM', 'POS', 'REF'], inplace=True)
+
+        vf = self.__class__(self.copy_meta(), df)
+        return vf
+
     @classmethod
     def from_dict(cls, meta, data):
         """Construct VcfFrame from dict of array-like or dicts.
@@ -808,131 +1009,6 @@ class VcfFrame:
         ABC = d['ABC'] if 'ABC' in d else 0
         abc = d['abc'] if 'abc' in d else 0
         return (Abc, aBc, ABc, abC, AbC, aBC, ABC, abc)
-
-    def collapse(self):
-        """Collapse duplicate records in the VcfFrame.
-
-        Duplicate records have the identical values for CHROM, POS, and REF.
-        They can result from merging two VCF files.
-
-        .. note::
-           The method will sort the order of ALT alleles.
-
-        Returns
-        -------
-        VcfFrame
-            Collapsed VcfFrame.
-
-        Examples
-        --------
-        Assume we have the following data:
-
-        >>> from fuc import pyvcf
-        >>> data = {
-        ...     'CHROM': ['chr1', 'chr1', 'chr2', 'chr2'],
-        ...     'POS': [100, 100, 200, 200],
-        ...     'ID': ['.', '.', '.', '.'],
-        ...     'REF': ['A', 'A', 'C', 'C'],
-        ...     'ALT': ['C', 'T', 'G', 'G,A'],
-        ...     'QUAL': ['.', '.', '.', '.'],
-        ...     'FILTER': ['.', '.', '.', '.'],
-        ...     'INFO': ['.', '.', '.', '.'],
-        ...     'FORMAT': ['GT:AD', 'GT:AD', 'GT:AD', 'GT:AD'],
-        ...     'Steven': ['0/1:12,15', './.:.', '0/1:16,12', './.:.'],
-        ...     'Sara': ['./.:.', '0/1:14,15', './.:.', '1/2:0,11,17'],
-        ... }
-        >>> vf = pyvcf.VcfFrame.from_dict([], data)
-        >>> vf.df
-          CHROM  POS ID REF  ALT QUAL FILTER INFO FORMAT     Steven         Sara
-        0  chr1  100  .   A    C    .      .    .  GT:AD  0/1:12,15        ./.:.
-        1  chr1  100  .   A    T    .      .    .  GT:AD      ./.:.    0/1:14,15
-        2  chr2  200  .   C    G    .      .    .  GT:AD  0/1:16,12        ./.:.
-        3  chr2  200  .   C  G,A    .      .    .  GT:AD      ./.:.  1/2:0,11,17
-
-        We collapse the VcfFrame:
-
-        >>> vf.collapse().df
-          CHROM  POS ID REF  ALT QUAL FILTER INFO FORMAT       Steven         Sara
-        0  chr1  100  .   A  C,T    .      .    .  GT:AD  0/1:12,15,0  0/2:14,0,15
-        2  chr2  200  .   C  A,G    .      .    .  GT:AD  0/2:16,0,12  1/2:0,17,11
-        """
-        df = self.df.copy()
-        dup_idx = df.duplicated(['CHROM', 'POS', 'REF'], keep=False)
-        dups = {}
-        for i, r in df[dup_idx].iterrows():
-            name = f'{r.CHROM}:{r.POS}:{r.REF}'
-            if name not in dups:
-                dups[name] = []
-            dups[name].append(i)
-
-        def collapse_one(df):
-            ref_allele = df.REF.unique()[0]
-            alt_alleles = []
-            for i, r in df.iterrows():
-                alt_alleles += r.ALT.split(',')
-            alt_alleles = sorted(list(set(alt_alleles)),
-                                 key=lambda x: (len(x), x))
-            all_alleles = [ref_allele] + alt_alleles
-
-            def infunc(x, r_all_alleles, index_map):
-                if gt_miss(x):
-                    return ''
-                old_fields = x.split(':')
-                old_gt = old_fields[0]
-                new_gt = '/'.join([str(x) for x in
-                    sorted([index_map[int(i)] for i in old_gt.split('/')])
-                ])
-                new_fields = [new_gt]
-                for old_field in old_fields[1:]:
-                    old_subfields = old_field.split(',')
-                    new_subfields = ['0' for x in all_alleles]
-                    if len(old_subfields) == len(r_all_alleles):
-                        for i, old_subfield in enumerate(old_subfields):
-                            new_subfields[index_map[i]] = old_subfield
-                        new_fields.append(','.join(new_subfields))
-                    else:
-                        new_fields.append(old_field)
-                return ':'.join(new_fields)
-
-            def outfunc(r):
-                r_alt_alleles = r.ALT.split(',')
-                r_all_alleles = [r.REF] + r_alt_alleles
-                old_indicies = [i for i in range(len(r_all_alleles))]
-                new_indicies = [all_alleles.index(x) for x in r_all_alleles]
-                index_map = dict(zip(old_indicies, new_indicies))
-                r[9:] = r[9:].apply(infunc, args=(r_all_alleles, index_map))
-                return r
-
-            df2 = df.apply(outfunc, axis=1)
-
-            def raise_error(c):
-                if sum(c.values != '') > 1:
-                    message = ('cannot collapse following '
-                               f'records:\n{df.loc[c.index]}')
-                    raise ValueError(message)
-
-            df2.iloc[:, 9:].apply(raise_error)
-            df2 = df2.groupby(['CHROM', 'POS', 'REF']).agg(''.join)
-            df2 = df2.reset_index()
-            cols = list(df2)
-            cols[2], cols[3] = cols[3], cols[2]
-            df2 = df2[cols]
-            df2.ID = df.ID.unique()[0]
-            df2.ALT = ','.join(alt_alleles)
-            df2.QUAL = df.QUAL.unique()[0]
-            df2.FILTER = df.FILTER.unique()[0]
-            df2.INFO = df.INFO.unique()[0]
-            df2.FORMAT = df.FORMAT.unique()[0]
-            s = df2.squeeze()
-            s = s.replace('', row_missval(s))
-            return s
-
-        for name, i in dups.items():
-            df.iloc[i] = collapse_one(df.iloc[i])
-        df.drop_duplicates(subset=['CHROM', 'POS', 'REF'], inplace=True)
-
-        vf = self.__class__(self.copy_meta(), df)
-        return vf
 
     def combine(self, a, b):
         """Combine the genotype data of Sample A and Sample B.
@@ -3173,16 +3249,3 @@ class VcfFrame:
         df = df.drop_duplicates()
         bf = pybed.BedFrame.from_frame([], df)
         return bf
-
-    def cfilter_empty(self):
-        """Remove samples whose genotype calls are all missing.
-
-        Returns
-        -------
-        VcfFrame
-            Filtered VcfFrame.
-        """
-        f = lambda r: r[9:].apply(gt_miss)
-        s = self.df.apply(f, axis=1).all()
-        l = s[s == False].index.to_list()
-        return self.subset(l)
