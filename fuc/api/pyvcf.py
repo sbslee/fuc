@@ -1862,7 +1862,7 @@ class VcfFrame:
                 data.append(s)
         return self.__class__(self.copy_meta(), pd.concat(data, axis=1).T)
 
-    def filter_bed(self, bed, opposite=False, index=False):
+    def filter_bed(self, bed, opposite=False, as_index=False):
         """Select rows that overlap with the given BED data.
 
         Parameters
@@ -1871,7 +1871,7 @@ class VcfFrame:
             BedFrame or path to a BED file.
         opposite : bool, default: False
             If True, return rows that don't meet the said criteria.
-        index : bool, default: False
+        as_index : bool, default: False
             If True, return boolean index array instead of VcfFrame.
 
         Returns
@@ -1931,7 +1931,7 @@ class VcfFrame:
 
         Finally, we can return boolean index array from the filtering:
 
-        >>> vf.filter_bed(bf, index=True)
+        >>> vf.filter_bed(bf, as_index=True)
         0     True
         1    False
         2     True
@@ -1947,18 +1947,18 @@ class VcfFrame:
         i = self.df.apply(f, axis=1)
         if opposite:
             i = ~i
-        if index:
+        if as_index:
             return i
         return self.__class__(self.copy_meta(), self.df[i])
 
-    def filter_empty(self, opposite=False, index=False):
+    def filter_empty(self, opposite=False, as_index=False):
         """Remove rows with no genotype calls at all.
 
         Parameters
         ----------
         opposite : bool, default: False
             If True, return rows that don't meet the said criteria.
-        index : bool, default: False
+        as_index : bool, default: False
             If True, return boolean index array instead of VcfFrame.
 
         Returns
@@ -2009,7 +2009,7 @@ class VcfFrame:
 
         Finally, we can return boolean index array from the filtering:
 
-        >>> vf.filter_empty(index=True)
+        >>> vf.filter_empty(as_index=True)
         0     True
         1    False
         2     True
@@ -2020,18 +2020,18 @@ class VcfFrame:
         i = self.df.apply(f, axis=1)
         if opposite:
             i = ~i
-        if index:
+        if as_index:
             return i
         return self.__class__(self.copy_meta(), self.df[i])
 
-    def filter_indel(self, opposite=False, index=False):
+    def filter_indel(self, opposite=False, as_index=False):
         """Remove rows with an indel.
 
         Parameters
         ----------
         opposite : bool, default: False
             If True, return rows that don't meet the said criteria.
-        index : bool, default: False
+        as_index : bool, default: False
             If True, return boolean index array instead of VcfFrame.
 
         Returns
@@ -2080,7 +2080,7 @@ class VcfFrame:
 
         Finally, we can return boolean index array from the filtering:
 
-        >>> vf.filter_indel(index=True)
+        >>> vf.filter_indel(as_index=True)
         0     True
         1    False
         2    False
@@ -2090,11 +2090,11 @@ class VcfFrame:
         i = ~self.df.apply(row_hasindel, axis=1)
         if opposite:
             i = ~i
-        if index:
+        if as_index:
             return i
         return self.__class__(self.copy_meta(), self.df[i])
 
-    def filter_flagall(self, flags, opposite=False, index=False):
+    def filter_flagall(self, flags, opposite=False, as_index=False):
         """Select rows if all of the given INFO flags are present.
 
         Parameters
@@ -2103,7 +2103,7 @@ class VcfFrame:
             List of INFO flags.
         opposite : bool, default: False
             If True, return rows that don't meet the said criteria.
-        index : bool, default: False
+        as_index : bool, default: False
             If True, return boolean index array instead of VcfFrame.
 
         Returns
@@ -2158,7 +2158,7 @@ class VcfFrame:
 
         Finally, we can return boolean index array from the filtering:
 
-        >>> vf.filter_flagall(['H2', 'DB'], index=True)
+        >>> vf.filter_flagall(['H2', 'DB'], as_index=True)
         0    False
         1     True
         2     True
@@ -2171,11 +2171,11 @@ class VcfFrame:
         i = self.df.apply(f, axis=1)
         if opposite:
             i = ~i
-        if index:
+        if as_index:
             return i
         return self.__class__(self.copy_meta(), self.df[i])
 
-    def filter_flagany(self, flags, opposite=False, index=False):
+    def filter_flagany(self, flags, opposite=False, as_index=False):
         """Select rows if any one of the given INFO flags is present.
 
         Parameters
@@ -2184,7 +2184,7 @@ class VcfFrame:
             List of INFO flags.
         opposite : bool, default: False
             If True, return rows that don't meet the said criteria.
-        index : bool, default: False
+        as_index : bool, default: False
             If True, return boolean index array instead of VcfFrame.
 
         Returns
@@ -2239,7 +2239,7 @@ class VcfFrame:
 
         Finally, we can return boolean index array from the filtering:
 
-        >>> vf.filter_flagany(['H2'], index=True)
+        >>> vf.filter_flagany(['H2'], as_index=True)
         0    False
         1     True
         2     True
@@ -2252,18 +2252,18 @@ class VcfFrame:
         i = self.df.apply(f, axis=1)
         if opposite:
             i = ~i
-        if index:
+        if as_index:
             return i
         return self.__class__(self.copy_meta(), self.df[i])
 
-    def filter_multialt(self, opposite=False, index=False):
+    def filter_multialt(self, opposite=False, as_index=False):
         """Remove rows with multiple ALT alleles.
 
         Parameters
         ----------
         opposite : bool, default: False
             If True, return rows that don't meet the said criteria.
-        index : bool, default: False
+        as_index : bool, default: False
             If True, return boolean index array instead of VcfFrame.
 
         Returns
@@ -2314,7 +2314,7 @@ class VcfFrame:
 
         Finally, we can return boolean index array from the filtering:
 
-        >>> vf.filter_multialt(index=True)
+        >>> vf.filter_multialt(as_index=True)
         0    False
         1     True
         2     True
@@ -2324,18 +2324,18 @@ class VcfFrame:
         i = self.df.apply(lambda r: ',' not in r.ALT, axis=1)
         if opposite:
             i = ~i
-        if index:
+        if as_index:
             return i
         return self.__class__(self.copy_meta(), self.df[i])
 
-    def filter_pass(self, opposite=False, index=False):
+    def filter_pass(self, opposite=False, as_index=False):
         """Select rows with PASS in the FILTER field.
 
         Parameters
         ----------
         opposite : bool, default: False
             If True, return rows that don't meet the said criteria.
-        index : bool, default: False
+        as_index : bool, default: False
             If True, return boolean index array instead of VcfFrame.
 
         Returns
@@ -2384,7 +2384,7 @@ class VcfFrame:
 
         Finally, we can return boolean index array from the filtering:
 
-        >>> vf.filter_pass(index=True)
+        >>> vf.filter_pass(as_index=True)
         0     True
         1    False
         2     True
@@ -2395,18 +2395,18 @@ class VcfFrame:
         i = self.df.apply(f, axis=1)
         if opposite:
             i = ~i
-        if index:
+        if as_index:
             return i
         return self.__class__(self.copy_meta(), self.df[i])
 
-    def filter_phased(self, opposite=False, index=False):
+    def filter_phased(self, opposite=False, as_index=False):
         """Remove rows with phased genotypes.
 
         Parameters
         ----------
         opposite : bool, default: False
             If True, return rows that don't meet the said criteria.
-        index : bool, default: False
+        as_index : bool, default: False
             If True, return boolean index array instead of VcfFrame.
 
         Returns
@@ -2455,7 +2455,7 @@ class VcfFrame:
 
         Finally, we can return boolean index array from the filtering:
 
-        >>> vf.filter_phased(index=True)
+        >>> vf.filter_phased(as_index=True)
         0    False
         1     True
         2     True
@@ -2466,17 +2466,19 @@ class VcfFrame:
         i = self.df.apply(f, axis=1)
         if opposite:
             i = ~i
-        if index:
+        if as_index:
             return i
         return self.__class__(self.copy_meta(), self.df[i])
 
-    def filter_polyp(self, opposite=False, index=False):
+    def filter_polyp(self, opposite=False, as_index=False):
         """Remove rows with a polyploid genotype call.
 
         Parameters
         ----------
-        include : bool, default: False
-            If True, include only such rows instead of excluding them.
+        opposite : bool, default: False
+            If True, return rows that don't meet the said criteria.
+        as_index : bool, default: False
+            If True, return boolean index array instead of VcfFrame.
 
         Returns
         -------
@@ -2524,7 +2526,7 @@ class VcfFrame:
 
         Finally, we can return boolean index array from the filtering:
 
-        >>> vf.filter_polyp(index=True)
+        >>> vf.filter_polyp(as_index=True)
         0    False
         1     True
         2    False
@@ -2535,11 +2537,11 @@ class VcfFrame:
         i = self.df.apply(f, axis=1)
         if opposite:
             i = ~i
-        if index:
+        if as_index:
             return i
         return self.__class__(self.copy_meta(), self.df[i])
 
-    def filter_qual(self, threshold, opposite=False, index=False):
+    def filter_qual(self, threshold, opposite=False, as_index=False):
         """Select rows with minimum QUAL value.
 
         Parameters
@@ -2548,7 +2550,7 @@ class VcfFrame:
             Minimum QUAL value.
         opposite : bool, default: False
             If True, return rows that don't meet the said criteria.
-        index : bool, default: False
+        as_index : bool, default: False
             If True, return boolean index array instead of VcfFrame.
 
         Returns
@@ -2598,7 +2600,7 @@ class VcfFrame:
 
         Finally, we can return boolean index array from the filtering:
 
-        >>> vf.filter_qual(30, index=True)
+        >>> vf.filter_qual(30, as_index=True)
         0    False
         1     True
         2    False
@@ -2613,11 +2615,11 @@ class VcfFrame:
         i = self.df.apply(one_row, axis=1)
         if opposite:
             i = ~i
-        if index:
+        if as_index:
             return i
         return self.__class__(self.copy_meta(), self.df[i])
 
-    def filter_sampall(self, samples=None, opposite=False, index=False):
+    def filter_sampall(self, samples=None, opposite=False, as_index=False):
         """Select rows if all of the given samples have the variant.
 
         The default behavior is to use all samples in the VcfFrame.
@@ -2628,7 +2630,7 @@ class VcfFrame:
             List of sample names or indicies.
         opposite : bool, default: False
             If True, return rows that don't meet the said criteria.
-        index : bool, default: False
+        as_index : bool, default: False
             If True, return boolean index array instead of VcfFrame.
 
         Returns
@@ -2693,7 +2695,7 @@ class VcfFrame:
 
         Finally, we can return boolean index array from the filtering:
 
-        >>> vf.filter_sampall(index=True)
+        >>> vf.filter_sampall(as_index=True)
         0     True
         1    False
         2    False
@@ -2709,11 +2711,11 @@ class VcfFrame:
         i = self.df.apply(f, axis=1)
         if opposite:
             i = ~i
-        if index:
+        if as_index:
             return i
         return self.__class__(self.copy_meta(), self.df[i])
 
-    def filter_sampany(self, samples=None, opposite=False, index=False):
+    def filter_sampany(self, samples=None, opposite=False, as_index=False):
         """Select rows if any one of the given samples has the variant.
 
         The default behavior is to use all samples in the VcfFrame.
@@ -2724,7 +2726,7 @@ class VcfFrame:
             List of sample names or indicies.
         opposite : bool, default: False
             If True, return rows that don't meet the said criteria.
-        index : bool, default: False
+        as_index : bool, default: False
             If True, return boolean index array instead of VcfFrame.
 
         Returns
@@ -2788,7 +2790,7 @@ class VcfFrame:
 
         Finally, we can return boolean index array from the filtering:
 
-        >>> vf.filter_sampany(index=True)
+        >>> vf.filter_sampany(as_index=True)
         0     True
         1     True
         2     True
@@ -2808,7 +2810,7 @@ class VcfFrame:
             return i
         return self.__class__(self.copy_meta(), self.df[i])
 
-    def filter_sampnum(self, threshold, opposite=False, index=False):
+    def filter_sampnum(self, threshold, opposite=False, as_index=False):
         """Select rows if the variant is prevalent enough.
 
         Parameters
@@ -2817,7 +2819,7 @@ class VcfFrame:
             Minimum number or fraction of samples with the variant.
         opposite : bool, default: False
             If True, return rows that don't meet the said criteria.
-        index : bool, default: False
+        as_index : bool, default: False
             If True, return boolean index array instead of VcfFrame.
 
         Returns
@@ -2874,7 +2876,7 @@ class VcfFrame:
 
         Finally, we can return boolean index array from the filtering:
 
-        >>> vf.filter_sampnum(2, index=True)
+        >>> vf.filter_sampnum(2, as_index=True)
         0     True
         1     True
         2    False
@@ -2889,7 +2891,7 @@ class VcfFrame:
         i = self.df.apply(f, axis=1)
         if opposite:
             i = ~i
-        if index:
+        if as_index:
             return i
         vf = self.__class__(self.copy_meta(), self.df[i])
         return vf

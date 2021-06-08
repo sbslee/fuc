@@ -47,14 +47,6 @@ SEVERITIY = [
     'intergenic_variant'
 ]
 
-def _get_keys(vf):
-    """Return existing annotation keys (e.g. Allele, IMPACT)."""
-    l = []
-    for i, line in enumerate(vf.meta):
-        if 'ID=CSQ' in line:
-            l = re.search(r'Format: (.*?)">', vf.meta[i]).group(1).split('|')
-    return l
-
 def row_firstann(r):
     """Return the first result in the row.
 
@@ -492,7 +484,7 @@ def parseann(vf, targets, sep=' | ', as_series=False):
     3     MTOR
     dtype: object
     """
-    _targets = [x if isinstance(x, int) else _get_keys(vf).index(x) for x in targets]
+    _targets = [x if isinstance(x, int) else annot_names(vf).index(x) for x in targets]
     def func(r):
         ann = row_firstann(r)
         if not ann:
@@ -509,13 +501,13 @@ def parseann(vf, targets, sep=' | ', as_series=False):
 
 def get_index(vf, target):
     """Return the index of the target field (e.g. CLIN_SIG)."""
-    headers = _get_keys(vf)
+    headers = annot_names(vf)
     return headers.index(target)
 
 def get_table(vf):
     """Write the VcfFrame as a tab-delimited text file."""
     df = vf.df.copy()
-    headers = _get_keys(vf)
+    headers = annot_names(vf)
     def func(r):
         ann = row_firstann(r)
         if ann:
@@ -597,3 +589,38 @@ def pick_result(vf, mode='mostsevere'):
     one_row = lambda r: pyvcf.row_updateinfo(r, 'CSQ', funcs[mode](r))
     new_vf.df.INFO = vf.df.apply(one_row, axis=1)
     return new_vf
+
+def annot_names(vf):
+    """Return the list of avaialble consequence annotations in the VcfFrame.
+
+    Parameters
+    ----------
+    vf : VcfFrame
+        VcfFrame.
+
+    Returns
+    -------
+    list
+        List of consequence annotations.
+    """
+    l = []
+    for i, line in enumerate(vf.meta):
+        if 'ID=CSQ' in line:
+            l = re.search(r'Format: (.*?)">', vf.meta[i]).group(1).split('|')
+    return l
+
+def filter_af(vf, name, threshold, opposite=None, as_index=False):
+    i = annot_names(vf).index(name)
+    def one_row(r):
+        af = row_firstann(r).split('|')[i]
+        if not af:
+            af = 0
+        return float(af) < threshold
+    i = vf.df.apply(one_row, axis=1)
+    if opposite:
+        i = ~i
+    if as_index:
+        return i
+    df = vf.df[i].reset_index(drop=True)
+    vf = vf.__class__(vf.copy_meta(), df)
+    return vf
