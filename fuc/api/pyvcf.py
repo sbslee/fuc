@@ -3173,3 +3173,16 @@ class VcfFrame:
         df = df.drop_duplicates()
         bf = pybed.BedFrame.from_frame([], df)
         return bf
+
+    def cfilter_empty(self):
+        """Remove samples whose genotype calls are all missing.
+
+        Returns
+        -------
+        VcfFrame
+            Filtered VcfFrame.
+        """
+        f = lambda r: r[9:].apply(gt_miss)
+        s = self.df.apply(f, axis=1).all()
+        l = s[s == False].index.to_list()
+        return self.subset(l)

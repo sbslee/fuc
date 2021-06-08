@@ -4,6 +4,8 @@ Changelog
 0.11.0 (in development)
 -----------------------
 
+* Add new method :meth:`pyvcf.VcfFrame.cfilter_empty`.
+
 0.10.0 (2021-06-03)
 -------------------
 
