@@ -610,6 +610,24 @@ def annot_names(vf):
     return l
 
 def filter_af(vf, name, threshold, opposite=None, as_index=False):
+    """Remove rows whose selected AF is below threshold.
+
+    Parameters
+    ----------
+    name : str
+        Name of the consequence annotation representing AF (e.g. 'gnomAD_AF').
+    threshold : float
+        Minimum AF.
+    opposite : bool, default: False
+        If True, return rows that don't meet the said criteria.
+    as_index : bool, default: False
+        If True, return boolean index array instead of VcfFrame.
+
+    Returns
+    -------
+    VcfFrame or pandas.Series
+        Filtered VcfFrame or boolean index array.
+    """
     i = annot_names(vf).index(name)
     def one_row(r):
         af = row_firstann(r).split('|')[i]
@@ -624,3 +642,21 @@ def filter_af(vf, name, threshold, opposite=None, as_index=False):
     df = vf.df[i].reset_index(drop=True)
     vf = vf.__class__(vf.copy_meta(), df)
     return vf
+
+def filter_lof(vf):
+    consequence_index = annot_names(vf).index('Consequence')
+    impact_index = annot_names(vf).index('IMPACT')
+    polyphen_index = annot_names(vf).index('PolyPhen')
+    sift_index = annot_names(vf).index('SIFT')
+
+    def one_row(r):
+        l = row_firstann(r).split('|')
+        consequence = l[consequence_index]
+        impact = l[impact_index]
+        polyphen = l[polyphen_index]
+        sift = l[sift_index]
+        if impact not in ['HIGH', 'MODERATE']:
+            return False
+        if consequence == 'missense_variant':
+            if 'damaging' in polyphen or 'deleterious' sift
+                return False
