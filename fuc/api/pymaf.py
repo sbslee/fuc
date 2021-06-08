@@ -1,9 +1,9 @@
 """
 The pymaf submodule is designed for working with MAF files. It implements
 ``pymaf.MafFrame`` which stores MAF data as ``pandas.DataFrame`` to allow
-fast computation and easy manipulation. The class also contains many useful
-plotting methods such as ``MafFrame.plot_varcls`` and
-``MafFrame.plot_waterfall``. The submodule strictly adheres to the
+fast computation and easy manipulation. The ``pymaf.MafFrame`` class also
+contains many useful plotting methods such as ``MafFrame.plot_oncoplot`` and
+``MafFrame.plot_summary``. The submodule strictly adheres to the
 standard `MAF specification
 <https://docs.gdc.cancer.gov/Data/File_Formats/MAF_Format/>`_.
 """

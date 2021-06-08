@@ -643,12 +643,25 @@ def filter_af(vf, name, threshold, opposite=None, as_index=False):
     vf = vf.__class__(vf.copy_meta(), df)
     return vf
 
-def filter_lof(vf):
+def filter_lof(vf, opposite=None, as_index=False):
+    """Select rows whose conseuqence annotation is deleterious and/or LoF.
+
+    Parameters
+    ----------
+    opposite : bool, default: False
+        If True, return rows that don't meet the said criteria.
+    as_index : bool, default: False
+        If True, return boolean index array instead of VcfFrame.
+
+    Returns
+    -------
+    VcfFrame or pandas.Series
+        Filtered VcfFrame or boolean index array.
+    """
     consequence_index = annot_names(vf).index('Consequence')
     impact_index = annot_names(vf).index('IMPACT')
     polyphen_index = annot_names(vf).index('PolyPhen')
     sift_index = annot_names(vf).index('SIFT')
-
     def one_row(r):
         l = row_firstann(r).split('|')
         consequence = l[consequence_index]
@@ -658,5 +671,16 @@ def filter_lof(vf):
         if impact not in ['HIGH', 'MODERATE']:
             return False
         if consequence == 'missense_variant':
-            if 'damaging' in polyphen or 'deleterious' sift
+            if 'damaging' in polyphen or 'deleterious' in sift:
+                return True
+            else:
                 return False
+        return True
+    i = vf.df.apply(one_row, axis=1)
+    if opposite:
+        i = ~i
+    if as_index:
+        return i
+    df = vf.df[i]
+    vf = vf.__class__(vf.copy_meta(), df)
+    return vf

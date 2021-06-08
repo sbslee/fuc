@@ -1,18 +1,18 @@
 """
 The pyvcf submodule is designed for working with VCF files. It implements
-``pyvcf.VcfFrame`` class which stores VCF data as
-``pandas.DataFrame`` to allow fast computation and easy manipulation.
-The submodule strictly adheres to the standard `VCF specification
+``pyvcf.VcfFrame`` which stores VCF data as ``pandas.DataFrame`` to allow
+fast computation and easy manipulation. The submodule strictly adheres to
+the standard `VCF specification
 <https://samtools.github.io/hts-specs/VCFv4.3.pdf>`_.
 
-A VCF file contains metadata lines (prefixed with '##'), a header line
-(prefixed with '#'), and genotype lines that begin with a chromosome
+A typical VCF file contains metadata lines (prefixed with '##'), a header
+line (prefixed with '#'), and genotype lines that begin with a chromosome
 identifier (e.g. 'chr1'). See the VCF specification above for an example
 VCF file.
 
 Genotype lines have nine required fields for storing variant information
 and variable-length fields for storing sample genotype data. For some
-fields, missing values are tolerated and specified with a dot ('.').
+fields, missing values are tolerated and can be specified with a dot ('.').
 The nine required fields are:
 
 +-----+--------+------------------------------------+------------------------+
@@ -38,7 +38,7 @@ The nine required fields are:
 +-----+--------+------------------------------------+------------------------+
 
 There are several common, reserved genotype keywords that are standards
-across the community. Currently, the module is aware of the
+across the community. Currently, the pyvcf submodule is aware of the
 following:
 
 * AD - Total read depth for each allele (R, Integer).

@@ -5,7 +5,7 @@ Changelog
 -----------------------
 
 * :issue:`16`: Add new method :meth:`pyvcf.VcfFrame.cfilter_empty`.
-* Add new method :meth:`pyvep.filter_af`.
+* Add new methods :meth:`pyvep.filter_af/lof`.
 
 0.10.0 (2021-06-03)
 -------------------
