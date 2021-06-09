@@ -2,8 +2,9 @@
 The pyvcf submodule is designed for working with VCF files. It implements
 ``pyvcf.VcfFrame`` which stores VCF data as ``pandas.DataFrame`` to allow
 fast computation and easy manipulation. The ``pyvcf.VcfFrame`` class also
-contains many useful plotting methods such as ``VcfFrame.plot_comparison``.
-The submodule strictly adheres to the standard `VCF specification
+contains many useful plotting methods such as ``VcfFrame.plot_comparison``
+and ``VcfFrame.plot_regplot``. The submodule strictly adheres to the
+standard `VCF specification
 <https://samtools.github.io/hts-specs/VCFv4.3.pdf>`_.
 
 A typical VCF file contains metadata lines (prefixed with '##'), a header
@@ -56,6 +57,7 @@ from . import pybed
 import matplotlib.pyplot as plt
 from matplotlib_venn import venn2, venn3
 import os
+import seaborn as sns
 
 CONTIGS = [
     '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13',
@@ -3302,13 +3304,11 @@ class VcfFrame:
             >>> b = ['Steven_B', 'John_B', 'Sara_B']
             >>> c = ['Steven_C', 'John_C', 'Sara_C']
             >>> vf.plot_comparison(a, b)
-            >>> plt.tight_layout()
 
         .. plot::
             :context: close-figs
 
             >>> vf.plot_comparison(a, b, c)
-            >>> plt.tight_layout()
         """
         if len(a) != len(b):
             raise ValueError('Groups A and B have different length.')
@@ -3341,3 +3341,60 @@ class VcfFrame:
             n = [x + y for x, y in zip(n, self.compare(a[i], b[i], c[i]))]
         out = venn3(subsets=n[:-1], **venn_kws)
         return out
+
+    def plot_regplot(self, a, b, ax=None, figsize=None, **kwargs):
+        """Create a scatter plot showing TMB between paired samples.
+
+        Parameters
+        ----------
+        a, b : list
+            Sample names. The lists must have the same shape.
+        labels : list, optional
+            List of labels to be displayed.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+        kwargs
+            Other keyword arguments will be passed down to
+            :meth:`seaborn.regplot`.
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+
+        Examples
+        --------
+
+        .. plot::
+
+            >>> from fuc import pyvcf
+            >>> data = {
+            ...     'CHROM': ['chr1', 'chr1', 'chr1'],
+            ...     'POS': [100, 101, 102],
+            ...     'ID': ['.', '.', '.'],
+            ...     'REF': ['G', 'T', 'T'],
+            ...     'ALT': ['A', 'C', 'C'],
+            ...     'QUAL': ['.', '.', '.'],
+            ...     'FILTER': ['.', '.', '.'],
+            ...     'INFO': ['.', '.', '.'],
+            ...     'FORMAT': ['GT', 'GT', 'GT'],
+            ...     'Steven_A': ['0/1', '0/1', '0/1'],
+            ...     'Steven_B': ['0/1', '0/1', '0/1'],
+            ...     'Sara_A': ['0/0', '1/1', '1/1'],
+            ...     'Sara_B': ['0/0', '1/1', '1/1'],
+            ...     'John_A': ['0/0', '0/0', '1/1'],
+            ...     'John_B': ['0/0', '0/0', '1/1'],
+            ... }
+            >>> vf = pyvcf.VcfFrame.from_dict([], data)
+            >>> vf.df
+            >>> a = ['Steven_A', 'Sara_A', 'John_A']
+            >>> b = ['Steven_B', 'Sara_B', 'John_B']
+            >>> vf.plot_regplot(a, b)
+        """
+        s = self.df.iloc[:, 9:].applymap(gt_hasvar).sum()
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+        sns.regplot(x=s[a], y=s[b], ax=ax, **kwargs)
+        return ax

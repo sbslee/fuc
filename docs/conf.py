@@ -49,6 +49,8 @@ autodoc_default_options = {
 
 issues_github_path = 'sbslee/fuc'
 
+napoleon_use_param = False
+
 # Include the example source for plots in API docs
 plot_include_source = True
 plot_formats = [('png', 90)]
