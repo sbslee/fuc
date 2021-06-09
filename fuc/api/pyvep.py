@@ -684,3 +684,31 @@ def filter_lof(vf, opposite=None, as_index=False):
     df = vf.df[i]
     vf = vf.__class__(vf.copy_meta(), df)
     return vf
+
+def filter_biotype(vf, value, opposite=None, as_index=False):
+    """Select rows whose BIOTYPE matches the given value.
+
+    Parameters
+    ----------
+    opposite : bool, default: False
+        If True, return rows that don't meet the said criteria.
+    as_index : bool, default: False
+        If True, return boolean index array instead of VcfFrame.
+
+    Returns
+    -------
+    VcfFrame or pandas.Series
+        Filtered VcfFrame or boolean index array.
+    """
+    i = annot_names(vf).index('BIOTYPE')
+    def one_row(r):
+        l = row_firstann(r).split('|')
+        return l[i] == value
+    i = vf.df.apply(one_row, axis=1)
+    if opposite:
+        i = ~i
+    if as_index:
+        return i
+    df = vf.df[i]
+    vf = vf.__class__(vf.copy_meta(), df)
+    return vf
