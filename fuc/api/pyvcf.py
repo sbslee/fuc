@@ -41,7 +41,7 @@ There are several common, reserved genotype keywords that are standards
 across the community. Currently, the pyvcf submodule is aware of the
 following:
 
-* AD - Total read depth for each allele (R, Integer).
+* AD - Total read depth for each allele (R, Integer)
 * AF - Allele fraction of the event in the tumor (1, Float)
 * DP - Read depth (1, Integer)
 """
