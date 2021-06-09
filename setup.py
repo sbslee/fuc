@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 exec(open('fuc/version.py').read())
 
 requirements = [
-    'biopython', 'lxml', 'matplotlib', 'numpy', 'pandas',
+    'biopython', 'lxml', 'matplotlib', 'matplotlib-venn', 'numpy', 'pandas',
     'pyranges', 'pysam', 'seaborn'
 ]
 

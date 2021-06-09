@@ -8,6 +8,7 @@ dependencies:
   - cython
   - lxml
   - matplotlib
+  - matplotlib-venn
   - notebook
   - numpy
   - pandas
