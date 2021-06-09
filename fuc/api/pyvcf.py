@@ -516,7 +516,61 @@ def row_missval(r):
         m += ':.'
     return m
 
-# -- VcfFrame ----------------------------------------------------------------
+class AnnFrame:
+    """Class for storing annotation data.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        DataFrame containing annotation data.
+
+    See Also
+    --------
+    AnnFrame.from_file
+        Construct AnnFrame from an annotation file.
+    """
+    def __init__(self, df):
+        self._df = df
+
+    @property
+    def df(self):
+        """pandas.DataFrame : DataFrame containing annotation data."""
+        return self._df
+
+    @df.setter
+    def df(self, value):
+        self._df = value
+
+    @classmethod
+    def from_file(cls, fn, sample_col, sep='\t'):
+        """Construct AnnFrame from an annotation file.
+
+        The input text file must contain a column that corresponds to
+        'SampleID'.
+
+        Parameters
+        ----------
+        fn : str
+            Annotation file path (zipped or unzipped).
+        sep : str, default: '\\\\t'
+            Delimiter to use.
+        sample_col : str, optional
+            If provided, use this column as 'Tumor_Sample_Barcode'.
+
+        Returns
+        -------
+        AnnFrame
+            AnnFrame.
+
+        See Also
+        --------
+        AnnFrame
+            AnnFrame object creation using constructor.
+        """
+
+        df = pd.read_table(fn, sep=sep)
+        df = df.set_index(sample_col)
+        return cls(df)
 
 class VcfFrame:
     """Class for storing VCF data.
@@ -594,6 +648,169 @@ class VcfFrame:
     def shape(self):
         """tuple : Dimensionality of VcfFrame (variants, samples)."""
         return (self.df.shape[0], len(self.samples))
+
+    def add_dp(self):
+        """Compute DP using AD and add it to the FORMAT field.
+
+        Returns
+        -------
+        VcfFrame
+            Updated VcfFrame.
+
+        Examples
+        --------
+        Assume we have the following data:
+
+        >>> from fuc import pyvcf
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr2', 'chr2'],
+        ...     'POS': [100, 100, 200, 200],
+        ...     'ID': ['.', '.', '.', '.'],
+        ...     'REF': ['A', 'A', 'C', 'C'],
+        ...     'ALT': ['C', 'T', 'G', 'G,A'],
+        ...     'QUAL': ['.', '.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.', '.'],
+        ...     'INFO': ['.', '.', '.', '.'],
+        ...     'FORMAT': ['GT:AD', 'GT:AD', 'GT:AD', 'GT:AD'],
+        ...     'Steven': ['0/1:12,15', '0/0:32,1', '0/1:16,12', './.:.'],
+        ...     'Sara': ['0/1:13,17', '0/1:14,15', './.:.', '1/2:0,11,17'],
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF  ALT QUAL FILTER INFO FORMAT     Steven         Sara
+        0  chr1  100  .   A    C    .      .    .  GT:AD  0/1:12,15    0/1:13,17
+        1  chr1  100  .   A    T    .      .    .  GT:AD   0/0:32,1    0/1:14,15
+        2  chr2  200  .   C    G    .      .    .  GT:AD  0/1:16,12        ./.:.
+        3  chr2  200  .   C  G,A    .      .    .  GT:AD      ./.:.  1/2:0,11,17
+
+        We can add the DP subfield to our genotype data:
+
+        >>> vf.add_dp().df
+          CHROM  POS ID REF  ALT QUAL FILTER INFO    FORMAT        Steven            Sara
+        0  chr1  100  .   A    C    .      .    .  GT:AD:DP  0/1:12,15:27    0/1:13,17:30
+        1  chr1  100  .   A    T    .      .    .  GT:AD:DP   0/0:32,1:33    0/1:14,15:29
+        2  chr2  200  .   C    G    .      .    .  GT:AD:DP  0/1:16,12:28         ./.:.:.
+        3  chr2  200  .   C  G,A    .      .    .  GT:AD:DP       ./.:.:.  1/2:0,11,17:28
+        """
+        def outfunc(r):
+            i = r.FORMAT.split(':').index('AD')
+            def infunc(x):
+                ad = x.split(':')[i].split(',')
+                dp = 0
+                for depth in ad:
+                    if depth == '.':
+                        return f'{x}:.'
+                    dp += int(depth)
+                return f'{x}:{dp}'
+            r.iloc[9:] = r.iloc[9:].apply(infunc)
+            r.FORMAT += ':DP'
+            return r
+        df = self.df.apply(outfunc, axis=1)
+        vf = self.__class__(self.copy_meta(), df)
+        return vf
+
+    def add_flag(self, flag, order='last', index=None):
+        """Add the given flag to the INFO field.
+
+        The default behavior is to add the flag to all rows in the VcfFrame.
+
+        Parameters
+        ----------
+        flag : str
+            INFO flag.
+        order : {'last', 'first', False}, default: 'last'
+            Determines the order in which the flag will be added.
+
+            - ``last`` : Add to the end of the list.
+            - ``first`` : Add to the beginning of the list.
+            - ``False`` : Overwrite the existing field.
+
+        index : list or pandas.Series, optional
+            Boolean index array indicating which rows should be updated.
+
+        Returns
+        -------
+        VcfFrame
+            Updated VcfFrame.
+
+        Examples
+        --------
+        Assume we have the following data:
+
+        >>> from fuc import pyvcf
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102, 103],
+        ...     'ID': ['.', '.', '.', '.'],
+        ...     'REF': ['G', 'T', 'A', 'C'],
+        ...     'ALT': ['A', 'C', 'T', 'A'],
+        ...     'QUAL': ['.', '.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.', '.'],
+        ...     'INFO': ['.', 'DB', 'DB', '.'],
+        ...     'FORMAT': ['GT', 'GT', 'GT', 'GT'],
+        ...     'Steven': ['0/0', '0/1', '0/1', '1/1'],
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
+        0  chr1  100  .   G   A    .      .    .     GT    0/0
+        1  chr1  101  .   T   C    .      .   DB     GT    0/1
+        2  chr1  102  .   A   T    .      .   DB     GT    0/1
+        3  chr1  103  .   C   A    .      .    .     GT    1/1
+
+        We can add the SOMATIC flag to the INFO field:
+
+        >>> vf.add_flag('SOMATIC').df
+          CHROM  POS ID REF ALT QUAL FILTER        INFO FORMAT Steven
+        0  chr1  100  .   G   A    .      .     SOMATIC     GT    0/0
+        1  chr1  101  .   T   C    .      .  DB;SOMATIC     GT    0/1
+        2  chr1  102  .   A   T    .      .  DB;SOMATIC     GT    0/1
+        3  chr1  103  .   C   A    .      .     SOMATIC     GT    1/1
+
+        Setting ``order='first'`` will append the flag at the beginning:
+
+        >>> vf.add_flag('SOMATIC', order='first').df
+          CHROM  POS ID REF ALT QUAL FILTER        INFO FORMAT Steven
+        0  chr1  100  .   G   A    .      .     SOMATIC     GT    0/0
+        1  chr1  101  .   T   C    .      .  SOMATIC;DB     GT    0/1
+        2  chr1  102  .   A   T    .      .  SOMATIC;DB     GT    0/1
+        3  chr1  103  .   C   A    .      .     SOMATIC     GT    1/1
+
+        Setting ``order=False`` will overwrite the INFO field:
+
+        >>> vf.add_flag('SOMATIC', order=False).df
+          CHROM  POS ID REF ALT QUAL FILTER     INFO FORMAT Steven
+        0  chr1  100  .   G   A    .      .  SOMATIC     GT    0/0
+        1  chr1  101  .   T   C    .      .  SOMATIC     GT    0/1
+        2  chr1  102  .   A   T    .      .  SOMATIC     GT    0/1
+        3  chr1  103  .   C   A    .      .  SOMATIC     GT    1/1
+
+        We can also specify which rows should be updated:
+
+        >>> vf.add_flag('SOMATIC', index=[True, True, False, False]).df
+          CHROM  POS ID REF ALT QUAL FILTER        INFO FORMAT Steven
+        0  chr1  100  .   G   A    .      .     SOMATIC     GT    0/0
+        1  chr1  101  .   T   C    .      .  DB;SOMATIC     GT    0/1
+        2  chr1  102  .   A   T    .      .          DB     GT    0/1
+        3  chr1  103  .   C   A    .      .           .     GT    1/1
+        """
+        if index is None:
+            index = [True for i in range(self.shape[0])]
+        def f(r):
+            if not index[r.name]:
+                return r
+            if r.INFO == '.':
+                r.INFO = flag
+            elif not order:
+                r.INFO = flag
+            elif order == 'first':
+                r.INFO = f'{flag};{r.INFO}'
+            else:
+                r.INFO += f';{flag}'
+            return r
+        df = self.df.apply(f, axis=1)
+        vf = self.__class__(self.copy_meta(), df)
+        return vf
 
     def cfilter_empty(self, opposite=False, as_list=False):
         """Remove samples whose genotype calls are all missing.
@@ -1326,168 +1543,179 @@ class VcfFrame:
             if '=<ID=' in line:
                 print(line)
 
-    def add_dp(self):
-        """Compute DP using AD and add it to the FORMAT field.
+    def plot_comparison(
+        self, a, b, c=None, labels=None, ax=None, figsize=None
+    ):
+        """Create a Venn diagram showing genotype concordance between groups.
 
-        Returns
-        -------
-        VcfFrame
-            Updated VcfFrame.
-
-        Examples
-        --------
-        Assume we have the following data:
-
-        >>> from fuc import pyvcf
-        >>> data = {
-        ...     'CHROM': ['chr1', 'chr1', 'chr2', 'chr2'],
-        ...     'POS': [100, 100, 200, 200],
-        ...     'ID': ['.', '.', '.', '.'],
-        ...     'REF': ['A', 'A', 'C', 'C'],
-        ...     'ALT': ['C', 'T', 'G', 'G,A'],
-        ...     'QUAL': ['.', '.', '.', '.'],
-        ...     'FILTER': ['.', '.', '.', '.'],
-        ...     'INFO': ['.', '.', '.', '.'],
-        ...     'FORMAT': ['GT:AD', 'GT:AD', 'GT:AD', 'GT:AD'],
-        ...     'Steven': ['0/1:12,15', '0/0:32,1', '0/1:16,12', './.:.'],
-        ...     'Sara': ['0/1:13,17', '0/1:14,15', './.:.', '1/2:0,11,17'],
-        ... }
-        >>> vf = pyvcf.VcfFrame.from_dict([], data)
-        >>> vf.df
-          CHROM  POS ID REF  ALT QUAL FILTER INFO FORMAT     Steven         Sara
-        0  chr1  100  .   A    C    .      .    .  GT:AD  0/1:12,15    0/1:13,17
-        1  chr1  100  .   A    T    .      .    .  GT:AD   0/0:32,1    0/1:14,15
-        2  chr2  200  .   C    G    .      .    .  GT:AD  0/1:16,12        ./.:.
-        3  chr2  200  .   C  G,A    .      .    .  GT:AD      ./.:.  1/2:0,11,17
-
-        We can add the DP subfield to our genotype data:
-
-        >>> vf.add_dp().df
-          CHROM  POS ID REF  ALT QUAL FILTER INFO    FORMAT        Steven            Sara
-        0  chr1  100  .   A    C    .      .    .  GT:AD:DP  0/1:12,15:27    0/1:13,17:30
-        1  chr1  100  .   A    T    .      .    .  GT:AD:DP   0/0:32,1:33    0/1:14,15:29
-        2  chr2  200  .   C    G    .      .    .  GT:AD:DP  0/1:16,12:28         ./.:.:.
-        3  chr2  200  .   C  G,A    .      .    .  GT:AD:DP       ./.:.:.  1/2:0,11,17:28
-        """
-        def outfunc(r):
-            i = r.FORMAT.split(':').index('AD')
-            def infunc(x):
-                ad = x.split(':')[i].split(',')
-                dp = 0
-                for depth in ad:
-                    if depth == '.':
-                        return f'{x}:.'
-                    dp += int(depth)
-                return f'{x}:{dp}'
-            r.iloc[9:] = r.iloc[9:].apply(infunc)
-            r.FORMAT += ':DP'
-            return r
-        df = self.df.apply(outfunc, axis=1)
-        vf = self.__class__(self.copy_meta(), df)
-        return vf
-
-    def add_flag(self, flag, order='last', index=None):
-        """Add the given flag to the INFO field.
-
-        The default behavior is to add the flag to all rows in the VcfFrame.
+        This method supports comparison between two groups (Groups A & B) and
+        three groups (Groups A, B, & C).
 
         Parameters
         ----------
-        flag : str
-            INFO flag.
-        order : {'last', 'first', False}, default: 'last'
-            Determines the order in which the flag will be added.
-
-            - ``last`` : Add to the end of the list.
-            - ``first`` : Add to the beginning of the list.
-            - ``False`` : Overwrite the existing field.
-
-        index : list or pandas.Series, optional
-            Boolean index array indicating which rows should be updated.
+        a : list
+            List of samples belonging to Group A.
+        b : list
+            List of samples belonging to Group B.
+        c : list, optional
+            List of samples belonging to Group C.
+        labels : list, optional
+            List of labels to be displayed.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
 
         Returns
         -------
-        VcfFrame
-            Updated VcfFrame.
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+        matplotlib_venn._common.VennDiagram
+            VennDiagram object.
 
         Examples
         --------
-        Assume we have the following data:
 
-        >>> from fuc import pyvcf
-        >>> data = {
-        ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1'],
-        ...     'POS': [100, 101, 102, 103],
-        ...     'ID': ['.', '.', '.', '.'],
-        ...     'REF': ['G', 'T', 'A', 'C'],
-        ...     'ALT': ['A', 'C', 'T', 'A'],
-        ...     'QUAL': ['.', '.', '.', '.'],
-        ...     'FILTER': ['.', '.', '.', '.'],
-        ...     'INFO': ['.', 'DB', 'DB', '.'],
-        ...     'FORMAT': ['GT', 'GT', 'GT', 'GT'],
-        ...     'Steven': ['0/0', '0/1', '0/1', '1/1'],
-        ... }
-        >>> vf = pyvcf.VcfFrame.from_dict([], data)
-        >>> vf.df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
-        0  chr1  100  .   G   A    .      .    .     GT    0/0
-        1  chr1  101  .   T   C    .      .   DB     GT    0/1
-        2  chr1  102  .   A   T    .      .   DB     GT    0/1
-        3  chr1  103  .   C   A    .      .    .     GT    1/1
+        .. plot::
+            :context: close-figs
 
-        We can add the SOMATIC flag to the INFO field:
+            >>> from fuc import pyvcf, common
+            >>> common.load_dataset('pyvcf')
+            >>> f = '~/fuc-data/pyvcf/plot_comparison.vcf'
+            >>> vf = pyvcf.VcfFrame.from_file(f)
+            >>> a = ['Steven_A', 'John_A', 'Sara_A']
+            >>> b = ['Steven_B', 'John_B', 'Sara_B']
+            >>> c = ['Steven_C', 'John_C', 'Sara_C']
+            >>> vf.plot_comparison(a, b)
 
-        >>> vf.add_flag('SOMATIC').df
-          CHROM  POS ID REF ALT QUAL FILTER        INFO FORMAT Steven
-        0  chr1  100  .   G   A    .      .     SOMATIC     GT    0/0
-        1  chr1  101  .   T   C    .      .  DB;SOMATIC     GT    0/1
-        2  chr1  102  .   A   T    .      .  DB;SOMATIC     GT    0/1
-        3  chr1  103  .   C   A    .      .     SOMATIC     GT    1/1
+        .. plot::
+            :context: close-figs
 
-        Setting ``order='first'`` will append the flag at the beginning:
-
-        >>> vf.add_flag('SOMATIC', order='first').df
-          CHROM  POS ID REF ALT QUAL FILTER        INFO FORMAT Steven
-        0  chr1  100  .   G   A    .      .     SOMATIC     GT    0/0
-        1  chr1  101  .   T   C    .      .  SOMATIC;DB     GT    0/1
-        2  chr1  102  .   A   T    .      .  SOMATIC;DB     GT    0/1
-        3  chr1  103  .   C   A    .      .     SOMATIC     GT    1/1
-
-        Setting ``order=False`` will overwrite the INFO field:
-
-        >>> vf.add_flag('SOMATIC', order=False).df
-          CHROM  POS ID REF ALT QUAL FILTER     INFO FORMAT Steven
-        0  chr1  100  .   G   A    .      .  SOMATIC     GT    0/0
-        1  chr1  101  .   T   C    .      .  SOMATIC     GT    0/1
-        2  chr1  102  .   A   T    .      .  SOMATIC     GT    0/1
-        3  chr1  103  .   C   A    .      .  SOMATIC     GT    1/1
-
-        We can also specify which rows should be updated:
-
-        >>> vf.add_flag('SOMATIC', index=[True, True, False, False]).df
-          CHROM  POS ID REF ALT QUAL FILTER        INFO FORMAT Steven
-        0  chr1  100  .   G   A    .      .     SOMATIC     GT    0/0
-        1  chr1  101  .   T   C    .      .  DB;SOMATIC     GT    0/1
-        2  chr1  102  .   A   T    .      .          DB     GT    0/1
-        3  chr1  103  .   C   A    .      .           .     GT    1/1
+            >>> vf.plot_comparison(a, b, c)
         """
-        if index is None:
-            index = [True for i in range(self.shape[0])]
-        def f(r):
-            if not index[r.name]:
-                return r
-            if r.INFO == '.':
-                r.INFO = flag
-            elif not order:
-                r.INFO = flag
-            elif order == 'first':
-                r.INFO = f'{flag};{r.INFO}'
+        if len(a) != len(b):
+            raise ValueError('Groups A and B have different length.')
+        if c is not None and len(a) != len(c):
+            raise ValueError('Group C has unmatched length.')
+        if labels is None:
+            if c is None:
+                labels = ('A', 'B')
             else:
-                r.INFO += f';{flag}'
-            return r
-        df = self.df.apply(f, axis=1)
-        vf = self.__class__(self.copy_meta(), df)
-        return vf
+                labels = ('A', 'B', 'C')
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+        venn_kws = dict(ax=ax, alpha=0.5, set_labels=labels)
+        if c is None:
+            out = self._plot_comparison_two(a, b, venn_kws)
+        else:
+            out = self._plot_comparison_three(a, b, c, venn_kws)
+        return ax, out
+
+    def _plot_comparison_two(self, a, b, venn_kws):
+        n = [0, 0, 0, 0]
+        for i in range(len(a)):
+            n = [x + y for x, y in zip(n, self.compare(a[i], b[i]))]
+        out = venn2(subsets=n[:-1], **venn_kws)
+        return out
+
+    def _plot_comparison_three(self, a, b, c, venn_kws):
+        n = [0, 0, 0, 0, 0, 0, 0, 0]
+        for i in range(len(a)):
+            n = [x + y for x, y in zip(n, self.compare(a[i], b[i], c[i]))]
+        out = venn3(subsets=n[:-1], **venn_kws)
+        return out
+
+    def plot_histplot(
+        self, af=None, hue=None, kde=True, ax=None, figsize=None
+    ):
+        """Create a histogram showing TMB distribution.
+
+        Parameters
+        ----------
+        a, b : list
+            Sample names. The lists must have the same shape.
+        labels : list, optional
+            List of labels to be displayed.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+        kwargs
+            Other keyword arguments will be passed down to
+            :meth:`seaborn.regplot`.
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+        """
+        s = self.df.iloc[:, 9:].applymap(gt_hasvar).sum()
+        s.name = 'TMB'
+        if af is None:
+            df = s.to_frame()
+        else:
+            df = pd.concat([af.df, s], axis=1, join='inner')
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+        sns.histplot(data=df, x='TMB', hue=hue, kde=kde)
+        return ax
+
+    def plot_regplot(self, a, b, ax=None, figsize=None, **kwargs):
+        """Create a scatter plot showing TMB between paired samples.
+
+        Parameters
+        ----------
+        a, b : list
+            Sample names. The lists must have the same shape.
+        labels : list, optional
+            List of labels to be displayed.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+        kwargs
+            Other keyword arguments will be passed down to
+            :meth:`seaborn.regplot`.
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+
+        Examples
+        --------
+
+        .. plot::
+
+            >>> from fuc import pyvcf
+            >>> data = {
+            ...     'CHROM': ['chr1', 'chr1', 'chr1'],
+            ...     'POS': [100, 101, 102],
+            ...     'ID': ['.', '.', '.'],
+            ...     'REF': ['G', 'T', 'T'],
+            ...     'ALT': ['A', 'C', 'C'],
+            ...     'QUAL': ['.', '.', '.'],
+            ...     'FILTER': ['.', '.', '.'],
+            ...     'INFO': ['.', '.', '.'],
+            ...     'FORMAT': ['GT', 'GT', 'GT'],
+            ...     'Steven_A': ['0/1', '0/1', '0/1'],
+            ...     'Steven_B': ['0/1', '0/1', '0/1'],
+            ...     'Sara_A': ['0/0', '1/1', '1/1'],
+            ...     'Sara_B': ['0/0', '1/1', '1/1'],
+            ...     'John_A': ['0/0', '0/0', '1/1'],
+            ...     'John_B': ['0/0', '0/0', '1/1'],
+            ... }
+            >>> vf = pyvcf.VcfFrame.from_dict([], data)
+            >>> vf.df
+            >>> a = ['Steven_A', 'Sara_A', 'John_A']
+            >>> b = ['Steven_B', 'Sara_B', 'John_B']
+            >>> vf.plot_regplot(a, b)
+        """
+        s = self.df.iloc[:, 9:].applymap(gt_hasvar).sum()
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+        sns.regplot(x=s[a], y=s[b], ax=ax, **kwargs)
+        return ax
 
     def markmiss_ad(self, threshold, samples=None, full=False, as_nan=False):
         """Mark genotypes whose AD is below threshold as missing.
@@ -3259,142 +3487,3 @@ class VcfFrame:
         df = df.drop_duplicates()
         bf = pybed.BedFrame.from_frame([], df)
         return bf
-
-    def plot_comparison(
-        self, a, b, c=None, labels=None, ax=None, figsize=None
-    ):
-        """Create a Venn diagram showing genotype concordance between groups.
-
-        This method supports comparison between two groups (Groups A & B) and
-        three groups (Groups A, B, & C).
-
-        Parameters
-        ----------
-        a : list
-            List of samples belonging to Group A.
-        b : list
-            List of samples belonging to Group B.
-        c : list, optional
-            List of samples belonging to Group C.
-        labels : list, optional
-            List of labels to be displayed.
-        ax : matplotlib.axes.Axes, optional
-            Pre-existing axes for the plot. Otherwise, crete a new one.
-        figsize : tuple, optional
-            Width, height in inches. Format: (float, float).
-
-        Returns
-        -------
-        matplotlib.axes.Axes
-            The matplotlib axes containing the plot.
-        matplotlib_venn._common.VennDiagram
-            VennDiagram object.
-
-        Examples
-        --------
-
-        .. plot::
-            :context: close-figs
-
-            >>> from fuc import pyvcf, common
-            >>> common.load_dataset('pyvcf')
-            >>> f = '~/fuc-data/pyvcf/plot_comparison.vcf'
-            >>> vf = pyvcf.VcfFrame.from_file(f)
-            >>> a = ['Steven_A', 'John_A', 'Sara_A']
-            >>> b = ['Steven_B', 'John_B', 'Sara_B']
-            >>> c = ['Steven_C', 'John_C', 'Sara_C']
-            >>> vf.plot_comparison(a, b)
-
-        .. plot::
-            :context: close-figs
-
-            >>> vf.plot_comparison(a, b, c)
-        """
-        if len(a) != len(b):
-            raise ValueError('Groups A and B have different length.')
-        if c is not None and len(a) != len(c):
-            raise ValueError('Group C has unmatched length.')
-        if labels is None:
-            if c is None:
-                labels = ('A', 'B')
-            else:
-                labels = ('A', 'B', 'C')
-        if ax is None:
-            fig, ax = plt.subplots(figsize=figsize)
-        venn_kws = dict(ax=ax, alpha=0.5, set_labels=labels)
-        if c is None:
-            out = self._plot_comparison_two(a, b, venn_kws)
-        else:
-            out = self._plot_comparison_three(a, b, c, venn_kws)
-        return ax, out
-
-    def _plot_comparison_two(self, a, b, venn_kws):
-        n = [0, 0, 0, 0]
-        for i in range(len(a)):
-            n = [x + y for x, y in zip(n, self.compare(a[i], b[i]))]
-        out = venn2(subsets=n[:-1], **venn_kws)
-        return out
-
-    def _plot_comparison_three(self, a, b, c, venn_kws):
-        n = [0, 0, 0, 0, 0, 0, 0, 0]
-        for i in range(len(a)):
-            n = [x + y for x, y in zip(n, self.compare(a[i], b[i], c[i]))]
-        out = venn3(subsets=n[:-1], **venn_kws)
-        return out
-
-    def plot_regplot(self, a, b, ax=None, figsize=None, **kwargs):
-        """Create a scatter plot showing TMB between paired samples.
-
-        Parameters
-        ----------
-        a, b : list
-            Sample names. The lists must have the same shape.
-        labels : list, optional
-            List of labels to be displayed.
-        ax : matplotlib.axes.Axes, optional
-            Pre-existing axes for the plot. Otherwise, crete a new one.
-        figsize : tuple, optional
-            Width, height in inches. Format: (float, float).
-        kwargs
-            Other keyword arguments will be passed down to
-            :meth:`seaborn.regplot`.
-
-        Returns
-        -------
-        matplotlib.axes.Axes
-            The matplotlib axes containing the plot.
-
-        Examples
-        --------
-
-        .. plot::
-
-            >>> from fuc import pyvcf
-            >>> data = {
-            ...     'CHROM': ['chr1', 'chr1', 'chr1'],
-            ...     'POS': [100, 101, 102],
-            ...     'ID': ['.', '.', '.'],
-            ...     'REF': ['G', 'T', 'T'],
-            ...     'ALT': ['A', 'C', 'C'],
-            ...     'QUAL': ['.', '.', '.'],
-            ...     'FILTER': ['.', '.', '.'],
-            ...     'INFO': ['.', '.', '.'],
-            ...     'FORMAT': ['GT', 'GT', 'GT'],
-            ...     'Steven_A': ['0/1', '0/1', '0/1'],
-            ...     'Steven_B': ['0/1', '0/1', '0/1'],
-            ...     'Sara_A': ['0/0', '1/1', '1/1'],
-            ...     'Sara_B': ['0/0', '1/1', '1/1'],
-            ...     'John_A': ['0/0', '0/0', '1/1'],
-            ...     'John_B': ['0/0', '0/0', '1/1'],
-            ... }
-            >>> vf = pyvcf.VcfFrame.from_dict([], data)
-            >>> vf.df
-            >>> a = ['Steven_A', 'Sara_A', 'John_A']
-            >>> b = ['Steven_B', 'Sara_B', 'John_B']
-            >>> vf.plot_regplot(a, b)
-        """
-        s = self.df.iloc[:, 9:].applymap(gt_hasvar).sum()
-        if ax is None:
-            fig, ax = plt.subplots(figsize=figsize)
-        sns.regplot(x=s[a], y=s[b], ax=ax, **kwargs)
-        return ax
