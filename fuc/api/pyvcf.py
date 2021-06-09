@@ -52,6 +52,9 @@ import gzip
 from copy import deepcopy
 from Bio import bgzf
 from . import pybed
+import matplotlib.pyplot as plt
+from matplotlib_venn import venn2, venn3
+import os
 
 CONTIGS = [
     '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13',
@@ -874,6 +877,8 @@ class VcfFrame:
         """
         meta = []
         skip_rows = 0
+        if fn.startswith('~'):
+            fn = os.path.expanduser(fn)
         if fn.endswith('.gz') or compression:
             f = bgzf.open(fn, 'rt')
         else:
@@ -3251,3 +3256,87 @@ class VcfFrame:
         df = df.drop_duplicates()
         bf = pybed.BedFrame.from_frame([], df)
         return bf
+
+    def plot_comparison(
+        self, a, b, c=None, labels=None, ax=None, figsize=None
+    ):
+        """Create a Venn diagram showing genotype concordance between groups.
+
+        This method supports comparison between two groups (Groups A & B) and
+        three groups (Groups A, B, & C).
+
+        Parameters
+        ----------
+        a : list
+            List of samples belonging to Group A.
+        b : list
+            List of samples belonging to Group B.
+        c : list, optional
+            List of samples belonging to Group C.
+        labels : list, optional
+            List of labels to be displayed.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+        matplotlib_venn._common.VennDiagram
+            VennDiagram object.
+
+        Examples
+        --------
+
+        .. plot::
+            :context: close-figs
+
+            >>> from fuc import pyvcf, common
+            >>> common.load_dataset('pyvcf')
+            >>> f = '~/fuc-data/pyvcf/plot_comparison.vcf'
+            >>> vf = pyvcf.VcfFrame.from_file(f)
+            >>> a = ['Steven_A', 'John_A', 'Sara_A']
+            >>> b = ['Steven_B', 'John_B', 'Sara_B']
+            >>> c = ['Steven_C', 'John_C', 'Sara_C']
+            >>> vf.plot_comparison(a, b)
+            >>> plt.tight_layout()
+
+        .. plot::
+            :context: close-figs
+
+            >>> vf.plot_comparison(a, b, c)
+            >>> plt.tight_layout()
+        """
+        if len(a) != len(b):
+            raise ValueError('Groups A and B have different length.')
+        if c is not None and len(a) != len(c):
+            raise ValueError('Group C has unmatched length.')
+        if labels is None:
+            if c is None:
+                labels = ('A', 'B')
+            else:
+                labels = ('A', 'B', 'C')
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+        venn_kws = dict(ax=ax, alpha=0.5, set_labels=labels)
+        if c is None:
+            out = self._plot_comparison_two(a, b, venn_kws)
+        else:
+            out = self._plot_comparison_three(a, b, c, venn_kws)
+        return ax, out
+
+    def _plot_comparison_two(self, a, b, venn_kws):
+        n = [0, 0, 0, 0]
+        for i in range(len(a)):
+            n = [x + y for x, y in zip(n, self.compare(a[i], b[i]))]
+        out = venn2(subsets=n[:-1], **venn_kws)
+        return out
+
+    def _plot_comparison_three(self, a, b, c, venn_kws):
+        n = [0, 0, 0, 0, 0, 0, 0, 0]
+        for i in range(len(a)):
+            n = [x + y for x, y in zip(n, self.compare(a[i], b[i], c[i]))]
+        out = venn3(subsets=n[:-1], **venn_kws)
+        return out

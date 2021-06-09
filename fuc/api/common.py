@@ -69,8 +69,11 @@ def load_dataset(name, force=False):
         'tcga-laml': [
             'tcga_cohort.txt.gz',
             'tcga_laml.maf.gz',
-            'tcga_laml_annot.tsv'
-        ]
+            'tcga_laml_annot.tsv',
+        ],
+        'pyvcf': [
+            'plot_comparison.vcf',
+        ],
     }
     base_url = ('https://raw.githubusercontent.com/sbslee/fuc-data/main')
     for f in datasets[name]:

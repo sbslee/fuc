@@ -7,6 +7,7 @@ Changelog
 * :issue:`16`: Add new method :meth:`pyvcf.VcfFrame.cfilter_empty`.
 * Add new methods :meth:`pyvep.filter_af/lof`.
 * Add ``matplotlib-venn`` package as dependency for plotting Venn diagrams.
+* Add new method :meth:`pyvcf.plot_comparison`.
 
 0.10.0 (2021-06-03)
 -------------------

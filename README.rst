@@ -56,11 +56,17 @@ Your contributions (e.g. feature ideas, pull requests) are most welcome.
 CLI Examples
 ============
 
+SAM/BAM/CRAM
+------------
+
 To print the header of a BAM file:
 
 .. code-block:: console
 
    $ fuc bam_head example.bam
+
+BED
+---
 
 To find intersection between BED files:
 
@@ -68,11 +74,17 @@ To find intersection between BED files:
 
    $ fuc bed_intxn 1.bed 2.bed 3.bed > intersect.bed
 
+FASTQ
+-----
+
 To count sequence reads in a FASTQ file:
 
 .. code-block:: console
 
    $ fuc fq_count example.fastq
+
+FUC
+---
 
 To check whether a file exists in the operating system:
 
@@ -86,11 +98,17 @@ To find all VCF files within the current directory recursively:
 
    $ fuc fuc_find . vcf
 
+TABLE
+-----
+
 To merge two tab-delimited files:
 
 .. code-block:: console
 
    $ fuc tbl_merge left.txt right.txt > merged.txt
+
+VCF
+---
 
 To merge VCF files:
 
@@ -100,6 +118,9 @@ To merge VCF files:
 
 API Examples
 ============
+
+VCF
+---
 
 To filter a VCF file based on a BED file:
 
@@ -119,11 +140,28 @@ To remove indels from a VCF file:
    >>> filtered_vf = vf.filter_indel()
    >>> filtered_vf.to_file('no_indels.vcf')
 
+To create a Venn diagram showing genotype concordance between groups:
+
+.. code:: python3
+
+    >>> from fuc import pyvcf, common
+    >>> common.load_dataset('pyvcf')
+    >>> f = '~/fuc-data/pyvcf/plot_comparison.vcf'
+    >>> vf = pyvcf.VcfFrame.from_file(f)
+    >>> a = ['Steven_A', 'John_A', 'Sara_A']
+    >>> b = ['Steven_B', 'John_B', 'Sara_B']
+    >>> c = ['Steven_C', 'John_C', 'Sara_C']
+    >>> vf.plot_comparison(a, b, c)
+
+.. image:: https://raw.githubusercontent.com/sbslee/fuc-data/main/images/plot_comparison.png
+
+MAF
+---
+
 To create an oncoplot with a MAF file:
 
 .. code:: python3
 
-    >>> import matplotlib.pyplot as plt
     >>> from fuc import common, pymaf
     >>> common.load_dataset('tcga-laml')
     >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
@@ -140,7 +178,6 @@ To create a summary figure for a MAF file:
 
 .. code:: python3
 
-    >>> import matplotlib.pyplot as plt
     >>> from fuc import common, pymaf
     >>> common.load_dataset('tcga-laml')
     >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
@@ -149,11 +186,13 @@ To create a summary figure for a MAF file:
 
 .. image:: https://raw.githubusercontent.com/sbslee/fuc-data/main/images/maf_summary.png
 
+SAM/BAM/CRAM
+------------
+
 To create read depth profile of a region from a CRAM file:
 
 .. code:: python3
 
-    >>> import matplotlib.pyplot as plt
     >>> from fuc import pycov
     >>> cf = pycov.CovFrame.from_file('HG00525.final.cram', zero=True,
     ...    region='chr12:21161194-21239796', names=['HG00525'])
@@ -251,9 +290,9 @@ Below is the list of submodules available in API:
 - **pybed** : The pybed submodule is designed for working with BED files. It implements ``pybed.BedFrame`` which stores BED data as ``pandas.DataFrame`` via the `pyranges <https://github.com/biocore-ntnu/pyranges>`_ package to allow fast computation and easy manipulation. The submodule strictly adheres to the standard `BED specification <https://genome.ucsc.edu/FAQ/FAQformat.html>`_.
 - **pycov** : The pycov submodule is designed for working with depth of coverage data from sequence alingment files (SAM/BAM/CRAM). It implements ``pycov.CovFrame`` which stores read depth data as ``pandas.DataFrame`` via the `pysam <https://pysam.readthedocs.io/en/latest/api.html>`_ package to allow fast computation and easy manipulation.
 - **pyfq** : The pyfq submodule is designed for working with FASTQ files. It implements ``pyfq.FqFrame`` which stores FASTQ data as ``pandas.DataFrame`` to allow fast computation and easy manipulation.
-- **pymaf** : The pymaf submodule is designed for working with MAF files. It implements ``pymaf.MafFrame`` which stores MAF data as ``pandas.DataFrame`` to allow fast computation and easy manipulation. The class also contains many useful plotting methods such as ``MafFrame.plot_varcls`` and ``MafFrame.plot_waterfall``. The submodule strictly adheres to the standard `MAF specification <https://docs.gdc.cancer.gov/Data/File_Formats/MAF_Format/>`_.
+- **pymaf** : The pymaf submodule is designed for working with MAF files. It implements ``pymaf.MafFrame`` which stores MAF data as ``pandas.DataFrame`` to allow fast computation and easy manipulation. The ``pymaf.MafFrame`` class also contains many useful plotting methods such as ``MafFrame.plot_oncoplot`` and ``MafFrame.plot_summary``. The submodule strictly adheres to the standard `MAF specification <https://docs.gdc.cancer.gov/Data/File_Formats/MAF_Format/>`_.
 - **pysnpeff** : The pysnpeff submodule is designed for parsing VCF annotation data from the `SnpEff <https://pcingola.github.io/SnpEff/>`_ program. It is designed to be used with ``pyvcf.VcfFrame``.
-- **pyvcf** : The pyvcf submodule is designed for working with VCF files. It implements ``pyvcf.VcfFrame`` class which stores VCF data as ``pandas.DataFrame`` to allow fast computation and easy manipulation. The submodule strictly adheres to the standard `VCF specification <https://samtools.github.io/hts-specs/VCFv4.3.pdf>`_.
+- **pyvcf** : The pyvcf submodule is designed for working with VCF files. It implements ``pyvcf.VcfFrame`` which stores VCF data as ``pandas.DataFrame`` to allow fast computation and easy manipulation. The submodule strictly adheres to the standard `VCF specification <https://samtools.github.io/hts-specs/VCFv4.3.pdf>`_.
 - **pyvep** : The pyvep submodule is designed for parsing VCF annotation data from the `Ensembl VEP <https://asia.ensembl.org/info/docs/tools/vep/index.html>`_. It is designed to be used with ``pyvcf.VcfFrame``.
 
 For getting help on a specific module (e.g. pyvcf):
