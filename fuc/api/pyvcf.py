@@ -1510,9 +1510,9 @@ class VcfFrame:
 
         See Also
         --------
-        markmiss_af
+        VcfFrame.markmiss_af
             Similar method using AF.
-        markmiss_dp
+        VcfFrame.markmiss_dp
             Similar method using DP.
 
         Examples
@@ -1612,9 +1612,9 @@ class VcfFrame:
 
         See Also
         --------
-        markmiss_ad
+        VcfFrame.markmiss_ad
             Similar method using AD.
-        markmiss_dp
+        VcfFrame.markmiss_dp
             Similar method using DP.
 
         Examples
@@ -1714,9 +1714,9 @@ class VcfFrame:
 
         See Also
         --------
-        markmiss_ad
+        VcfFrame.markmiss_ad
             Similar method using allele depth.
-        markmiss_af
+        VcfFrame.markmiss_af
             Similar method using allele fraction.
 
         Examples
@@ -1805,7 +1805,7 @@ class VcfFrame:
 
         See Also
         --------
-        collapse
+        VcfFrame.collapse
             Collapse duplicate records in the VcfFrame.
 
         Examples
@@ -2119,7 +2119,7 @@ class VcfFrame:
 
         See Also
         --------
-        filter_flagany
+        VcfFrame.filter_flagany
             Similar method that selects rows if any one of the given
             INFO flags is present.
 
@@ -2200,7 +2200,7 @@ class VcfFrame:
 
         See Also
         --------
-        filter_flagall
+        VcfFrame.filter_flagall
             Similar method that selects rows if all of the given INFO
             flags are present.
 
@@ -2646,7 +2646,7 @@ class VcfFrame:
 
         See Also
         --------
-        filter_sampany
+        VcfFrame.filter_sampany
             Similar method that selects rows if any one of the given
             samples has the variant.
 
@@ -2742,7 +2742,7 @@ class VcfFrame:
 
         See Also
         --------
-        filter_sampall
+        VcfFrame.filter_sampall
             Similar method that selects rows if all of the given
             samples have the variant.
 

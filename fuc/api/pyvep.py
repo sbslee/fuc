@@ -2,6 +2,11 @@
 The pyvep submodule is designed for parsing VCF annotation data from the
 `Ensembl VEP <https://asia.ensembl.org/info/docs/tools/vep/index.html>`_
 program. It should be used with ``pyvcf.VcfFrame``.
+
+The input VCF should already contain functional annotation data from
+Ensemble VEP. The recommended method is Ensemble VEP with
+“RefSeq transcripts” as the transcript database and the filtering option
+“Show one selected consequence per variant”.
 """
 
 import re

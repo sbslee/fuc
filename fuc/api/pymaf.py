@@ -261,7 +261,7 @@ class AnnFrame:
         ----------
         fn : str
             Annotation file path (zipped or unzipped).
-        sep : str, default: '\t'
+        sep : str, default: '\\\\t'
             Delimiter to use.
         sample_col : str, optional
             If provided, use this column as 'Tumor_Sample_Barcode'.
@@ -283,8 +283,15 @@ class AnnFrame:
         df = df.set_index('Tumor_Sample_Barcode')
         return cls(df)
 
-    def legend_handles(self, col, numeric=False, segments=5, samples=None, decimals=0, cmap='Pastel1'):
+    def legend_handles(
+        self, col, samples=None, numeric=False, segments=5, decimals=0,
+        cmap='Pastel1'
+    ):
         """Return legend handles for the given column.
+
+        In the case of a numeric column, use ``numeric=True`` which will
+        divide the values into equal-sized intervals, with the number of
+        intervals determined by the `segments` option.
 
         Parameters
         ----------
@@ -292,6 +299,14 @@ class AnnFrame:
             Column name.
         samples : list, optional
             If provided, these samples will be used to create legend handles.
+        numeric : bool, default: False
+            If True, the column will be treated as numeric.
+        segments : int, default: 5
+            If ``numeric`` is True, the numbers will be divided
+            into this number of equal-sized segments.
+        decimals : int, default: 0
+            If ``numeric`` is True, the numbers will be rounded up to this
+            number of decimals.
         cmap : str, default: 'Pastel1'
             Color map.
 
@@ -299,6 +314,11 @@ class AnnFrame:
         -------
         list
             Legend handles.
+
+        See Also
+        --------
+        AnnFrame.plot_annot
+            Create a 1D categorical heatmap for the given column.
 
         Examples
         --------
@@ -311,26 +331,42 @@ class AnnFrame:
             >>> f = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
             >>> af = pymaf.AnnFrame.from_file(f)
             >>> fig, ax = plt.subplots()
-            >>> handles1 = af.legend_handles('FAB_classification')
-            >>> handles2 = af.legend_handles('Overall_Survival_Status')
-            >>> leg1 = ax.legend(handles=handles1, title='FAB_classification', loc='center left')
-            >>> leg2 = ax.legend(handles=handles2, title='Overall_Survival_Status', loc='center right')
+            >>> handles1 = af.legend_handles('FAB_classification',
+            ...                              cmap='Dark2')
+            >>> handles2 = af.legend_handles('days_to_last_followup',
+            ...                              numeric=True,
+            ...                              cmap='viridis')
+            >>> handles3 = af.legend_handles('Overall_Survival_Status')
+            >>> leg1 = ax.legend(handles=handles1,
+            ...                  title='FAB_classification',
+            ...                  loc='center left')
+            >>> leg2 = ax.legend(handles=handles2,
+            ...                  title='days_to_last_followup',
+            ...                  loc='center')
+            >>> leg3 = ax.legend(handles=handles3,
+            ...                  title='Overall_Survival_Status',
+            ...                  loc='center right')
             >>> ax.add_artist(leg1)
             >>> ax.add_artist(leg2)
+            >>> ax.add_artist(leg3)
             >>> plt.tight_layout()
         """
-        s, l = self._get_col(col, numeric=numeric, segments=segments, samples=samples)
+        s, l = self._get_col(col, numeric=numeric, segments=segments,
+            samples=samples)
         colors = plt.cm.get_cmap(cmap)(np.linspace(0, 1, len(l)))
         handles = []
         for i, label in enumerate(l):
             handles.append(mpatches.Patch(color=colors[i], label=label))
         return handles
 
-    def _get_col(self, col, numeric=False, segments=5, samples=None, decimals=0):
+    def _get_col(
+        self, col, numeric=False, segments=5, samples=None, decimals=0
+    ):
         s = self.df[col]
         s = s.replace([np.inf, -np.inf], np.nan)
         if numeric:
-            boundaries = list(np.linspace(s.min(), s.max(), segments+1, endpoint=True))
+            boundaries = list(np.linspace(s.min(), s.max(),
+                segments+1, endpoint=True))
             intervals = list(zip(boundaries[:-1], boundaries[1:]))
             def f(x):
                 if pd.isna(x):
@@ -346,10 +382,66 @@ class AnnFrame:
         return s, l
 
     def plot_annot(
-        self, col, numeric=False, segments=5, samples=None, decimals=0, cmap='Pastel1', ax=None,
-        figsize=None, **kwargs
+        self, col, samples=None, numeric=False, segments=5, decimals=0,
+        cmap='Pastel1', ax=None, figsize=None, **kwargs
     ):
-        s, l = self._get_col(col, numeric=numeric, segments=segments, samples=samples)
+        """Create a 1D categorical heatmap for the given column.
+
+        In the case of a numeric column, use ``numeric=True`` which will
+        divide the values into equal-sized intervals, with the number of
+        intervals determined by the `segments` option.
+
+        Parameters
+        ----------
+        col : str
+            Column name.
+        samples : list, optional
+            If provided, these samples will be used to create legend handles.
+        numeric : bool, default: False
+            If True, the column will be treated as numeric.
+        segments : int, default: 5
+            If ``numeric`` is True, the numbers will be divided
+            into this number of equal-sized segments.
+        decimals : int, default: 0
+            If ``numeric`` is True, the numbers will be rounded up to this
+            number of decimals.
+        cmap : str, default: 'Pastel1'
+            Color map.
+
+        Returns
+        -------
+        list
+            Legend handles.
+
+        See Also
+        --------
+        AnnFrame.legend_handles
+            Return legend handles for the given column.
+
+        Examples
+        --------
+
+        .. plot::
+
+            >>> import matplotlib.pyplot as plt
+            >>> from fuc import common, pymaf
+            >>> common.load_dataset('tcga-laml')
+            >>> f = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
+            >>> af = pymaf.AnnFrame.from_file(f)
+            >>> fig, [ax1, ax2, ax3] = plt.subplots(3, 1, figsize=(10, 5))
+            >>> af.plot_annot('FAB_classification', ax=ax1, linewidths=1, cmap='Dark2')
+            >>> af.plot_annot('days_to_last_followup', ax=ax2, linewidths=1, cmap='viridis')
+            >>> af.plot_annot('Overall_Survival_Status', ax=ax3, linewidths=1)
+            >>> ax1.set_xlabel('')
+            >>> ax2.set_xlabel('')
+            >>> ax1.set_ylabel('')
+            >>> ax2.set_ylabel('')
+            >>> ax3.set_ylabel('')
+            >>> plt.tight_layout()
+            >>> plt.subplots_adjust(wspace=0.01, hspace=0.01)
+        """
+        s, l = self._get_col(col, numeric=numeric, segments=segments,
+            samples=samples)
         d = {k: v for v, k in enumerate(l)}
         df = s.to_frame().applymap(lambda x: x if pd.isna(x) else d[x])
         if ax is None:
