@@ -8,6 +8,7 @@ Changelog
 * Add new methods :meth:`pyvep.filter_af/lof`.
 * Add ``matplotlib-venn`` package as dependency for plotting Venn diagrams.
 * Add new method :meth:`pyvcf.plot_comparison`.
+* :issue:`17`: Add new method :meth:`pyvep.filter_biotype`.
 
 0.10.0 (2021-06-03)
 -------------------
