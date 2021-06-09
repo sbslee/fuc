@@ -615,7 +615,7 @@ def annot_names(vf):
     return l
 
 def filter_af(vf, name, threshold, opposite=None, as_index=False):
-    """Remove rows whose selected AF is below threshold.
+    """Select rows whose selected AF is below threshold.
 
     Parameters
     ----------

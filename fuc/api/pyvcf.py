@@ -1626,23 +1626,24 @@ class VcfFrame:
         return out
 
     def plot_histplot(
-        self, af=None, hue=None, kde=True, ax=None, figsize=None
+        self, af=None, hue=None, kde=True, ax=None, figsize=None, **kwargs
     ):
-        """Create a histogram showing TMB distribution.
+        """Create a histogram of TMB distribution.
 
         Parameters
         ----------
-        a, b : list
-            Sample names. The lists must have the same shape.
-        labels : list, optional
-            List of labels to be displayed.
+        af : pyvcf.AnnFrame
+            AnnFrame.
+        hue : list, optional
+            Grouping variable that will produce bars with different colors.
+            Requires the `af` option.
         ax : matplotlib.axes.Axes, optional
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
             Width, height in inches. Format: (float, float).
         kwargs
             Other keyword arguments will be passed down to
-            :meth:`seaborn.regplot`.
+            :meth:`seaborn.histplot`.
 
         Returns
         -------
@@ -1657,7 +1658,7 @@ class VcfFrame:
             df = pd.concat([af.df, s], axis=1, join='inner')
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
-        sns.histplot(data=df, x='TMB', hue=hue, kde=kde)
+        sns.histplot(data=df, x='TMB', hue=hue, kde=kde, **kwargs)
         return ax
 
     def plot_regplot(self, a, b, ax=None, figsize=None, **kwargs):
