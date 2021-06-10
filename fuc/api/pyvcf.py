@@ -517,45 +517,131 @@ def row_missval(r):
     return m
 
 class AnnFrame:
-    """Class for storing annotation data.
+    """Class for storing sample annotation data.
+
+    This class stores sample annotation data as pandas.DataFrame with sample
+    names as index.
+
+    Note that an AnnFrame can have a different set of samples than its
+    accompanying VcfFrame.
 
     Parameters
     ----------
     df : pandas.DataFrame
-        DataFrame containing annotation data.
+        DataFrame containing sample annotation data. Index must be
+        sample names.
 
     See Also
     --------
+    AnnFrame.from_dict
+        Construct AnnFrame from dict of array-like or dicts.
     AnnFrame.from_file
-        Construct AnnFrame from an annotation file.
+        Construct AnnFrame from a delimited text file.
+
+    Examples
+    --------
+
+    >>> import pandas as pd
+    >>> from fuc import pyvcf
+    >>> data = {
+    ...     'Sample': ['Steven_N', 'Steven_T', 'Sara_N', 'Sara_T'],
+    ...     'Subject': ['Steven', 'Steven', 'Sara', 'Sara'],
+    ...     'Type': ['Normal', 'Tumor', 'Normal', 'Tumor'],
+    ...     'Age': [30, 30, 57, 57]
+    ... }
+    >>> df = pd.DataFrame(data)
+    >>> df = df.set_index('Sample')
+    >>> af = pyvcf.AnnFrame(df)
+    >>> af.df
+             Subject    Type  Age
+    Sample
+    Steven_N  Steven  Normal   30
+    Steven_T  Steven   Tumor   30
+    Sara_N      Sara  Normal   57
+    Sara_T      Sara   Tumor   57
     """
+    def _check_df(self, df):
+        if type(df.index) == pd.RangeIndex:
+            m = "Index must be sample names, not 'pandas.RangeIndex'."
+            raise ValueError(m)
+        return df
+
     def __init__(self, df):
-        self._df = df
+        self._df = self._check_df(df)
 
     @property
     def df(self):
-        """pandas.DataFrame : DataFrame containing annotation data."""
+        """pandas.DataFrame : DataFrame containing sample annotation data."""
         return self._df
 
     @df.setter
     def df(self, value):
-        self._df = value
+        self._df = self._check_df(value)
+
+    @classmethod
+    def from_dict(cls, data, sample_col):
+        """Construct AnnFrame from dict of array-like or dicts.
+
+        The dictionary must have at least one column that represents sample
+        names which are used as index for pandas.DataFrame.
+
+        Parameters
+        ----------
+        data : dict
+            Of the form {field : array-like} or {field : dict}.
+        sample_col : str
+            Column containing sample names.
+
+        Returns
+        -------
+        AnnFrame
+            AnnFrame object.
+
+        See Also
+        --------
+        AnnFrame
+            AnnFrame object creation using constructor.
+        AnnFrame.from_file
+            Construct AnnFrame from a delimited text file.
+
+        Examples
+        --------
+
+        >>> from fuc import pyvcf
+        >>> data = {
+        ...     'Sample': ['Steven_Normal', 'Steven_Tumor', 'Sara_Normal', 'Sara_Tumor'],
+        ...     'Subject': ['Steven', 'Steven', 'Sara', 'Sara'],
+        ...     'Type': ['Normal', 'Tumor', 'Normal', 'Tumor'],
+        ...     'Age': [30, 30, 57, 57]
+        ... }
+        >>> af = pyvcf.AnnFrame.from_dict(data, 'Sample')
+        >>> af.df
+                      Subject    Type  Age
+        Sample
+        Steven_Normal  Steven  Normal   30
+        Steven_Tumor   Steven   Tumor   30
+        Sara_Normal      Sara  Normal   57
+        Sara_Tumor       Sara   Tumor   57
+        """
+        df = pd.DataFrame(data)
+        df = df.set_index(sample_col)
+        return cls(df)
 
     @classmethod
     def from_file(cls, fn, sample_col, sep='\t'):
-        """Construct AnnFrame from an annotation file.
+        """Construct AnnFrame from a delimited text file.
 
-        The input text file must contain a column that corresponds to
-        'SampleID'.
+        The text file must have at least one column that represents
+        sample names which are used as index for pandas.DataFrame.
 
         Parameters
         ----------
         fn : str
-            Annotation file path (zipped or unzipped).
+            Text file path (zipped or unzipped).
+        sample_col : str
+            Column containing sample names.
         sep : str, default: '\\\\t'
             Delimiter to use.
-        sample_col : str, optional
-            If provided, use this column as 'Tumor_Sample_Barcode'.
 
         Returns
         -------
@@ -566,8 +652,16 @@ class AnnFrame:
         --------
         AnnFrame
             AnnFrame object creation using constructor.
-        """
+        AnnFrame.from_dict
+            Construct AnnFrame from dict of array-like or dicts.
 
+        Examples
+        --------
+
+        >>> from fuc import pyvcf
+        >>> af1 = pyvcf.AnnFrame.from_file('sample-annot-1.tsv', 'Tumor_Sample_Barcode')
+        >>> af2 = pyvcf.AnnFrame.from_file('sample-annot-2.csv', 'SampleID', sep=',')
+        """
         df = pd.read_table(fn, sep=sep)
         df = df.set_index(sample_col)
         return cls(df)
@@ -1548,17 +1642,15 @@ class VcfFrame:
     ):
         """Create a Venn diagram showing genotype concordance between groups.
 
-        This method supports comparison between two groups (Groups A & B) and
-        three groups (Groups A, B, & C).
+        This method supports comparison between two groups (Groups A & B)
+        as well as three groups (Groups A, B, & C).
 
         Parameters
         ----------
-        a : list
-            List of samples belonging to Group A.
-        b : list
-            List of samples belonging to Group B.
+        a, b : list
+            Sample names. The lists must have the same shape.
         c : list, optional
-            List of samples belonging to Group C.
+            Same as above.
         labels : list, optional
             List of labels to be displayed.
         ax : matplotlib.axes.Axes, optional
@@ -1637,6 +1729,8 @@ class VcfFrame:
         hue : list, optional
             Grouping variable that will produce bars with different colors.
             Requires the `af` option.
+        kde : bool, default: True
+            Compute a kernel density estimate to smooth the distribution.
         ax : matplotlib.axes.Axes, optional
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
@@ -1649,6 +1743,46 @@ class VcfFrame:
         -------
         matplotlib.axes.Axes
             The matplotlib axes containing the plot.
+
+        Examples
+        --------
+
+        .. plot::
+            :context: close-figs
+
+            >>> from fuc import pyvcf
+            >>> vcf_data = {
+            ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1', 'chr1'],
+            ...     'POS': [100, 101, 102, 103, 103],
+            ...     'ID': ['.', '.', '.', '.', '.'],
+            ...     'REF': ['T', 'T', 'T', 'T', 'T'],
+            ...     'ALT': ['C', 'C', 'C', 'C', 'C'],
+            ...     'QUAL': ['.', '.', '.', '.', '.'],
+            ...     'FILTER': ['.', '.', '.', '.', '.'],
+            ...     'INFO': ['.', '.', '.', '.', '.'],
+            ...     'FORMAT': ['GT', 'GT', 'GT', 'GT', 'GT'],
+            ...     'Steven_N': ['0/0', '0/0', '0/1', '0/0', '0/0'],
+            ...     'Steven_T': ['0/0', '0/1', '0/1', '0/1', '0/1'],
+            ...     'Sara_N': ['0/0', '0/1', '0/0', '0/0', '0/0'],
+            ...     'Sara_T': ['0/0', '0/0', '1/1', '1/1', '0/1'],
+            ...     'John_N': ['0/0', '0/0', '0/0', '0/0', '0/0'],
+            ...     'John_T': ['0/1', '0/0', '1/1', '1/1', '0/1'],
+            ...     'Rachel_N': ['0/0', '0/0', '0/0', '0/0', '0/0'],
+            ...     'Rachel_T': ['0/1', '0/1', '0/0', '0/1', '0/1'],
+            ... }
+            >>> annot_data = {
+            ...     'Sample': ['Steven_N', 'Steven_T', 'Sara_N', 'Sara_T', 'John_N', 'John_T', 'Rachel_N', 'Rachel_T'],
+            ...     'Subject': ['Steven', 'Steven', 'Sara', 'Sara', 'John', 'John', 'Rachel', 'Rachel'],
+            ...     'Type': ['Normal', 'Tumor', 'Normal', 'Tumor', 'Normal', 'Tumor', 'Normal', 'Tumor'],
+            ... }
+            >>> vf = pyvcf.VcfFrame.from_dict([], vcf_data)
+            >>> af = pyvcf.AnnFrame.from_dict(annot_data, 'Sample')
+            >>> vf.plot_histplot()
+
+        .. plot::
+            :context: close-figs
+
+            >>> vf.plot_histplot(hue='Type', af=af)
         """
         s = self.df.iloc[:, 9:].applymap(gt_hasvar).sum()
         s.name = 'TMB'
@@ -1668,8 +1802,6 @@ class VcfFrame:
         ----------
         a, b : list
             Sample names. The lists must have the same shape.
-        labels : list, optional
-            List of labels to be displayed.
         ax : matplotlib.axes.Axes, optional
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional

@@ -1,8 +1,8 @@
 Changelog
 *********
 
-0.11.0 (in development)
------------------------
+0.11.0 (2021-06-10)
+-------------------
 
 * :issue:`16`: Add new method :meth:`pyvcf.VcfFrame.cfilter_empty`.
 * Add new methods :meth:`pyvep.filter_af/lof`.

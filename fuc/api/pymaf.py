@@ -234,37 +234,131 @@ def legend_handles(name='regular'):
     return handles
 
 class AnnFrame:
-    """Class for storing annotation data.
+    """Class for storing sample annotation data.
+
+    This class stores sample annotation data as pandas.DataFrame with sample
+    names as index.
+
+    Note that an AnnFrame can have a different set of samples than its
+    accompanying MafFrame.
 
     Parameters
     ----------
     df : pandas.DataFrame
-        DataFrame containing annotation data. The index must be
-        'Tumor_Sample_Barcode'.
+        DataFrame containing sample annotation data. The index must be
+        sample names.
 
     See Also
     --------
+    AnnFrame.from_dict
+        Construct AnnFrame from dict of array-like or dicts.
     AnnFrame.from_file
-        Construct AnnFrame from an annotation file.
+        Construct AnnFrame from a delimited text file.
+
+    Examples
+    --------
+
+    >>> import pandas as pd
+    >>> from fuc import pymaf
+    >>> data = {
+    ...     'Tumor_Sample_Barcode': ['Steven_N', 'Steven_T', 'Sara_N', 'Sara_T'],
+    ...     'Subject': ['Steven', 'Steven', 'Sara', 'Sara'],
+    ...     'Type': ['Normal', 'Tumor', 'Normal', 'Tumor'],
+    ...     'Age': [30, 30, 57, 57]
+    ... }
+    >>> df = pd.DataFrame(data)
+    >>> df = df.set_index('Tumor_Sample_Barcode')
+    >>> af = pymaf.AnnFrame(df)
+    >>> af.df
+                         Subject    Type  Age
+    Tumor_Sample_Barcode
+    Steven_N              Steven  Normal   30
+    Steven_T              Steven   Tumor   30
+    Sara_N                  Sara  Normal   57
+    Sara_T                  Sara   Tumor   57
     """
     def __init__(self, df):
-        self.df = df
+        self._df = self._check_df(df)
+
+    def _check_df(self, df):
+        if type(df.index) == pd.RangeIndex:
+            m = "Index must be sample names, not 'pandas.RangeIndex'."
+            raise ValueError(m)
+        return df
+
+    @property
+    def df(self):
+        """pandas.DataFrame : DataFrame containing sample annotation data."""
+        return self._df
+
+    @df.setter
+    def df(self, value):
+        self._df = self._check_df(value)
 
     @classmethod
-    def from_file(cls, fn, sep='\t', sample_col=None):
-        """Construct AnnFrame from an annotation file.
+    def from_dict(cls, data, sample_col='Tumor_Sample_Barcode'):
+        """Construct AnnFrame from dict of array-like or dicts.
 
-        The input text file must contain a column that corresponds to
-        'Tumor_Sample_Barcode'.
+        The dictionary must have at least one column that represents sample
+        names which are used as index for pandas.DataFrame.
+
+        Parameters
+        ----------
+        data : dict
+            Of the form {field : array-like} or {field : dict}.
+        sample_col : str, default: 'Tumor_Sample_Barcode'
+            Column containing sample names.
+
+        Returns
+        -------
+        AnnFrame
+            AnnFrame object.
+
+        See Also
+        --------
+        AnnFrame
+            AnnFrame object creation using constructor.
+        AnnFrame.from_file
+            Construct AnnFrame from a delimited text file.
+
+        Examples
+        --------
+
+        >>> from fuc import pymaf
+        >>> data = {
+        ...     'Tumor_Sample_Barcode': ['Steven_Normal', 'Steven_Tumor', 'Sara_Normal', 'Sara_Tumor'],
+        ...     'Subject': ['Steven', 'Steven', 'Sara', 'Sara'],
+        ...     'Type': ['Normal', 'Tumor', 'Normal', 'Tumor'],
+        ...     'Age': [30, 30, 57, 57]
+        ... }
+        >>> af = pymaf.AnnFrame.from_dict(data)
+        >>> af.df
+                             Subject    Type  Age
+        Tumor_Sample_Barcode
+        Steven_Normal         Steven  Normal   30
+        Steven_Tumor          Steven   Tumor   30
+        Sara_Normal             Sara  Normal   57
+        Sara_Tumor              Sara   Tumor   57
+        """
+        df = pd.DataFrame(data)
+        df = df.set_index(sample_col)
+        return cls(df)
+
+    @classmethod
+    def from_file(cls, fn, sample_col='Tumor_Sample_Barcode', sep='\t'):
+        """Construct AnnFrame from a delimited text file.
+
+        The text file must have at least one column that represents
+        sample names which are used as index for pandas.DataFrame.
 
         Parameters
         ----------
         fn : str
-            Annotation file path (zipped or unzipped).
+            Text file path (zipped or unzipped).
+        sample_col : str, default: 'Tumor_Sample_Barcode'
+            Column containing sample names.
         sep : str, default: '\\\\t'
             Delimiter to use.
-        sample_col : str, optional
-            If provided, use this column as 'Tumor_Sample_Barcode'.
 
         Returns
         -------
@@ -275,12 +369,18 @@ class AnnFrame:
         --------
         AnnFrame
             AnnFrame object creation using constructor.
-        """
+        AnnFrame.from_dict
+            Construct AnnFrame from dict of array-like or dicts.
 
+        Examples
+        --------
+
+        >>> from fuc import pymaf
+        >>> af1 = pymaf.AnnFrame.from_file('sample-annot-1.tsv')
+        >>> af2 = pymaf.AnnFrame.from_file('sample-annot-2.csv', sample_col='SampleID', sep=',')
+        """
         df = pd.read_table(fn, sep=sep)
-        if sample_col is not None:
-            df = df.rename(columns={sample_col: 'Tumor_Sample_Barcode'})
-        df = df.set_index('Tumor_Sample_Barcode')
+        df = df.set_index(sample_col)
         return cls(df)
 
     def legend_handles(
