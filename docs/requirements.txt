@@ -2,6 +2,7 @@ sphinx_rtd_theme
 sphinx_issues
 autodocsumm
 matplotlib
+matplotlib-venn
 numpy
 pandas
 pysam

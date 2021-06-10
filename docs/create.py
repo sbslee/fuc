@@ -84,11 +84,17 @@ Your contributions (e.g. feature ideas, pull requests) are most welcome.
 CLI Examples
 ============
 
+SAM/BAM/CRAM
+------------
+
 To print the header of a BAM file:
 
 .. code-block:: console
 
    $ fuc bam_head example.bam
+
+BED
+---
 
 To find intersection between BED files:
 
@@ -96,11 +102,17 @@ To find intersection between BED files:
 
    $ fuc bed_intxn 1.bed 2.bed 3.bed > intersect.bed
 
+FASTQ
+-----
+
 To count sequence reads in a FASTQ file:
 
 .. code-block:: console
 
    $ fuc fq_count example.fastq
+
+FUC
+---
 
 To check whether a file exists in the operating system:
 
@@ -114,11 +126,17 @@ To find all VCF files within the current directory recursively:
 
    $ fuc fuc_find . vcf
 
+TABLE
+-----
+
 To merge two tab-delimited files:
 
 .. code-block:: console
 
    $ fuc tbl_merge left.txt right.txt > merged.txt
+
+VCF
+---
 
 To merge VCF files:
 
@@ -128,6 +146,9 @@ To merge VCF files:
 
 API Examples
 ============
+
+VCF
+---
 
 To filter a VCF file based on a BED file:
 
@@ -147,11 +168,63 @@ To remove indels from a VCF file:
    >>> filtered_vf = vf.filter_indel()
    >>> filtered_vf.to_file('no_indels.vcf')
 
+To create a Venn diagram showing genotype concordance between groups:
+
+.. code:: python3
+
+    >>> from fuc import pyvcf, common
+    >>> common.load_dataset('pyvcf')
+    >>> f = '~/fuc-data/pyvcf/plot_comparison.vcf'
+    >>> vf = pyvcf.VcfFrame.from_file(f)
+    >>> a = ['Steven_A', 'John_A', 'Sara_A']
+    >>> b = ['Steven_B', 'John_B', 'Sara_B']
+    >>> c = ['Steven_C', 'John_C', 'Sara_C']
+    >>> vf.plot_comparison(a, b, c)
+
+.. image:: https://raw.githubusercontent.com/sbslee/fuc-data/main/images/plot_comparison.png
+
+To create a histogram of tumor mutational burden (TMB) distribution:
+
+.. code:: python3
+
+    >>> from fuc import pyvcf
+    >>> vcf_data = {{
+    ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1', 'chr1'],
+    ...     'POS': [100, 101, 102, 103, 103],
+    ...     'ID': ['.', '.', '.', '.', '.'],
+    ...     'REF': ['T', 'T', 'T', 'T', 'T'],
+    ...     'ALT': ['C', 'C', 'C', 'C', 'C'],
+    ...     'QUAL': ['.', '.', '.', '.', '.'],
+    ...     'FILTER': ['.', '.', '.', '.', '.'],
+    ...     'INFO': ['.', '.', '.', '.', '.'],
+    ...     'FORMAT': ['GT', 'GT', 'GT', 'GT', 'GT'],
+    ...     'Steven_N': ['0/0', '0/0', '0/1', '0/0', '0/0'],
+    ...     'Steven_T': ['0/0', '0/1', '0/1', '0/1', '0/1'],
+    ...     'Sara_N': ['0/0', '0/1', '0/0', '0/0', '0/0'],
+    ...     'Sara_T': ['0/0', '0/0', '1/1', '1/1', '0/1'],
+    ...     'John_N': ['0/0', '0/0', '0/0', '0/0', '0/0'],
+    ...     'John_T': ['0/1', '0/0', '1/1', '1/1', '0/1'],
+    ...     'Rachel_N': ['0/0', '0/0', '0/0', '0/0', '0/0'],
+    ...     'Rachel_T': ['0/1', '0/1', '0/0', '0/1', '0/1'],
+    ... }}
+    >>> annot_data = {{
+    ...     'Sample': ['Steven_N', 'Steven_T', 'Sara_N', 'Sara_T', 'John_N', 'John_T', 'Rachel_N', 'Rachel_T'],
+    ...     'Subject': ['Steven', 'Steven', 'Sara', 'Sara', 'John', 'John', 'Rachel', 'Rachel'],
+    ...     'Type': ['Normal', 'Tumor', 'Normal', 'Tumor', 'Normal', 'Tumor', 'Normal', 'Tumor'],
+    ... }}
+    >>> vf = pyvcf.VcfFrame.from_dict([], vcf_data)
+    >>> af = pyvcf.AnnFrame.from_dict(annot_data, 'Sample')
+    >>> vf.plot_histplot(hue='Type', af=af)
+
+.. image:: https://raw.githubusercontent.com/sbslee/fuc-data/main/images/plot_histplot.png
+
+MAF
+---
+
 To create an oncoplot with a MAF file:
 
 .. code:: python3
 
-    >>> import matplotlib.pyplot as plt
     >>> from fuc import common, pymaf
     >>> common.load_dataset('tcga-laml')
     >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
@@ -168,7 +241,6 @@ To create a summary figure for a MAF file:
 
 .. code:: python3
 
-    >>> import matplotlib.pyplot as plt
     >>> from fuc import common, pymaf
     >>> common.load_dataset('tcga-laml')
     >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
@@ -177,11 +249,13 @@ To create a summary figure for a MAF file:
 
 .. image:: https://raw.githubusercontent.com/sbslee/fuc-data/main/images/maf_summary.png
 
+SAM/BAM/CRAM
+------------
+
 To create read depth profile of a region from a CRAM file:
 
 .. code:: python3
 
-    >>> import matplotlib.pyplot as plt
     >>> from fuc import pycov
     >>> cf = pycov.CovFrame.from_file('HG00525.final.cram', zero=True,
     ...    region='chr12:21161194-21239796', names=['HG00525'])
@@ -225,7 +299,7 @@ Finally, you can clone the GitHub repository and then install fuc this way:
    $ cd fuc
    $ pip install .
 
-The nice thing about this approach is that you will have access to development versions that are not available in Anaconda or PyPI. For example, you can access a development branch with the ``git checkout`` command.
+The nice thing about this approach is that you will have access to development versions that are not available in Anaconda or PyPI. For example, you can access a development branch with the ``git checkout`` command. When you do this, please make sure your environment already has all the dependencies installed.
 
 Getting Help
 ============

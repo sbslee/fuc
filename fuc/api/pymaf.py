@@ -1,11 +1,49 @@
 """
 The pymaf submodule is designed for working with MAF files. It implements
 ``pymaf.MafFrame`` which stores MAF data as ``pandas.DataFrame`` to allow
-fast computation and easy manipulation. The class also contains many useful
-plotting methods such as ``MafFrame.plot_varcls`` and
-``MafFrame.plot_waterfall``. The submodule strictly adheres to the
+fast computation and easy manipulation. The ``pymaf.MafFrame`` class also
+contains many useful plotting methods such as ``MafFrame.plot_oncoplot`` and
+``MafFrame.plot_summary``. The submodule strictly adheres to the
 standard `MAF specification
 <https://docs.gdc.cancer.gov/Data/File_Formats/MAF_Format/>`_.
+
+A typical MAF file contains many fields ranging from gene symbol to
+protein change. However, most of the analysis in pymaf uses the
+following fields:
+
++------+------------------------+----------------------+-------------------------------+
+| No.  | Name                   | Description          | Examples                      |
++======+========================+======================+===============================+
+| 1    | Hugo_Symbol            | HUGO gene symbol     | 'TP53', 'Unknown'             |
++------+------------------------+----------------------+-------------------------------+
+| 2    | Entrez_Gene_Id         | Entrez or Ensembl ID | 0, 8714                       |
++------+------------------------+----------------------+-------------------------------+
+| 3    | Center                 | Sequencing center    | '.', 'genome.wustl.edu'       |
++------+------------------------+----------------------+-------------------------------+
+| 4    | NCBI_Build             | Genome assembly      | '37', 'GRCh38'                |
++------+------------------------+----------------------+-------------------------------+
+| 5    | Chromosome             | Chromosome name      | 'chr1'                        |
++------+------------------------+----------------------+-------------------------------+
+| 6    | Start_Position         | Start coordinate     | 119031351                     |
++------+------------------------+----------------------+-------------------------------+
+| 7    | End_Position           | End coordinate       | 44079555                      |
++------+------------------------+----------------------+-------------------------------+
+| 8    | Strand                 | Genomic strand       | '+', '-'                      |
++------+------------------------+----------------------+-------------------------------+
+| 9    | Variant_Classification | Translational effect | 'Missense_Mutation', 'Silent' |
++------+------------------------+----------------------+-------------------------------+
+| 10   | Variant_Type           | Mutation type        | 'SNP', 'INS', 'DEL'           |
++------+------------------------+----------------------+-------------------------------+
+| 11   | Reference_Allele       | Reference allele     | 'T', '-', 'ACAA'              |
++------+------------------------+----------------------+-------------------------------+
+| 12   | Tumor_Seq_Allele1      | First tumor allele   | 'A', '-', 'TCA'               |
++------+------------------------+----------------------+-------------------------------+
+| 13   | Tumor_Seq_Allele2      | Second tumor allele  | 'A', '-', 'TCA'               |
++------+------------------------+----------------------+-------------------------------+
+| 14   | Tumor_Sample_Barcode   | Sample ID            | 'TCGA-AB-3002'                |
++------+------------------------+----------------------+-------------------------------+
+| 15   | Protein_Change         | Protein change       | 'p.L558Q'                     |
++------+------------------------+----------------------+-------------------------------+
 """
 
 import pandas as pd
@@ -196,37 +234,131 @@ def legend_handles(name='regular'):
     return handles
 
 class AnnFrame:
-    """Class for storing annotation data.
+    """Class for storing sample annotation data.
+
+    This class stores sample annotation data as pandas.DataFrame with sample
+    names as index.
+
+    Note that an AnnFrame can have a different set of samples than its
+    accompanying MafFrame.
 
     Parameters
     ----------
     df : pandas.DataFrame
-        DataFrame containing annotation data. The index must be
-        'Tumor_Sample_Barcode'.
+        DataFrame containing sample annotation data. The index must be
+        sample names.
 
     See Also
     --------
+    AnnFrame.from_dict
+        Construct AnnFrame from dict of array-like or dicts.
     AnnFrame.from_file
-        Construct AnnFrame from an annotation file.
+        Construct AnnFrame from a delimited text file.
+
+    Examples
+    --------
+
+    >>> import pandas as pd
+    >>> from fuc import pymaf
+    >>> data = {
+    ...     'Tumor_Sample_Barcode': ['Steven_N', 'Steven_T', 'Sara_N', 'Sara_T'],
+    ...     'Subject': ['Steven', 'Steven', 'Sara', 'Sara'],
+    ...     'Type': ['Normal', 'Tumor', 'Normal', 'Tumor'],
+    ...     'Age': [30, 30, 57, 57]
+    ... }
+    >>> df = pd.DataFrame(data)
+    >>> df = df.set_index('Tumor_Sample_Barcode')
+    >>> af = pymaf.AnnFrame(df)
+    >>> af.df
+                         Subject    Type  Age
+    Tumor_Sample_Barcode
+    Steven_N              Steven  Normal   30
+    Steven_T              Steven   Tumor   30
+    Sara_N                  Sara  Normal   57
+    Sara_T                  Sara   Tumor   57
     """
     def __init__(self, df):
-        self.df = df
+        self._df = self._check_df(df)
+
+    def _check_df(self, df):
+        if type(df.index) == pd.RangeIndex:
+            m = "Index must be sample names, not 'pandas.RangeIndex'."
+            raise ValueError(m)
+        return df
+
+    @property
+    def df(self):
+        """pandas.DataFrame : DataFrame containing sample annotation data."""
+        return self._df
+
+    @df.setter
+    def df(self, value):
+        self._df = self._check_df(value)
 
     @classmethod
-    def from_file(cls, fn, sep='\t', sample_col=None):
-        """Construct AnnFrame from an annotation file.
+    def from_dict(cls, data, sample_col='Tumor_Sample_Barcode'):
+        """Construct AnnFrame from dict of array-like or dicts.
 
-        The input text file must contain a column that corresponds to
-        'Tumor_Sample_Barcode'.
+        The dictionary must have at least one column that represents sample
+        names which are used as index for pandas.DataFrame.
+
+        Parameters
+        ----------
+        data : dict
+            Of the form {field : array-like} or {field : dict}.
+        sample_col : str, default: 'Tumor_Sample_Barcode'
+            Column containing sample names.
+
+        Returns
+        -------
+        AnnFrame
+            AnnFrame object.
+
+        See Also
+        --------
+        AnnFrame
+            AnnFrame object creation using constructor.
+        AnnFrame.from_file
+            Construct AnnFrame from a delimited text file.
+
+        Examples
+        --------
+
+        >>> from fuc import pymaf
+        >>> data = {
+        ...     'Tumor_Sample_Barcode': ['Steven_Normal', 'Steven_Tumor', 'Sara_Normal', 'Sara_Tumor'],
+        ...     'Subject': ['Steven', 'Steven', 'Sara', 'Sara'],
+        ...     'Type': ['Normal', 'Tumor', 'Normal', 'Tumor'],
+        ...     'Age': [30, 30, 57, 57]
+        ... }
+        >>> af = pymaf.AnnFrame.from_dict(data)
+        >>> af.df
+                             Subject    Type  Age
+        Tumor_Sample_Barcode
+        Steven_Normal         Steven  Normal   30
+        Steven_Tumor          Steven   Tumor   30
+        Sara_Normal             Sara  Normal   57
+        Sara_Tumor              Sara   Tumor   57
+        """
+        df = pd.DataFrame(data)
+        df = df.set_index(sample_col)
+        return cls(df)
+
+    @classmethod
+    def from_file(cls, fn, sample_col='Tumor_Sample_Barcode', sep='\t'):
+        """Construct AnnFrame from a delimited text file.
+
+        The text file must have at least one column that represents
+        sample names which are used as index for pandas.DataFrame.
 
         Parameters
         ----------
         fn : str
-            Annotation file path (zipped or unzipped).
-        sep : str, default: '\t'
+            Text file path (zipped or unzipped).
+        sample_col : str, default: 'Tumor_Sample_Barcode'
+            Column containing sample names.
+        sep : str, default: '\\\\t'
             Delimiter to use.
-        sample_col : str, optional
-            If provided, use this column as 'Tumor_Sample_Barcode'.
 
         Returns
         -------
@@ -237,16 +369,29 @@ class AnnFrame:
         --------
         AnnFrame
             AnnFrame object creation using constructor.
-        """
+        AnnFrame.from_dict
+            Construct AnnFrame from dict of array-like or dicts.
 
+        Examples
+        --------
+
+        >>> from fuc import pymaf
+        >>> af1 = pymaf.AnnFrame.from_file('sample-annot-1.tsv')
+        >>> af2 = pymaf.AnnFrame.from_file('sample-annot-2.csv', sample_col='SampleID', sep=',')
+        """
         df = pd.read_table(fn, sep=sep)
-        if sample_col is not None:
-            df = df.rename(columns={sample_col: 'Tumor_Sample_Barcode'})
-        df = df.set_index('Tumor_Sample_Barcode')
+        df = df.set_index(sample_col)
         return cls(df)
 
-    def legend_handles(self, col, numeric=False, segments=5, samples=None, decimals=0, cmap='Pastel1'):
+    def legend_handles(
+        self, col, samples=None, numeric=False, segments=5, decimals=0,
+        cmap='Pastel1'
+    ):
         """Return legend handles for the given column.
+
+        In the case of a numeric column, use ``numeric=True`` which will
+        divide the values into equal-sized intervals, with the number of
+        intervals determined by the `segments` option.
 
         Parameters
         ----------
@@ -254,6 +399,14 @@ class AnnFrame:
             Column name.
         samples : list, optional
             If provided, these samples will be used to create legend handles.
+        numeric : bool, default: False
+            If True, the column will be treated as numeric.
+        segments : int, default: 5
+            If ``numeric`` is True, the numbers will be divided
+            into this number of equal-sized segments.
+        decimals : int, default: 0
+            If ``numeric`` is True, the numbers will be rounded up to this
+            number of decimals.
         cmap : str, default: 'Pastel1'
             Color map.
 
@@ -261,6 +414,11 @@ class AnnFrame:
         -------
         list
             Legend handles.
+
+        See Also
+        --------
+        AnnFrame.plot_annot
+            Create a 1D categorical heatmap for the given column.
 
         Examples
         --------
@@ -273,26 +431,42 @@ class AnnFrame:
             >>> f = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
             >>> af = pymaf.AnnFrame.from_file(f)
             >>> fig, ax = plt.subplots()
-            >>> handles1 = af.legend_handles('FAB_classification')
-            >>> handles2 = af.legend_handles('Overall_Survival_Status')
-            >>> leg1 = ax.legend(handles=handles1, title='FAB_classification', loc='center left')
-            >>> leg2 = ax.legend(handles=handles2, title='Overall_Survival_Status', loc='center right')
+            >>> handles1 = af.legend_handles('FAB_classification',
+            ...                              cmap='Dark2')
+            >>> handles2 = af.legend_handles('days_to_last_followup',
+            ...                              numeric=True,
+            ...                              cmap='viridis')
+            >>> handles3 = af.legend_handles('Overall_Survival_Status')
+            >>> leg1 = ax.legend(handles=handles1,
+            ...                  title='FAB_classification',
+            ...                  loc='center left')
+            >>> leg2 = ax.legend(handles=handles2,
+            ...                  title='days_to_last_followup',
+            ...                  loc='center')
+            >>> leg3 = ax.legend(handles=handles3,
+            ...                  title='Overall_Survival_Status',
+            ...                  loc='center right')
             >>> ax.add_artist(leg1)
             >>> ax.add_artist(leg2)
+            >>> ax.add_artist(leg3)
             >>> plt.tight_layout()
         """
-        s, l = self._get_col(col, numeric=numeric, segments=segments, samples=samples)
+        s, l = self._get_col(col, numeric=numeric, segments=segments,
+            samples=samples)
         colors = plt.cm.get_cmap(cmap)(np.linspace(0, 1, len(l)))
         handles = []
         for i, label in enumerate(l):
             handles.append(mpatches.Patch(color=colors[i], label=label))
         return handles
 
-    def _get_col(self, col, numeric=False, segments=5, samples=None, decimals=0):
+    def _get_col(
+        self, col, numeric=False, segments=5, samples=None, decimals=0
+    ):
         s = self.df[col]
         s = s.replace([np.inf, -np.inf], np.nan)
         if numeric:
-            boundaries = list(np.linspace(s.min(), s.max(), segments+1, endpoint=True))
+            boundaries = list(np.linspace(s.min(), s.max(),
+                segments+1, endpoint=True))
             intervals = list(zip(boundaries[:-1], boundaries[1:]))
             def f(x):
                 if pd.isna(x):
@@ -308,10 +482,66 @@ class AnnFrame:
         return s, l
 
     def plot_annot(
-        self, col, numeric=False, segments=5, samples=None, decimals=0, cmap='Pastel1', ax=None,
-        figsize=None, **kwargs
+        self, col, samples=None, numeric=False, segments=5, decimals=0,
+        cmap='Pastel1', ax=None, figsize=None, **kwargs
     ):
-        s, l = self._get_col(col, numeric=numeric, segments=segments, samples=samples)
+        """Create a 1D categorical heatmap for the given column.
+
+        In the case of a numeric column, use ``numeric=True`` which will
+        divide the values into equal-sized intervals, with the number of
+        intervals determined by the `segments` option.
+
+        Parameters
+        ----------
+        col : str
+            Column name.
+        samples : list, optional
+            If provided, these samples will be used to create legend handles.
+        numeric : bool, default: False
+            If True, the column will be treated as numeric.
+        segments : int, default: 5
+            If ``numeric`` is True, the numbers will be divided
+            into this number of equal-sized segments.
+        decimals : int, default: 0
+            If ``numeric`` is True, the numbers will be rounded up to this
+            number of decimals.
+        cmap : str, default: 'Pastel1'
+            Color map.
+
+        Returns
+        -------
+        list
+            Legend handles.
+
+        See Also
+        --------
+        AnnFrame.legend_handles
+            Return legend handles for the given column.
+
+        Examples
+        --------
+
+        .. plot::
+
+            >>> import matplotlib.pyplot as plt
+            >>> from fuc import common, pymaf
+            >>> common.load_dataset('tcga-laml')
+            >>> f = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
+            >>> af = pymaf.AnnFrame.from_file(f)
+            >>> fig, [ax1, ax2, ax3] = plt.subplots(3, 1, figsize=(10, 5))
+            >>> af.plot_annot('FAB_classification', ax=ax1, linewidths=1, cmap='Dark2')
+            >>> af.plot_annot('days_to_last_followup', ax=ax2, linewidths=1, cmap='viridis')
+            >>> af.plot_annot('Overall_Survival_Status', ax=ax3, linewidths=1)
+            >>> ax1.set_xlabel('')
+            >>> ax2.set_xlabel('')
+            >>> ax1.set_ylabel('')
+            >>> ax2.set_ylabel('')
+            >>> ax3.set_ylabel('')
+            >>> plt.tight_layout()
+            >>> plt.subplots_adjust(wspace=0.01, hspace=0.01)
+        """
+        s, l = self._get_col(col, numeric=numeric, segments=segments,
+            samples=samples)
         d = {k: v for v, k in enumerate(l)}
         df = s.to_frame().applymap(lambda x: x if pd.isna(x) else d[x])
         if ax is None:
@@ -401,10 +631,22 @@ class MafFrame:
     def from_vcf(cls, vcf):
         """Construct MafFrame from a VCF file or VcfFrame.
 
+        The input VCF should already contain functional annotation data
+        from a tool such as Ensemble VEP, SnpEff, and ANNOVAR. The
+        recommended method is Ensemble VEP with "RefSeq transcripts" as the
+        transcript database and the filtering option "Show one selected
+        consequence per variant".
+
         Parameters
         ----------
         vcf : str or VcfFrame
-            VCF file path or VcfFrame.
+            VCF file or VcfFrame.
+
+        Examples
+        --------
+
+        >>> from fuc import pymaf
+        >>> mf = pymaf.MafFrame.from_vcf('annotated.vcf')
         """
         # Parse the input VCF.
         if isinstance(vcf, str):
