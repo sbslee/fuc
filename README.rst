@@ -245,6 +245,7 @@ The following packages are required to run fuc:
    biopython
    lxml
    matplotlib
+   matplotlib-venn
    numpy
    pandas
    pyranges

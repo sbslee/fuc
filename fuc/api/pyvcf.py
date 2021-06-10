@@ -743,6 +743,71 @@ class VcfFrame:
         """tuple : Dimensionality of VcfFrame (variants, samples)."""
         return (self.df.shape[0], len(self.samples))
 
+    def add_af(self, decimals=3):
+        """Compute AF using AD and add it to the FORMAT field.
+
+        Parameters
+        ----------
+        decimals : int, default: 3
+            Number of decimals to display.
+
+        Returns
+        -------
+        VcfFrame
+            Updated VcfFrame.
+
+        Examples
+        --------
+        Assume we have the following data:
+
+        >>> from fuc import pyvcf
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr2', 'chr2'],
+        ...     'POS': [100, 100, 200, 200],
+        ...     'ID': ['.', '.', '.', '.'],
+        ...     'REF': ['A', 'A', 'C', 'C'],
+        ...     'ALT': ['C', 'T', 'G', 'G,A'],
+        ...     'QUAL': ['.', '.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.', '.'],
+        ...     'INFO': ['.', '.', '.', '.'],
+        ...     'FORMAT': ['GT:AD', 'GT:AD', 'GT:AD', 'GT:AD'],
+        ...     'Steven': ['0/1:12,15', '0/0:32,1', '0/1:16,12', './.:.'],
+        ...     'Sara': ['0/1:13,17', '0/1:14,15', './.:.', '1/2:0,11,17'],
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF  ALT QUAL FILTER INFO FORMAT     Steven         Sara
+        0  chr1  100  .   A    C    .      .    .  GT:AD  0/1:12,15    0/1:13,17
+        1  chr1  100  .   A    T    .      .    .  GT:AD   0/0:32,1    0/1:14,15
+        2  chr2  200  .   C    G    .      .    .  GT:AD  0/1:16,12        ./.:.
+        3  chr2  200  .   C  G,A    .      .    .  GT:AD      ./.:.  1/2:0,11,17
+
+        We can add the AF subfield to our genotype data:
+
+        >>> vf.add_af().df
+          CHROM  POS ID REF  ... INFO    FORMAT           Steven               Sara
+        0  chr1  100  .   A  ...    .  GT:AD:AF  0/1:12,15:0.556    0/1:13,17:0.567
+        1  chr1  100  .   A  ...    .  GT:AD:AF   0/0:32,1:0.030    0/1:14,15:0.517
+        2  chr2  200  .   C  ...    .  GT:AD:AF  0/1:16,12:0.429            ./.:.:.
+        3  chr2  200  .   C  ...    .  GT:AD:AF          ./.:.:.  1/2:0,11,17:0.607
+        """
+        def one_row(r):
+            i = r.FORMAT.split(':').index('AD')
+            def one_gt(g):
+                ad = g.split(':')[i]
+                if ad == '.':
+                    return f'{g}:.'
+                depths = [int(x) for x in ad.split(',')]
+                total = sum(depths)
+                af = max(depths[1:]) / total
+                return f'{g}:{af:.{decimals}f}'
+            r.iloc[9:] = r.iloc[9:].apply(one_gt)
+            r.FORMAT += ':AF'
+            return r
+        df = self.df.apply(one_row, axis=1)
+        vf = self.__class__(self.copy_meta(), df)
+        return vf
+
     def add_dp(self):
         """Compute DP using AD and add it to the FORMAT field.
 

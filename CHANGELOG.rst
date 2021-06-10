@@ -1,6 +1,11 @@
 Changelog
 *********
 
+0.12.0 (in development)
+-----------------------
+
+* Add new method :meth:`pyvcf.VcfFrame.add_af`.
+
 0.11.0 (2021-06-10)
 -------------------
 
