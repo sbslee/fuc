@@ -51,6 +51,8 @@ import pandas as pd
 import numpy as np
 from . import pyvcf
 
+# https://m.ensembl.org/info/docs/tools/vep/vep_formats.html
+
 DATA_TYPES = {
     'Allele': 'str',
     'Consequence': 'str',
