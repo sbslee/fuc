@@ -5,6 +5,8 @@ Changelog
 -----------------------
 
 * Add new method :meth:`pyvcf.VcfFrame.add_af`.
+* Add new method :meth:`pyvcf.VcfFrame.extract`.
+* Add new command :command:`vep_query`.
 
 0.11.0 (2021-06-10)
 -------------------

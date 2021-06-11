@@ -38,6 +38,7 @@ For getting help on CLI:
        vcf_merge    [VCF] merge two or more VCF files
        vcf_slice    [VCF] slice a VCF file
        vcf_vcf2bed  [VCF] convert a VCF file to a BED file
+       vep_query    [VEP] filter a VEP-annotated VCF file
    
    optional arguments:
      -h, --help     show this help message and exit
@@ -477,6 +478,28 @@ vcf_vcf2bed
    
    positional arguments:
      vcf_file    VCF file
+   
+   optional arguments:
+     -h, --help  show this help message and exit
+
+vep_query
+=========
+
+.. code-block:: console
+
+   $ fuc vep_query -h
+   usage: fuc vep_query [-h] vcf expr
+   
+   This command will filter a VEP-annotated VCF file. It essentially wraps the `pandas.DataFrame.query` method. For details on the method, please visit its documentation page (https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.query.html#pandas-dataframe-query).
+   
+   examples:
+     $ fuc vep_query in.vcf 'SYMBOL == "TP53"' > out.vcf
+     $ fuc vep_query in.vcf 'Consequence in ["splice_donor_variant", "stop_gained"]' > out.vcf
+     $ fuc vep_query in.vcf '(SYMBOL == "TP53") and (Consequence.str.contains("stop_gained"))' > out.vcf
+   
+   positional arguments:
+     vcf         VEP-annotated VCF file
+     expr        query expression to evaluate
    
    optional arguments:
      -h, --help  show this help message and exit

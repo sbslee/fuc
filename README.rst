@@ -308,6 +308,7 @@ For getting help on CLI:
        vcf_merge    [VCF] merge two or more VCF files
        vcf_slice    [VCF] slice a VCF file
        vcf_vcf2bed  [VCF] convert a VCF file to a BED file
+       vep_query    [VEP] filter a VEP-annotated VCF file
    
    optional arguments:
      -h, --help     show this help message and exit

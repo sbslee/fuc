@@ -3685,3 +3685,78 @@ class VcfFrame:
         df = df.drop_duplicates()
         bf = pybed.BedFrame.from_frame([], df)
         return bf
+
+    def extract(self, k, func=None, as_nan=False):
+        """
+        Create a DataFrame containing analysis-ready data for the given
+        genotype key.
+
+        Parameters
+        ----------
+        k : str
+            Genotype key such as 'DP' and 'AD'.
+        func : function, optional
+            Function to apply to each of the returned values. For example, if
+            the goal is to extract AD only for reference alleles, one can use
+            ``func=lambda x: x.split(',')[0]``
+        as_nan : bool, default: False
+            If True, missing values will be returned as ``NaN``.
+
+        Returns
+        -------
+        pandas.DataFrame
+            DataFrame containing requested data.
+
+        Examples
+        --------
+
+        >>> from fuc import pyvcf
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr1'],
+        ...     'POS': [100, 101],
+        ...     'ID': ['.', '.'],
+        ...     'REF': ['A', 'T'],
+        ...     'ALT': ['A', 'T'],
+        ...     'QUAL': ['.', '.'],
+        ...     'FILTER': ['.', '.'],
+        ...     'INFO': ['.', '.'],
+        ...     'FORMAT': ['GT:AD:DP', 'GT:AD:DP'],
+        ...     'A': ['0/1:15,13:28', '0/0:28,1:29'],
+        ...     'B': ['./.:.:.', '1/1:0,26:26'],
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO    FORMAT             A            B
+        0  chr1  100  .   A   A    .      .    .  GT:AD:DP  0/1:15,13:28      ./.:.:.
+        1  chr1  101  .   T   T    .      .    .  GT:AD:DP   0/0:28,1:29  1/1:0,26:26
+        >>> vf.extract('GT')
+             A    B
+        0  0/1  ./.
+        1  0/0  1/1
+        >>> vf.extract('GT', as_nan=True)
+             A    B
+        0  0/1  NaN
+        1  0/0  1/1
+        >>> vf.extract('AD')
+               A     B
+        0  15,13     .
+        1   28,1  0,26
+        >>> vf.extract('AD', as_nan=True, func=lambda x: float(x.split(',')[1]))
+              A     B
+        0  13.0   NaN
+        1   1.0  26.0
+        """
+        def one_row(r):
+            i = r.FORMAT.split(':').index(k)
+            def one_gt(g):
+                v = g.split(':')[i]
+                if as_nan and not i and gt_miss(v):
+                    return np.nan
+                if as_nan and v == '.':
+                    return np.nan
+                if func is not None:
+                    return func(v)
+                return v
+            return r[9:].apply(one_gt)
+        df = self.df.apply(one_row, axis=1)
+        return df

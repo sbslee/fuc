@@ -48,6 +48,7 @@ following fields:
 
 import re
 import pandas as pd
+import numpy as np
 from . import pyvcf
 
 SEVERITIY = [
@@ -546,26 +547,18 @@ def get_index(vf, target):
     headers = annot_names(vf)
     return headers.index(target)
 
-def get_table(vf):
-    """Write the VcfFrame as a tab-delimited text file."""
-    df = vf.df.copy()
-    headers = annot_names(vf)
-    def func(r):
-        ann = row_firstann(r)
-        if ann:
-            s = ['.' if x == '' else x for x in ann.split('|')]
-        else:
-            s = ['.' for x in headers]
-        s = pd.Series(s, index=headers)
-        s = pd.concat([r[:9], s, r[9:]])
-        return s
-    df = df.apply(func, axis=1)
-    return df
+def to_frame(vf):
+    """
+    Create a DataFrame containing analysis-ready annotation data.
 
-def write_table(vf, fn):
-    """Write the VcfFrame as a tab-delimited text file."""
-    df = get_table(vf)
-    df.to_csv(fn, sep='\t', index=False)
+    Returns
+    -------
+    pandas.DataFrame
+        DataFrame containing annotation data.
+    """
+    df = vf.df.apply(lambda r: pd.Series(row_firstann(r).split('|')), axis=1)
+    df.columns = annot_names(vf)
+    return df
 
 def pick_result(vf, mode='mostsevere'):
     """Return a new VcfFrame after picking one result per row.
