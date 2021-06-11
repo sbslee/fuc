@@ -118,7 +118,7 @@ bam_slice
    
    optional arguments:
      -h, --help  show this help message and exit
-     --no_index  use to this flag to skip indexing
+     --no_index  use this flag to skip indexing
 
 bed_intxn
 =========
@@ -488,14 +488,18 @@ vep_query
 .. code-block:: console
 
    $ fuc vep_query -h
-   usage: fuc vep_query [-h] vcf expr
+   usage: fuc vep_query [-h] [--opposite] [--as_zero] vcf expr
    
-   This command will filter a VEP-annotated VCF file. It essentially wraps the `pandas.DataFrame.query` method. For details on the method, please visit its documentation page (https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.query.html#pandas-dataframe-query).
+   This command will filter a VEP-annotated VCF file. It essentially wraps the `pandas.DataFrame.query` method. For details on query expression, please visit the method's documentation page (https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.query.html#pandas-dataframe-query).
    
    examples:
      $ fuc vep_query in.vcf 'SYMBOL == "TP53"' > out.vcf
+     $ fuc vep_query in.vcf 'SYMBOL != "TP53"' > out.vcf
+     $ fuc vep_query in.vcf 'SYMBOL == "TP53"' --opposite > out.vcf
      $ fuc vep_query in.vcf 'Consequence in ["splice_donor_variant", "stop_gained"]' > out.vcf
      $ fuc vep_query in.vcf '(SYMBOL == "TP53") and (Consequence.str.contains("stop_gained"))' > out.vcf
+     $ fuc vep_query in.vcf 'gnomAD_AF < 0.001' > out.vcf
+     $ fuc vep_query in.vcf 'gnomAD_AF < 0.001' --as_zero > out.vcf
    
    positional arguments:
      vcf         VEP-annotated VCF file
@@ -503,4 +507,6 @@ vep_query
    
    optional arguments:
      -h, --help  show this help message and exit
+     --opposite  use this flag to return records that don’t meet the said criteria
+     --as_zero   use this flag to treat missing values as zero instead of NaN
 

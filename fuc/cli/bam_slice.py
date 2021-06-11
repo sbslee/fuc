@@ -25,7 +25,7 @@ def create_parser(subparsers):
     parser.add_argument(
         '--no_index',
         action='store_true',
-        help='use to this flag to skip indexing'
+        help='use this flag to skip indexing'
     )
 
 def main(args):

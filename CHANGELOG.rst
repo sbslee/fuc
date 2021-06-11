@@ -6,6 +6,8 @@ Changelog
 
 * Add new method :meth:`pyvcf.VcfFrame.add_af`.
 * Add new method :meth:`pyvcf.VcfFrame.extract`.
+* Deprecate methods :meth:`pyvep.filter_af/biotype`.
+* Add new method :meth:`pyvep.filter_query`.
 * :issue:`19`: Add new command :command:`vep_query`.
 
 0.11.0 (2021-06-10)

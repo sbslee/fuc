@@ -51,6 +51,69 @@ import pandas as pd
 import numpy as np
 from . import pyvcf
 
+DATA_TYPES = {
+    'Allele': 'str',
+    'Consequence': 'str',
+    'IMPACT': 'str',
+    'SYMBOL': 'str',
+    'Gene': 'str',
+    'Feature_type': 'str',
+    'Feature': 'str',
+    'BIOTYPE': 'str',
+    'EXON': 'str',
+    'INTRON': 'str',
+    'HGVSc': 'str',
+    'HGVSp': 'str',
+    'cDNA_position': 'str',
+    'CDS_position': 'str',
+    'Protein_position': 'str',
+    'Amino_acids': 'str',
+    'Codons': 'str',
+    'Existing_variation': 'str',
+    'DISTANCE': 'str',
+    'STRAND': 'str',
+    'FLAGS': 'str',
+    'SYMBOL_SOURCE': 'str',
+    'HGNC_ID': 'str',
+    'MANE_SELECT': 'str',
+    'MANE_PLUS_CLINICAL': 'str',
+    'TSL': 'str',
+    'APPRIS': 'str',
+    'REFSEQ_MATCH': 'str',
+    'REFSEQ_OFFSET': 'str',
+    'GIVEN_REF': 'str',
+    'USED_REF': 'str',
+    'BAM_EDIT': 'str',
+    'SIFT': 'str',
+    'PolyPhen': 'str',
+    'AF': 'float64',
+    'AFR_AF': 'float64',
+    'AMR_AF': 'float64',
+    'EAS_AF': 'float64',
+    'EUR_AF': 'float64',
+    'SAS_AF': 'float64',
+    'AA_AF': 'float64',
+    'EA_AF': 'float64',
+    'gnomAD_AF': 'float64',
+    'gnomAD_AFR_AF': 'float64',
+    'gnomAD_AMR_AF': 'float64',
+    'gnomAD_ASJ_AF': 'float64',
+    'gnomAD_EAS_AF': 'float64',
+    'gnomAD_FIN_AF': 'float64',
+    'gnomAD_NFE_AF': 'float64',
+    'gnomAD_OTH_AF': 'float64',
+    'gnomAD_SAS_AF': 'float64',
+    'CLIN_SIG': 'str',
+    'SOMATIC': 'str',
+    'PHENO': 'str',
+    'PUBMED': 'str',
+    'MOTIF_NAME': 'str',
+    'MOTIF_POS': 'str',
+    'HIGH_INF_POS': 'str',
+    'MOTIF_SCORE_CHANGE': 'str',
+    'TRANSCRIPTION_FACTORS': 'str',
+}
+
 SEVERITIY = [
     'transcript_ablation',
     'splice_acceptor_variant',
@@ -547,17 +610,30 @@ def get_index(vf, target):
     headers = annot_names(vf)
     return headers.index(target)
 
-def to_frame(vf):
+def to_frame(vf, as_zero=False):
     """
-    Create a DataFrame containing analysis-ready annotation data.
+    Create a DataFrame containing analysis-ready VEP annotation data.
+
+    Parameters
+    ----------
+    vf : VcfFrame
+        VcfFrame object.
+    as_zero : bool, default: False
+        If True, missing values will be converted to zeros instead of ``NaN``.
 
     Returns
     -------
     pandas.DataFrame
-        DataFrame containing annotation data.
+        DataFrame containing VEP annotation data.
     """
-    df = vf.df.apply(lambda r: pd.Series(row_firstann(r).split('|')), axis=1)
+    f = lambda r: pd.Series(row_firstann(r).split('|'))
+    df = vf.df.apply(f, axis=1)
+    if as_zero:
+        df = df.replace('', 0)
+    else:
+        df = df.replace('', np.nan)
     df.columns = annot_names(vf)
+    df = df.astype(DATA_TYPES)
     return df
 
 def pick_result(vf, mode='mostsevere'):
@@ -566,7 +642,7 @@ def pick_result(vf, mode='mostsevere'):
     Parameters
     ----------
     vf : VcfFrame
-        VcfFrame.
+        VcfFrame object.
     mode : {'mostsevere', 'firstann'}, default: 'mostsevere'
         Selection mode:
 
@@ -644,40 +720,6 @@ def annot_names(vf):
             l = re.search(r'Format: (.*?)">', vf.meta[i]).group(1).split('|')
     return l
 
-def filter_af(vf, name, threshold, opposite=None, as_index=False):
-    """Select rows whose selected AF is below threshold.
-
-    Parameters
-    ----------
-    name : str
-        Name of the consequence annotation representing AF (e.g. 'gnomAD_AF').
-    threshold : float
-        Minimum AF.
-    opposite : bool, default: False
-        If True, return rows that don't meet the said criteria.
-    as_index : bool, default: False
-        If True, return boolean index array instead of VcfFrame.
-
-    Returns
-    -------
-    VcfFrame or pandas.Series
-        Filtered VcfFrame or boolean index array.
-    """
-    i = annot_names(vf).index(name)
-    def one_row(r):
-        af = row_firstann(r).split('|')[i]
-        if not af:
-            af = 0
-        return float(af) < threshold
-    i = vf.df.apply(one_row, axis=1)
-    if opposite:
-        i = ~i
-    if as_index:
-        return i
-    df = vf.df[i].reset_index(drop=True)
-    vf = vf.__class__(vf.copy_meta(), df)
-    return vf
-
 def filter_lof(vf, opposite=None, as_index=False):
     """Select rows whose conseuqence annotation is deleterious and/or LoF.
 
@@ -720,30 +762,32 @@ def filter_lof(vf, opposite=None, as_index=False):
     vf = vf.__class__(vf.copy_meta(), df)
     return vf
 
-def filter_biotype(vf, value, opposite=None, as_index=False):
-    """Select rows whose BIOTYPE matches the given value.
+def filter_query(vf, expr, opposite=None, as_index=False, as_zero=False):
+    """
+    Select rows that satisfy the query expression.
+
+    This method essentially wraps the :meth:`pandas.DataFrame.query` method.
 
     Parameters
     ----------
+    expr : str
+        The query string to evaluate.
     opposite : bool, default: False
         If True, return rows that don't meet the said criteria.
     as_index : bool, default: False
         If True, return boolean index array instead of VcfFrame.
+    as_zero : bool, default: False
+        If True, missing values will be converted to zeros instead of ``NaN``.
 
     Returns
     -------
     VcfFrame or pandas.Series
         Filtered VcfFrame or boolean index array.
     """
-    i = annot_names(vf).index('BIOTYPE')
-    def one_row(r):
-        l = row_firstann(r).split('|')
-        return l[i] == value
-    i = vf.df.apply(one_row, axis=1)
+    df = to_frame(vf, as_zero=as_zero)
+    i = vf.df.index.isin(df.query(expr).index)
     if opposite:
         i = ~i
     if as_index:
         return i
-    df = vf.df[i]
-    vf = vf.__class__(vf.copy_meta(), df)
-    return vf
+    return vf.__class__(vf.copy_meta(), vf.df[i])
