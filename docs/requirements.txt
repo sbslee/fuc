@@ -6,4 +6,5 @@ matplotlib-venn
 numpy
 pandas
 pysam
+scipy
 seaborn

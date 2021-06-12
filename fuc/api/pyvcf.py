@@ -3,7 +3,7 @@ The pyvcf submodule is designed for working with VCF files. It implements
 ``pyvcf.VcfFrame`` which stores VCF data as ``pandas.DataFrame`` to allow
 fast computation and easy manipulation. The ``pyvcf.VcfFrame`` class also
 contains many useful plotting methods such as ``VcfFrame.plot_comparison``
-and ``VcfFrame.plot_regplot``. The submodule strictly adheres to the
+and ``VcfFrame.plot_tmb``. The submodule strictly adheres to the
 standard `VCF specification
 <https://samtools.github.io/hts-specs/VCFv4.3.pdf>`_.
 
@@ -58,6 +58,7 @@ import matplotlib.pyplot as plt
 from matplotlib_venn import venn2, venn3
 import os
 import seaborn as sns
+import scipy.stats as stats
 
 CONTIGS = [
     '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13',
@@ -665,6 +666,60 @@ class AnnFrame:
         df = pd.read_table(fn, sep=sep)
         df = df.set_index(sample_col)
         return cls(df)
+
+def simulate_genotype(
+    p=0.5, noise_scale=0.05, dp_show=True, dp_loc=30, dp_scale=10,
+    ad_show=True, ad_loc=0.5, ad_scale=0.05, af_show=True
+):
+    lower, upper = 0, 1
+    mu, sigma = p, noise_scale
+    X = stats.truncnorm((lower - mu) / sigma, (upper - mu) / sigma, loc=mu, scale=sigma)
+    has_var = np.random.binomial(1, X.rvs(1)) == 1
+
+    if has_var:
+        result = '0/1'
+    else:
+        result = '0/0'
+
+    dp = np.random.normal(loc=dp_loc, scale=dp_scale)
+    dp = round(abs(dp))
+
+    if has_var:
+        alt = round(abs(np.random.normal(loc=ad_loc, scale=ad_scale)) * dp)
+        ref = dp - alt
+        ad = f'{ref},{alt}'
+    else:
+        ad = f'{dp},0'
+
+    if has_var:
+        af = round(alt / (ref + alt), 3)
+    else:
+        af = 0
+
+    if dp_show:
+        result += f':{dp}'
+
+    if ad_show:
+        result += f':{ad}'
+
+    if af_show:
+        result += f':{af}'
+
+    return result
+
+def simulate_sample(
+    n, p=0.5, noise_scale=0.1, dp_show=True, dp_loc=30, dp_scale=10,
+    ad_show=True, ad_loc=0.5, ad_scale=0.05, af_show=True
+):
+    l = []
+    for i in range(n):
+        genotype = simulate_genotype(
+            p=p, noise_scale=noise_scale, dp_show=dp_show,
+            dp_loc=dp_loc, dp_scale=dp_scale, ad_show=ad_show,
+            ad_loc=ad_loc, ad_scale=ad_scale
+        )
+        l.append(genotype)
+    return l
 
 class VcfFrame:
     """Class for storing VCF data.
@@ -1782,18 +1837,21 @@ class VcfFrame:
         out = venn3(subsets=n[:-1], **venn_kws)
         return out
 
-    def plot_histplot(
-        self, af=None, hue=None, kde=True, ax=None, figsize=None, **kwargs
+    def plot_hist(
+        self, k, af=None, hue=None, kde=True, ax=None, figsize=None, **kwargs
     ):
-        """Create a histogram of TMB distribution.
+        """
+        Create a histogram showing AD/AF/DP distribution.
 
         Parameters
         ----------
+        k : {'AD', 'AF', 'DP'}
+            Genotype key.
         af : pyvcf.AnnFrame
-            AnnFrame.
+            AnnFrame containing sample annotation data (requires ``hue``).
         hue : list, optional
-            Grouping variable that will produce bars with different colors.
-            Requires the `af` option.
+            Grouping variable that will produce multiple histograms with
+            different colors (requires ``af``).
         kde : bool, default: True
             Compute a kernel density estimate to smooth the distribution.
         ax : matplotlib.axes.Axes, optional
@@ -1811,43 +1869,98 @@ class VcfFrame:
 
         Examples
         --------
+        Below is a simple example:
 
         .. plot::
             :context: close-figs
 
-            >>> from fuc import pyvcf
-            >>> vcf_data = {
-            ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1', 'chr1'],
-            ...     'POS': [100, 101, 102, 103, 103],
-            ...     'ID': ['.', '.', '.', '.', '.'],
-            ...     'REF': ['T', 'T', 'T', 'T', 'T'],
-            ...     'ALT': ['C', 'C', 'C', 'C', 'C'],
-            ...     'QUAL': ['.', '.', '.', '.', '.'],
-            ...     'FILTER': ['.', '.', '.', '.', '.'],
-            ...     'INFO': ['.', '.', '.', '.', '.'],
-            ...     'FORMAT': ['GT', 'GT', 'GT', 'GT', 'GT'],
-            ...     'Steven_N': ['0/0', '0/0', '0/1', '0/0', '0/0'],
-            ...     'Steven_T': ['0/0', '0/1', '0/1', '0/1', '0/1'],
-            ...     'Sara_N': ['0/0', '0/1', '0/0', '0/0', '0/0'],
-            ...     'Sara_T': ['0/0', '0/0', '1/1', '1/1', '0/1'],
-            ...     'John_N': ['0/0', '0/0', '0/0', '0/0', '0/0'],
-            ...     'John_T': ['0/1', '0/0', '1/1', '1/1', '0/1'],
-            ...     'Rachel_N': ['0/0', '0/0', '0/0', '0/0', '0/0'],
-            ...     'Rachel_T': ['0/1', '0/1', '0/0', '0/1', '0/1'],
-            ... }
-            >>> annot_data = {
-            ...     'Sample': ['Steven_N', 'Steven_T', 'Sara_N', 'Sara_T', 'John_N', 'John_T', 'Rachel_N', 'Rachel_T'],
-            ...     'Subject': ['Steven', 'Steven', 'Sara', 'Sara', 'John', 'John', 'Rachel', 'Rachel'],
-            ...     'Type': ['Normal', 'Tumor', 'Normal', 'Tumor', 'Normal', 'Tumor', 'Normal', 'Tumor'],
-            ... }
-            >>> vf = pyvcf.VcfFrame.from_dict([], vcf_data)
-            >>> af = pyvcf.AnnFrame.from_dict(annot_data, 'Sample')
-            >>> vf.plot_histplot()
+            >>> from fuc import common, pyvcf
+            >>> common.load_dataset('pyvcf')
+            >>> vf = pyvcf.VcfFrame.from_file('~/fuc-data/pyvcf/normal-tumor.vcf')
+            >>> af = pyvcf.AnnFrame.from_file('~/fuc-data/pyvcf/normal-tumor-annot.tsv', 'Sample')
+            >>> vf.plot_hist('DP')
+
+        We can draw multiple histograms with hue mapping:
 
         .. plot::
             :context: close-figs
 
-            >>> vf.plot_histplot(hue='Type', af=af)
+            >>> vf.plot_hist('DP', af=af, hue='Tissue')
+
+        We can show AF instead of DP:
+
+        .. plot::
+            :context: close-figs
+
+            >>> vf.plot_hist('AF')
+        """
+        d = {
+            'AD': lambda x: float(x.split(',')[1]),
+            'AF': lambda x: float(x),
+            'DP': lambda x: int(x),
+        }
+        df = self.extract(k, as_nan=True, func=d[k])
+        df = df.T
+        id_vars = ['index']
+        if hue is not None:
+            df = pd.concat([df, af.df[hue]], axis=1, join='inner')
+            id_vars.append(hue)
+        df = df.reset_index()
+        df = pd.melt(df, id_vars=id_vars)
+        df = df.dropna()
+        df = df.rename(columns={'value': k})
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+        sns.histplot(data=df, x=k, hue=hue, kde=kde, ax=ax, **kwargs)
+        return ax
+
+    def plot_tmb(
+        self, af=None, hue=None, kde=True, ax=None, figsize=None, **kwargs
+    ):
+        """
+        Create a histogram showing TMB distribution.
+
+        Parameters
+        ----------
+        af : pyvcf.AnnFrame
+            AnnFrame containing sample annotation data (requires ``hue``).
+        hue : list, optional
+            Grouping variable that will produce multiple histograms with
+            different colors (requires ``af``).
+        kde : bool, default: True
+            Compute a kernel density estimate to smooth the distribution.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+        kwargs
+            Other keyword arguments will be passed down to
+            :meth:`seaborn.histplot`.
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+
+        Examples
+        --------
+        Below is a simple example:
+
+        .. plot::
+            :context: close-figs
+
+            >>> from fuc import common, pyvcf
+            >>> common.load_dataset('pyvcf')
+            >>> vf = pyvcf.VcfFrame.from_file('~/fuc-data/pyvcf/normal-tumor.vcf')
+            >>> af = pyvcf.AnnFrame.from_file('~/fuc-data/pyvcf/normal-tumor-annot.tsv', 'Sample')
+            >>> vf.plot_tmb()
+
+        We can draw multiple histograms with hue mapping:
+
+        .. plot::
+            :context: close-figs
+
+            >>> vf.plot_tmb(af=af, hue='Tissue')
         """
         s = self.df.iloc[:, 9:].applymap(gt_hasvar).sum()
         s.name = 'TMB'
@@ -1857,7 +1970,7 @@ class VcfFrame:
             df = pd.concat([af.df, s], axis=1, join='inner')
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
-        sns.histplot(data=df, x='TMB', hue=hue, kde=kde, **kwargs)
+        sns.histplot(data=df, x='TMB', ax=ax, hue=hue, kde=kde, **kwargs)
         return ax
 
     def plot_regplot(self, a, b, ax=None, figsize=None, **kwargs):
@@ -1885,29 +1998,13 @@ class VcfFrame:
 
         .. plot::
 
-            >>> from fuc import pyvcf
-            >>> data = {
-            ...     'CHROM': ['chr1', 'chr1', 'chr1'],
-            ...     'POS': [100, 101, 102],
-            ...     'ID': ['.', '.', '.'],
-            ...     'REF': ['G', 'T', 'T'],
-            ...     'ALT': ['A', 'C', 'C'],
-            ...     'QUAL': ['.', '.', '.'],
-            ...     'FILTER': ['.', '.', '.'],
-            ...     'INFO': ['.', '.', '.'],
-            ...     'FORMAT': ['GT', 'GT', 'GT'],
-            ...     'Steven_A': ['0/1', '0/1', '0/1'],
-            ...     'Steven_B': ['0/1', '0/1', '0/1'],
-            ...     'Sara_A': ['0/0', '1/1', '1/1'],
-            ...     'Sara_B': ['0/0', '1/1', '1/1'],
-            ...     'John_A': ['0/0', '0/0', '1/1'],
-            ...     'John_B': ['0/0', '0/0', '1/1'],
-            ... }
-            >>> vf = pyvcf.VcfFrame.from_dict([], data)
-            >>> vf.df
-            >>> a = ['Steven_A', 'Sara_A', 'John_A']
-            >>> b = ['Steven_B', 'Sara_B', 'John_B']
-            >>> vf.plot_regplot(a, b)
+            >>> from fuc import common, pyvcf
+            >>> common.load_dataset('pyvcf')
+            >>> vf = pyvcf.VcfFrame.from_file('~/fuc-data/pyvcf/normal-tumor.vcf')
+            >>> af = pyvcf.AnnFrame.from_file('~/fuc-data/pyvcf/normal-tumor-annot.tsv', 'Sample')
+            >>> normal = af.df[af.df.Tissue == 'Normal'].index
+            >>> tumor = af.df[af.df.Tissue == 'Tumor'].index
+            >>> vf.plot_regplot(normal, tumor)
         """
         s = self.df.iloc[:, 9:].applymap(gt_hasvar).sum()
         if ax is None:
