@@ -116,6 +116,12 @@ To merge VCF files:
 
    $ fuc vcf_merge 1.vcf 2.vcf 3.vcf > merged.vcf
 
+To filter a VCF file annotated by Ensemble VEP:
+
+.. code-block:: console
+
+   $ fuc vcf_vep in.vcf 'SYMBOL == "TP53"' > out.vcf
+
 API Examples
 ============
 
@@ -155,40 +161,25 @@ To create a Venn diagram showing genotype concordance between groups:
 
 .. image:: https://raw.githubusercontent.com/sbslee/fuc-data/main/images/plot_comparison.png
 
-To create a histogram of tumor mutational burden (TMB) distribution:
+To create various figures for normal-tumor analysis:
 
 .. code:: python3
 
-    >>> from fuc import pyvcf
-    >>> vcf_data = {
-    ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1', 'chr1'],
-    ...     'POS': [100, 101, 102, 103, 103],
-    ...     'ID': ['.', '.', '.', '.', '.'],
-    ...     'REF': ['T', 'T', 'T', 'T', 'T'],
-    ...     'ALT': ['C', 'C', 'C', 'C', 'C'],
-    ...     'QUAL': ['.', '.', '.', '.', '.'],
-    ...     'FILTER': ['.', '.', '.', '.', '.'],
-    ...     'INFO': ['.', '.', '.', '.', '.'],
-    ...     'FORMAT': ['GT', 'GT', 'GT', 'GT', 'GT'],
-    ...     'Steven_N': ['0/0', '0/0', '0/1', '0/0', '0/0'],
-    ...     'Steven_T': ['0/0', '0/1', '0/1', '0/1', '0/1'],
-    ...     'Sara_N': ['0/0', '0/1', '0/0', '0/0', '0/0'],
-    ...     'Sara_T': ['0/0', '0/0', '1/1', '1/1', '0/1'],
-    ...     'John_N': ['0/0', '0/0', '0/0', '0/0', '0/0'],
-    ...     'John_T': ['0/1', '0/0', '1/1', '1/1', '0/1'],
-    ...     'Rachel_N': ['0/0', '0/0', '0/0', '0/0', '0/0'],
-    ...     'Rachel_T': ['0/1', '0/1', '0/0', '0/1', '0/1'],
-    ... }
-    >>> annot_data = {
-    ...     'Sample': ['Steven_N', 'Steven_T', 'Sara_N', 'Sara_T', 'John_N', 'John_T', 'Rachel_N', 'Rachel_T'],
-    ...     'Subject': ['Steven', 'Steven', 'Sara', 'Sara', 'John', 'John', 'Rachel', 'Rachel'],
-    ...     'Type': ['Normal', 'Tumor', 'Normal', 'Tumor', 'Normal', 'Tumor', 'Normal', 'Tumor'],
-    ... }
-    >>> vf = pyvcf.VcfFrame.from_dict([], vcf_data)
-    >>> af = pyvcf.AnnFrame.from_dict(annot_data, 'Sample')
-    >>> vf.plot_histplot(hue='Type', af=af)
+    >>> import matplotlib.pyplot as plt
+    >>> from fuc import common, pyvcf
+    >>> common.load_dataset('pyvcf')
+    >>> vf = pyvcf.VcfFrame.from_file('~/fuc-data/pyvcf/normal-tumor.vcf')
+    >>> af = pyvcf.AnnFrame.from_file('~/fuc-data/pyvcf/normal-tumor-annot.tsv', 'Sample')
+    >>> normal = af.df[af.df.Tissue == 'Normal'].index
+    >>> tumor = af.df[af.df.Tissue == 'Tumor'].index
+    >>> fig, [[ax1, ax2], [ax3, ax4]] = plt.subplots(2, 2, figsize=(10, 10))
+    >>> vf.plot_tmb(ax=ax1)
+    >>> vf.plot_tmb(ax=ax2, af=af, hue='Tissue')
+    >>> vf.plot_hist('DP', ax=ax3, af=af, hue='Tissue')
+    >>> vf.plot_regplot(normal, tumor, ax=ax4)
+    >>> plt.tight_layout()
 
-.. image:: https://raw.githubusercontent.com/sbslee/fuc-data/main/images/plot_histplot.png
+.. image:: https://raw.githubusercontent.com/sbslee/fuc-data/main/images/normal-tumor.png
 
 MAF
 ---
@@ -245,10 +236,12 @@ The following packages are required to run fuc:
    biopython
    lxml
    matplotlib
+   matplotlib-venn
    numpy
    pandas
    pyranges
    pysam
+   scipy
    seaborn
 
 There are various ways you can install fuc. The recommended way is via conda:
@@ -307,6 +300,7 @@ For getting help on CLI:
        vcf_merge    [VCF] merge two or more VCF files
        vcf_slice    [VCF] slice a VCF file
        vcf_vcf2bed  [VCF] convert a VCF file to a BED file
+       vcf_vep      [VCF] filter a VCF file annotated by Ensemble VEP
    
    optional arguments:
      -h, --help     show this help message and exit
@@ -327,7 +321,7 @@ Below is the list of submodules available in API:
 - **pyfq** : The pyfq submodule is designed for working with FASTQ files. It implements ``pyfq.FqFrame`` which stores FASTQ data as ``pandas.DataFrame`` to allow fast computation and easy manipulation.
 - **pymaf** : The pymaf submodule is designed for working with MAF files. It implements ``pymaf.MafFrame`` which stores MAF data as ``pandas.DataFrame`` to allow fast computation and easy manipulation. The ``pymaf.MafFrame`` class also contains many useful plotting methods such as ``MafFrame.plot_oncoplot`` and ``MafFrame.plot_summary``. The submodule strictly adheres to the standard `MAF specification <https://docs.gdc.cancer.gov/Data/File_Formats/MAF_Format/>`_.
 - **pysnpeff** : The pysnpeff submodule is designed for parsing VCF annotation data from the `SnpEff <https://pcingola.github.io/SnpEff/>`_ program. It should be used with ``pyvcf.VcfFrame``.
-- **pyvcf** : The pyvcf submodule is designed for working with VCF files. It implements ``pyvcf.VcfFrame`` which stores VCF data as ``pandas.DataFrame`` to allow fast computation and easy manipulation. The ``pyvcf.VcfFrame`` class also contains many useful plotting methods such as ``VcfFrame.plot_comparison`` and ``VcfFrame.plot_regplot``. The submodule strictly adheres to the standard `VCF specification <https://samtools.github.io/hts-specs/VCFv4.3.pdf>`_.
+- **pyvcf** : The pyvcf submodule is designed for working with VCF files. It implements ``pyvcf.VcfFrame`` which stores VCF data as ``pandas.DataFrame`` to allow fast computation and easy manipulation. The ``pyvcf.VcfFrame`` class also contains many useful plotting methods such as ``VcfFrame.plot_comparison`` and ``VcfFrame.plot_tmb``. The submodule strictly adheres to the standard `VCF specification <https://samtools.github.io/hts-specs/VCFv4.3.pdf>`_.
 - **pyvep** : The pyvep submodule is designed for parsing VCF annotation data from the `Ensembl VEP <https://asia.ensembl.org/info/docs/tools/vep/index.html>`_ program. It should be used with ``pyvcf.VcfFrame``.
 
 For getting help on a specific module (e.g. pyvcf):

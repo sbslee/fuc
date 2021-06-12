@@ -4,7 +4,7 @@ exec(open('fuc/version.py').read())
 
 requirements = [
     'biopython', 'lxml', 'matplotlib', 'matplotlib-venn', 'numpy', 'pandas',
-    'pyranges', 'pysam', 'seaborn'
+    'pyranges', 'pysam', 'scipy', 'seaborn'
 ]
 
 setup(

@@ -14,6 +14,7 @@ dependencies:
   - pandas
   - pyranges
   - pysam
+  - scipy
   - seaborn
   - sphinx-issues
   - sphinx_rtd_theme

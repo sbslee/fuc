@@ -1,6 +1,18 @@
 Changelog
 *********
 
+0.12.0 (2021-06-12)
+-------------------
+
+* Add new method :meth:`pyvcf.VcfFrame.add_af`.
+* Add new method :meth:`pyvcf.VcfFrame.extract`.
+* Deprecate methods :meth:`pyvep.filter_af/biotype/nothas/impact`.
+* Add new method :meth:`pyvep.filter_query`.
+* :issue:`19`: Add new command :command:`vcf_vep`.
+* Rename :meth:`pyvcf.VcfFrame.plot_histplot` to :meth:`pyvcf.VcfFrame.plot_tmb`.
+* Add ``scipy`` package as dependency for performing statistical analysis.
+* Add new method :meth:`pyvcf.VcfFrame.plot_hist`.
+
 0.11.0 (2021-06-10)
 -------------------
 

@@ -38,6 +38,7 @@ For getting help on CLI:
        vcf_merge    [VCF] merge two or more VCF files
        vcf_slice    [VCF] slice a VCF file
        vcf_vcf2bed  [VCF] convert a VCF file to a BED file
+       vcf_vep      [VCF] filter a VCF file annotated by Ensemble VEP
    
    optional arguments:
      -h, --help     show this help message and exit
@@ -117,7 +118,7 @@ bam_slice
    
    optional arguments:
      -h, --help  show this help message and exit
-     --no_index  use to this flag to skip indexing
+     --no_index  use this flag to skip indexing
 
 bed_intxn
 =========
@@ -480,4 +481,32 @@ vcf_vcf2bed
    
    optional arguments:
      -h, --help  show this help message and exit
+
+vcf_vep
+=======
+
+.. code-block:: console
+
+   $ fuc vcf_vep -h
+   usage: fuc vcf_vep [-h] [--opposite] [--as_zero] vcf expr
+   
+   This command will filter a VCF file annotated by Ensemble VEP. It essentially wraps the `pandas.DataFrame.query` method. For details on query expression, please visit the method's documentation page (https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.query.html#pandas-dataframe-query).
+   
+   examples:
+     $ fuc vcf_vep in.vcf 'SYMBOL == "TP53"' > out.vcf
+     $ fuc vcf_vep in.vcf 'SYMBOL != "TP53"' > out.vcf
+     $ fuc vcf_vep in.vcf 'SYMBOL == "TP53"' --opposite > out.vcf
+     $ fuc vcf_vep in.vcf 'Consequence in ["splice_donor_variant", "stop_gained"]' > out.vcf
+     $ fuc vcf_vep in.vcf '(SYMBOL == "TP53") and (Consequence.str.contains("stop_gained"))' > out.vcf
+     $ fuc vcf_vep in.vcf 'gnomAD_AF < 0.001' > out.vcf
+     $ fuc vcf_vep in.vcf 'gnomAD_AF < 0.001' --as_zero > out.vcf
+   
+   positional arguments:
+     vcf         Ensemble VEP-annotated VCF file
+     expr        query expression to evaluate
+   
+   optional arguments:
+     -h, --help  show this help message and exit
+     --opposite  use this flag to return records that don’t meet the said criteria
+     --as_zero   use this flag to treat missing values as zero instead of NaN
 

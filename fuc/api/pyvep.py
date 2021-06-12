@@ -8,11 +8,113 @@ Ensemble VEP. The recommended method is Ensemble VEP's
 `web interface <https://asia.ensembl.org/Tools/VEP>`_ with
 “RefSeq transcripts” as the transcript database and the filtering option
 “Show one selected consequence per variant”.
+
+A typical VEP-annotated VCF file contains many fields ranging from gene
+symbol to protein change. However, most of the analysis in pyvep uses the
+following fields:
+
++-----+--------------------+---------------------+----------------------------------------------+
+| No. | Name               | Description         | Examples                                     |
++=====+====================+=====================+==============================================+
+| 1   | Allele             | Variant allele      | 'C', 'T', 'CG'                               |
++-----+--------------------+---------------------+----------------------------------------------+
+| 2   | Consequence        | Consequence type    | 'missense_variant', 'stop_gained'            |
++-----+--------------------+---------------------+----------------------------------------------+
+| 3   | IMPACT             | Consequence impact  | 'MODERATE', 'HIGH'                           |
++-----+--------------------+---------------------+----------------------------------------------+
+| 4   | SYMBOL             | Gene symbol         | 'TP53', 'APC'                                |
++-----+--------------------+---------------------+----------------------------------------------+
+| 5   | Gene               | Ensembl ID          | 7157, 55294                                  |
++-----+--------------------+---------------------+----------------------------------------------+
+| 6   | BIOTYPE            | Transcript biotype  | 'protein_coding', 'pseudogene', 'miRNA'      |
++-----+--------------------+---------------------+----------------------------------------------+
+| 7   | EXON               | Exon number         | '8/17', '17/17'                              |
++-----+--------------------+---------------------+----------------------------------------------+
+| 8   | Protein_position   | Amino acid position | 234, 1510                                    |
++-----+--------------------+---------------------+----------------------------------------------+
+| 9   | Amino_acids        | Amino acid changes  | 'R/\*', 'A/X', 'V/A'                         |
++-----+--------------------+---------------------+----------------------------------------------+
+| 10  | Existing_variation | Variant identifier  | 'rs17851045', 'rs786201856&COSV57325157'     |
++-----+--------------------+---------------------+----------------------------------------------+
+| 11  | STRAND             | Genomic strand      | 1, -1                                        |
++-----+--------------------+---------------------+----------------------------------------------+
+| 12  | SIFT               | SIFT prediction     | 'deleterious(0)', 'tolerated(0.6)'           |
++-----+--------------------+---------------------+----------------------------------------------+
+| 13  | PolyPhen           | PolyPhen prediction | 'benign(0.121)', 'probably_damaging(0.999)'  |
++-----+--------------------+---------------------+----------------------------------------------+
+| 14  | CLIN_SIG           | ClinVar prediction  | 'pathogenic', 'likely_pathogenic&pathogenic' |
++-----+--------------------+---------------------+----------------------------------------------+
 """
 
 import re
 import pandas as pd
+import numpy as np
 from . import pyvcf
+
+# https://m.ensembl.org/info/docs/tools/vep/vep_formats.html
+
+DATA_TYPES = {
+    'Allele': 'str',
+    'Consequence': 'str',
+    'IMPACT': 'str',
+    'SYMBOL': 'str',
+    'Gene': 'str',
+    'Feature_type': 'str',
+    'Feature': 'str',
+    'BIOTYPE': 'str',
+    'EXON': 'str',
+    'INTRON': 'str',
+    'HGVSc': 'str',
+    'HGVSp': 'str',
+    'cDNA_position': 'str',
+    'CDS_position': 'str',
+    'Protein_position': 'str',
+    'Amino_acids': 'str',
+    'Codons': 'str',
+    'Existing_variation': 'str',
+    'DISTANCE': 'str',
+    'STRAND': 'str',
+    'FLAGS': 'str',
+    'SYMBOL_SOURCE': 'str',
+    'HGNC_ID': 'str',
+    'MANE_SELECT': 'str',
+    'MANE_PLUS_CLINICAL': 'str',
+    'TSL': 'str',
+    'APPRIS': 'str',
+    'REFSEQ_MATCH': 'str',
+    'REFSEQ_OFFSET': 'str',
+    'GIVEN_REF': 'str',
+    'USED_REF': 'str',
+    'BAM_EDIT': 'str',
+    'SIFT': 'str',
+    'PolyPhen': 'str',
+    'AF': 'float64',
+    'AFR_AF': 'float64',
+    'AMR_AF': 'float64',
+    'EAS_AF': 'float64',
+    'EUR_AF': 'float64',
+    'SAS_AF': 'float64',
+    'AA_AF': 'float64',
+    'EA_AF': 'float64',
+    'gnomAD_AF': 'float64',
+    'gnomAD_AFR_AF': 'float64',
+    'gnomAD_AMR_AF': 'float64',
+    'gnomAD_ASJ_AF': 'float64',
+    'gnomAD_EAS_AF': 'float64',
+    'gnomAD_FIN_AF': 'float64',
+    'gnomAD_NFE_AF': 'float64',
+    'gnomAD_OTH_AF': 'float64',
+    'gnomAD_SAS_AF': 'float64',
+    'CLIN_SIG': 'str',
+    'SOMATIC': 'str',
+    'PHENO': 'str',
+    'PUBMED': 'str',
+    'MOTIF_NAME': 'str',
+    'MOTIF_POS': 'str',
+    'HIGH_INF_POS': 'str',
+    'MOTIF_SCORE_CHANGE': 'str',
+    'TRANSCRIPTION_FACTORS': 'str',
+}
 
 SEVERITIY = [
     'transcript_ablation',
@@ -157,33 +259,6 @@ def row_mostsevere(r):
     f = lambda x: SEVERITIY.index(x.split('|')[1].split('&')[0])
     return sorted(results.split(','), key=f)[0]
 
-def filter_nothas(vf, s, include=False):
-    """Filter out rows based on the VEP annotations.
-
-    Parameters
-    ----------
-    vf : VcfFrame
-        Input VcfFrame.
-    targets : list
-        List of annotations (e.g. ['missense_variant', 'stop_gained']).
-    include : bool, default: False
-        If True, include only such rows instead of excluding them.
-
-    Returns
-    -------
-    vf : VcfFrame
-        Filtered VcfFrame.
-    """
-    def func(r):
-        ann = row_firstann(r)
-        return s not in ann
-    i = vf.df.apply(func, axis=1)
-    if include:
-        i = ~i
-    df = vf.df[i].reset_index(drop=True)
-    vf = vf.__class__(vf.copy_meta(), df)
-    return vf
-
 def filter_clinsig(vf, whitelist=None, blacklist=None, opposite=False,
                    index=False):
     """Select rows based on the given CLIN_SIG values.
@@ -290,111 +365,13 @@ def filter_clinsig(vf, whitelist=None, blacklist=None, opposite=False,
         blacklist = []
     def func(r):
         ann = row_firstann(r)
-        values = ann.split('|')[get_index(vf, 'CLIN_SIG')].split('&')
+        i = annot_names(vf).index('CLIN_SIG')
+        values = ann.split('|')[i].split('&')
         if not list(set(values) & set(whitelist)):
             return False
         if list(set(values) & set(blacklist)):
             return False
         return True
-    i = vf.df.apply(func, axis=1)
-    if opposite:
-        i = ~i
-    if index:
-        return i
-    df = vf.df[i].reset_index(drop=True)
-    vf = vf.__class__(vf.copy_meta(), df)
-    return vf
-
-def filter_impact(vf, values, opposite=False, index=False):
-    """Select rows based on the given IMPACT values.
-
-    List of IMPACT values:
-
-        - LOW
-        - MODERATE
-        - HIGH
-        - MODIFIER
-
-    Parameters
-    ----------
-    vf : VcfFrame
-        VcfFrame.
-    values : list, default: None
-        If any one of the IMPACT values is present, select the row.
-    opposite : bool, default: False
-        If True, return rows that don't meet the said criteria.
-    index : bool, default: False
-        If True, return boolean index array instead of VcfFrame.
-
-    Returns
-    -------
-    VcfFrame or pandas.Series
-        Filtered VcfFrame or boolean index array.
-
-    Examples
-    --------
-    Assume we have the following data:
-
-    >>> meta = [
-    ...     '##fileformat=VCFv4.1',
-    ...     '##VEP="v104" time="2021-05-20 10:50:12" cache="/net/isilonP/public/ro/ensweb-data/latest/tools/grch37/e104/vep/cache/homo_sapiens/104_GRCh37" db="homo_sapiens_core_104_37@hh-mysql-ens-grch37-web" 1000genomes="phase3" COSMIC="92" ClinVar="202012" HGMD-PUBLIC="20204" assembly="GRCh37.p13" dbSNP="154" gencode="GENCODE 19" genebuild="2011-04" gnomAD="r2.1" polyphen="2.2.2" regbuild="1.0" sift="sift5.2.2"',
-    ...     '##INFO=<ID=CSQ,Number=.,Type=String,Description="Consequence annotations from Ensembl VEP. Format: Allele|Consequence|IMPACT|SYMBOL|Gene|Feature_type|Feature|BIOTYPE|EXON|INTRON|HGVSc|HGVSp|cDNA_position|CDS_position|Protein_position|Amino_acids|Codons|Existing_variation|DISTANCE|STRAND|FLAGS|SYMBOL_SOURCE|HGNC_ID|MANE_SELECT|MANE_PLUS_CLINICAL|TSL|APPRIS|SIFT|PolyPhen|AF|CLIN_SIG|SOMATIC|PHENO|PUBMED|MOTIF_NAME|MOTIF_POS|HIGH_INF_POS|MOTIF_SCORE_CHANGE|TRANSCRIPTION_FACTORS">'
-    ... ]
-    >>> data = {
-    ...     'CHROM': ['chr1', 'chr1', 'chr2', 'chr2'],
-    ...     'POS': [100, 101, 200, 201],
-    ...     'ID': ['.', '.', '.', '.'],
-    ...     'REF': ['G', 'C', 'CAG', 'C'],
-    ...     'ALT': ['T', 'T', 'C', 'T'],
-    ...     'QUAL': ['.', '.', '.', '.'],
-    ...     'FILTER': ['.', '.', '.', '.'],
-    ...     'INFO': [
-    ...         'CSQ=T|missense_variant|MODERATE|MTOR|ENSG00000198793|Transcript|ENST00000361445.4|protein_coding|47/58||||6721|6644|2215|S/Y|tCt/tAt|rs587777894&COSV63868278&COSV63868313||-1||HGNC|3942|||||deleterious(0)|possibly_damaging(0.876)||likely_pathogenic&pathogenic|0&1&1|1&1&1|26619011&27159400&24631838&26018084&27830187|||||',
-    ...         'CSQ=T|synonymous_variant|LOW|MTOR|ENSG00000198793|Transcript|ENST00000361445.4|protein_coding|49/58||||6986|6909|2303|L|ctG/ctA|rs11121691&COSV63870864||-1||HGNC|3942|||||||0.2206|benign|0&1|1&1|24996771|||||',
-    ...         'CSQ=-|frameshift_variant|HIGH|BRCA2|ENSG00000139618|Transcript|ENST00000380152.3|protein_coding|18/27||||8479-8480|8246-8247|2749|Q/X|cAG/c|rs80359701||1||HGNC|1101||||||||pathogenic||1|26467025&26295337&15340362|||||',
-    ...         'CSQ=T|missense_variant|MODERATE|MTOR|ENSG00000198793|Transcript|ENST00000361445.4|protein_coding|30/58||||4516|4439|1480|R/H|cGc/cAc|rs780930764&COSV63868373||-1||HGNC|3942|||||tolerated(0.13)|benign(0)||likely_benign|0&1|1&1||||||'
-    ...     ],
-    ...     'FORMAT': ['GT', 'GT', 'GT', 'GT'],
-    ...     'Steven': ['0/1', '0/1', '0/1', '0/1'],
-    ... }
-    >>> vf = pyvcf.VcfFrame.from_dict(meta, data)
-    >>> pyvep.parseann(vf, ['IMPACT']).df
-      CHROM  POS ID  REF ALT QUAL FILTER      INFO FORMAT Steven
-    0  chr1  100  .    G   T    .      .  MODERATE     GT    0/1
-    1  chr1  101  .    C   T    .      .       LOW     GT    0/1
-    2  chr2  200  .  CAG   C    .      .      HIGH     GT    0/1
-    3  chr2  201  .    C   T    .      .  MODERATE     GT    0/1
-
-    We can select rows with either LOW or HIGH:
-
-    >>> temp_vf = pyvep.filter_impact(vf, ['LOW', 'HIGH'])
-    >>> pyvep.parseann(temp_vf, ['IMPACT']).df
-      CHROM  POS ID REF ALT QUAL FILTER      INFO FORMAT Steven
-    0  chr1  100  .   G   T    .      .  MODERATE     GT    0/1
-    1  chr2  201  .   C   T    .      .  MODERATE     GT    0/1
-
-    We can also remove those rows:
-
-    >>> temp_vf = pyvep.filter_impact(vf, ['LOW', 'HIGH'], opposite=True)
-    >>> pyvep.parseann(temp_vf, ['IMPACT']).df
-      CHROM  POS ID REF ALT QUAL FILTER      INFO FORMAT Steven
-    0  chr1  100  .   G   T    .      .  MODERATE     GT    0/1
-    1  chr2  201  .   C   T    .      .  MODERATE     GT    0/1
-
-    Finally, we can return boolean index array from the filtering:
-
-    >>> pyvep.filter_impact(vf, ['LOW', 'HIGH'], index=True)
-    0     True
-    1    False
-    2    False
-    3     True
-    dtype: bool
-
-    """
-    def func(r):
-        ann = row_firstann(r)
-        impact = ann.split('|')[get_index(vf, 'IMPACT')]
-        return impact in values
     i = vf.df.apply(func, axis=1)
     if opposite:
         i = ~i
@@ -505,31 +482,31 @@ def parseann(vf, targets, sep=' | ', as_series=False):
     new_vf.df.INFO = s
     return new_vf
 
-def get_index(vf, target):
-    """Return the index of the target field (e.g. CLIN_SIG)."""
-    headers = annot_names(vf)
-    return headers.index(target)
+def to_frame(vf, as_zero=False):
+    """
+    Create a DataFrame containing analysis-ready VEP annotation data.
 
-def get_table(vf):
-    """Write the VcfFrame as a tab-delimited text file."""
-    df = vf.df.copy()
-    headers = annot_names(vf)
-    def func(r):
-        ann = row_firstann(r)
-        if ann:
-            s = ['.' if x == '' else x for x in ann.split('|')]
-        else:
-            s = ['.' for x in headers]
-        s = pd.Series(s, index=headers)
-        s = pd.concat([r[:9], s, r[9:]])
-        return s
-    df = df.apply(func, axis=1)
+    Parameters
+    ----------
+    vf : VcfFrame
+        VcfFrame object.
+    as_zero : bool, default: False
+        If True, missing values will be converted to zeros instead of ``NaN``.
+
+    Returns
+    -------
+    pandas.DataFrame
+        DataFrame containing VEP annotation data.
+    """
+    f = lambda r: pd.Series(row_firstann(r).split('|'))
+    df = vf.df.apply(f, axis=1)
+    if as_zero:
+        df = df.replace('', 0)
+    else:
+        df = df.replace('', np.nan)
+    df.columns = annot_names(vf)
+    df = df.astype(DATA_TYPES)
     return df
-
-def write_table(vf, fn):
-    """Write the VcfFrame as a tab-delimited text file."""
-    df = get_table(vf)
-    df.to_csv(fn, sep='\t', index=False)
 
 def pick_result(vf, mode='mostsevere'):
     """Return a new VcfFrame after picking one result per row.
@@ -537,7 +514,7 @@ def pick_result(vf, mode='mostsevere'):
     Parameters
     ----------
     vf : VcfFrame
-        VcfFrame.
+        VcfFrame object.
     mode : {'mostsevere', 'firstann'}, default: 'mostsevere'
         Selection mode:
 
@@ -615,40 +592,6 @@ def annot_names(vf):
             l = re.search(r'Format: (.*?)">', vf.meta[i]).group(1).split('|')
     return l
 
-def filter_af(vf, name, threshold, opposite=None, as_index=False):
-    """Select rows whose selected AF is below threshold.
-
-    Parameters
-    ----------
-    name : str
-        Name of the consequence annotation representing AF (e.g. 'gnomAD_AF').
-    threshold : float
-        Minimum AF.
-    opposite : bool, default: False
-        If True, return rows that don't meet the said criteria.
-    as_index : bool, default: False
-        If True, return boolean index array instead of VcfFrame.
-
-    Returns
-    -------
-    VcfFrame or pandas.Series
-        Filtered VcfFrame or boolean index array.
-    """
-    i = annot_names(vf).index(name)
-    def one_row(r):
-        af = row_firstann(r).split('|')[i]
-        if not af:
-            af = 0
-        return float(af) < threshold
-    i = vf.df.apply(one_row, axis=1)
-    if opposite:
-        i = ~i
-    if as_index:
-        return i
-    df = vf.df[i].reset_index(drop=True)
-    vf = vf.__class__(vf.copy_meta(), df)
-    return vf
-
 def filter_lof(vf, opposite=None, as_index=False):
     """Select rows whose conseuqence annotation is deleterious and/or LoF.
 
@@ -691,30 +634,32 @@ def filter_lof(vf, opposite=None, as_index=False):
     vf = vf.__class__(vf.copy_meta(), df)
     return vf
 
-def filter_biotype(vf, value, opposite=None, as_index=False):
-    """Select rows whose BIOTYPE matches the given value.
+def filter_query(vf, expr, opposite=None, as_index=False, as_zero=False):
+    """
+    Select rows that satisfy the query expression.
+
+    This method essentially wraps the :meth:`pandas.DataFrame.query` method.
 
     Parameters
     ----------
+    expr : str
+        The query string to evaluate.
     opposite : bool, default: False
         If True, return rows that don't meet the said criteria.
     as_index : bool, default: False
         If True, return boolean index array instead of VcfFrame.
+    as_zero : bool, default: False
+        If True, missing values will be converted to zeros instead of ``NaN``.
 
     Returns
     -------
     VcfFrame or pandas.Series
         Filtered VcfFrame or boolean index array.
     """
-    i = annot_names(vf).index('BIOTYPE')
-    def one_row(r):
-        l = row_firstann(r).split('|')
-        return l[i] == value
-    i = vf.df.apply(one_row, axis=1)
+    df = to_frame(vf, as_zero=as_zero)
+    i = vf.df.index.isin(df.query(expr).index)
     if opposite:
         i = ~i
     if as_index:
         return i
-    df = vf.df[i]
-    vf = vf.__class__(vf.copy_meta(), df)
-    return vf
+    return vf.__class__(vf.copy_meta(), vf.df[i])

@@ -73,6 +73,8 @@ def load_dataset(name, force=False):
         ],
         'pyvcf': [
             'plot_comparison.vcf',
+            'normal-tumor.vcf',
+            'normal-tumor-annot.tsv',
         ],
     }
     base_url = ('https://raw.githubusercontent.com/sbslee/fuc-data/main')
