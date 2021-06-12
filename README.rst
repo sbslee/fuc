@@ -178,7 +178,6 @@ To create various figures for normal-tumor analysis:
     >>> vf.plot_hist('DP', ax=ax3, af=af, hue='Tissue')
     >>> vf.plot_regplot(normal, tumor, ax=ax4)
     >>> plt.tight_layout()
-    >>> plt.savefig('normal-tumor.png')
 
 .. image:: https://raw.githubusercontent.com/sbslee/fuc-data/main/images/normal-tumor.png
 
