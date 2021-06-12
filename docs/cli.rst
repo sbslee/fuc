@@ -38,7 +38,7 @@ For getting help on CLI:
        vcf_merge    [VCF] merge two or more VCF files
        vcf_slice    [VCF] slice a VCF file
        vcf_vcf2bed  [VCF] convert a VCF file to a BED file
-       vep_query    [VEP] filter a VEP-annotated VCF file
+       vcf_vep      [VCF] filter a VCF file annotated by Ensemble VEP
    
    optional arguments:
      -h, --help     show this help message and exit
@@ -482,27 +482,27 @@ vcf_vcf2bed
    optional arguments:
      -h, --help  show this help message and exit
 
-vep_query
-=========
+vcf_vep
+=======
 
 .. code-block:: console
 
-   $ fuc vep_query -h
-   usage: fuc vep_query [-h] [--opposite] [--as_zero] vcf expr
+   $ fuc vcf_vep -h
+   usage: fuc vcf_vep [-h] [--opposite] [--as_zero] vcf expr
    
-   This command will filter a VEP-annotated VCF file. It essentially wraps the `pandas.DataFrame.query` method. For details on query expression, please visit the method's documentation page (https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.query.html#pandas-dataframe-query).
+   This command will filter a VCF file annotated by Ensemble VEP. It essentially wraps the `pandas.DataFrame.query` method. For details on query expression, please visit the method's documentation page (https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.query.html#pandas-dataframe-query).
    
    examples:
-     $ fuc vep_query in.vcf 'SYMBOL == "TP53"' > out.vcf
-     $ fuc vep_query in.vcf 'SYMBOL != "TP53"' > out.vcf
-     $ fuc vep_query in.vcf 'SYMBOL == "TP53"' --opposite > out.vcf
-     $ fuc vep_query in.vcf 'Consequence in ["splice_donor_variant", "stop_gained"]' > out.vcf
-     $ fuc vep_query in.vcf '(SYMBOL == "TP53") and (Consequence.str.contains("stop_gained"))' > out.vcf
-     $ fuc vep_query in.vcf 'gnomAD_AF < 0.001' > out.vcf
-     $ fuc vep_query in.vcf 'gnomAD_AF < 0.001' --as_zero > out.vcf
+     $ fuc vcf_vep in.vcf 'SYMBOL == "TP53"' > out.vcf
+     $ fuc vcf_vep in.vcf 'SYMBOL != "TP53"' > out.vcf
+     $ fuc vcf_vep in.vcf 'SYMBOL == "TP53"' --opposite > out.vcf
+     $ fuc vcf_vep in.vcf 'Consequence in ["splice_donor_variant", "stop_gained"]' > out.vcf
+     $ fuc vcf_vep in.vcf '(SYMBOL == "TP53") and (Consequence.str.contains("stop_gained"))' > out.vcf
+     $ fuc vcf_vep in.vcf 'gnomAD_AF < 0.001' > out.vcf
+     $ fuc vcf_vep in.vcf 'gnomAD_AF < 0.001' --as_zero > out.vcf
    
    positional arguments:
-     vcf         VEP-annotated VCF file
+     vcf         Ensemble VEP-annotated VCF file
      expr        query expression to evaluate
    
    optional arguments:

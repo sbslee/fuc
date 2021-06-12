@@ -8,7 +8,7 @@ Changelog
 * Add new method :meth:`pyvcf.VcfFrame.extract`.
 * Deprecate methods :meth:`pyvep.filter_af/biotype/nothas/impact`.
 * Add new method :meth:`pyvep.filter_query`.
-* :issue:`19`: Add new command :command:`vep_query`.
+* :issue:`19`: Add new command :command:`vcf_vep`.
 
 0.11.0 (2021-06-10)
 -------------------

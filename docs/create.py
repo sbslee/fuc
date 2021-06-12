@@ -144,6 +144,12 @@ To merge VCF files:
 
    $ fuc vcf_merge 1.vcf 2.vcf 3.vcf > merged.vcf
 
+To filter a VCF file annotated by Ensemble VEP:
+
+.. code-block:: console
+
+   $ fuc vcf_vep in.vcf 'SYMBOL == "TP53"' > out.vcf
+
 API Examples
 ============
 
