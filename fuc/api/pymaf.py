@@ -1381,6 +1381,55 @@ class MafFrame:
 
         return ax
 
+    def to_vcf(self, ignore_indels=False):
+        """
+        Write the MafFrame to a VcfFrame.
+
+        Returns
+        -------
+        VcfFrame
+            VcfFrame object.
+        """
+        df = self.df.pivot(
+            index=[
+                'Chromosome', 'Start_Position',
+                'Reference_Allele', 'Tumor_Seq_Allele2'
+            ],
+            columns='Tumor_Sample_Barcode',
+            values='Tumor_Seq_Allele2'
+        )
+        df.columns.name = None
+        df = df.reset_index()
+
+        # Handle INDELs.
+        if ignore_indels:
+            l = ['A', 'C', 'G', 'T']
+            i = (df.Reference_Allele.isin(l)) & (df.Tumor_Seq_Allele2.isin(l))
+            df = df[i]
+        else:
+            pass
+
+        df = df.rename(
+            columns={
+                'Chromosome': 'CHROM', 'Start_Position': 'POS',
+                'Reference_Allele': 'REF', 'Tumor_Seq_Allele2': 'ALT'
+            }
+        )
+        df['ID'] = '.'
+        df['QUAL'] = '.'
+        df['FILTER'] = '.'
+        df['INFO'] = '.'
+        df['FORMAT'] = 'GT'
+        df = df[['CHROM', 'POS', 'ID', 'REF', 'ALT', 'QUAL', 'FILTER', 'INFO', 'FORMAT'] + self.samples]
+
+        # Fill in genotypes.
+        df.iloc[:, 9:] = df.iloc[:, 9:].applymap(lambda x: '0/0' if pd.isnull(x) else '0/1')
+
+        # Create VcfFrame.
+        vf = pyvcf.VcfFrame(['##fileformat=VCFv4.3'], df)
+
+        return vf
+
     def to_file(self, fn):
         """Write MafFrame to a MAF file.
 
