@@ -2,7 +2,7 @@ from .. import api
 
 def create_parser(subparsers):
     parser = subparsers.add_parser(
-        api.common.script_name(__file__),
+        api.common._script_name(__file__),
         help='[MAF] convert a MAF file to a VCF file',
         description='This command will convert a MAF file to a VCF file.'
     )

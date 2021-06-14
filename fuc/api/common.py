@@ -12,13 +12,11 @@ from urllib.request import urlretrieve
 from pathlib import Path
 import pysam
 
-def script_name(fn):
+FUC_PATH = pathlib.Path(__file__).parent.parent.parent.absolute()
+
+def _script_name(fn):
     """Return the script name."""
     return pathlib.Path(fn).stem
-
-def fuc_dir():
-    """Return the path to the fuc directory."""
-    return pathlib.Path(__file__).parent.parent.parent.absolute()
 
 def get_similarity(a, b):
     """Return a value from 0 to 1 representing how similar two strings are."""

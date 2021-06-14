@@ -3,7 +3,7 @@ import pysam
 
 def create_parser(subparsers):
     parser = subparsers.add_parser(
-        api.common.script_name(__file__),
+        api.common._script_name(__file__),
         help='[BAM] slice a BAM file',
         description=
             'This command will slice a BAM file. By default, the command '

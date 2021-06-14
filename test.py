@@ -2,18 +2,17 @@ import os
 import unittest
 import subprocess
 
-from fuc.api.common import fuc_dir
+from fuc.api.common import FUC_PATH
 from fuc import pyvcf, pybed, pyfq
 
-fuc_dir = fuc_dir()
-vcf_file1 = f'{fuc_dir}/data/vcf/1.vcf'
-vcf_file2 = f'{fuc_dir}/data/vcf/2.vcf'
-vcf_file3 = f'{fuc_dir}/data/vcf/3.vcf'
-bed_file1 = f'{fuc_dir}/data/bed/1.bed'
-bed_file2 = f'{fuc_dir}/data/bed/2.bed'
-fq_file1 = f'{fuc_dir}/data/fq/1.fastq'
-text_file1 = f'{fuc_dir}/data/text/1.txt'
-text_file2 = f'{fuc_dir}/data/text/2.txt'
+vcf_file1 = f'{FUC_PATH}/data/vcf/1.vcf'
+vcf_file2 = f'{FUC_PATH}/data/vcf/2.vcf'
+vcf_file3 = f'{FUC_PATH}/data/vcf/3.vcf'
+bed_file1 = f'{FUC_PATH}/data/bed/1.bed'
+bed_file2 = f'{FUC_PATH}/data/bed/2.bed'
+fq_file1 = f'{FUC_PATH}/data/fq/1.fastq'
+text_file1 = f'{FUC_PATH}/data/text/1.txt'
+text_file2 = f'{FUC_PATH}/data/text/2.txt'
 
 class TestPyvcf(unittest.TestCase):
 
@@ -28,7 +27,7 @@ class TestPyvcf(unittest.TestCase):
 
     def test_filter_bed(self):
         vf = pyvcf.VcfFrame.from_file(vcf_file1)
-        bf = pybed.BedFrame.from_file(f'{fuc_dir}/data/bed/1.bed')
+        bf = pybed.BedFrame.from_file(f'{FUC_PATH}/data/bed/1.bed')
         vf = vf.filter_bed(bf)
         self.assertEqual(vf.df.shape, (3, 13))
 
@@ -55,16 +54,16 @@ class TestPyvcf(unittest.TestCase):
 class TestPybed(unittest.TestCase):
 
     def test_intersect(self):
-        bf1 = pybed.BedFrame.from_file(f'{fuc_dir}/data/bed/1.bed')
-        bf2 = pybed.BedFrame.from_file(f'{fuc_dir}/data/bed/2.bed')
-        bf3 = pybed.BedFrame.from_file(f'{fuc_dir}/data/bed/3.bed')
+        bf1 = pybed.BedFrame.from_file(f'{FUC_PATH}/data/bed/1.bed')
+        bf2 = pybed.BedFrame.from_file(f'{FUC_PATH}/data/bed/2.bed')
+        bf3 = pybed.BedFrame.from_file(f'{FUC_PATH}/data/bed/3.bed')
         bf4 = bf1.intersect(bf2)
         self.assertEqual(bf3.to_string(), bf4.to_string())
 
 class TestPyfq(unittest.TestCase):
 
     def test_shape(self):
-        qf = pyfq.FqFrame.from_file(f'{fuc_dir}/data/fq/1.fastq')
+        qf = pyfq.FqFrame.from_file(f'{FUC_PATH}/data/fq/1.fastq')
         self.assertEqual(qf.shape, (5, 4))
 
 class TestCli(unittest.TestCase):
@@ -93,7 +92,7 @@ class TestCli(unittest.TestCase):
         self.assertTrue('True' in result.stdout)
 
     def test_fucfind(self):
-        result = subprocess.run(['fuc', 'fuc_find', fuc_dir, 'vcf'], capture_output=True, text=True, check=True)
+        result = subprocess.run(['fuc', 'fuc_find', FUC_PATH, 'vcf'], capture_output=True, text=True, check=True)
         self.assertTrue('1.vcf' in result.stdout)
 
     def test_qfcount(self):

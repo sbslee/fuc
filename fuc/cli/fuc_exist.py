@@ -4,13 +4,13 @@ import sys
 
 def create_parser(subparsers):
     parser = subparsers.add_parser(
-        api.common.script_name(__file__),
+        api.common._script_name(__file__),
         help='[FUC] check whether files/dirs exist',
         description='This command will check whether files/dirs exist. '
                     "It will return 'True' if they exist and 'False' "
                     'otherwise. The command will look for stdin if there '
                     'are no arguments (e.g. $ cat files.list | fuc '
-                    f'{api.common.script_name(__file__)}).'
+                    f'{api.common._script_name(__file__)}).'
     )
     parser.add_argument('paths', nargs='*',
         help='file/dir paths (default: stdin)')

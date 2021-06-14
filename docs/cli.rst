@@ -16,11 +16,17 @@ For getting help on CLI:
    $ fuc -h
    usage: fuc [-h] [-v] COMMAND ...
    
+   The main goal of the fuc package is to wrap some of the most frequently used
+   commands in the field of bioinformatics into one place. You can use fuc for
+   both command line interface (CLI) and application programming interface (API)
+   whose documentations are available at Read the Docs (https://sbslee-
+   fuc.readthedocs.io/en/latest).
+   
    positional arguments:
      COMMAND        name of the command
-       bam_head     [BAM] print the header of a BAM file
+       bam_head     [BAM] print the header of a SAM/BAM/CRAM file
        bam_index    [BAM] index a BAM file
-       bam_rename   [BAM] add a new sample name to a BAM file
+       bam_rename   [BAM] rename the sample in a BAM file
        bam_slice    [BAM] slice a BAM file
        bed_intxn    [BED] find intersection of two or more BED files
        bed_sum      [BED] summarize a BED file
@@ -57,12 +63,12 @@ bam_head
 .. code-block:: console
 
    $ fuc bam_head -h
-   usage: fuc bam_head [-h] bam_file
+   usage: fuc bam_head [-h] bam
    
-   This command will print the header of a BAM file.
+   This command will print the header of a SAM/BAM/CRAM file.
    
    positional arguments:
-     bam_file    BAM file
+     bam         SAM/BAM/CRAM file
    
    optional arguments:
      -h, --help  show this help message and exit
@@ -91,7 +97,7 @@ bam_rename
    $ fuc bam_rename -h
    usage: fuc bam_rename [-h] input_bam name output_bam
    
-   This command will add a new sample name to a BAM file.
+   This command will rename the sample in a BAM file.
    
    positional arguments:
      input_bam   input BAM file

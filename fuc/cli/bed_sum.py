@@ -2,7 +2,7 @@ from .. import api
 
 def create_parser(subparsers):
     parser = subparsers.add_parser(
-        api.common.script_name(__file__),
+        api.common._script_name(__file__),
         help='[BED] summarize a BED file',
         description=
             'This command will compute summary statstics of the '
