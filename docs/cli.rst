@@ -285,14 +285,18 @@ maf_maf2vcf
    $ fuc maf_maf2vcf -h
    usage: fuc maf_maf2vcf [-h] [--fasta PATH] [--ignore_indels] maf
    
-   This command will convert a MAF file to a VCF file.
+   This command will convert a MAF file to a VCF file. It essentially wraps the `pymaf.MafFrame.to_vcf` method. For details on the conversion algorithm, please visit the method's documentation page (https://sbslee-fuc.readthedocs.io/en/latest/api.html#fuc.api.pymaf.MafFrame.to_vcf).
+   
+   examples:
+     $ fuc maf_maf2vcf in.maf hs37d5.fa > out.vcf
+     $ fuc maf_maf2vcf in.maf --ignore_indels > out.vcf
    
    positional arguments:
      maf              MAF file
    
    optional arguments:
      -h, --help       show this help message and exit
-     --fasta PATH     FASTA file
+     --fasta PATH     FASTA file (required to include INDELs)
      --ignore_indels  use this tag to exclude INDELs from the output
 
 maf_oncoplt
