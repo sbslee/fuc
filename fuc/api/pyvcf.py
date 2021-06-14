@@ -3857,3 +3857,74 @@ class VcfFrame:
             return r[9:].apply(one_gt)
         df = self.df.apply(one_row, axis=1)
         return df
+
+    def rename(self, names):
+        """
+        Rename the samples.
+
+        Parameters
+        ----------
+        names : dict or list
+            Dict of old names to new names or list of new names.
+
+        Returns
+        -------
+        VcfFrame
+            Updated VcfFrame.
+
+        Examples
+        --------
+
+        >>> from fuc import pyvcf
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr2'],
+        ...     'POS': [100, 101],
+        ...     'ID': ['.', '.'],
+        ...     'REF': ['G', 'T'],
+        ...     'ALT': ['A', 'C'],
+        ...     'QUAL': ['.', '.'],
+        ...     'FILTER': ['.', '.'],
+        ...     'INFO': ['.', '.'],
+        ...     'FORMAT': ['GT', 'GT'],
+        ...     'A': ['0/1', '0/1'],
+        ...     'B': ['0/1', '0/1'],
+        ...     'C': ['0/1', '0/1'],
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    B    C
+        0  chr1  100  .   G   A    .      .    .     GT  0/1  0/1  0/1
+        1  chr2  101  .   T   C    .      .    .     GT  0/1  0/1  0/1
+        >>> vf.rename({'B': 'X', 'C': 'Y'}).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    X    Y
+        0  chr1  100  .   G   A    .      .    .     GT  0/1  0/1  0/1
+        1  chr2  101  .   T   C    .      .    .     GT  0/1  0/1  0/1
+        >>> vf.rename(['X', 'Y']).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    X    Y    C
+        0  chr1  100  .   G   A    .      .    .     GT  0/1  0/1  0/1
+        1  chr2  101  .   T   C    .      .    .     GT  0/1  0/1  0/1
+        """
+        samples = self.samples
+
+        if len(names) > len(samples):
+            raise ValueError('There are too many names.')
+
+        if isinstance(names, list):
+            names = dict(zip(samples, names))
+        elif isinstance(names, dict):
+            pass
+        else:
+            raise TypeError("Argument 'names' must be dict or list.")
+
+        for old, new in names.items():
+            i = samples.index(old)
+            samples[i] = new
+
+        if len(samples) > len(set(samples)):
+            raise ValueError('There are more than one duplicate names.')
+
+        columns = self.df.columns[:9].to_list() + samples
+        vf = self.copy()
+        vf.df.columns = columns
+
+        return vf

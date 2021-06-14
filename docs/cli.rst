@@ -30,6 +30,7 @@ For getting help on CLI:
        fuc_demux    [FUC] parse Reports directory from bcl2fastq or bcl2fastq2
        fuc_exist    [FUC] check whether files/dirs exist
        fuc_find     [FUC] find files with certain extension recursively
+       maf_maf2vcf  [MAF] convert a MAF file to a VCF file
        maf_oncoplt  [MAF] create an oncoplot from a MAF file
        maf_sumplt   [MAF] create a summary plot for a MAF file
        maf_vcf2maf  [MAF] convert an annotated VCF file to a MAF file
@@ -269,6 +270,24 @@ fuc_find
    
    optional arguments:
      -h, --help  show this help message and exit
+
+maf_maf2vcf
+===========
+
+.. code-block:: console
+
+   $ fuc maf_maf2vcf -h
+   usage: fuc maf_maf2vcf [-h] [--fasta PATH] [--ignore_indels] maf
+   
+   This command will convert a MAF file to a VCF file.
+   
+   positional arguments:
+     maf              MAF file
+   
+   optional arguments:
+     -h, --help       show this help message and exit
+     --fasta PATH     FASTA file
+     --ignore_indels  use this tag to exclude INDELs from the output
 
 maf_oncoplt
 ===========
