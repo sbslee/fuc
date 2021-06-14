@@ -1476,3 +1476,33 @@ class MafFrame:
             String representation of MafFrame.
         """
         return self.df.to_csv(index=False, sep='\t')
+
+    def plot_vaf(self, col, ax=None, figsize=None):
+        """
+        Create a bar plot showing VAF distribution for each gene.
+
+        Parameters
+        ----------
+        col : str
+            VAF column.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+        """
+        genes = self.compute_genes().index.to_list()
+        s = self.df.groupby('Hugo_Symbol')[col].median()
+        genes = s[genes].sort_values(ascending=False).index.to_list()
+        df = self.df[self.df.Hugo_Symbol.isin(genes)]
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+        sns.boxplot(x="Hugo_Symbol", y="i_TumorVAF_WU", data=df, order=genes, ax=ax)
+        sns.swarmplot(x="Hugo_Symbol", y="i_TumorVAF_WU", data=df, order=genes, color=".25")
+        ax.set_xlabel('')
+        ax.set_ylabel('VAF')
+        return ax
