@@ -53,7 +53,7 @@ import re
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import matplotlib.gridspec as gridspec
-from . import pyvcf
+from . import pyvcf, common
 import copy
 
 # Below is the list of calculated variant consequences from Ensemble VEP:
@@ -1381,14 +1381,21 @@ class MafFrame:
 
         return ax
 
-    def to_vcf(self, ignore_indels=False):
+    def to_vcf(self, fasta=None, ignore_indels=False):
         """
         Write the MafFrame to a VcfFrame.
+
+        Parameters
+        ----------
+        fasta : str, optional
+            FASTA file.
+        ignore_indels : bool, default: False
+            If True, do not include INDELs in the VcfFrame.
 
         Returns
         -------
         VcfFrame
-            VcfFrame object.
+            The VcfFrame object.
         """
         df = self.df.pivot(
             index=[
@@ -1400,15 +1407,6 @@ class MafFrame:
         )
         df.columns.name = None
         df = df.reset_index()
-
-        # Handle INDELs.
-        if ignore_indels:
-            l = ['A', 'C', 'G', 'T']
-            i = (df.Reference_Allele.isin(l)) & (df.Tumor_Seq_Allele2.isin(l))
-            df = df[i]
-        else:
-            pass
-
         df = df.rename(
             columns={
                 'Chromosome': 'CHROM', 'Start_Position': 'POS',
@@ -1425,7 +1423,35 @@ class MafFrame:
         # Fill in genotypes.
         df.iloc[:, 9:] = df.iloc[:, 9:].applymap(lambda x: '0/0' if pd.isnull(x) else '0/1')
 
-        # Create VcfFrame.
+        # Handle INDELs.
+        l = ['A', 'C', 'G', 'T']
+        if ignore_indels:
+            i = (df.REF.isin(l)) & (df.ALT.isin(l))
+            df = df[i]
+        elif fasta is None:
+            raise ValueError('FASTA file not found.')
+        else:
+            def one_row(r):
+                if r.REF in l and r.ALT in l:
+                    return r
+                region = f'{r.CHROM}:{r.POS-1}-{r.POS-1}'
+                anchor = common.extract_sequence(fasta, region)
+                if not anchor:
+                    return r
+                r.POS = r.POS - 1
+                if r.ALT == '-':
+                    r.REF = anchor + r.REF
+                    r.ALT = anchor
+                elif r.REF == '-':
+                    r.REF = anchor
+                    r.ALT = anchor + r.ALT
+                else:
+                    r.REF = anchor + r.REF
+                    r.ALT = anchor + r.ALT
+                return r
+            df = df.apply(one_row, axis=1)
+
+        # Create the VcfFrame.
         vf = pyvcf.VcfFrame(['##fileformat=VCFv4.3'], df)
 
         return vf

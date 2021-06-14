@@ -1,6 +1,12 @@
 Changelog
 *********
 
+0.13.0 (in development)
+-----------------------
+
+* Add new method :meth:`pymaf.MafFrame.to_vcf`.
+* :issue:`21`: Add new command :command:`maf_maf2vcf`.
+
 0.12.0 (2021-06-12)
 -------------------
 

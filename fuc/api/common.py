@@ -10,6 +10,7 @@ import os
 from difflib import SequenceMatcher
 from urllib.request import urlretrieve
 from pathlib import Path
+import pysam
 
 def script_name(fn):
     """Return the script name."""
@@ -93,19 +94,50 @@ def load_dataset(name, force=False):
             urlretrieve(file_url, file_path)
 
 def parse_region(region):
-    """Parse the given region.
+    """
+    Parse the region.
 
     Parameters
     ----------
     region : str
-        Region to be parsed (format: CHROM:START-END).
+        Region ('chrom:start-end').
 
     Returns
     -------
     tuple
-        (CHROM, START, END) which has data types of (str, int, int).
+        The output tuple will have a shape of (chrom, start, end) with the
+        following data types: (str, int, int).
+
+    Examples
+    --------
+
+    >>> from fuc import common
+    >>> common.parse_region('chr1:100-150')
+    ('chr1', 100, 150)
     """
     chrom = region.split(':')[0]
     start = int(region.split(':')[1].split('-')[0])
     end = int(region.split(':')[1].split('-')[1])
     return (chrom, start, end)
+
+def extract_sequence(fasta, region):
+    """
+    Extract the region's DNA sequence from the FASTA file.
+
+    Parameters
+    ----------
+    fasta : str
+        FASTA file.
+    region : str
+        Region ('chrom:start-end').
+
+    Returns
+    -------
+    str
+        DNA sequence. Empty string if there is no matching sequence.
+    """
+    try:
+        sequence = pysam.faidx(fasta, region).split('\n')[1]
+    except pysam.SamtoolsError:
+        sequence = ''
+    return sequence
