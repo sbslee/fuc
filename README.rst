@@ -39,6 +39,7 @@ Currently, the following file formats are supported by fuc:
 - Mutation Annotation Format (MAF)
 - Browser Extensible Data (BED)
 - FASTQ
+- FASTA
 - delimiter-separated values format (e.g. comma-separated values or CSV format)
 
 Additionally, you can use fuc to parse output data from the following programs:

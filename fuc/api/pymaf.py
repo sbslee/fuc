@@ -1385,10 +1385,27 @@ class MafFrame:
         """
         Write the MafFrame to a VcfFrame.
 
+        Converting from MAF to VCF is pretty straightforward for SNVs, but it
+        can be challenging for INDELs and complex events involving multiple
+        nucleotides (e.g. 'AAGG' → 'CCCG'). This is because, for the latter
+        case we need to identify the "anchor" nucleotide for each event,
+        which is crucial for constructing a properly formatted VCF. For
+        example, a deletion event 'AGT' → '-' in MAF would have to be
+        converted to 'CAGT' → 'C' in the VCF where 'C' is our anchor
+        nucleotide. The position should be shifted by one as well.
+
+        In order to tackle this issue, the method makes use of a reference
+        assembly (i.e. FASTA file). If SNVs are your only concern, then you
+        do not need a FASTA file and can just set ``ignore_indels=True``. If
+        you are going to provide a FASTA file, please make sure to select the
+        appropriate one (e.g. one that matches the genome assembly). For
+        example, if your MAF is in hg19/GRCh37, freely download and use the
+        'hs37d5.fa' file from the 1000 Genomes Project.
+
         Parameters
         ----------
         fasta : str, optional
-            FASTA file.
+            FASTA file. Required if ``ignore_indels=False``.
         ignore_indels : bool, default: False
             If True, do not include INDELs in the VcfFrame.
 
