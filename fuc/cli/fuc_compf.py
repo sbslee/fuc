@@ -3,7 +3,7 @@ import filecmp
 
 def create_parser(subparsers):
     parser = subparsers.add_parser(
-        api.common._script_name(__file__),
+        api.common._script_name(),
         help='[FUC] compare contents of two files',
         description=
             'This command will compare the contents of two files. '

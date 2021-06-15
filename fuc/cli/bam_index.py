@@ -1,7 +1,7 @@
 from .. import api
 import pysam
 
-COMMAND = api.common._script_name(__file__)
+COMMAND = api.common._script_name()
 
 DESCRIPTION = f"""
 This command will index a SAM/BAM/CRAM file. It essentially wraps the

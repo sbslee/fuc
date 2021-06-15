@@ -5,7 +5,7 @@ DOC_URL = 'https://sbslee-fuc.readthedocs.io/en/latest/api.html#fuc.api.pymaf.Ma
 
 def create_parser(subparsers):
     parser = subparsers.add_parser(
-        api.common._script_name(__file__),
+        api.common._script_name(),
         help='[MAF] create an oncoplot from a MAF file',
         description=
             'This command will create an oncoplot from a MAF file. '

@@ -2,7 +2,7 @@ from .. import api
 
 def create_parser(subparsers):
     parser = subparsers.add_parser(
-        api.common._script_name(__file__),
+        api.common._script_name(),
         help='[VCF] merge two or more VCF files',
         description=
             'This command will merge multiple VCF files (both zipped '

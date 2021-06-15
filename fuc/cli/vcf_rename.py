@@ -2,7 +2,7 @@ from .. import api
 import pandas as pd
 from argparse import RawTextHelpFormatter
 
-command = api.common._script_name(__file__)
+command = api.common._script_name()
 
 description = f"""
 This command will rename the samples in a VCF file. It essentially wraps

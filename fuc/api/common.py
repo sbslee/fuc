@@ -12,11 +12,13 @@ from urllib.request import urlretrieve
 from pathlib import Path
 import pysam
 import warnings
+import inspect
 
 FUC_PATH = pathlib.Path(__file__).parent.parent.parent.absolute()
 
-def _script_name(fn):
-    """Return the script name."""
+def _script_name():
+    """Return the current script's name."""
+    fn = inspect.stack()[1].filename
     return pathlib.Path(fn).stem
 
 def get_similarity(a, b):

@@ -1,7 +1,7 @@
 from .. import api
 from argparse import RawTextHelpFormatter
 
-command = api.common._script_name(__file__)
+command = api.common._script_name()
 
 description = f"""
 This command will filter a VCF file annotated by Ensemble VEP. It
