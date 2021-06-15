@@ -42,7 +42,7 @@ Currently, fuc can be used to analyze, summarize, visualize, and manipulate the 
 - FASTA
 - delimiter-separated values format (e.g. comma-separated values or CSV format)
 
-Additionally, fuc can parse output data from the following programs:
+Additionally, fuc can be used to parse output data from the following programs:
 
 - Ensembl Variant Effect Predictor (VEP)
 - SnpEff
@@ -62,7 +62,7 @@ SAM/BAM/CRAM
 
 To print the header of a BAM file:
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc bam_head example.bam
 
@@ -71,7 +71,7 @@ BED
 
 To find intersection between BED files:
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc bed_intxn 1.bed 2.bed 3.bed > intersect.bed
 
@@ -80,7 +80,7 @@ FASTQ
 
 To count sequence reads in a FASTQ file:
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc fq_count example.fastq
 
@@ -89,13 +89,13 @@ FUC
 
 To check whether a file exists in the operating system:
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc fuc_exist example.txt
 
 To find all VCF files within the current directory recursively:
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc fuc_find . vcf
 
@@ -104,7 +104,7 @@ TABLE
 
 To merge two tab-delimited files:
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc tbl_merge left.txt right.txt > merged.txt
 
@@ -113,13 +113,13 @@ VCF
 
 To merge VCF files:
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc vcf_merge 1.vcf 2.vcf 3.vcf > merged.vcf
 
 To filter a VCF file annotated by Ensemble VEP:
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc vcf_vep in.vcf 'SYMBOL == "TP53"' > out.vcf
 
@@ -247,19 +247,19 @@ The following packages are required to run fuc:
 
 There are various ways you can install fuc. The recommended way is via conda:
 
-.. code-block:: console
+.. code-block:: text
 
    $ conda install -c bioconda fuc
 
 Above will automatically download and install all the dependencies as well. Alternatively, you can use pip to install fuc and all of its dependencies:
 
-.. code-block:: console
+.. code-block:: text
 
    $ pip install fuc
 
 Finally, you can clone the GitHub repository and then install fuc this way:
 
-.. code-block:: console
+.. code-block:: text
 
    $ git clone https://github.com/sbslee/fuc
    $ cd fuc
@@ -274,7 +274,7 @@ For detailed documentations on fuc's CLI and API, please refer to the `Read the 
 
 For getting help on CLI:
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc -h
    usage: fuc [-h] [-v] COMMAND ...
@@ -317,7 +317,7 @@ For getting help on CLI:
 
 For getting help on a specific command (e.g. vcf_merge):
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc vcf_merge -h
 

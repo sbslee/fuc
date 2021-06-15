@@ -11,6 +11,7 @@ from difflib import SequenceMatcher
 from urllib.request import urlretrieve
 from pathlib import Path
 import pysam
+import warnings
 
 FUC_PATH = pathlib.Path(__file__).parent.parent.parent.absolute()
 
@@ -136,6 +137,7 @@ def extract_sequence(fasta, region):
     """
     try:
         sequence = pysam.faidx(fasta, region).split('\n')[1]
-    except pysam.SamtoolsError:
+    except pysam.SamtoolsError as e:
+        warnings.warn(str(e))
         sequence = ''
     return sequence

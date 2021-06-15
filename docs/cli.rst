@@ -11,7 +11,7 @@ This section describes command line interface (CLI) for the fuc package.
 
 For getting help on CLI:
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc -h
    usage: fuc [-h] [-v] COMMAND ...
@@ -54,14 +54,14 @@ For getting help on CLI:
 
 For getting help on a specific command (e.g. vcf_merge):
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc vcf_merge -h
 
 bam_head
 ========
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc bam_head -h
    usage: fuc bam_head [-h] bam
@@ -77,7 +77,7 @@ bam_head
 bam_index
 =========
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc bam_index -h
    usage: fuc bam_index [-h] bam
@@ -93,7 +93,7 @@ bam_index
 bam_rename
 ==========
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc bam_rename -h
    usage: fuc bam_rename [-h] input_bam name output_bam
@@ -111,7 +111,7 @@ bam_rename
 bam_slice
 =========
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc bam_slice -h
    usage: fuc bam_slice [-h] [--no_index] input_bam region output_bam
@@ -131,13 +131,13 @@ bam_slice
 bed_intxn
 =========
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc bed_intxn -h
    usage: fuc bed_intxn [-h] bed_files [bed_files ...]
    
    This command will compute intersections beween multiple BED files. It
-   essentially wraps the `pyranges.PyRanges.intersect` method.
+   essentially wraps the 'pyranges.PyRanges.intersect' method.
    
    positional arguments:
      bed_files   BED files
@@ -148,7 +148,7 @@ bed_intxn
 bed_sum
 =======
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc bed_sum -h
    usage: fuc bed_sum [-h] [--bases INT] [--decimals INT] bed_file
@@ -169,7 +169,7 @@ bed_sum
 fq_count
 ========
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc fq_count -h
    usage: fuc fq_count [-h] [paths ...]
@@ -187,7 +187,7 @@ fq_count
 fq_sum
 ======
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc fq_sum -h
    usage: fuc fq_sum [-h] fastq_file
@@ -206,7 +206,7 @@ fq_sum
 fuc_compf
 =========
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc fuc_compf -h
    usage: fuc fuc_compf [-h] file1 file2
@@ -224,7 +224,7 @@ fuc_compf
 fuc_demux
 =========
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc fuc_demux -h
    usage: fuc fuc_demux [-h] reports_dir output_dir
@@ -244,7 +244,7 @@ fuc_demux
 fuc_exist
 =========
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc fuc_exist -h
    usage: fuc fuc_exist [-h] [paths ...]
@@ -262,7 +262,7 @@ fuc_exist
 fuc_find
 ========
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc fuc_find -h
    usage: fuc fuc_find [-h] path extension
@@ -281,29 +281,55 @@ fuc_find
 maf_maf2vcf
 ===========
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc maf_maf2vcf -h
-   usage: fuc maf_maf2vcf [-h] [--fasta PATH] [--ignore_indels] maf
+   usage: fuc maf_maf2vcf [-h] [--fasta PATH] [--ignore_indels]
+                          [--cols TEXT [TEXT ...]] [--names TEXT [TEXT ...]]
+                          maf
    
-   This command will convert a MAF file to a VCF file. It essentially wraps the `pymaf.MafFrame.to_vcf` method. For details on the conversion algorithm, please visit the method's documentation page (https://sbslee-fuc.readthedocs.io/en/latest/api.html#fuc.api.pymaf.MafFrame.to_vcf).
+   This command will convert a MAF file to a VCF file. It essentially wraps the
+   'pymaf.MafFrame.to_vcf' method from the fuc API.
    
-   examples:
-     $ fuc maf_maf2vcf in.maf hs37d5.fa > out.vcf
+   In order to handle INDELs the command makes use of a reference assembly
+   (i.e. FASTA file). If SNVs are your only concern, then you do not need a
+   FASTA file and can just use the '--ignore_indels' flag. If you are going to
+   provide a FASTA file, please make sure to select the appropriate one (e.g.
+   one that matches the genome assembly). For example, if your MAF file is
+   in hg19/GRCh37, use the 'hs37d5.fa' file which can be freely downloaded
+   from the 1000 Genomes Project. For more details on the conversion algorithm,
+   please visit the 'pymaf.MafFrame.to_vcf' method's documentation page.
+   
+   In addition to basic genotype calls (e.g. '0/1'), you can extract more
+   information from the MAF file by specifying the column(s) that contain
+   additional genotype data of interest with the '--cols' argument. If
+   provided, this argument will append the requested data to individual
+   sample genotypes (e.g. '0/1:0.23'). You can also control how these
+   additional genotype information appear in the FORMAT field (e.g. AF) with
+   the '--names' argument. If this argument is not provided, the original
+   column name(s) will be displayed.
+   
+   usage examples:
+     $ fuc maf_maf2vcf in.maf --fasta hs37d5.fa > out.vcf
      $ fuc maf_maf2vcf in.maf --ignore_indels > out.vcf
+     $ fuc maf_maf2vcf in.maf --fasta hs37d5.fa --cols i_TumorVAF_WU --names AF > out.vcf
    
    positional arguments:
-     maf              MAF file
+     maf                   MAF file
    
    optional arguments:
-     -h, --help       show this help message and exit
-     --fasta PATH     FASTA file (required to include INDELs)
-     --ignore_indels  use this tag to exclude INDELs from the output
+     -h, --help            show this help message and exit
+     --fasta PATH          FASTA file (required to include INDELs in the output)
+     --ignore_indels       use this flag to exclude INDELs from the output
+     --cols TEXT [TEXT ...]
+                           column(s) in the MAF file
+     --names TEXT [TEXT ...]
+                           name(s) to be displayed in the FORMAT field
 
 maf_oncoplt
 ===========
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc maf_oncoplt -h
    usage: fuc maf_oncoplt [-h] [--count INT] [--figsize FLOAT FLOAT]
@@ -337,7 +363,7 @@ maf_oncoplt
 maf_sumplt
 ==========
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc maf_sumplt -h
    usage: fuc maf_sumplt [-h] [--figsize FLOAT FLOAT] [--title_fontsize FLOAT]
@@ -369,7 +395,7 @@ maf_sumplt
 maf_vcf2maf
 ===========
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc maf_vcf2maf -h
    usage: fuc maf_vcf2maf [-h] vcf_file
@@ -385,7 +411,7 @@ maf_vcf2maf
 tbl_merge
 =========
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc tbl_merge -h
    usage: fuc tbl_merge [-h] [--how TEXT] [--on TEXT [TEXT ...]]
@@ -411,7 +437,7 @@ tbl_merge
 tbl_sum
 =======
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc tbl_sum -h
    usage: fuc tbl_sum [-h] [--sep TEXT] [--skiprows TEXT]
@@ -450,7 +476,7 @@ tbl_sum
 vcf_merge
 =========
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc vcf_merge -h
    usage: fuc vcf_merge [-h] [--how TEXT] [--format TEXT] [--sort] [--collapse]
@@ -476,17 +502,25 @@ vcf_merge
 vcf_rename
 ==========
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc vcf_rename -h
    usage: fuc vcf_rename [-h] [--mode TEXT] [--range INT INT] [--sep TEXT]
                          vcf names
    
-   This command will rename the samples in a VCF file. It essentially wraps the 'pyvcf.VcfFrame.rename' method from the fuc API.
+   This command will rename the samples in a VCF file. It essentially wraps
+   the 'pyvcf.VcfFrame.rename' method from the fuc API.
    
-   There are three renaming modes: 'MAP', 'INDICIES', and 'RANGE'. The default mode is 'MAP' in which case the 'names' file must contain two columns, one for the old names and the other for the new names. If the mode is 'INDICIES' the first column should be the new names and the second column must be 0-based indicies of the samples to be renamed. Lastly, in the 'RANGE' mode only the first column is required but the 'range' argument must be specified. For more details on the renaming modes, please visit the 'pyvcf.VcfFrame.rename' method's documentation page (https://sbslee-fuc.readthedocs.io/en/latest/api.html#fuc.api.pyvcf.VcfFrame.rename).
+   There are three renaming modes: 'MAP', 'INDICIES', and 'RANGE'. The default
+   mode is 'MAP' in which case the 'names' file must contain two columns, one
+   for the old names and the other for the new names. If the mode is 'INDICIES'
+   the first column should be the new names and the second column must be
+   0-based indicies of the samples to be renamed. Lastly, in the 'RANGE' mode
+   only the first column is required but the 'range' argument must be specified.
+   For more details on the renaming modes, please visit the
+   'pyvcf.VcfFrame.rename' method's documentation page.
    
-   examples:
+   usage examples:
      $ fuc vcf_rename in.vcf old_new.tsv > out.vcf
      $ fuc vcf_rename in.vcf new_idx.tsv --mode INDICIES > out.vcf
      $ fuc vcf_rename in.vcf new_only.tsv --mode RANGE --range 2 5 > out.vcf
@@ -505,7 +539,7 @@ vcf_rename
 vcf_slice
 =========
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc vcf_slice -h
    usage: fuc vcf_slice [-h] [--start INT] [--end INT] vcf_file chrom
@@ -524,7 +558,7 @@ vcf_slice
 vcf_vcf2bed
 ===========
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc vcf_vcf2bed -h
    usage: fuc vcf_vcf2bed [-h] vcf_file
@@ -540,14 +574,16 @@ vcf_vcf2bed
 vcf_vep
 =======
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc vcf_vep -h
    usage: fuc vcf_vep [-h] [--opposite] [--as_zero] vcf expr
    
-   This command will filter a VCF file annotated by Ensemble VEP. It essentially wraps the `pandas.DataFrame.query` method. For details on query expression, please visit the method's documentation page (https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.query.html#pandas-dataframe-query).
+   This command will filter a VCF file annotated by Ensemble VEP. It
+   essentially wraps the 'pyvep.filter_query' method from the fuc API. For
+   details on query expression, please visit the method's documentation page.
    
-   examples:
+   usage examples:
      $ fuc vcf_vep in.vcf 'SYMBOL == "TP53"' > out.vcf
      $ fuc vcf_vep in.vcf 'SYMBOL != "TP53"' > out.vcf
      $ fuc vcf_vep in.vcf 'SYMBOL == "TP53"' --opposite > out.vcf

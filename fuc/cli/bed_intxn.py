@@ -7,7 +7,7 @@ def create_parser(subparsers):
         description=
             'This command will compute intersections beween '
             'multiple BED files. It essentially wraps the '
-            '`pyranges.PyRanges.intersect` method.'
+            "'pyranges.PyRanges.intersect' method."
     )
     parser.add_argument('bed_files', help='BED files', nargs='+')
 

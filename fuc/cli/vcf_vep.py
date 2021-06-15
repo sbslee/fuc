@@ -4,9 +4,11 @@ from argparse import RawTextHelpFormatter
 command = api.common._script_name(__file__)
 
 description = f"""
-This command will filter a VCF file annotated by Ensemble VEP. It essentially wraps the `pandas.DataFrame.query` method. For details on query expression, please visit the method's documentation page (https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.query.html#pandas-dataframe-query).
+This command will filter a VCF file annotated by Ensemble VEP. It
+essentially wraps the 'pyvep.filter_query' method from the fuc API. For
+details on query expression, please visit the method's documentation page.
 
-examples:
+usage examples:
   $ fuc {command} in.vcf 'SYMBOL == "TP53"' > out.vcf
   $ fuc {command} in.vcf 'SYMBOL != "TP53"' > out.vcf
   $ fuc {command} in.vcf 'SYMBOL == "TP53"' --opposite > out.vcf

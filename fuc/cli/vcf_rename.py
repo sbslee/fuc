@@ -5,12 +5,19 @@ from argparse import RawTextHelpFormatter
 command = api.common._script_name(__file__)
 
 description = f"""
+This command will rename the samples in a VCF file. It essentially wraps
+the 'pyvcf.VcfFrame.rename' method from the fuc API.
 
-This command will rename the samples in a VCF file. It essentially wraps the 'pyvcf.VcfFrame.rename' method from the fuc API.
+There are three renaming modes: 'MAP', 'INDICIES', and 'RANGE'. The default
+mode is 'MAP' in which case the 'names' file must contain two columns, one
+for the old names and the other for the new names. If the mode is 'INDICIES'
+the first column should be the new names and the second column must be
+0-based indicies of the samples to be renamed. Lastly, in the 'RANGE' mode
+only the first column is required but the 'range' argument must be specified.
+For more details on the renaming modes, please visit the
+'pyvcf.VcfFrame.rename' method's documentation page.
 
-There are three renaming modes: 'MAP', 'INDICIES', and 'RANGE'. The default mode is 'MAP' in which case the 'names' file must contain two columns, one for the old names and the other for the new names. If the mode is 'INDICIES' the first column should be the new names and the second column must be 0-based indicies of the samples to be renamed. Lastly, in the 'RANGE' mode only the first column is required but the 'range' argument must be specified. For more details on the renaming modes, please visit the 'pyvcf.VcfFrame.rename' method's documentation page (https://sbslee-fuc.readthedocs.io/en/latest/api.html#fuc.api.pyvcf.VcfFrame.rename).
-
-examples:
+usage examples:
   $ fuc {command} in.vcf old_new.tsv > out.vcf
   $ fuc {command} in.vcf new_idx.tsv --mode INDICIES > out.vcf
   $ fuc {command} in.vcf new_only.tsv --mode RANGE --range 2 5 > out.vcf

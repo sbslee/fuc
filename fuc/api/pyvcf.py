@@ -46,6 +46,9 @@ following:
 * AD - Total read depth for each allele (R, Integer)
 * AF - Allele fraction of the event in the tumor (1, Float)
 * DP - Read depth (1, Integer)
+
+If sample annotation data are available for a given VCF file, use
+the :class:`AnnFrame` class to import the data.
 """
 
 import pandas as pd
@@ -59,6 +62,9 @@ from matplotlib_venn import venn2, venn3
 import os
 import seaborn as sns
 import scipy.stats as stats
+
+HEADERS = ['CHROM', 'POS', 'ID', 'REF', 'ALT',
+           'QUAL', 'FILTER', 'INFO', 'FORMAT']
 
 CONTIGS = [
     '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13',
