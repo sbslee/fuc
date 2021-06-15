@@ -1,26 +1,24 @@
 from .. import api
 from argparse import RawTextHelpFormatter
 
-command = api.common._script_name()
-
 description = f"""
 This command will filter a VCF file annotated by Ensemble VEP. It
 essentially wraps the 'pyvep.filter_query' method from the fuc API. For
 details on query expression, please visit the method's documentation page.
 
 usage examples:
-  $ fuc {command} in.vcf 'SYMBOL == "TP53"' > out.vcf
-  $ fuc {command} in.vcf 'SYMBOL != "TP53"' > out.vcf
-  $ fuc {command} in.vcf 'SYMBOL == "TP53"' --opposite > out.vcf
-  $ fuc {command} in.vcf 'Consequence in ["splice_donor_variant", "stop_gained"]' > out.vcf
-  $ fuc {command} in.vcf '(SYMBOL == "TP53") and (Consequence.str.contains("stop_gained"))' > out.vcf
-  $ fuc {command} in.vcf 'gnomAD_AF < 0.001' > out.vcf
-  $ fuc {command} in.vcf 'gnomAD_AF < 0.001' --as_zero > out.vcf
+  $ fuc {api.common.script()} in.vcf 'SYMBOL == "TP53"' > out.vcf
+  $ fuc {api.common.script()} in.vcf 'SYMBOL != "TP53"' > out.vcf
+  $ fuc {api.common.script()} in.vcf 'SYMBOL == "TP53"' --opposite > out.vcf
+  $ fuc {api.common.script()} in.vcf 'Consequence in ["splice_donor_variant", "stop_gained"]' > out.vcf
+  $ fuc {api.common.script()} in.vcf '(SYMBOL == "TP53") and (Consequence.str.contains("stop_gained"))' > out.vcf
+  $ fuc {api.common.script()} in.vcf 'gnomAD_AF < 0.001' > out.vcf
+  $ fuc {api.common.script()} in.vcf 'gnomAD_AF < 0.001' --as_zero > out.vcf
 """
 
 def create_parser(subparsers):
     parser = subparsers.add_parser(
-        command,
+        api.common.script(),
         help='[VCF] filter a VCF file annotated by Ensemble VEP',
         description=description,
         formatter_class=RawTextHelpFormatter,

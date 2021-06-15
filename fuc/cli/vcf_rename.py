@@ -2,8 +2,6 @@ from .. import api
 import pandas as pd
 from argparse import RawTextHelpFormatter
 
-command = api.common._script_name()
-
 description = f"""
 This command will rename the samples in a VCF file. It essentially wraps
 the 'pyvcf.VcfFrame.rename' method from the fuc API.
@@ -18,15 +16,15 @@ For more details on the renaming modes, please visit the
 'pyvcf.VcfFrame.rename' method's documentation page.
 
 usage examples:
-  $ fuc {command} in.vcf old_new.tsv > out.vcf
-  $ fuc {command} in.vcf new_idx.tsv --mode INDICIES > out.vcf
-  $ fuc {command} in.vcf new_only.tsv --mode RANGE --range 2 5 > out.vcf
-  $ fuc {command} in.vcf old_new.csv --sep , > out.vcf
+  $ fuc {api.common.script()} in.vcf old_new.tsv > out.vcf
+  $ fuc {api.common.script()} in.vcf new_idx.tsv --mode INDICIES > out.vcf
+  $ fuc {api.common.script()} in.vcf new_only.tsv --mode RANGE --range 2 5 > out.vcf
+  $ fuc {api.common.script()} in.vcf old_new.csv --sep , > out.vcf
 """
 
 def create_parser(subparsers):
     parser = subparsers.add_parser(
-        command,
+        api.common.script(),
         help='[VCF] rename the samples in a VCF file.',
         description=description,
         formatter_class=RawTextHelpFormatter,

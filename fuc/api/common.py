@@ -16,7 +16,7 @@ import inspect
 
 FUC_PATH = pathlib.Path(__file__).parent.parent.parent.absolute()
 
-def _script_name():
+def script():
     """Return the current script's name."""
     fn = inspect.stack()[1].filename
     return pathlib.Path(fn).stem

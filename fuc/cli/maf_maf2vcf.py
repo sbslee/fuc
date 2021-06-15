@@ -1,8 +1,6 @@
 from .. import api
 from argparse import RawTextHelpFormatter
 
-command = api.common._script_name()
-
 description = f"""
 This command will convert a MAF file to a VCF file. It essentially wraps the
 'pymaf.MafFrame.to_vcf' method from the fuc API.
@@ -26,14 +24,14 @@ the '--names' argument. If this argument is not provided, the original
 column name(s) will be displayed.
 
 usage examples:
-  $ fuc {command} in.maf --fasta hs37d5.fa > out.vcf
-  $ fuc {command} in.maf --ignore_indels > out.vcf
-  $ fuc {command} in.maf --fasta hs37d5.fa --cols i_TumorVAF_WU --names AF > out.vcf
+  $ fuc {api.common.script()} in.maf --fasta hs37d5.fa > out.vcf
+  $ fuc {api.common.script()} in.maf --ignore_indels > out.vcf
+  $ fuc {api.common.script()} in.maf --fasta hs37d5.fa --cols i_TumorVAF_WU --names AF > out.vcf
 """
 
 def create_parser(subparsers):
     parser = subparsers.add_parser(
-        command,
+        api.common.script(),
         help='[MAF] convert a MAF file to a VCF file',
         description=description,
         formatter_class=RawTextHelpFormatter,

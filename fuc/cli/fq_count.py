@@ -3,13 +3,13 @@ import sys
 
 def create_parser(subparsers):
     parser = subparsers.add_parser(
-        api.common._script_name(),
+        api.common.script(),
         help='[FASTQ] count sequence reads in FASTQ files',
         description=
             'This command will count sequence reads in FASTQ '
             'files (both zipped and unzipped). It will look for stdin '
             'if there are no arguments (e.g. $ cat files.list | fuc '
-            f'{api.common._script_name()}).'
+            f'{api.common.script()}).'
     )
     parser.add_argument('paths', nargs='*',
         help='FASTQ file paths (default: stdin)')
