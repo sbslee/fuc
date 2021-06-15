@@ -875,7 +875,8 @@ class MafFrame:
     def plot_genes(
         self, count=10, mode='variants', ax=None, figsize=None, **kwargs
     ):
-        """Create a bar plot for top mutated genes.
+        """
+        Create a bar plot showing variant distirbution for top mutated genes.
 
         Parameters
         ----------
@@ -1213,6 +1214,49 @@ class MafFrame:
         ax.set_xticks([])
         return ax
 
+    def plot_vaf(self, col, ax=None, figsize=None):
+        """
+        Create a bar plot showing VAF distribution for top mutated genes.
+
+        Parameters
+        ----------
+        col : str
+            VAF column.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+
+        Examples
+        --------
+
+        .. plot::
+
+            >>> import matplotlib.pyplot as plt
+            >>> from fuc import common, pymaf
+            >>> common.load_dataset('tcga-laml')
+            >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+            >>> mf = pymaf.MafFrame.from_file(f)
+            >>> mf.plot_vaf('i_TumorVAF_WU')
+            >>> plt.tight_layout()
+        """
+        genes = self.compute_genes().index.to_list()
+        s = self.df.groupby('Hugo_Symbol')[col].median()
+        genes = s[genes].sort_values(ascending=False).index.to_list()
+        df = self.df[self.df.Hugo_Symbol.isin(genes)]
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+        sns.boxplot(x="Hugo_Symbol", y="i_TumorVAF_WU", data=df, order=genes, ax=ax)
+        sns.stripplot(x="Hugo_Symbol", y="i_TumorVAF_WU", data=df, order=genes, color=".25")
+        ax.set_xlabel('')
+        ax.set_ylabel('VAF')
+        return ax
+
     def plot_varcls(self, ax=None, figsize=None, **kwargs):
         """Create a bar plot for the nonsynonymous variant classes.
 
@@ -1544,33 +1588,3 @@ class MafFrame:
             String representation of MafFrame.
         """
         return self.df.to_csv(index=False, sep='\t')
-
-    def plot_vaf(self, col, ax=None, figsize=None):
-        """
-        Create a bar plot showing VAF distribution for each gene.
-
-        Parameters
-        ----------
-        col : str
-            VAF column.
-        ax : matplotlib.axes.Axes, optional
-            Pre-existing axes for the plot. Otherwise, crete a new one.
-        figsize : tuple, optional
-            Width, height in inches. Format: (float, float).
-
-        Returns
-        -------
-        matplotlib.axes.Axes
-            The matplotlib axes containing the plot.
-        """
-        genes = self.compute_genes().index.to_list()
-        s = self.df.groupby('Hugo_Symbol')[col].median()
-        genes = s[genes].sort_values(ascending=False).index.to_list()
-        df = self.df[self.df.Hugo_Symbol.isin(genes)]
-        if ax is None:
-            fig, ax = plt.subplots(figsize=figsize)
-        sns.boxplot(x="Hugo_Symbol", y="i_TumorVAF_WU", data=df, order=genes, ax=ax)
-        sns.swarmplot(x="Hugo_Symbol", y="i_TumorVAF_WU", data=df, order=genes, color=".25")
-        ax.set_xlabel('')
-        ax.set_ylabel('VAF')
-        return ax
