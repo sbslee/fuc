@@ -23,9 +23,9 @@ def main():
     subparsers = parser.add_subparsers(
         dest='command',
         metavar='COMMAND',
-        help='name of the command'
+        help='name of the command',
+        required=True,
     )
-    subparsers.required = True
     for name, command in commands.items():
         command.create_parser(subparsers)
     args = parser.parse_args()

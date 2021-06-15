@@ -54,7 +54,7 @@ README
 Introduction
 ============
 
-The main goal of the fuc package (pronounced just "eff-you-see") is to wrap some of the most [f]requently [u]sed [c]ommands in the field of bioinformatics into one place.
+The main goal of the fuc package (pronounced "eff-you-see") is to wrap some of the most **f**\ requently **u**\ sed **c**\ ommands in the field of bioinformatics into one place.
 
 The package supports both command line interface (CLI) and application programming interface (API) whose documentations are available at `Read the Docs <https://sbslee-fuc.readthedocs.io/en/latest/>`_.
 
