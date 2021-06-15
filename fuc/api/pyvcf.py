@@ -3858,7 +3858,7 @@ class VcfFrame:
         df = self.df.apply(one_row, axis=1)
         return df
 
-    def rename(self, names):
+    def rename(self, names, indicies=None):
         """
         Rename the samples.
 
@@ -3866,6 +3866,9 @@ class VcfFrame:
         ----------
         names : dict or list
             Dict of old names to new names or list of new names.
+        indicies : list or tuple, optional
+            List of 0-based sample indicies. Alternatively, a tuple
+            (int, int) can be used to specify an index range.
 
         Returns
         -------
@@ -3895,26 +3898,56 @@ class VcfFrame:
           CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    B    C
         0  chr1  100  .   G   A    .      .    .     GT  0/1  0/1  0/1
         1  chr2  101  .   T   C    .      .    .     GT  0/1  0/1  0/1
+        >>> vf.rename(['X', 'Y', 'Z']).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    X    Y    Z
+        0  chr1  100  .   G   A    .      .    .     GT  0/1  0/1  0/1
+        1  chr2  101  .   T   C    .      .    .     GT  0/1  0/1  0/1
         >>> vf.rename({'B': 'X', 'C': 'Y'}).df
           CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    X    Y
         0  chr1  100  .   G   A    .      .    .     GT  0/1  0/1  0/1
         1  chr2  101  .   T   C    .      .    .     GT  0/1  0/1  0/1
-        >>> vf.rename(['X', 'Y']).df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    X    Y    C
+        >>> vf.rename(['X'], indicies=[1]).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    X    C
+        0  chr1  100  .   G   A    .      .    .     GT  0/1  0/1  0/1
+        1  chr2  101  .   T   C    .      .    .     GT  0/1  0/1  0/1
+        >>> vf.rename(['X', 'Y'], indicies=(1, 3)).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    X    Y
         0  chr1  100  .   G   A    .      .    .     GT  0/1  0/1  0/1
         1  chr2  101  .   T   C    .      .    .     GT  0/1  0/1  0/1
         """
         samples = self.samples
 
+        if not isinstance(names, list) and not isinstance(names, dict):
+            raise TypeError("Argument 'names' must be dict or list.")
+
         if len(names) > len(samples):
-            raise ValueError('There are too many names.')
+            raise ValueError("There are too many names.")
+
+        if isinstance(names, list) and indicies is not None:
+            if isinstance(indicies, tuple):
+                if len(indicies) != 2:
+                    raise ValueError("Index range must be two integers.")
+                l = len(range(indicies[0], indicies[1]))
+            elif isinstance(indicies, list):
+                l = len(indicies)
+            else:
+                raise TypeError("Argument 'indicies' must be list or tuple.")
+
+            if len(names) != l:
+                raise ValueError("Names and indicies have different lengths.")
 
         if isinstance(names, list):
-            names = dict(zip(samples, names))
-        elif isinstance(names, dict):
-            pass
-        else:
-            raise TypeError("Argument 'names' must be dict or list.")
+            if len(names) == len(samples):
+                names = dict(zip(samples, names))
+            else:
+                if indicies is None:
+                    message = ("There are too few names. If this was "
+                        "intended, use the 'indicies' argument.")
+                    raise ValueError(message)
+                elif isinstance(indicies, tuple):
+                    names = dict(zip(samples[indicies[0]:indicies[1]], names))
+                else:
+                    names = dict(zip([samples[i] for i in indicies], names))
 
         for old, new in names.items():
             i = samples.index(old)

@@ -10,9 +10,9 @@ def create_parser(subparsers):
     )
     parser.add_argument('vcf_file', help='VCF file')
     parser.add_argument('chrom', help='chromosome')
-    parser.add_argument('--start', metavar='INTEGER', type=int,
+    parser.add_argument('--start', metavar='INT', type=int,
         help='start position')
-    parser.add_argument('--end', metavar='INTEGER', type=int,
+    parser.add_argument('--end', metavar='INT', type=int,
         help='end position')
 
 def main(args):

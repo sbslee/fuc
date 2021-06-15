@@ -25,7 +25,7 @@ def create_parser(subparsers):
     )
     parser.add_argument(
         '--count',
-        metavar='INTEGER',
+        metavar='INT',
         type=int,
         default=10,
         help='number of top mutated genes to display (default: 10)'

@@ -4,9 +4,9 @@ import pysam
 def create_parser(subparsers):
     parser = subparsers.add_parser(
         api.common._script_name(__file__),
-        help='[BAM] slice a BAM file',
+        help='[BAM] slice a SAM/BAM/CRAM file',
         description=
-            'This command will slice a BAM file. By default, the command '
+            'This command will slice a SAM/BAM/CRAM file. By default, the command '
             'will create a accompanying index file (.bai) for the output '
             'BAM file.'
     )

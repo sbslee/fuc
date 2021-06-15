@@ -19,16 +19,16 @@ def create_parser(subparsers):
         "(default: 'inner')")
     parser.add_argument('--on', metavar='TEXT', nargs='+',
         help='column names to join on')
-    parser.add_argument('--left_delimiter', metavar='TEXT', default='\t',
-        help="left delimiter (default: '\\t')")
-    parser.add_argument('--right_delimiter', metavar='TEXT', default='\t',
-        help="right delimiter (default: '\\t')")
-    parser.add_argument('--output_delimiter', metavar='TEXT', default='\t',
-        help="output delimiter (default: '\\t')")
+    parser.add_argument('--left_sep', metavar='TEXT', default='\t',
+        help="left delimiter to use (default: '\\t')")
+    parser.add_argument('--right_sep', metavar='TEXT', default='\t',
+        help="right delimiter to use (default: '\\t')")
+    parser.add_argument('--output_sep', metavar='TEXT', default='\t',
+        help="output delimiter to use (default: '\\t')")
     return parser
 
 def main(args):
-    df1 = pd.read_table(args.left_file, delimiter=args.left_delimiter)
-    df2 = pd.read_table(args.right_file, delimiter=args.right_delimiter)
+    df1 = pd.read_table(args.left_file, sep=args.left_sep)
+    df2 = pd.read_table(args.right_file, sep=args.right_sep)
     df3 = df1.merge(df2, on=args.on, how=args.how)
-    print(df3.to_csv(sep=args.output_delimiter, index=False))
+    print(df3.to_csv(sep=args.output_sep, index=False))

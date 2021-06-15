@@ -1414,6 +1414,11 @@ class MafFrame:
         VcfFrame
             The VcfFrame object.
         """
+        # Sanity check.
+        if not ignore_indels and fasta is None:
+            m = "A FASTA file is required when 'ignore_indels' is False."
+            raise ValueError(m)
+
         df = self.df.pivot(
             index=[
                 'Chromosome', 'Start_Position',
@@ -1445,8 +1450,6 @@ class MafFrame:
         if ignore_indels:
             i = (df.REF.isin(l)) & (df.ALT.isin(l))
             df = df[i]
-        elif fasta is None:
-            raise ValueError('FASTA file not found.')
         else:
             def one_row(r):
                 if r.REF in l and r.ALT in l:

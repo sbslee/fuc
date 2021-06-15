@@ -12,9 +12,9 @@ def create_parser(subparsers):
             "for example, use '--bases 1000' to display base pairs in kb."
     )
     parser.add_argument('bed_file', help='input BED file')
-    parser.add_argument('--bases', metavar='INTEGER', type=int, default=1,
+    parser.add_argument('--bases', metavar='INT', type=int, default=1,
         help='number used to divide the bases (default: 1)')
-    parser.add_argument('--decimals', metavar='INTEGER', type=int, default=0,
+    parser.add_argument('--decimals', metavar='INT', type=int, default=0,
         help='maximum number of decimals (default: 0)')
 
 def main(args):

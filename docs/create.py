@@ -56,9 +56,9 @@ Introduction
 
 The main goal of the fuc package is to wrap some of the most frequently used commands in the field of bioinformatics into one place.
 
-You can use fuc for both command line interface (CLI) and application programming interface (API) whose documentations are available at `Read the Docs <https://sbslee-fuc.readthedocs.io/en/latest/>`_.
+The package supports both command line interface (CLI) and application programming interface (API) whose documentations are available at `Read the Docs <https://sbslee-fuc.readthedocs.io/en/latest/>`_.
 
-Currently, the following file formats are supported by fuc:
+Currently, fuc can be used to analyze, summarize, visualize, and manipulate the following file formats:
 
 - Sequence Alignment/Map (SAM)
 - Binary Alignment/Map (BAM)
@@ -70,7 +70,7 @@ Currently, the following file formats are supported by fuc:
 - FASTA
 - delimiter-separated values format (e.g. comma-separated values or CSV format)
 
-Additionally, you can use fuc to parse output data from the following programs:
+Additionally, fuc can parse output data from the following programs:
 
 - Ensembl Variant Effect Predictor (VEP)
 - SnpEff

@@ -16,10 +16,10 @@ def create_parser(subparsers):
         help='table file'
     )
     parser.add_argument(
-        '--delimiter',
+        '--sep',
         metavar='TEXT',
         default='\t',
-        help="delimiter (default: '\\t')"
+        help="delimiter to use (default: '\\t')"
     )
     parser.add_argument(
         '--skiprows',
@@ -68,7 +68,7 @@ def main(args):
     else:
         skiprows = int(args.skiprows)
     df = pd.read_table(args.table_file,
-                       delimiter=args.delimiter,
+                       sep=args.sep,
                        skiprows=skiprows,
                        na_values=args.na_values,
                        keep_default_na=args.keep_default_na)

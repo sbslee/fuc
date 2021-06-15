@@ -25,9 +25,9 @@ For getting help on CLI:
    positional arguments:
      COMMAND        name of the command
        bam_head     [BAM] print the header of a SAM/BAM/CRAM file
-       bam_index    [BAM] index a BAM file
-       bam_rename   [BAM] rename the sample in a BAM file
-       bam_slice    [BAM] slice a BAM file
+       bam_index    [BAM] index a SAM/BAM/CRAM file
+       bam_rename   [BAM] rename the samples in a SAM/BAM/CRAM file
+       bam_slice    [BAM] slice a SAM/BAM/CRAM file
        bed_intxn    [BED] find intersection of two or more BED files
        bed_sum      [BED] summarize a BED file
        fq_count     [FASTQ] count sequence reads in FASTQ files
@@ -43,6 +43,7 @@ For getting help on CLI:
        tbl_merge    [TABLE] merge two table files
        tbl_sum      [TABLE] summarize a table file
        vcf_merge    [VCF] merge two or more VCF files
+       vcf_rename   [VCF] rename the samples in a VCF file.
        vcf_slice    [VCF] slice a VCF file
        vcf_vcf2bed  [VCF] convert a VCF file to a BED file
        vcf_vep      [VCF] filter a VCF file annotated by Ensemble VEP
@@ -79,12 +80,12 @@ bam_index
 .. code-block:: console
 
    $ fuc bam_index -h
-   usage: fuc bam_index [-h] bam_file
+   usage: fuc bam_index [-h] bam
    
-   This command will index a BAM file.
+   This command will index a SAM/BAM/CRAM file.
    
    positional arguments:
-     bam_file    BAM file
+     bam         SAM/BAM/CRAM file
    
    optional arguments:
      -h, --help  show this help message and exit
@@ -97,10 +98,10 @@ bam_rename
    $ fuc bam_rename -h
    usage: fuc bam_rename [-h] input_bam name output_bam
    
-   This command will rename the sample in a BAM file.
+   This command will rename the sample in a SAM/BAM/CRAM file.
    
    positional arguments:
-     input_bam   input BAM file
+     input_bam   SAM/BAM/CRAM file
      name        sample name
      output_bam  output BAM file
    
@@ -115,8 +116,8 @@ bam_slice
    $ fuc bam_slice -h
    usage: fuc bam_slice [-h] [--no_index] input_bam region output_bam
    
-   This command will slice a BAM file. By default, the command will create a
-   accompanying index file (.bai) for the output BAM file.
+   This command will slice a SAM/BAM/CRAM file. By default, the command will
+   create a accompanying index file (.bai) for the output BAM file.
    
    positional arguments:
      input_bam   input BAM file
@@ -150,7 +151,7 @@ bed_sum
 .. code-block:: console
 
    $ fuc bed_sum -h
-   usage: fuc bed_sum [-h] [--bases INTEGER] [--decimals INTEGER] bed_file
+   usage: fuc bed_sum [-h] [--bases INT] [--decimals INT] bed_file
    
    This command will compute summary statstics of the BED file. This includes the
    total numbers of probes and covered base pairs for each chromosome. By
@@ -158,12 +159,12 @@ bed_sum
    for example, use '--bases 1000' to display base pairs in kb.
    
    positional arguments:
-     bed_file            input BED file
+     bed_file        input BED file
    
    optional arguments:
-     -h, --help          show this help message and exit
-     --bases INTEGER     number used to divide the bases (default: 1)
-     --decimals INTEGER  maximum number of decimals (default: 0)
+     -h, --help      show this help message and exit
+     --bases INT     number used to divide the bases (default: 1)
+     --decimals INT  maximum number of decimals (default: 0)
 
 fq_count
 ========
@@ -305,7 +306,7 @@ maf_oncoplt
 .. code-block:: console
 
    $ fuc maf_oncoplt -h
-   usage: fuc maf_oncoplt [-h] [--count INTEGER] [--figsize FLOAT FLOAT]
+   usage: fuc maf_oncoplt [-h] [--count INT] [--figsize FLOAT FLOAT]
                           [--label_fontsize FLOAT] [--ticklabels_fontsize FLOAT]
                           [--legend_fontsize FLOAT]
                           maf_file output_file
@@ -323,7 +324,7 @@ maf_oncoplt
    
    optional arguments:
      -h, --help            show this help message and exit
-     --count INTEGER       number of top mutated genes to display (default: 10)
+     --count INT           number of top mutated genes to display (default: 10)
      --figsize FLOAT FLOAT
                            width, height in inches (default: [15, 10])
      --label_fontsize FLOAT
@@ -388,8 +389,7 @@ tbl_merge
 
    $ fuc tbl_merge -h
    usage: fuc tbl_merge [-h] [--how TEXT] [--on TEXT [TEXT ...]]
-                        [--left_delimiter TEXT] [--right_delimiter TEXT]
-                        [--output_delimiter TEXT]
+                        [--left_sep TEXT] [--right_sep TEXT] [--output_sep TEXT]
                         left_file right_file
    
    This command will merge two table files using one or more shared columns. This
@@ -404,12 +404,9 @@ tbl_merge
      --how TEXT            type of merge to be performed ['left', 'right',
                            'outer', 'inner', 'cross'] (default: 'inner')
      --on TEXT [TEXT ...]  column names to join on
-     --left_delimiter TEXT
-                           left delimiter (default: '\t')
-     --right_delimiter TEXT
-                           right delimiter (default: '\t')
-     --output_delimiter TEXT
-                           output delimiter (default: '\t')
+     --left_sep TEXT       left delimiter to use (default: '\t')
+     --right_sep TEXT      right delimiter to use (default: '\t')
+     --output_sep TEXT     output delimiter to use (default: '\t')
 
 tbl_sum
 =======
@@ -417,7 +414,7 @@ tbl_sum
 .. code-block:: console
 
    $ fuc tbl_sum -h
-   usage: fuc tbl_sum [-h] [--delimiter TEXT] [--skiprows TEXT]
+   usage: fuc tbl_sum [-h] [--sep TEXT] [--skiprows TEXT]
                       [--na_values TEXT [TEXT ...]] [--keep_default_na]
                       [--query TEXT] [--columns TEXT [TEXT ...]]
                       table_file
@@ -430,7 +427,7 @@ tbl_sum
    
    optional arguments:
      -h, --help            show this help message and exit
-     --delimiter TEXT      delimiter (default: '\t')
+     --sep TEXT            delimiter to use (default: '\t')
      --skiprows TEXT       comma-separated line numbers to skip (0-indexed) or
                            number of lines to skip at the start of the file (e.g.
                            `--skiprows 1,` will skip the second line, `--skiprows
@@ -476,24 +473,53 @@ vcf_merge
      --sort         use this flag to turn off sorting of records (default: True)
      --collapse     use this flag to collapse duplicate records (default: False)
 
+vcf_rename
+==========
+
+.. code-block:: console
+
+   $ fuc vcf_rename -h
+   usage: fuc vcf_rename [-h] [--mode TEXT] [--range INT INT] [--sep TEXT]
+                         vcf names
+   
+   This command will rename the samples in a VCF file. It essentially wraps the 'pyvcf.VcfFrame.rename' method from the fuc API.
+   
+   There are three renaming modes: 'MAP', 'INDICIES', and 'RANGE'. The default mode is 'MAP' in which case the 'names' file must contain two columns, one for the old names and the other for the new names. If the mode is 'INDICIES' the first column should be the new names and the second column must be 0-based indicies of the samples to be renamed. Lastly, in the 'RANGE' mode only the first column is required but the 'range' argument must be specified. For more details on the renaming modes, please visit the 'pyvcf.VcfFrame.rename' method's documentation page (https://sbslee-fuc.readthedocs.io/en/latest/api.html#fuc.api.pyvcf.VcfFrame.rename).
+   
+   examples:
+     $ fuc vcf_rename in.vcf old_new.tsv > out.vcf
+     $ fuc vcf_rename in.vcf new_idx.tsv --mode INDICIES > out.vcf
+     $ fuc vcf_rename in.vcf new_only.tsv --mode RANGE --range 2 5 > out.vcf
+     $ fuc vcf_rename in.vcf old_new.csv --sep , > out.vcf
+   
+   positional arguments:
+     vcf              VCF file
+     names            delimited text file
+   
+   optional arguments:
+     -h, --help       show this help message and exit
+     --mode TEXT      renaming mode (default: 'MAP') (choices: 'MAP', 'INDICIES', 'RANGE')
+     --range INT INT  specify an index range
+     --sep TEXT       delimiter to use (default: '\t')
+
 vcf_slice
 =========
 
 .. code-block:: console
 
    $ fuc vcf_slice -h
-   usage: fuc vcf_slice [-h] [--start INTEGER] [--end INTEGER] vcf_file chrom
+   usage: fuc vcf_slice [-h] [--start INT] [--end INT] vcf_file chrom
    
    This command will slice a VCF file (both zipped and unzipped).
    
    positional arguments:
-     vcf_file         VCF file
-     chrom            chromosome
+     vcf_file     VCF file
+     chrom        chromosome
    
    optional arguments:
-     -h, --help       show this help message and exit
-     --start INTEGER  start position
-     --end INTEGER    end position
+     -h, --help   show this help message and exit
+     --start INT  start position
+     --end INT    end position
 
 vcf_vcf2bed
 ===========
