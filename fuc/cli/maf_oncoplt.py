@@ -2,7 +2,7 @@ from .. import api
 import matplotlib.pyplot as plt
 
 description = f"""
-This command will create an oncoplot from a MAF file. It essentially wraps
+This command will create an oncoplot with a MAF file. It essentially wraps
 the 'pymaf.plot_oncoplot' method. Visit the method's documentation to see
 example plots.
 
@@ -18,7 +18,7 @@ def create_parser(subparsers):
     parser = api.common._add_parser(
         subparsers,
         api.common._script_name(),
-        help='[MAF] create an oncoplot from a MAF file',
+        help='[MAF] create an oncoplot with a MAF file',
         description=description,
     )
     parser.add_argument('maf', help='MAF file')

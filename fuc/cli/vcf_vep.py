@@ -9,8 +9,10 @@ usage examples:
   $ fuc {api.common._script_name()} in.vcf 'SYMBOL == "TP53"' > out.vcf
   $ fuc {api.common._script_name()} in.vcf 'SYMBOL != "TP53"' > out.vcf
   $ fuc {api.common._script_name()} in.vcf 'SYMBOL == "TP53"' --opposite > out.vcf
-  $ fuc {api.common._script_name()} in.vcf 'Consequence in ["splice_donor_variant", "stop_gained"]' > out.vcf
-  $ fuc {api.common._script_name()} in.vcf '(SYMBOL == "TP53") and (Consequence.str.contains("stop_gained"))' > out.vcf
+  $ fuc {api.common._script_name()} in.vcf \\
+      'Consequence in ["splice_donor_variant", "stop_gained"]' > out.vcf
+  $ fuc {api.common._script_name()} in.vcf \\
+      '(SYMBOL == "TP53") and (Consequence.str.contains("stop_gained"))' > out.vcf
   $ fuc {api.common._script_name()} in.vcf 'gnomAD_AF < 0.001' > out.vcf
   $ fuc {api.common._script_name()} in.vcf 'gnomAD_AF < 0.001' --as_zero > out.vcf
 """
@@ -38,4 +40,4 @@ def create_parser(subparsers):
 def main(args):
     vf = api.pyvcf.VcfFrame.from_file(args.vcf)
     filtered_vf = api.pyvep.filter_query(vf, args.expr, opposite=args.opposite, as_zero=args.as_zero)
-    print(filtered_vf.to_string())
+    print(filtered_vf.to_string(), end='')

@@ -1,10 +1,15 @@
 from .. import api
 
 description = f"""
-This command will slice a VCF file (both zipped and unzipped).
+This command will slice a VCF file (both zipped and unzipped). It essentially
+wraps the 'pyvcf.VcfFrame.slice' method.
 
 usage examples:
-  $ fuc {api.common._script_name()} in.vcf chr4 --start 300 --end 400 > sliced.vcf
+  $ fuc {api.common._script_name()} in.vcf chr1 > sliced.vcf
+  $ fuc {api.common._script_name()} in.vcf chr1:100-300 > sliced.vcf
+  $ fuc {api.common._script_name()} in.vcf chr1:100 > sliced.vcf
+  $ fuc {api.common._script_name()} in.vcf chr1:100- > sliced.vcf
+  $ fuc {api.common._script_name()} in.vcf chr1:-300 > sliced.vcf
 """
 
 def create_parser(subparsers):
@@ -14,14 +19,10 @@ def create_parser(subparsers):
         help='[VCF] slice a VCF file',
         description=description,
     )
-    parser.add_argument('vcf_file', help='VCF file')
-    parser.add_argument('chrom', help='chromosome')
-    parser.add_argument('--start', metavar='INT', type=int,
-        help='start position')
-    parser.add_argument('--end', metavar='INT', type=int,
-        help='end position')
+    parser.add_argument('vcf', help='VCF file')
+    parser.add_argument('region', help="region ('chrom:start-end')")
 
 def main(args):
-    vf = api.pyvcf.VcfFrame.from_file(args.vcf_file)
-    sliced_vf = vf.slice(args.chrom, start=args.start, end=args.end)
-    print(sliced_vf.to_string())
+    vf = api.pyvcf.VcfFrame.from_file(args.vcf)
+    sliced_vf = vf.slice(args.region)
+    print(sliced_vf.to_string(), end='')

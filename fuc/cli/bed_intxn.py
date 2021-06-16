@@ -22,4 +22,4 @@ def main(args):
     final_bf = bfs[0]
     for bf in bfs[1:]:
         final_bf = final_bf.intersect(bf)
-    print(final_bf.to_string())
+    print(final_bf.to_string(), end='')

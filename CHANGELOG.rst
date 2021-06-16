@@ -9,6 +9,8 @@ Changelog
 * Add new method :meth:`pyvcf.VcfFrame.rename`.
 * Add new command :command:`vcf_rename`.
 * Add new method :meth:`pymaf.MafFrame.plot_vaf`.
+* Update :meth:`pyvcf.VcfFrame.slice` method.
+* Update :command:`vcf_slice`.
 
 0.12.0 (2021-06-12)
 -------------------

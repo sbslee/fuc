@@ -113,8 +113,8 @@ def parse_region(region):
     Returns
     -------
     tuple
-        The output tuple will have a shape of (chrom, start, end) with the
-        following data types: (str, int, int).
+        The output tuple will always have a shape of (chrom, start, end) with
+        the following data types: (str, int, int).
 
     Examples
     --------
@@ -122,10 +122,35 @@ def parse_region(region):
     >>> from fuc import common
     >>> common.parse_region('chr1:100-150')
     ('chr1', 100, 150)
+    >>> common.parse_region('chr1')
+    ('chr1', 0, 0)
+    >>> common.parse_region('chr1:100')
+    ('chr1', 100, 0)
+    >>> common.parse_region('chr1:100-')
+    ('chr1', 100, 0)
+    >>> common.parse_region('chr1:-100')
+    ('chr1', 0, 100)
     """
     chrom = region.split(':')[0]
-    start = int(region.split(':')[1].split('-')[0])
-    end = int(region.split(':')[1].split('-')[1])
+
+    try:
+        start = region.split(':')[1].split('-')[0]
+        if not start:
+            start = 0
+        else:
+            start = int(start)
+    except IndexError:
+        start = 0
+
+    try:
+        end = region.split(':')[1].split('-')[1]
+        if not end:
+            end = 0
+        else:
+            end = int(end)
+    except IndexError:
+        end = 0
+
     return (chrom, start, end)
 
 def extract_sequence(fasta, region):

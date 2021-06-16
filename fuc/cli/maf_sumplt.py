@@ -2,7 +2,7 @@ from .. import api
 import matplotlib.pyplot as plt
 
 description = f"""
-This command will create a summary plot for a MAF file. It essentially wraps
+This command will create a summary plot with a MAF file. It essentially wraps
 the 'pymaf.plot_summary' method. Visit the method's documentation to see
 example plots.
 
@@ -18,7 +18,7 @@ def create_parser(subparsers):
     parser = api.common._add_parser(
         subparsers,
         api.common._script_name(),
-        help='[MAF] create a summary plot for a MAF file',
+        help='[MAF] create a summary plot with a MAF file',
         description=description,
     )
     parser.add_argument('maf', help='MAF file')

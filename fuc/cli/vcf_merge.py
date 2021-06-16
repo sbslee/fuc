@@ -36,4 +36,4 @@ def main(args):
     vfs = [api.pyvcf.VcfFrame.from_file(x) for x in args.vcf_files]
     merged_vf = api.pyvcf.merge(vfs, format=args.format, how=args.how,
         sort=args.sort, collapse=args.collapse)
-    print(merged_vf.to_string())
+    print(merged_vf.to_string(), end='')

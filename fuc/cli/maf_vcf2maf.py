@@ -19,4 +19,4 @@ def create_parser(subparsers):
 
 def main(args):
     mf = api.pymaf.MafFrame.from_vcf(args.vcf)
-    print(mf.to_string())
+    print(mf.to_string(), end='')

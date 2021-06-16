@@ -40,4 +40,4 @@ def main(args):
     df1 = pd.read_table(args.left, sep=args.lsep)
     df2 = pd.read_table(args.right, sep=args.rsep)
     df3 = df1.merge(df2, on=args.on, how=args.how)
-    print(df3.to_csv(sep=args.osep, index=False))
+    print(df3.to_csv(sep=args.osep, index=False), end='')

@@ -31,8 +31,8 @@ For getting help on the fuc CLI:
        fuc_exist    [FUC] check whether files/directories exist
        fuc_find     [FUC] find files with certain extension recursively
        maf_maf2vcf  [MAF] convert a MAF file to a VCF file
-       maf_oncoplt  [MAF] create an oncoplot from a MAF file
-       maf_sumplt   [MAF] create a summary plot for a MAF file
+       maf_oncoplt  [MAF] create an oncoplot with a MAF file
+       maf_sumplt   [MAF] create a summary plot with a MAF file
        maf_vcf2maf  [MAF] convert an annotated VCF file to a MAF file
        tbl_merge    [TABLE] merge two table files
        tbl_sum      [TABLE] summarize a table file
@@ -392,7 +392,7 @@ maf_oncoplt
                           [--legend_fontsize FLOAT]
                           maf out
    
-   This command will create an oncoplot from a MAF file. It essentially wraps
+   This command will create an oncoplot with a MAF file. It essentially wraps
    the 'pymaf.plot_oncoplot' method. Visit the method's documentation to see
    example plots.
    
@@ -429,7 +429,7 @@ maf_sumplt
                          [--ticklabels_fontsize FLOAT] [--legend_fontsize FLOAT]
                          maf out
    
-   This command will create a summary plot for a MAF file. It essentially wraps
+   This command will create a summary plot with a MAF file. It essentially wraps
    the 'pymaf.plot_summary' method. Visit the method's documentation to see
    example plots.
    
@@ -622,21 +622,24 @@ vcf_slice
 .. code-block:: text
 
    $ fuc vcf_slice -h
-   usage: fuc vcf_slice [-h] [--start INT] [--end INT] vcf_file chrom
+   usage: fuc vcf_slice [-h] vcf region
    
-   This command will slice a VCF file (both zipped and unzipped).
+   This command will slice a VCF file (both zipped and unzipped). It essentially
+   wraps the 'pyvcf.VcfFrame.slice' method.
    
    usage examples:
-     $ fuc vcf_slice in.vcf chr4 --start 300 --end 400 > sliced.vcf
+     $ fuc vcf_slice in.vcf chr1 > sliced.vcf
+     $ fuc vcf_slice in.vcf chr1:100-300 > sliced.vcf
+     $ fuc vcf_slice in.vcf chr1:100 > sliced.vcf
+     $ fuc vcf_slice in.vcf chr1:100- > sliced.vcf
+     $ fuc vcf_slice in.vcf chr1:-300 > sliced.vcf
    
    positional arguments:
-     vcf_file     VCF file
-     chrom        chromosome
+     vcf         VCF file
+     region      region ('chrom:start-end')
    
    optional arguments:
-     -h, --help   show this help message and exit
-     --start INT  start position
-     --end INT    end position
+     -h, --help  show this help message and exit
 
 vcf_vcf2bed
 ===========

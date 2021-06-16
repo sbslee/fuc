@@ -56,12 +56,12 @@ import numpy as np
 import gzip
 from copy import deepcopy
 from Bio import bgzf
-from . import pybed
 import matplotlib.pyplot as plt
 from matplotlib_venn import venn2, venn3
 import os
 import seaborn as sns
 import scipy.stats as stats
+from . import pybed, common
 
 HEADERS = ['CHROM', 'POS', 'ID', 'REF', 'ALT',
            'QUAL', 'FILTER', 'INFO', 'FORMAT']
@@ -3664,17 +3664,14 @@ class VcfFrame:
         vf = self.__class__(self.copy_meta(), df)
         return vf
 
-    def slice(self, chrom, start=None, end=None):
-        """Return a sliced VcfFrame for the given region.
+    def slice(self, region):
+        """
+        Slice the VcfFrame for the region.
 
         Parameters
         ----------
-        chrom : str
-            Chromosome.
-        start : int, optional
-            Start position.
-        end : int, optional
-            End position.
+        region : str
+            Region ('chrom:start-end').
 
         Returns
         -------
@@ -3704,20 +3701,29 @@ class VcfFrame:
         1  chr1  205  .   T   C    .      .    .     GT    1/1
         2  chr1  297  .   A   T    .      .    .     GT    0/1
         3  chr2  101  .   C   A    .      .    .     GT    0/1
+        >>> vf.slice('chr1:101-300').df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
+        0  chr1  205  .   T   C    .      .    .     GT    1/1
+        1  chr1  297  .   A   T    .      .    .     GT    0/1
         >>> vf.slice('chr1').df
           CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
         0  chr1  100  .   G   A    .      .    .     GT    0/1
         1  chr1  205  .   T   C    .      .    .     GT    1/1
         2  chr1  297  .   A   T    .      .    .     GT    0/1
-        >>> vf.slice('chr1', start=101, end=300).df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
-        0  chr1  205  .   T   C    .      .    .     GT    1/1
-        1  chr1  297  .   A   T    .      .    .     GT    0/1
-        >>> vf.slice('chr1', end=296).df
+        >>> vf.slice('chr1:-296').df
           CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
         0  chr1  100  .   G   A    .      .    .     GT    0/1
         1  chr1  205  .   T   C    .      .    .     GT    1/1
+        >>> vf.slice('chr1:101').df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
+        0  chr1  205  .   T   C    .      .    .     GT    1/1
+        1  chr1  297  .   A   T    .      .    .     GT    0/1
+        >>> vf.slice('chr1:101-').df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
+        0  chr1  205  .   T   C    .      .    .     GT    1/1
+        1  chr1  297  .   A   T    .      .    .     GT    0/1
         """
+        chrom, start, end = common.parse_region(region)
         df = self.df[self.df.CHROM == chrom]
         if start:
             df = df[df.POS >= start]

@@ -52,4 +52,4 @@ def main(args):
         fasta=args.fasta, ignore_indels=args.ignore_indels,
         cols=args.cols, names=args.names
     )
-    print(vf.to_string())
+    print(vf.to_string(), end='')

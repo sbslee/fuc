@@ -47,4 +47,4 @@ def main(args):
         names = df[0].to_list()
         indicies = tuple(args.range)
     vf = vf.rename(names, indicies=indicies)
-    print(vf.to_string())
+    print(vf.to_string(), end='')

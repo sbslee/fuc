@@ -121,8 +121,8 @@ For getting help on the fuc CLI:
        fuc_exist    [FUC] check whether files/directories exist
        fuc_find     [FUC] find files with certain extension recursively
        maf_maf2vcf  [MAF] convert a MAF file to a VCF file
-       maf_oncoplt  [MAF] create an oncoplot from a MAF file
-       maf_sumplt   [MAF] create a summary plot for a MAF file
+       maf_oncoplt  [MAF] create an oncoplot with a MAF file
+       maf_sumplt   [MAF] create a summary plot with a MAF file
        maf_vcf2maf  [MAF] convert an annotated VCF file to a MAF file
        tbl_merge    [TABLE] merge two table files
        tbl_sum      [TABLE] summarize a table file
