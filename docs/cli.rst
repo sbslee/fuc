@@ -61,7 +61,7 @@ bam_head
    usage: fuc bam_head [-h] bam
    
    This command will print the header of a SAM/BAM/CRAM file. It essentially
-   wraps the 'pybam.header' method from the fuc API.
+   wraps the 'pysam.view' method from the pysam package.
    
    usage examples:
      $ fuc bam_head in.sam
@@ -129,7 +129,7 @@ bam_slice
    usage: fuc bam_slice [-h] [--no_index] bam region out
    
    This command will slice a SAM/BAM/CRAM file. It essentially wraps the
-   'pysam.view' method from the fuc API.
+   'pysam.view' method from the pysam package.
    
    By default, the command will index the output file. Use the '--no_index' flag
    to skip indexing.

@@ -1214,7 +1214,7 @@ class MafFrame:
         ax.set_xticks([])
         return ax
 
-    def plot_vaf(self, col, ax=None, figsize=None):
+    def plot_vaf(self, col, count=10, ax=None, figsize=None):
         """
         Create a bar plot showing VAF distribution for top mutated genes.
 
@@ -1222,6 +1222,8 @@ class MafFrame:
         ----------
         col : str
             VAF column.
+        count : int, default: 10
+            Number of top mutated genes to display.
         ax : matplotlib.axes.Axes, optional
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
@@ -1245,14 +1247,13 @@ class MafFrame:
             >>> mf.plot_vaf('i_TumorVAF_WU')
             >>> plt.tight_layout()
         """
-        genes = self.compute_genes().index.to_list()
+        genes = self.compute_genes(count=count).index.to_list()
         s = self.df.groupby('Hugo_Symbol')[col].median()
         genes = s[genes].sort_values(ascending=False).index.to_list()
         df = self.df[self.df.Hugo_Symbol.isin(genes)]
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
-        sns.boxplot(x="Hugo_Symbol", y="i_TumorVAF_WU", data=df, order=genes, ax=ax)
-        sns.stripplot(x="Hugo_Symbol", y="i_TumorVAF_WU", data=df, order=genes, color=".25")
+        sns.boxplot(x='Hugo_Symbol', y=col, data=df, order=genes, ax=ax)
         ax.set_xlabel('')
         ax.set_ylabel('VAF')
         return ax

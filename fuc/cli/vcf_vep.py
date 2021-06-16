@@ -39,5 +39,6 @@ def create_parser(subparsers):
 
 def main(args):
     vf = api.pyvcf.VcfFrame.from_file(args.vcf)
-    filtered_vf = api.pyvep.filter_query(vf, args.expr, opposite=args.opposite, as_zero=args.as_zero)
+    filtered_vf = api.pyvep.filter_query(vf, args.expr,
+        opposite=args.opposite, as_zero=args.as_zero)
     print(filtered_vf.to_string(), end='')

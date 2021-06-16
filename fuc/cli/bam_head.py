@@ -1,8 +1,9 @@
 from .. import api
+import pysam
 
 description = f"""
 This command will print the header of a SAM/BAM/CRAM file. It essentially
-wraps the 'pybam.header' method from the fuc API.
+wraps the 'pysam.view' method from the pysam package.
 
 usage examples:
   $ fuc {api.common._script_name()} in.sam
@@ -20,4 +21,5 @@ def create_parser(subparsers):
     parser.add_argument('bam', help='SAM/BAM/CRAM file')
 
 def main(args):
-    print(api.pybam.header(args.bam))
+    header = pysam.view('-H', args.bam)
+    print(header, end='')
