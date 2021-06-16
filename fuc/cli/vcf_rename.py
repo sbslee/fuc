@@ -1,6 +1,5 @@
 from .. import api
 import pandas as pd
-from argparse import RawTextHelpFormatter
 
 description = f"""
 This command will rename the samples in a VCF file. It essentially wraps
@@ -23,11 +22,11 @@ usage examples:
 """
 
 def create_parser(subparsers):
-    parser = subparsers.add_parser(
+    parser = api.common._add_parser(
+        subparsers,
         api.common._script_name(),
         help='[VCF] rename the samples in a VCF file.',
         description=description,
-        formatter_class=RawTextHelpFormatter,
     )
     parser.add_argument('vcf', help='VCF file')
     parser.add_argument('names', help='delimited text file')

@@ -1,28 +1,28 @@
 from .. import api
 import matplotlib.pyplot as plt
 
-DOC_URL = 'https://sbslee-fuc.readthedocs.io/en/latest/api.html#fuc.api.pymaf.MafFrame.plot_summary'
+description = f"""
+This command will create a summary plot for a MAF file. It essentially wraps
+the 'pymaf.plot_summary' method. Visit the method's documentation to see
+example plots.
+
+The format of output image (PDF/PNG/JPEG/SVG) will be automatically
+determined by the output file's extension.
+
+usage examples:
+  $ fuc {api.common._script_name()} in.maf out.png
+  $ fuc {api.common._script_name()} in.maf out.pdf
+"""
 
 def create_parser(subparsers):
-    parser = subparsers.add_parser(
+    parser = api.common._add_parser(
+        subparsers,
         api.common._script_name(),
         help='[MAF] create a summary plot for a MAF file',
-        description=
-            'This command will create a summary plot for a MAF file. '
-            'The format of output image (PDF/PNG/JPEG/SVG) will be '
-            "automatically determined by the output file's extension. "
-            'This command essentially wraps the `pymaf.plot_summary` '
-            f"method. Visit the method's documentation ({DOC_URL}) to see "
-            'example plots.'
+        description=description,
     )
-    parser.add_argument(
-        'maf_file',
-        help='input MAF file'
-    )
-    parser.add_argument(
-        'output_file',
-        help='output image file'
-    )
+    parser.add_argument('maf', help='MAF file')
+    parser.add_argument('out', help='output image file')
     parser.add_argument(
         '--figsize',
         metavar='FLOAT',
@@ -54,11 +54,11 @@ def create_parser(subparsers):
     )
 
 def main(args):
-    mf = api.pymaf.MafFrame.from_file(args.maf_file)
+    mf = api.pymaf.MafFrame.from_file(args.maf)
     mf.plot_summary(
         figsize=args.figsize,
         title_fontsize=args.title_fontsize,
         ticklabels_fontsize=args.ticklabels_fontsize,
         legend_fontsize=args.legend_fontsize
     )
-    plt.savefig(args.output_file)
+    plt.savefig(args.out)

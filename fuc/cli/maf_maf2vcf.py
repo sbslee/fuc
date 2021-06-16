@@ -1,5 +1,4 @@
 from .. import api
-from argparse import RawTextHelpFormatter
 
 description = f"""
 This command will convert a MAF file to a VCF file. It essentially wraps the
@@ -30,11 +29,11 @@ usage examples:
 """
 
 def create_parser(subparsers):
-    parser = subparsers.add_parser(
+    parser = api.common._add_parser(
+        subparsers,
         api.common._script_name(),
         help='[MAF] convert a MAF file to a VCF file',
         description=description,
-        formatter_class=RawTextHelpFormatter,
     )
     parser.add_argument('maf', help='MAF file')
     parser.add_argument('--fasta', metavar='PATH', help='FASTA file (required to include INDELs in the output)')

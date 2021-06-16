@@ -1,16 +1,22 @@
 from .. import api
 import pandas as pd
 
+description = f"""
+This command will merge two table files using one or more shared columns.
+It essentially wraps the 'pandas.DataFrame.merge' method.
+
+usage examples:
+  $ fuc {api.common._script_name()} in.vcf > out.maf
+"""
+
 CHOICES = ['left', 'right', 'outer', 'inner', 'cross']
 
 def create_parser(subparsers):
-    parser = subparsers.add_parser(
+    parser = api.common._add_parser(
+        subparsers,
         api.common._script_name(),
         help='[TABLE] merge two table files',
-        description=
-            'This command will merge two table files using one '
-            'or more shared columns. This essentially wraps the '
-            '`pandas.DataFrame.merge` method.'
+        description=description,
     )
     parser.add_argument('left_file', help='left table file')
     parser.add_argument('right_file', help='right table file')

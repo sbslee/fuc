@@ -1,14 +1,20 @@
 from .. import api
 from pathlib import Path
 
+description = f"""
+This command will recursively find files with a certain extension, such as
+'.txt' and '.vcf', within the given directory and return their absolute paths.
+
+usage examples:
+  $ fuc {api.common._script_name()} path extension
+"""
+
 def create_parser(subparsers):
-    parser = subparsers.add_parser(
+    parser = api.common._add_parser(
+        subparsers,
         api.common._script_name(),
         help='[FUC] find files with certain extension recursively',
-        description=
-            'This command will recursively find files with a certain '
-            "extension -- such as '.txt' and '.vcf' -- within"
-            'the given directory and return their absolute paths.'
+        description=description,
     )
     parser.add_argument('path', help='directory path')
     parser.add_argument('extension', help='extension')

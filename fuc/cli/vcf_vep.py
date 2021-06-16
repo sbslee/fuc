@@ -1,5 +1,4 @@
 from .. import api
-from argparse import RawTextHelpFormatter
 
 description = f"""
 This command will filter a VCF file annotated by Ensemble VEP. It
@@ -17,11 +16,11 @@ usage examples:
 """
 
 def create_parser(subparsers):
-    parser = subparsers.add_parser(
+    parser = api.common._add_parser(
+        subparsers,
         api.common._script_name(),
         help='[VCF] filter a VCF file annotated by Ensemble VEP',
         description=description,
-        formatter_class=RawTextHelpFormatter,
     )
     parser.add_argument('vcf', help='Ensemble VEP-annotated VCF file')
     parser.add_argument('expr', help='query expression to evaluate')

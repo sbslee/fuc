@@ -1,12 +1,18 @@
 from .. import api
 
+description = f"""
+This command will slice a VCF file (both zipped and unzipped).
+
+usage examples:
+  $ fuc {api.common._script_name()} in.vcf chr4 --start 300 --end 400 > sliced.vcf
+"""
+
 def create_parser(subparsers):
-    parser = subparsers.add_parser(
+    parser = api.common._add_parser(
+        subparsers,
         api.common._script_name(),
         help='[VCF] slice a VCF file',
-        description=
-            'This command will slice a VCF file (both zipped '
-            'and unzipped).'
+        description=description,
     )
     parser.add_argument('vcf_file', help='VCF file')
     parser.add_argument('chrom', help='chromosome')
