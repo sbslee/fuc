@@ -54,6 +54,119 @@ Your contributions (e.g. feature ideas, pull requests) are most welcome.
 | Email: sbstevenlee@gmail.com
 | License: MIT License
 
+Installation
+============
+
+The following packages are required to run fuc:
+
+.. parsed-literal::
+
+   biopython
+   lxml
+   matplotlib
+   matplotlib-venn
+   numpy
+   pandas
+   pyranges
+   pysam
+   scipy
+   seaborn
+
+There are various ways you can install fuc. The recommended way is via conda:
+
+.. code-block:: text
+
+   $ conda install -c bioconda fuc
+
+Above will automatically download and install all the dependencies as well. Alternatively, you can use pip to install fuc and all of its dependencies:
+
+.. code-block:: text
+
+   $ pip install fuc
+
+Finally, you can clone the GitHub repository and then install fuc this way:
+
+.. code-block:: text
+
+   $ git clone https://github.com/sbslee/fuc
+   $ cd fuc
+   $ pip install .
+
+The nice thing about this approach is that you will have access to development versions that are not available in Anaconda or PyPI. For example, you can access a development branch with the ``git checkout`` command. When you do this, please make sure your environment already has all the dependencies installed.
+
+Getting Help
+============
+
+For detailed documentations on fuc's CLI and API, please refer to the `Read the Docs <https://sbslee-fuc.readthedocs.io/en/latest/>`_.
+
+For getting help on CLI:
+
+.. code-block:: text
+
+   $ fuc -h
+   usage: fuc [-h] [-v] COMMAND ...
+   
+   The main goal of the fuc package is to wrap some of the most frequently used
+   commands in the field of bioinformatics into one place. You can use fuc for
+   both command line interface (CLI) and application programming interface (API)
+   whose documentations are available at Read the Docs (https://sbslee-
+   fuc.readthedocs.io/en/latest).
+   
+   positional arguments:
+     COMMAND        name of the command
+       bam_head     [BAM] print the header of a SAM/BAM/CRAM file
+       bam_index    [BAM] index a SAM/BAM/CRAM file
+       bam_rename   [BAM] rename the samples in a SAM/BAM/CRAM file
+       bam_slice    [BAM] slice a SAM/BAM/CRAM file
+       bed_intxn    [BED] find intersection of two or more BED files
+       bed_sum      [BED] summarize a BED file
+       fq_count     [FASTQ] count sequence reads in FASTQ files
+       fq_sum       [FASTQ] summarize a FASTQ file
+       fuc_compf    [FUC] compare contents of two files
+       fuc_demux    [FUC] parse Reports directory from bcl2fastq or bcl2fastq2
+       fuc_exist    [FUC] check whether files/dirs exist
+       fuc_find     [FUC] find files with certain extension recursively
+       maf_maf2vcf  [MAF] convert a MAF file to a VCF file
+       maf_oncoplt  [MAF] create an oncoplot from a MAF file
+       maf_sumplt   [MAF] create a summary plot for a MAF file
+       maf_vcf2maf  [MAF] convert an annotated VCF file to a MAF file
+       tbl_merge    [TABLE] merge two table files
+       tbl_sum      [TABLE] summarize a table file
+       vcf_merge    [VCF] merge two or more VCF files
+       vcf_rename   [VCF] rename the samples in a VCF file.
+       vcf_slice    [VCF] slice a VCF file
+       vcf_vcf2bed  [VCF] convert a VCF file to a BED file
+       vcf_vep      [VCF] filter a VCF file annotated by Ensemble VEP
+   
+   optional arguments:
+     -h, --help     show this help message and exit
+     -v, --version  show the version number and exit
+
+For getting help on a specific command (e.g. vcf_merge):
+
+.. code-block:: text
+
+   $ fuc vcf_merge -h
+
+Below is the list of submodules available in API:
+
+- **common** : The common submodule is used by other fuc submodules such as pyvcf and pybed. It also provides many day-to-day actions used in the field of bioinformatics.
+- **pybam** : The pybam submodule is designed for working with sequence alignment files (SAM/BAM/CRAM). It essentially wraps the `pysam <https://pysam.readthedocs.io/en/latest/api.html>`_ package to allow fast computation and easy manipulation.
+- **pybed** : The pybed submodule is designed for working with BED files. It implements ``pybed.BedFrame`` which stores BED data as ``pandas.DataFrame`` via the `pyranges <https://github.com/biocore-ntnu/pyranges>`_ package to allow fast computation and easy manipulation. The submodule strictly adheres to the standard `BED specification <https://genome.ucsc.edu/FAQ/FAQformat.html>`_.
+- **pycov** : The pycov submodule is designed for working with depth of coverage data from sequence alingment files (SAM/BAM/CRAM). It implements ``pycov.CovFrame`` which stores read depth data as ``pandas.DataFrame`` via the `pysam <https://pysam.readthedocs.io/en/latest/api.html>`_ package to allow fast computation and easy manipulation.
+- **pyfq** : The pyfq submodule is designed for working with FASTQ files. It implements ``pyfq.FqFrame`` which stores FASTQ data as ``pandas.DataFrame`` to allow fast computation and easy manipulation.
+- **pymaf** : The pymaf submodule is designed for working with MAF files. It implements ``pymaf.MafFrame`` which stores MAF data as ``pandas.DataFrame`` to allow fast computation and easy manipulation. The ``pymaf.MafFrame`` class also contains many useful plotting methods such as ``MafFrame.plot_oncoplot`` and ``MafFrame.plot_summary``. The submodule strictly adheres to the standard `MAF specification <https://docs.gdc.cancer.gov/Data/File_Formats/MAF_Format/>`_.
+- **pysnpeff** : The pysnpeff submodule is designed for parsing VCF annotation data from the `SnpEff <https://pcingola.github.io/SnpEff/>`_ program. It should be used with ``pyvcf.VcfFrame``.
+- **pyvcf** : The pyvcf submodule is designed for working with VCF files. It implements ``pyvcf.VcfFrame`` which stores VCF data as ``pandas.DataFrame`` to allow fast computation and easy manipulation. The ``pyvcf.VcfFrame`` class also contains many useful plotting methods such as ``VcfFrame.plot_comparison`` and ``VcfFrame.plot_tmb``. The submodule strictly adheres to the standard `VCF specification <https://samtools.github.io/hts-specs/VCFv4.3.pdf>`_.
+- **pyvep** : The pyvep submodule is designed for parsing VCF annotation data from the `Ensembl VEP <https://asia.ensembl.org/info/docs/tools/vep/index.html>`_ program. It should be used with ``pyvcf.VcfFrame``.
+
+For getting help on a specific module (e.g. pyvcf):
+
+.. code:: python3
+
+   from fuc import pyvcf
+   help(pyvcf)
+
 CLI Examples
 ============
 
@@ -226,117 +339,4 @@ To create read depth profile of a region from a CRAM file:
     >>> cf.plot_region('chr12', start=21161194, end=21239796)
 
 .. image:: https://raw.githubusercontent.com/sbslee/fuc-data/main/images/coverage.png
-
-Installation
-============
-
-The following packages are required to run fuc:
-
-.. parsed-literal::
-
-   biopython
-   lxml
-   matplotlib
-   matplotlib-venn
-   numpy
-   pandas
-   pyranges
-   pysam
-   scipy
-   seaborn
-
-There are various ways you can install fuc. The recommended way is via conda:
-
-.. code-block:: text
-
-   $ conda install -c bioconda fuc
-
-Above will automatically download and install all the dependencies as well. Alternatively, you can use pip to install fuc and all of its dependencies:
-
-.. code-block:: text
-
-   $ pip install fuc
-
-Finally, you can clone the GitHub repository and then install fuc this way:
-
-.. code-block:: text
-
-   $ git clone https://github.com/sbslee/fuc
-   $ cd fuc
-   $ pip install .
-
-The nice thing about this approach is that you will have access to development versions that are not available in Anaconda or PyPI. For example, you can access a development branch with the ``git checkout`` command. When you do this, please make sure your environment already has all the dependencies installed.
-
-Getting Help
-============
-
-For detailed documentations on fuc's CLI and API, please refer to the `Read the Docs <https://sbslee-fuc.readthedocs.io/en/latest/>`_.
-
-For getting help on CLI:
-
-.. code-block:: text
-
-   $ fuc -h
-   usage: fuc [-h] [-v] COMMAND ...
-   
-   The main goal of the fuc package is to wrap some of the most frequently used
-   commands in the field of bioinformatics into one place. You can use fuc for
-   both command line interface (CLI) and application programming interface (API)
-   whose documentations are available at Read the Docs (https://sbslee-
-   fuc.readthedocs.io/en/latest).
-   
-   positional arguments:
-     COMMAND        name of the command
-       bam_head     [BAM] print the header of a SAM/BAM/CRAM file
-       bam_index    [BAM] index a SAM/BAM/CRAM file
-       bam_rename   [BAM] rename the samples in a SAM/BAM/CRAM file
-       bam_slice    [BAM] slice a SAM/BAM/CRAM file
-       bed_intxn    [BED] find intersection of two or more BED files
-       bed_sum      [BED] summarize a BED file
-       fq_count     [FASTQ] count sequence reads in FASTQ files
-       fq_sum       [FASTQ] summarize a FASTQ file
-       fuc_compf    [FUC] compare contents of two files
-       fuc_demux    [FUC] parse Reports directory from bcl2fastq or bcl2fastq2
-       fuc_exist    [FUC] check whether files/dirs exist
-       fuc_find     [FUC] find files with certain extension recursively
-       maf_maf2vcf  [MAF] convert a MAF file to a VCF file
-       maf_oncoplt  [MAF] create an oncoplot from a MAF file
-       maf_sumplt   [MAF] create a summary plot for a MAF file
-       maf_vcf2maf  [MAF] convert an annotated VCF file to a MAF file
-       tbl_merge    [TABLE] merge two table files
-       tbl_sum      [TABLE] summarize a table file
-       vcf_merge    [VCF] merge two or more VCF files
-       vcf_rename   [VCF] rename the samples in a VCF file.
-       vcf_slice    [VCF] slice a VCF file
-       vcf_vcf2bed  [VCF] convert a VCF file to a BED file
-       vcf_vep      [VCF] filter a VCF file annotated by Ensemble VEP
-   
-   optional arguments:
-     -h, --help     show this help message and exit
-     -v, --version  show the version number and exit
-
-For getting help on a specific command (e.g. vcf_merge):
-
-.. code-block:: text
-
-   $ fuc vcf_merge -h
-
-Below is the list of submodules available in API:
-
-- **common** : The common submodule is used by other fuc submodules such as pyvcf and pybed. It also provides many day-to-day actions used in the field of bioinformatics.
-- **pybam** : The pybam submodule is designed for working with sequence alignment files (SAM/BAM/CRAM). It essentially wraps the `pysam <https://pysam.readthedocs.io/en/latest/api.html>`_ package to allow fast computation and easy manipulation.
-- **pybed** : The pybed submodule is designed for working with BED files. It implements ``pybed.BedFrame`` which stores BED data as ``pandas.DataFrame`` via the `pyranges <https://github.com/biocore-ntnu/pyranges>`_ package to allow fast computation and easy manipulation. The submodule strictly adheres to the standard `BED specification <https://genome.ucsc.edu/FAQ/FAQformat.html>`_.
-- **pycov** : The pycov submodule is designed for working with depth of coverage data from sequence alingment files (SAM/BAM/CRAM). It implements ``pycov.CovFrame`` which stores read depth data as ``pandas.DataFrame`` via the `pysam <https://pysam.readthedocs.io/en/latest/api.html>`_ package to allow fast computation and easy manipulation.
-- **pyfq** : The pyfq submodule is designed for working with FASTQ files. It implements ``pyfq.FqFrame`` which stores FASTQ data as ``pandas.DataFrame`` to allow fast computation and easy manipulation.
-- **pymaf** : The pymaf submodule is designed for working with MAF files. It implements ``pymaf.MafFrame`` which stores MAF data as ``pandas.DataFrame`` to allow fast computation and easy manipulation. The ``pymaf.MafFrame`` class also contains many useful plotting methods such as ``MafFrame.plot_oncoplot`` and ``MafFrame.plot_summary``. The submodule strictly adheres to the standard `MAF specification <https://docs.gdc.cancer.gov/Data/File_Formats/MAF_Format/>`_.
-- **pysnpeff** : The pysnpeff submodule is designed for parsing VCF annotation data from the `SnpEff <https://pcingola.github.io/SnpEff/>`_ program. It should be used with ``pyvcf.VcfFrame``.
-- **pyvcf** : The pyvcf submodule is designed for working with VCF files. It implements ``pyvcf.VcfFrame`` which stores VCF data as ``pandas.DataFrame`` to allow fast computation and easy manipulation. The ``pyvcf.VcfFrame`` class also contains many useful plotting methods such as ``VcfFrame.plot_comparison`` and ``VcfFrame.plot_tmb``. The submodule strictly adheres to the standard `VCF specification <https://samtools.github.io/hts-specs/VCFv4.3.pdf>`_.
-- **pyvep** : The pyvep submodule is designed for parsing VCF annotation data from the `Ensembl VEP <https://asia.ensembl.org/info/docs/tools/vep/index.html>`_ program. It should be used with ``pyvcf.VcfFrame``.
-
-For getting help on a specific module (e.g. pyvcf):
-
-.. code:: python3
-
-   from fuc import pyvcf
-   help(pyvcf)
 

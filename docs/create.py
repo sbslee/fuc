@@ -82,6 +82,74 @@ Your contributions (e.g. feature ideas, pull requests) are most welcome.
 | Email: sbstevenlee@gmail.com
 | License: MIT License
 
+Installation
+============
+
+The following packages are required to run fuc:
+
+.. parsed-literal::
+
+   biopython
+   lxml
+   matplotlib
+   matplotlib-venn
+   numpy
+   pandas
+   pyranges
+   pysam
+   scipy
+   seaborn
+
+There are various ways you can install fuc. The recommended way is via conda:
+
+.. code-block:: text
+
+   $ conda install -c bioconda fuc
+
+Above will automatically download and install all the dependencies as well. Alternatively, you can use pip to install fuc and all of its dependencies:
+
+.. code-block:: text
+
+   $ pip install fuc
+
+Finally, you can clone the GitHub repository and then install fuc this way:
+
+.. code-block:: text
+
+   $ git clone https://github.com/sbslee/fuc
+   $ cd fuc
+   $ pip install .
+
+The nice thing about this approach is that you will have access to development versions that are not available in Anaconda or PyPI. For example, you can access a development branch with the ``git checkout`` command. When you do this, please make sure your environment already has all the dependencies installed.
+
+Getting Help
+============
+
+For detailed documentations on fuc's CLI and API, please refer to the `Read the Docs <https://sbslee-fuc.readthedocs.io/en/latest/>`_.
+
+For getting help on CLI:
+
+.. code-block:: text
+
+   $ fuc -h
+{fuc_help}
+
+For getting help on a specific command (e.g. vcf_merge):
+
+.. code-block:: text
+
+   $ fuc vcf_merge -h
+
+Below is the list of submodules available in API:
+
+{module_help}
+For getting help on a specific module (e.g. pyvcf):
+
+.. code:: python3
+
+   from fuc import pyvcf
+   help(pyvcf)
+
 CLI Examples
 ============
 
@@ -254,74 +322,6 @@ To create read depth profile of a region from a CRAM file:
     >>> cf.plot_region('chr12', start=21161194, end=21239796)
 
 .. image:: https://raw.githubusercontent.com/sbslee/fuc-data/main/images/coverage.png
-
-Installation
-============
-
-The following packages are required to run fuc:
-
-.. parsed-literal::
-
-   biopython
-   lxml
-   matplotlib
-   matplotlib-venn
-   numpy
-   pandas
-   pyranges
-   pysam
-   scipy
-   seaborn
-
-There are various ways you can install fuc. The recommended way is via conda:
-
-.. code-block:: text
-
-   $ conda install -c bioconda fuc
-
-Above will automatically download and install all the dependencies as well. Alternatively, you can use pip to install fuc and all of its dependencies:
-
-.. code-block:: text
-
-   $ pip install fuc
-
-Finally, you can clone the GitHub repository and then install fuc this way:
-
-.. code-block:: text
-
-   $ git clone https://github.com/sbslee/fuc
-   $ cd fuc
-   $ pip install .
-
-The nice thing about this approach is that you will have access to development versions that are not available in Anaconda or PyPI. For example, you can access a development branch with the ``git checkout`` command. When you do this, please make sure your environment already has all the dependencies installed.
-
-Getting Help
-============
-
-For detailed documentations on fuc's CLI and API, please refer to the `Read the Docs <https://sbslee-fuc.readthedocs.io/en/latest/>`_.
-
-For getting help on CLI:
-
-.. code-block:: text
-
-   $ fuc -h
-{fuc_help}
-
-For getting help on a specific command (e.g. vcf_merge):
-
-.. code-block:: text
-
-   $ fuc vcf_merge -h
-
-Below is the list of submodules available in API:
-
-{module_help}
-For getting help on a specific module (e.g. pyvcf):
-
-.. code:: python3
-
-   from fuc import pyvcf
-   help(pyvcf)
 
 """.format(**d)
 
