@@ -61,7 +61,7 @@ bam_head
    usage: fuc bam_head [-h] bam
    
    This command will print the header of a SAM/BAM/CRAM file. It essentially
-   wraps the 'pybam.header' method.
+   wraps the 'pybam.header' method from the fuc API.
    
    usage examples:
      $ fuc bam_head in.sam
@@ -83,7 +83,7 @@ bam_index
    usage: fuc bam_index [-h] bam
    
    This command will index a SAM/BAM/CRAM file. It essentially wraps the
-   'pysam.index' method.
+   'pysam.index' method from the pysam package.
    
    usage examples:
      $ fuc bam_index in.sam
@@ -105,7 +105,7 @@ bam_rename
    usage: fuc bam_rename [-h] bam name out
    
    This command will rename the samples in a SAM/BAM/CRAM file. It essentially
-   wraps the 'pybam.rename' method.
+   wraps the 'pybam.rename' method from the fuc API.
    
    usage examples:
      $ fuc bam_rename in.sam new_name out.sam
@@ -129,7 +129,7 @@ bam_slice
    usage: fuc bam_slice [-h] [--no_index] bam region out
    
    This command will slice a SAM/BAM/CRAM file. It essentially wraps the
-   'pysam.view' method.
+   'pysam.view' method from the fuc API.
    
    By default, the command will index the output file. Use the '--no_index' flag
    to skip indexing.
@@ -157,7 +157,7 @@ bed_intxn
    usage: fuc bed_intxn [-h] bed [bed ...]
    
    This command will compute intersections beween multiple BED files. It
-   essentially wraps the 'pybed.BedFrame.intersect' method.
+   essentially wraps the 'pybed.BedFrame.intersect' method from the fuc API.
    
    usage examples:
      $ fuc bed_intxn 1.bed 2.bed 3.bed > intersect.bed
@@ -247,7 +247,7 @@ fuc_compf
    
    This command will compare the contents of two files. It will return 'True'
    if they are identical and 'False' otherwise. It essentially wraps the
-   'filecmp.cmp' method.
+   'filecmp.cmp' method from Python.
    
    usage examples:
      $ fuc fuc_compf left.txt right.txt
@@ -393,8 +393,8 @@ maf_oncoplt
                           maf out
    
    This command will create an oncoplot with a MAF file. It essentially wraps
-   the 'pymaf.plot_oncoplot' method. Visit the method's documentation to see
-   example plots.
+   the 'pymaf.plot_oncoplot' method from the fuc API. Visit the method's
+   documentation to see example plots.
    
    The format of output image (PDF/PNG/JPEG/SVG) will be automatically
    determined by the output file's extension.
@@ -430,8 +430,8 @@ maf_sumplt
                          maf out
    
    This command will create a summary plot with a MAF file. It essentially wraps
-   the 'pymaf.plot_summary' method. Visit the method's documentation to see
-   example plots.
+   the 'pymaf.plot_summary' method from the fuc API. Visit the method's
+   documentation to see example plots.
    
    The format of output image (PDF/PNG/JPEG/SVG) will be automatically
    determined by the output file's extension.
@@ -464,7 +464,7 @@ maf_vcf2maf
    usage: fuc maf_vcf2maf [-h] vcf
    
    This command will convert an annotated VCF file to a MAF file. It essentially
-   wraps the 'pymaf.MafFrame.from_vcf' method.
+   wraps the 'pymaf.MafFrame.from_vcf' method from the fuc API.
    
    usage examples:
      $ fuc maf_vcf2maf in.vcf > out.maf
@@ -486,8 +486,9 @@ tbl_merge
                         left right
    
    This command will merge two table files using one or more shared columns.
-   It essentially wraps the 'pandas.DataFrame.merge' method. For details on the
-   merging algorithms, please visit the method's documentation page.
+   It essentially wraps the 'pandas.DataFrame.merge' method from the pandas
+   package. For details on the merging algorithms, please visit the method's
+   documentation page.
    
    usage examples:
      $ fuc tbl_merge left.tsv right.tsv > merged.tsv
@@ -519,7 +520,8 @@ tbl_sum
                       table_file
    
    This command will summarize a table file. It essentially wraps the
-   'pandas.Series.describe' and 'pandas.Series.value_counts' methods.
+   'pandas.Series.describe' and 'pandas.Series.value_counts' methods from the
+   pandas pacakge.
    
    usage examples:
      $ fuc tbl_sum table.tsv
@@ -558,8 +560,10 @@ vcf_merge
    usage: fuc vcf_merge [-h] [--how TEXT] [--format TEXT] [--sort] [--collapse]
                         vcf_files [vcf_files ...]
    
-   This command will merge multiple VCF files (both zipped and unzipped). By
-   default, only the GT subfield of the FORMAT field will be included in the
+   This command will merge multiple VCF files (both zipped and unzipped). It
+   essentially wraps the 'pyvcf.merge' method from the fuc API.
+   
+   By default, only the GT subfield of the FORMAT field will be included in the
    merged VCF. Use '--format' to include additional FORMAT subfields such as AD
    and DP.
    
@@ -625,7 +629,7 @@ vcf_slice
    usage: fuc vcf_slice [-h] vcf region
    
    This command will slice a VCF file (both zipped and unzipped). It essentially
-   wraps the 'pyvcf.VcfFrame.slice' method.
+   wraps the 'pyvcf.VcfFrame.slice' method from the fuc API.
    
    usage examples:
      $ fuc vcf_slice in.vcf chr1 > sliced.vcf
@@ -649,7 +653,8 @@ vcf_vcf2bed
    $ fuc vcf_vcf2bed -h
    usage: fuc vcf_vcf2bed [-h] vcf
    
-   This command will convert a VCF file to a BED file.
+   This command will convert a VCF file to a BED file. It essentially wraps the
+   'pyvcf.VcfFrame.to_bed' method from the fuc API.
    
    usage examples:
      $ fuc vcf_vcf2bed in.vcf > out.bed
@@ -676,8 +681,10 @@ vcf_vep
      $ fuc vcf_vep in.vcf 'SYMBOL == "TP53"' > out.vcf
      $ fuc vcf_vep in.vcf 'SYMBOL != "TP53"' > out.vcf
      $ fuc vcf_vep in.vcf 'SYMBOL == "TP53"' --opposite > out.vcf
-     $ fuc vcf_vep in.vcf 'Consequence in ["splice_donor_variant", "stop_gained"]' > out.vcf
-     $ fuc vcf_vep in.vcf '(SYMBOL == "TP53") and (Consequence.str.contains("stop_gained"))' > out.vcf
+     $ fuc vcf_vep in.vcf \
+         'Consequence in ["splice_donor_variant", "stop_gained"]' > out.vcf
+     $ fuc vcf_vep in.vcf \
+         '(SYMBOL == "TP53") and (Consequence.str.contains("stop_gained"))' > out.vcf
      $ fuc vcf_vep in.vcf 'gnomAD_AF < 0.001' > out.vcf
      $ fuc vcf_vep in.vcf 'gnomAD_AF < 0.001' --as_zero > out.vcf
    

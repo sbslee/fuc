@@ -2,7 +2,7 @@ from .. import api
 
 description = f"""
 This command will slice a VCF file (both zipped and unzipped). It essentially
-wraps the 'pyvcf.VcfFrame.slice' method.
+wraps the 'pyvcf.VcfFrame.slice' method from the fuc API.
 
 usage examples:
   $ fuc {api.common._script_name()} in.vcf chr1 > sliced.vcf

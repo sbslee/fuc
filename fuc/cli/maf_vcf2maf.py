@@ -2,7 +2,7 @@ from .. import api
 
 description = f"""
 This command will convert an annotated VCF file to a MAF file. It essentially
-wraps the 'pymaf.MafFrame.from_vcf' method.
+wraps the 'pymaf.MafFrame.from_vcf' method from the fuc API.
 
 usage examples:
   $ fuc {api.common._script_name()} in.vcf > out.maf

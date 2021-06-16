@@ -3,8 +3,9 @@ import pandas as pd
 
 description = f"""
 This command will merge two table files using one or more shared columns.
-It essentially wraps the 'pandas.DataFrame.merge' method. For details on the
-merging algorithms, please visit the method's documentation page.
+It essentially wraps the 'pandas.DataFrame.merge' method from the pandas
+package. For details on the merging algorithms, please visit the method's
+documentation page.
 
 usage examples:
   $ fuc {api.common._script_name()} left.tsv right.tsv > merged.tsv

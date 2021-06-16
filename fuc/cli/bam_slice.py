@@ -3,7 +3,7 @@ import pysam
 
 description = f"""
 This command will slice a SAM/BAM/CRAM file. It essentially wraps the
-'pysam.view' method.
+'pysam.view' method from the fuc API.
 
 By default, the command will index the output file. Use the '--no_index' flag
 to skip indexing.

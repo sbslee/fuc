@@ -2,7 +2,7 @@ from .. import api
 
 description = f"""
 This command will rename the samples in a SAM/BAM/CRAM file. It essentially
-wraps the 'pybam.rename' method.
+wraps the 'pybam.rename' method from the fuc API.
 
 usage examples:
   $ fuc {api.common._script_name()} in.sam new_name out.sam

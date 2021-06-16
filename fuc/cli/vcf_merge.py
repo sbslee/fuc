@@ -1,8 +1,10 @@
 from .. import api
 
 description = f"""
-This command will merge multiple VCF files (both zipped and unzipped). By
-default, only the GT subfield of the FORMAT field will be included in the
+This command will merge multiple VCF files (both zipped and unzipped). It
+essentially wraps the 'pyvcf.merge' method from the fuc API.
+
+By default, only the GT subfield of the FORMAT field will be included in the
 merged VCF. Use '--format' to include additional FORMAT subfields such as AD
 and DP.
 

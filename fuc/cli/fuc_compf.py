@@ -4,7 +4,7 @@ import filecmp
 description = f"""
 This command will compare the contents of two files. It will return 'True'
 if they are identical and 'False' otherwise. It essentially wraps the
-'filecmp.cmp' method.
+'filecmp.cmp' method from Python.
 
 usage examples:
   $ fuc {api.common._script_name()} left.txt right.txt

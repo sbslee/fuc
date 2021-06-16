@@ -4,7 +4,8 @@ from pandas.api.types import is_numeric_dtype
 
 description = f"""
 This command will summarize a table file. It essentially wraps the
-'pandas.Series.describe' and 'pandas.Series.value_counts' methods.
+'pandas.Series.describe' and 'pandas.Series.value_counts' methods from the
+pandas pacakge.
 
 usage examples:
   $ fuc {api.common._script_name()} table.tsv

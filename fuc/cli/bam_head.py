@@ -2,7 +2,7 @@ from .. import api
 
 description = f"""
 This command will print the header of a SAM/BAM/CRAM file. It essentially
-wraps the 'pybam.header' method.
+wraps the 'pybam.header' method from the fuc API.
 
 usage examples:
   $ fuc {api.common._script_name()} in.sam

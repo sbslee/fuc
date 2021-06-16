@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 
 description = f"""
 This command will create an oncoplot with a MAF file. It essentially wraps
-the 'pymaf.plot_oncoplot' method. Visit the method's documentation to see
-example plots.
+the 'pymaf.plot_oncoplot' method from the fuc API. Visit the method's
+documentation to see example plots.
 
 The format of output image (PDF/PNG/JPEG/SVG) will be automatically
 determined by the output file's extension.
