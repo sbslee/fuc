@@ -7,18 +7,18 @@ essentially wraps the 'pyvep.filter_query' method from the fuc API. For
 details on query expression, please visit the method's documentation page.
 
 usage examples:
-  $ fuc {api.common.script()} in.vcf 'SYMBOL == "TP53"' > out.vcf
-  $ fuc {api.common.script()} in.vcf 'SYMBOL != "TP53"' > out.vcf
-  $ fuc {api.common.script()} in.vcf 'SYMBOL == "TP53"' --opposite > out.vcf
-  $ fuc {api.common.script()} in.vcf 'Consequence in ["splice_donor_variant", "stop_gained"]' > out.vcf
-  $ fuc {api.common.script()} in.vcf '(SYMBOL == "TP53") and (Consequence.str.contains("stop_gained"))' > out.vcf
-  $ fuc {api.common.script()} in.vcf 'gnomAD_AF < 0.001' > out.vcf
-  $ fuc {api.common.script()} in.vcf 'gnomAD_AF < 0.001' --as_zero > out.vcf
+  $ fuc {api.common._script_name()} in.vcf 'SYMBOL == "TP53"' > out.vcf
+  $ fuc {api.common._script_name()} in.vcf 'SYMBOL != "TP53"' > out.vcf
+  $ fuc {api.common._script_name()} in.vcf 'SYMBOL == "TP53"' --opposite > out.vcf
+  $ fuc {api.common._script_name()} in.vcf 'Consequence in ["splice_donor_variant", "stop_gained"]' > out.vcf
+  $ fuc {api.common._script_name()} in.vcf '(SYMBOL == "TP53") and (Consequence.str.contains("stop_gained"))' > out.vcf
+  $ fuc {api.common._script_name()} in.vcf 'gnomAD_AF < 0.001' > out.vcf
+  $ fuc {api.common._script_name()} in.vcf 'gnomAD_AF < 0.001' --as_zero > out.vcf
 """
 
 def create_parser(subparsers):
     parser = subparsers.add_parser(
-        api.common.script(),
+        api.common._script_name(),
         help='[VCF] filter a VCF file annotated by Ensemble VEP',
         description=description,
         formatter_class=RawTextHelpFormatter,

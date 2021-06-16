@@ -1,23 +1,29 @@
 from .. import api
 import sys
 
+description = f"""
+This command will count sequence reads in FASTQ files (both zipped and
+unzipped). It will look for stdin if there are no arguments.
+
+usage examples:
+  $ fuc {api.common._script_name()} in.fastq
+  $ cat files.list | fuc {api.common._script_name()}
+"""
+
 def create_parser(subparsers):
-    parser = subparsers.add_parser(
-        api.common.script(),
+    parser = api.common._add_parser(
+        subparsers,
+        api.common._script_name(),
         help='[FASTQ] count sequence reads in FASTQ files',
-        description=
-            'This command will count sequence reads in FASTQ '
-            'files (both zipped and unzipped). It will look for stdin '
-            'if there are no arguments (e.g. $ cat files.list | fuc '
-            f'{api.common.script()}).'
+        description=description,
     )
-    parser.add_argument('paths', nargs='*',
-        help='FASTQ file paths (default: stdin)')
+    parser.add_argument('fastq', nargs='*',
+        help='FASTQ files (default: stdin)')
     return parser
 
 def main(args):
-    if args.paths:
-        paths = args.paths
+    if args.fastq:
+        paths = args.fastq
     elif not sys.stdin.isatty():
         paths = sys.stdin.read().rstrip('\n').split('\n')
     else:

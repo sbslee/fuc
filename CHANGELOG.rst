@@ -7,8 +7,8 @@ Changelog
 * Add new method :meth:`pymaf.MafFrame.to_vcf`.
 * :issue:`21`: Add new command :command:`maf_maf2vcf`.
 * Add new method :meth:`pyvcf.VcfFrame.rename`.
-* Add new method :meth:`pymaf.MafFrame.plot_vaf`.
 * Add new command :command:`vcf_rename`.
+* Add new method :meth:`pymaf.MafFrame.plot_vaf`.
 
 0.12.0 (2021-06-12)
 -------------------

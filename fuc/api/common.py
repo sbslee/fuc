@@ -13,13 +13,20 @@ from pathlib import Path
 import pysam
 import warnings
 import inspect
+from argparse import RawDescriptionHelpFormatter
 
 FUC_PATH = pathlib.Path(__file__).parent.parent.parent.absolute()
 
-def script():
-    """Return the current script's name."""
+def _script_name():
+    """Return the current script's file name."""
     fn = inspect.stack()[1].filename
     return pathlib.Path(fn).stem
+
+def _add_parser(subparsers, name, **kwargs):
+    """Return a formatted parser."""
+    parser = subparsers.add_parser(name,
+        formatter_class=RawDescriptionHelpFormatter, **kwargs)
+    return parser
 
 def get_similarity(a, b):
     """Return a value from 0 to 1 representing how similar two strings are."""

@@ -16,15 +16,15 @@ For more details on the renaming modes, please visit the
 'pyvcf.VcfFrame.rename' method's documentation page.
 
 usage examples:
-  $ fuc {api.common.script()} in.vcf old_new.tsv > out.vcf
-  $ fuc {api.common.script()} in.vcf new_idx.tsv --mode INDICIES > out.vcf
-  $ fuc {api.common.script()} in.vcf new_only.tsv --mode RANGE --range 2 5 > out.vcf
-  $ fuc {api.common.script()} in.vcf old_new.csv --sep , > out.vcf
+  $ fuc {api.common._script_name()} in.vcf old_new.tsv > out.vcf
+  $ fuc {api.common._script_name()} in.vcf new_idx.tsv --mode INDICIES > out.vcf
+  $ fuc {api.common._script_name()} in.vcf new_only.tsv --mode RANGE --range 2 5 > out.vcf
+  $ fuc {api.common._script_name()} in.vcf old_new.csv --sep , > out.vcf
 """
 
 def create_parser(subparsers):
     parser = subparsers.add_parser(
-        api.common.script(),
+        api.common._script_name(),
         help='[VCF] rename the samples in a VCF file.',
         description=description,
         formatter_class=RawTextHelpFormatter,

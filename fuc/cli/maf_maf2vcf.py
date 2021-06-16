@@ -24,14 +24,14 @@ the '--names' argument. If this argument is not provided, the original
 column name(s) will be displayed.
 
 usage examples:
-  $ fuc {api.common.script()} in.maf --fasta hs37d5.fa > out.vcf
-  $ fuc {api.common.script()} in.maf --ignore_indels > out.vcf
-  $ fuc {api.common.script()} in.maf --fasta hs37d5.fa --cols i_TumorVAF_WU --names AF > out.vcf
+  $ fuc {api.common._script_name()} in.maf --fasta hs37d5.fa > out.vcf
+  $ fuc {api.common._script_name()} in.maf --ignore_indels > out.vcf
+  $ fuc {api.common._script_name()} in.maf --fasta hs37d5.fa --cols i_TumorVAF_WU --names AF > out.vcf
 """
 
 def create_parser(subparsers):
     parser = subparsers.add_parser(
-        api.common.script(),
+        api.common._script_name(),
         help='[MAF] convert a MAF file to a VCF file',
         description=description,
         formatter_class=RawTextHelpFormatter,

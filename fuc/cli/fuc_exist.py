@@ -2,15 +2,21 @@ from .. import api
 from pathlib import Path
 import sys
 
+description = f"""
+This command will check whether files/dirs exist. It will return 'True' if
+they exist and 'False' otherwise. The command will look for stdin if there
+are no arguments.
+
+usage examples:
+  $ cat files.list | fuc {api.common._script_name()}
+"""
+
 def create_parser(subparsers):
-    parser = subparsers.add_parser(
-        api.common.script(),
+    parser = api.common._add_parser(
+        subparsers,
+        api.common._script_name(),
         help='[FUC] check whether files/dirs exist',
-        description='This command will check whether files/dirs exist. '
-                    "It will return 'True' if they exist and 'False' "
-                    'otherwise. The command will look for stdin if there '
-                    'are no arguments (e.g. $ cat files.list | fuc '
-                    f'{api.common.script()}).'
+        description=description,
     )
     parser.add_argument('paths', nargs='*',
         help='file/dir paths (default: stdin)')

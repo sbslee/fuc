@@ -2,7 +2,7 @@ from .. import api
 
 def create_parser(subparsers):
     parser = subparsers.add_parser(
-        api.common.script(),
+        api.common._script_name(),
         help='[VCF] slice a VCF file',
         description=
             'This command will slice a VCF file (both zipped '

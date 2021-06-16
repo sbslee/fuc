@@ -5,15 +5,26 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import os
 
+description = f"""
+This command will parse the Reports directory from the bcl2fastq or
+bcl2fastq2 prograrm. In the output directory, the command will create four
+files:
+
+- flowcell_summary.csv
+- lane_summary.csv
+- top_unknown_barcodes.csv
+- reports.pdf
+
+usage examples:
+  $ fuc {api.common._script_name()} reports_dir output_dir
+"""
+
 def create_parser(subparsers):
-    parser = subparsers.add_parser(
-        api.common.script(),
+    parser = api.common._add_parser(
+        subparsers,
+        api.common._script_name(),
         help='[FUC] parse Reports directory from bcl2fastq or bcl2fastq2',
-        description=
-            'This command will parse the Reports directory from the '
-            'bcl2fastq or bcl2fastq2 prograrm. In the output directory, the '
-            'command will create four files: flowcell_summary.csv, '
-            'lane_summary.csv, top_unknown_barcodes.csv, and reports.pdf.'
+        description=description,
     )
     parser.add_argument('reports_dir', help='Reports directory')
     parser.add_argument('output_dir', help='output directory')

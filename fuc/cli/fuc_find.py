@@ -3,7 +3,7 @@ from pathlib import Path
 
 def create_parser(subparsers):
     parser = subparsers.add_parser(
-        api.common.script(),
+        api.common._script_name(),
         help='[FUC] find files with certain extension recursively',
         description=
             'This command will recursively find files with a certain '
