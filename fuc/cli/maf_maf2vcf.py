@@ -25,7 +25,8 @@ column name(s) will be displayed.
 usage examples:
   $ fuc {api.common._script_name()} in.maf --fasta hs37d5.fa > out.vcf
   $ fuc {api.common._script_name()} in.maf --ignore_indels > out.vcf
-  $ fuc {api.common._script_name()} in.maf --fasta hs37d5.fa --cols i_TumorVAF_WU --names AF > out.vcf
+  $ fuc {api.common._script_name()} in.maf --fasta hs37d5.fa \\
+      --cols i_TumorVAF_WU --names AF > out.vcf
 """
 
 def create_parser(subparsers):
@@ -36,10 +37,14 @@ def create_parser(subparsers):
         description=description,
     )
     parser.add_argument('maf', help='MAF file')
-    parser.add_argument('--fasta', metavar='PATH', help='FASTA file (required to include INDELs in the output)')
-    parser.add_argument('--ignore_indels', action='store_true', help='use this flag to exclude INDELs from the output')
-    parser.add_argument('--cols', metavar='TEXT', nargs='+', help='column(s) in the MAF file')
-    parser.add_argument('--names', metavar='TEXT', nargs='+', help='name(s) to be displayed in the FORMAT field')
+    parser.add_argument('--fasta', metavar='PATH',
+        help='FASTA file (required to include INDELs in the output)')
+    parser.add_argument('--ignore_indels', action='store_true',
+        help='use this flag to exclude INDELs from the output')
+    parser.add_argument('--cols', metavar='TEXT', nargs='+',
+        help='column(s) in the MAF file')
+    parser.add_argument('--names', metavar='TEXT', nargs='+',
+        help='name(s) to be displayed in the FORMAT field')
 
 def main(args):
     mf = api.pymaf.MafFrame.from_file(args.maf)

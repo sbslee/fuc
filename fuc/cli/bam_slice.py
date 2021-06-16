@@ -6,11 +6,11 @@ This command will slice a SAM/BAM/CRAM file. It essentially wraps the
 'pysam.view' method.
 
 By default, the command will index the output file. Use the '--no_index' flag
-to skip this.
+to skip indexing.
 
 usage examples:
-  $ fuc {api.common._script_name()} in.bam chr1:100-200 out.bam
   $ fuc {api.common._script_name()} in.sam 4:300-400 out.sam
+  $ fuc {api.common._script_name()} in.bam chr1:100-200 out.bam
   $ fuc {api.common._script_name()} in.cram chr1:100-200 out.cram --no_index
 """
 
@@ -21,7 +21,7 @@ def create_parser(subparsers):
         help='[BAM] slice a SAM/BAM/CRAM file',
         description=description,
     )
-    parser.add_argument('bam', help='input BAM file')
+    parser.add_argument('bam', help='SAM/BAM/CRAM file')
     parser.add_argument('region', help="region ('chrom:start-end')")
     parser.add_argument('out', help='output file')
     parser.add_argument('--no_index', action='store_true',

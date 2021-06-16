@@ -6,7 +6,7 @@ includes the total numbers of probes and covered base pairs for each
 chromosome.
 
 By default, covered base paris are displayed in bp, but if you prefer you
-can, for example, use '--bases 1000' to display base pairs in kb.
+can, for example, use '--bases 1000' to display in kb.
 
 usage examples:
   $ fuc {api.common._script_name()} in.bed
@@ -21,9 +21,9 @@ def create_parser(subparsers):
     )
     parser.add_argument('bed', help='BED file')
     parser.add_argument('--bases', metavar='INT', type=int, default=1,
-        help='number used to divide the bases (default: 1)')
+        help='number to divide covered base pairs (default: 1)')
     parser.add_argument('--decimals', metavar='INT', type=int, default=0,
-        help='maximum number of decimals (default: 0)')
+        help='number of decimals (default: 0)')
 
 def main(args):
     bf = api.pybed.BedFrame.from_file(args.bed)

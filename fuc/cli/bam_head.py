@@ -5,8 +5,8 @@ This command will print the header of a SAM/BAM/CRAM file. It essentially
 wraps the 'pybam.header' method.
 
 usage examples:
-  $ fuc {api.common._script_name()} in.bam
   $ fuc {api.common._script_name()} in.sam
+  $ fuc {api.common._script_name()} in.bam
   $ fuc {api.common._script_name()} in.cram
 """
 

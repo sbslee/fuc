@@ -28,7 +28,7 @@ Introduction
 
 The main goal of the fuc package (pronounced "eff-you-see") is to wrap some of the most **f**\ requently **u**\ sed **c**\ ommands in the field of bioinformatics into one place.
 
-The package supports both command line interface (CLI) and application programming interface (API) whose documentations are available at `Read the Docs <https://sbslee-fuc.readthedocs.io/en/latest/>`_.
+The package supports both command line interface (CLI) and application programming interface (API) whose documentations are available at the `Read the Docs <https://sbslee-fuc.readthedocs.io/en/latest/>`_.
 
 Currently, fuc can be used to analyze, summarize, visualize, and manipulate the following file formats:
 
@@ -84,7 +84,7 @@ Above will automatically download and install all the dependencies as well. Alte
 
    $ pip install fuc
 
-Finally, you can clone the GitHub repository and then install fuc this way:
+Finally, you can clone the GitHub repository and then install fuc locally:
 
 .. code-block:: text
 
@@ -97,20 +97,14 @@ The nice thing about this approach is that you will have access to development v
 Getting Help
 ============
 
-For detailed documentations on fuc's CLI and API, please refer to the `Read the Docs <https://sbslee-fuc.readthedocs.io/en/latest/>`_.
+For detailed documentations on the fuc package's CLI and API, please refer to the `Read the Docs <https://sbslee-fuc.readthedocs.io/en/latest/>`_.
 
-For getting help on CLI:
+For getting help on the fuc CLI:
 
 .. code-block:: text
 
    $ fuc -h
    usage: fuc [-h] [-v] COMMAND ...
-   
-   The main goal of the fuc package is to wrap some of the most frequently used
-   commands in the field of bioinformatics into one place. You can use fuc for
-   both command line interface (CLI) and application programming interface (API)
-   whose documentations are available at Read the Docs (https://sbslee-
-   fuc.readthedocs.io/en/latest).
    
    positional arguments:
      COMMAND        name of the command
@@ -124,7 +118,7 @@ For getting help on CLI:
        fq_sum       [FASTQ] summarize a FASTQ file
        fuc_compf    [FUC] compare contents of two files
        fuc_demux    [FUC] parse Reports directory from bcl2fastq or bcl2fastq2
-       fuc_exist    [FUC] check whether files/dirs exist
+       fuc_exist    [FUC] check whether files/directories exist
        fuc_find     [FUC] find files with certain extension recursively
        maf_maf2vcf  [MAF] convert a MAF file to a VCF file
        maf_oncoplt  [MAF] create an oncoplot from a MAF file
@@ -148,7 +142,7 @@ For getting help on a specific command (e.g. vcf_merge):
 
    $ fuc vcf_merge -h
 
-Below is the list of submodules available in API:
+Below is the list of submodules available in the fuc API:
 
 - **common** : The common submodule is used by other fuc submodules such as pyvcf and pybed. It also provides many day-to-day actions used in the field of bioinformatics.
 - **pybam** : The pybam submodule is designed for working with sequence alignment files (SAM/BAM/CRAM). It essentially wraps the `pysam <https://pysam.readthedocs.io/en/latest/api.html>`_ package to allow fast computation and easy manipulation.
@@ -160,12 +154,12 @@ Below is the list of submodules available in API:
 - **pyvcf** : The pyvcf submodule is designed for working with VCF files. It implements ``pyvcf.VcfFrame`` which stores VCF data as ``pandas.DataFrame`` to allow fast computation and easy manipulation. The ``pyvcf.VcfFrame`` class also contains many useful plotting methods such as ``VcfFrame.plot_comparison`` and ``VcfFrame.plot_tmb``. The submodule strictly adheres to the standard `VCF specification <https://samtools.github.io/hts-specs/VCFv4.3.pdf>`_.
 - **pyvep** : The pyvep submodule is designed for parsing VCF annotation data from the `Ensembl VEP <https://asia.ensembl.org/info/docs/tools/vep/index.html>`_ program. It should be used with ``pyvcf.VcfFrame``.
 
-For getting help on a specific module (e.g. pyvcf):
+For getting help on a specific submodule (e.g. pyvcf):
 
 .. code:: python3
 
-   from fuc import pyvcf
-   help(pyvcf)
+   >>> from fuc import pyvcf
+   >>> help(pyvcf)
 
 CLI Examples
 ============

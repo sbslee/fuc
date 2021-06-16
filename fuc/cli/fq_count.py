@@ -7,7 +7,7 @@ unzipped). It will look for stdin if there are no arguments.
 
 usage examples:
   $ fuc {api.common._script_name()} in.fastq
-  $ cat files.list | fuc {api.common._script_name()}
+  $ cat fastq.list | fuc {api.common._script_name()}
 """
 
 def create_parser(subparsers):

@@ -7,7 +7,7 @@ merged VCF. Use '--format' to include additional FORMAT subfields such as AD
 and DP.
 
 usage examples:
-  $ fuc {api.common._script_name()} 1.vcf 2.vcf > merged.vcf
+  $ fuc {api.common._script_name()} 1.vcf 2.vcf 3.vcf > merged.vcf
 """
 
 def create_parser(subparsers):

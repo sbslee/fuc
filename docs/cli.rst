@@ -9,18 +9,12 @@ Introduction
 
 This section describes command line interface (CLI) for the fuc package.
 
-For getting help on CLI:
+For getting help on the fuc CLI:
 
 .. code-block:: text
 
    $ fuc -h
    usage: fuc [-h] [-v] COMMAND ...
-   
-   The main goal of the fuc package is to wrap some of the most frequently used
-   commands in the field of bioinformatics into one place. You can use fuc for
-   both command line interface (CLI) and application programming interface (API)
-   whose documentations are available at Read the Docs (https://sbslee-
-   fuc.readthedocs.io/en/latest).
    
    positional arguments:
      COMMAND        name of the command
@@ -34,7 +28,7 @@ For getting help on CLI:
        fq_sum       [FASTQ] summarize a FASTQ file
        fuc_compf    [FUC] compare contents of two files
        fuc_demux    [FUC] parse Reports directory from bcl2fastq or bcl2fastq2
-       fuc_exist    [FUC] check whether files/dirs exist
+       fuc_exist    [FUC] check whether files/directories exist
        fuc_find     [FUC] find files with certain extension recursively
        maf_maf2vcf  [MAF] convert a MAF file to a VCF file
        maf_oncoplt  [MAF] create an oncoplot from a MAF file
@@ -70,8 +64,8 @@ bam_head
    wraps the 'pybam.header' method.
    
    usage examples:
-     $ fuc bam_head in.bam
      $ fuc bam_head in.sam
+     $ fuc bam_head in.bam
      $ fuc bam_head in.cram
    
    positional arguments:
@@ -92,8 +86,8 @@ bam_index
    'pysam.index' method.
    
    usage examples:
-     $ fuc bam_index in.bam
      $ fuc bam_index in.sam
+     $ fuc bam_index in.bam
      $ fuc bam_index in.cram
    
    positional arguments:
@@ -110,12 +104,12 @@ bam_rename
    $ fuc bam_rename -h
    usage: fuc bam_rename [-h] bam name out
    
-   This command will rename the sample in a SAM/BAM/CRAM file. It essentially
+   This command will rename the samples in a SAM/BAM/CRAM file. It essentially
    wraps the 'pybam.rename' method.
    
    usage examples:
-     $ fuc bam_rename in.bam new_name out.bam
      $ fuc bam_rename in.sam new_name out.sam
+     $ fuc bam_rename in.bam new_name out.bam
      $ fuc bam_rename in.cram new_name out.cram
    
    positional arguments:
@@ -138,15 +132,15 @@ bam_slice
    'pysam.view' method.
    
    By default, the command will index the output file. Use the '--no_index' flag
-   to skip this.
+   to skip indexing.
    
    usage examples:
-     $ fuc bam_slice in.bam chr1:100-200 out.bam
      $ fuc bam_slice in.sam 4:300-400 out.sam
+     $ fuc bam_slice in.bam chr1:100-200 out.bam
      $ fuc bam_slice in.cram chr1:100-200 out.cram --no_index
    
    positional arguments:
-     bam         input BAM file
+     bam         SAM/BAM/CRAM file
      region      region ('chrom:start-end')
      out         output file
    
@@ -187,7 +181,7 @@ bed_sum
    chromosome.
    
    By default, covered base paris are displayed in bp, but if you prefer you
-   can, for example, use '--bases 1000' to display base pairs in kb.
+   can, for example, use '--bases 1000' to display in kb.
    
    usage examples:
      $ fuc bed_sum in.bed
@@ -197,8 +191,8 @@ bed_sum
    
    optional arguments:
      -h, --help      show this help message and exit
-     --bases INT     number used to divide the bases (default: 1)
-     --decimals INT  maximum number of decimals (default: 0)
+     --bases INT     number to divide covered base pairs (default: 1)
+     --decimals INT  number of decimals (default: 0)
 
 fq_count
 ========
@@ -213,7 +207,7 @@ fq_count
    
    usage examples:
      $ fuc fq_count in.fastq
-     $ cat files.list | fuc fq_count
+     $ cat fastq.list | fuc fq_count
    
    positional arguments:
      fastq       FASTQ files (default: stdin)
@@ -249,18 +243,18 @@ fuc_compf
 .. code-block:: text
 
    $ fuc fuc_compf -h
-   usage: fuc fuc_compf [-h] file1 file2
+   usage: fuc fuc_compf [-h] left right
    
    This command will compare the contents of two files. It will return 'True'
    if they are identical and 'False' otherwise. It essentially wraps the
    'filecmp.cmp' method.
    
    usage examples:
-     $ fuc fuc_compf 1.txt 2.txt
+     $ fuc fuc_compf left.txt right.txt
    
    positional arguments:
-     file1       first file
-     file2       second file
+     left        left file
+     right       right file
    
    optional arguments:
      -h, --help  show this help message and exit
@@ -298,17 +292,19 @@ fuc_exist
 .. code-block:: text
 
    $ fuc fuc_exist -h
-   usage: fuc fuc_exist [-h] [paths ...]
+   usage: fuc fuc_exist [-h] [files ...]
    
-   This command will check whether files/dirs exist. It will return 'True' if
-   they exist and 'False' otherwise. The command will look for stdin if there
-   are no arguments.
+   This command will check whether files/directories exist. It will return
+   'True' if they exist and 'False' otherwise. The command will look for stdin
+   if there are no arguments.
    
    usage examples:
-     $ cat files.list | fuc fuc_exist
+     $ fuc fuc_exist test.txt
+     $ fuc fuc_exist test_dir
+     $ cat test.list | fuc fuc_exist
    
    positional arguments:
-     paths       file/dir paths (default: stdin)
+     files       test files/directories (default: stdin)
    
    optional arguments:
      -h, --help  show this help message and exit
@@ -319,20 +315,22 @@ fuc_find
 .. code-block:: text
 
    $ fuc fuc_find -h
-   usage: fuc fuc_find [-h] path extension
+   usage: fuc fuc_find [-h] [--dir PATH] ext
    
-   This command will recursively find files with a certain extension, such as
-   '.txt' and '.vcf', within the given directory and return their absolute paths.
+   This command will recursively find all files with a certain extension and
+   then return their absolute paths.
    
    usage examples:
-     $ fuc fuc_find path extension
+     $ fuc fuc_find .vcf
+     $ fuc fuc_find .vcf.gz
+     $ fuc fuc_find .vcf.gz --dir ~/test_dir
    
    positional arguments:
-     path        directory path
-     extension   extension
+     ext         file extension
    
    optional arguments:
      -h, --help  show this help message and exit
+     --dir PATH  directory to search in (default: current directory)
 
 maf_maf2vcf
 ===========
@@ -368,7 +366,8 @@ maf_maf2vcf
    usage examples:
      $ fuc maf_maf2vcf in.maf --fasta hs37d5.fa > out.vcf
      $ fuc maf_maf2vcf in.maf --ignore_indels > out.vcf
-     $ fuc maf_maf2vcf in.maf --fasta hs37d5.fa --cols i_TumorVAF_WU --names AF > out.vcf
+     $ fuc maf_maf2vcf in.maf --fasta hs37d5.fa \
+         --cols i_TumorVAF_WU --names AF > out.vcf
    
    positional arguments:
      maf                   MAF file
@@ -464,7 +463,8 @@ maf_vcf2maf
    $ fuc maf_vcf2maf -h
    usage: fuc maf_vcf2maf [-h] vcf
    
-   This command will convert an annotated VCF file to a MAF file.
+   This command will convert an annotated VCF file to a MAF file. It essentially
+   wraps the 'pymaf.MafFrame.from_vcf' method.
    
    usage examples:
      $ fuc maf_vcf2maf in.vcf > out.maf
@@ -481,28 +481,31 @@ tbl_merge
 .. code-block:: text
 
    $ fuc tbl_merge -h
-   usage: fuc tbl_merge [-h] [--how TEXT] [--on TEXT [TEXT ...]]
-                        [--left_sep TEXT] [--right_sep TEXT] [--output_sep TEXT]
-                        left_file right_file
+   usage: fuc tbl_merge [-h] [--how TEXT] [--on TEXT [TEXT ...]] [--lsep TEXT]
+                        [--rsep TEXT] [--osep TEXT]
+                        left right
    
    This command will merge two table files using one or more shared columns.
-   It essentially wraps the 'pandas.DataFrame.merge' method.
+   It essentially wraps the 'pandas.DataFrame.merge' method. For details on the
+   merging algorithms, please visit the method's documentation page.
    
    usage examples:
-     $ fuc tbl_merge in.vcf > out.maf
+     $ fuc tbl_merge left.tsv right.tsv > merged.tsv
+     $ fuc tbl_merge left.csv right.tsv --lsep , > merged.tsv
+     $ fuc tbl_merge left.tsv right.tsv --how outer > merged.tsv
    
    positional arguments:
-     left_file             left table file
-     right_file            right table file
+     left                  left file
+     right                 right file
    
    optional arguments:
      -h, --help            show this help message and exit
      --how TEXT            type of merge to be performed ['left', 'right',
                            'outer', 'inner', 'cross'] (default: 'inner')
      --on TEXT [TEXT ...]  column names to join on
-     --left_sep TEXT       left delimiter to use (default: '\t')
-     --right_sep TEXT      right delimiter to use (default: '\t')
-     --output_sep TEXT     output delimiter to use (default: '\t')
+     --lsep TEXT           delimiter to use for the left file (default: '\t')
+     --rsep TEXT           delimiter to use for the right file (default: '\t')
+     --osep TEXT           delimiter to use for the output file (default: '\t')
 
 tbl_sum
 =======
@@ -519,7 +522,7 @@ tbl_sum
    'pandas.Series.describe' and 'pandas.Series.value_counts' methods.
    
    usage examples:
-     $ fuc tbl_sum table.txt
+     $ fuc tbl_sum table.tsv
    
    positional arguments:
      table_file            table file
@@ -561,7 +564,7 @@ vcf_merge
    and DP.
    
    usage examples:
-     $ fuc vcf_merge 1.vcf 2.vcf > merged.vcf
+     $ fuc vcf_merge 1.vcf 2.vcf 3.vcf > merged.vcf
    
    positional arguments:
      vcf_files      VCF files
