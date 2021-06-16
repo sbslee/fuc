@@ -46,6 +46,9 @@ following:
 * AD - Total read depth for each allele (R, Integer)
 * AF - Allele fraction of the event in the tumor (1, Float)
 * DP - Read depth (1, Integer)
+
+If sample annotation data are available for a given VCF file, use
+the :class:`AnnFrame` class to import the data.
 """
 
 import pandas as pd
@@ -53,12 +56,15 @@ import numpy as np
 import gzip
 from copy import deepcopy
 from Bio import bgzf
-from . import pybed
 import matplotlib.pyplot as plt
 from matplotlib_venn import venn2, venn3
 import os
 import seaborn as sns
 import scipy.stats as stats
+from . import pybed, common
+
+HEADERS = ['CHROM', 'POS', 'ID', 'REF', 'ALT',
+           'QUAL', 'FILTER', 'INFO', 'FORMAT']
 
 CONTIGS = [
     '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13',
@@ -3658,17 +3664,14 @@ class VcfFrame:
         vf = self.__class__(self.copy_meta(), df)
         return vf
 
-    def slice(self, chrom, start=None, end=None):
-        """Return a sliced VcfFrame for the given region.
+    def slice(self, region):
+        """
+        Slice the VcfFrame for the region.
 
         Parameters
         ----------
-        chrom : str
-            Chromosome.
-        start : int, optional
-            Start position.
-        end : int, optional
-            End position.
+        region : str
+            Region ('chrom:start-end').
 
         Returns
         -------
@@ -3698,20 +3701,29 @@ class VcfFrame:
         1  chr1  205  .   T   C    .      .    .     GT    1/1
         2  chr1  297  .   A   T    .      .    .     GT    0/1
         3  chr2  101  .   C   A    .      .    .     GT    0/1
+        >>> vf.slice('chr1:101-300').df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
+        0  chr1  205  .   T   C    .      .    .     GT    1/1
+        1  chr1  297  .   A   T    .      .    .     GT    0/1
         >>> vf.slice('chr1').df
           CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
         0  chr1  100  .   G   A    .      .    .     GT    0/1
         1  chr1  205  .   T   C    .      .    .     GT    1/1
         2  chr1  297  .   A   T    .      .    .     GT    0/1
-        >>> vf.slice('chr1', start=101, end=300).df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
-        0  chr1  205  .   T   C    .      .    .     GT    1/1
-        1  chr1  297  .   A   T    .      .    .     GT    0/1
-        >>> vf.slice('chr1', end=296).df
+        >>> vf.slice('chr1:-296').df
           CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
         0  chr1  100  .   G   A    .      .    .     GT    0/1
         1  chr1  205  .   T   C    .      .    .     GT    1/1
+        >>> vf.slice('chr1:101').df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
+        0  chr1  205  .   T   C    .      .    .     GT    1/1
+        1  chr1  297  .   A   T    .      .    .     GT    0/1
+        >>> vf.slice('chr1:101-').df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
+        0  chr1  205  .   T   C    .      .    .     GT    1/1
+        1  chr1  297  .   A   T    .      .    .     GT    0/1
         """
+        chrom, start, end = common.parse_region(region)
         df = self.df[self.df.CHROM == chrom]
         if start:
             df = df[df.POS >= start]
@@ -3857,3 +3869,107 @@ class VcfFrame:
             return r[9:].apply(one_gt)
         df = self.df.apply(one_row, axis=1)
         return df
+
+    def rename(self, names, indicies=None):
+        """
+        Rename the samples.
+
+        Parameters
+        ----------
+        names : dict or list
+            Dict of old names to new names or list of new names.
+        indicies : list or tuple, optional
+            List of 0-based sample indicies. Alternatively, a tuple
+            (int, int) can be used to specify an index range.
+
+        Returns
+        -------
+        VcfFrame
+            Updated VcfFrame.
+
+        Examples
+        --------
+
+        >>> from fuc import pyvcf
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr2'],
+        ...     'POS': [100, 101],
+        ...     'ID': ['.', '.'],
+        ...     'REF': ['G', 'T'],
+        ...     'ALT': ['A', 'C'],
+        ...     'QUAL': ['.', '.'],
+        ...     'FILTER': ['.', '.'],
+        ...     'INFO': ['.', '.'],
+        ...     'FORMAT': ['GT', 'GT'],
+        ...     'A': ['0/1', '0/1'],
+        ...     'B': ['0/1', '0/1'],
+        ...     'C': ['0/1', '0/1'],
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    B    C
+        0  chr1  100  .   G   A    .      .    .     GT  0/1  0/1  0/1
+        1  chr2  101  .   T   C    .      .    .     GT  0/1  0/1  0/1
+        >>> vf.rename(['X', 'Y', 'Z']).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    X    Y    Z
+        0  chr1  100  .   G   A    .      .    .     GT  0/1  0/1  0/1
+        1  chr2  101  .   T   C    .      .    .     GT  0/1  0/1  0/1
+        >>> vf.rename({'B': 'X', 'C': 'Y'}).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    X    Y
+        0  chr1  100  .   G   A    .      .    .     GT  0/1  0/1  0/1
+        1  chr2  101  .   T   C    .      .    .     GT  0/1  0/1  0/1
+        >>> vf.rename(['X'], indicies=[1]).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    X    C
+        0  chr1  100  .   G   A    .      .    .     GT  0/1  0/1  0/1
+        1  chr2  101  .   T   C    .      .    .     GT  0/1  0/1  0/1
+        >>> vf.rename(['X', 'Y'], indicies=(1, 3)).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    X    Y
+        0  chr1  100  .   G   A    .      .    .     GT  0/1  0/1  0/1
+        1  chr2  101  .   T   C    .      .    .     GT  0/1  0/1  0/1
+        """
+        samples = self.samples
+
+        if not isinstance(names, list) and not isinstance(names, dict):
+            raise TypeError("Argument 'names' must be dict or list.")
+
+        if len(names) > len(samples):
+            raise ValueError("There are too many names.")
+
+        if isinstance(names, list) and indicies is not None:
+            if isinstance(indicies, tuple):
+                if len(indicies) != 2:
+                    raise ValueError("Index range must be two integers.")
+                l = len(range(indicies[0], indicies[1]))
+            elif isinstance(indicies, list):
+                l = len(indicies)
+            else:
+                raise TypeError("Argument 'indicies' must be list or tuple.")
+
+            if len(names) != l:
+                raise ValueError("Names and indicies have different lengths.")
+
+        if isinstance(names, list):
+            if len(names) == len(samples):
+                names = dict(zip(samples, names))
+            else:
+                if indicies is None:
+                    message = ("There are too few names. If this was "
+                        "intended, use the 'indicies' argument.")
+                    raise ValueError(message)
+                elif isinstance(indicies, tuple):
+                    names = dict(zip(samples[indicies[0]:indicies[1]], names))
+                else:
+                    names = dict(zip([samples[i] for i in indicies], names))
+
+        for old, new in names.items():
+            i = samples.index(old)
+            samples[i] = new
+
+        if len(samples) > len(set(samples)):
+            raise ValueError('There are more than one duplicate names.')
+
+        columns = self.df.columns[:9].to_list() + samples
+        vf = self.copy()
+        vf.df.columns = columns
+
+        return vf

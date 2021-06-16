@@ -1,15 +1,22 @@
 from .. import api
 
+description = f"""
+This command will convert an annotated VCF file to a MAF file. It essentially
+wraps the 'pymaf.MafFrame.from_vcf' method from the fuc API.
+
+usage examples:
+  $ fuc {api.common._script_name()} in.vcf > out.maf
+"""
+
 def create_parser(subparsers):
-    parser = subparsers.add_parser(
-        api.common.script_name(__file__),
+    parser = api.common._add_parser(
+        subparsers,
+        api.common._script_name(),
         help='[MAF] convert an annotated VCF file to a MAF file',
-        description=
-            'This command will convert an annotated VCF '
-            'file to a MAF file.'
+        description=description,
     )
-    parser.add_argument('vcf_file', help='annotated VCF file')
+    parser.add_argument('vcf', help='VCF file')
 
 def main(args):
-    mf = api.pymaf.MafFrame.from_vcf(args.vcf_file)
-    print(mf.to_string())
+    mf = api.pymaf.MafFrame.from_vcf(args.vcf)
+    print(mf.to_string(), end='')

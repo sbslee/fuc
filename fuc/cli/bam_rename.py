@@ -1,14 +1,25 @@
 from .. import api
 
+description = f"""
+This command will rename the samples in a SAM/BAM/CRAM file. It essentially
+wraps the 'pybam.rename' method from the fuc API.
+
+usage examples:
+  $ fuc {api.common._script_name()} in.sam new_name out.sam
+  $ fuc {api.common._script_name()} in.bam new_name out.bam
+  $ fuc {api.common._script_name()} in.cram new_name out.cram
+"""
+
 def create_parser(subparsers):
-    parser = subparsers.add_parser(
-        api.common.script_name(__file__),
-        help='[BAM] add a new sample name to a BAM file',
-        description='This command will add a new sample name to a BAM file.'
+    parser = api.common._add_parser(
+        subparsers,
+        api.common._script_name(),
+        help='[BAM] rename the samples in a SAM/BAM/CRAM file',
+        description=description,
     )
-    parser.add_argument('input_bam', help='input BAM file')
+    parser.add_argument('bam', help='SAM/BAM/CRAM file')
     parser.add_argument('name', help='sample name')
-    parser.add_argument('output_bam', help='output BAM file')
+    parser.add_argument('out', help='output file')
 
 def main(args):
-    api.pybam.rename(args.input_bam, args.name, args.output_bam)
+    api.pybam.rename(args.bam, args.name, args.out)

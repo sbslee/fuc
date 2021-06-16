@@ -1,24 +1,32 @@
 from .. import api
 
+description = f"""
+This command will compute various summary statstics for a BED file. This
+includes the total numbers of probes and covered base pairs for each
+chromosome.
+
+By default, covered base paris are displayed in bp, but if you prefer you
+can, for example, use '--bases 1000' to display in kb.
+
+usage examples:
+  $ fuc {api.common._script_name()} in.bed
+"""
+
 def create_parser(subparsers):
-    parser = subparsers.add_parser(
-        api.common.script_name(__file__),
+    parser = api.common._add_parser(
+        subparsers,
+        api.common._script_name(),
         help='[BED] summarize a BED file',
-        description=
-            'This command will compute summary statstics of the '
-            'BED file. This includes the total numbers of probes and '
-            'covered base pairs for each chromosome. By default, covered '
-            'base paris are displayed in bp, but if you prefer you can, '
-            "for example, use '--bases 1000' to display base pairs in kb."
+        description=description,
     )
-    parser.add_argument('bed_file', help='input BED file')
-    parser.add_argument('--bases', metavar='INTEGER', type=int, default=1,
-        help='number used to divide the bases (default: 1)')
-    parser.add_argument('--decimals', metavar='INTEGER', type=int, default=0,
-        help='maximum number of decimals (default: 0)')
+    parser.add_argument('bed', help='BED file')
+    parser.add_argument('--bases', metavar='INT', type=int, default=1,
+        help='number to divide covered base pairs (default: 1)')
+    parser.add_argument('--decimals', metavar='INT', type=int, default=0,
+        help='number of decimals (default: 0)')
 
 def main(args):
-    bf = api.pybed.BedFrame.from_file(args.bed_file)
+    bf = api.pybed.BedFrame.from_file(args.bed)
     chrom_dict = {}
     total = [0, 0]
     for i, r in bf.gr.df.iterrows():

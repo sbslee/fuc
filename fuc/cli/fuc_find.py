@@ -1,18 +1,29 @@
 from .. import api
+
+import os
 from pathlib import Path
 
+description = f"""
+This command will recursively find all files with a certain extension and
+then return their absolute paths.
+
+usage examples:
+  $ fuc {api.common._script_name()} .vcf
+  $ fuc {api.common._script_name()} .vcf.gz
+  $ fuc {api.common._script_name()} .vcf.gz --dir ~/test_dir
+"""
+
 def create_parser(subparsers):
-    parser = subparsers.add_parser(
-        api.common.script_name(__file__),
+    parser = api.common._add_parser(
+        subparsers,
+        api.common._script_name(),
         help='[FUC] find files with certain extension recursively',
-        description=
-            'This command will recursively find files with a certain '
-            "extension -- such as '.txt' and '.vcf' -- within"
-            'the given directory and return their absolute paths.'
+        description=description,
     )
-    parser.add_argument('path', help='directory path')
-    parser.add_argument('extension', help='extension')
+    parser.add_argument('ext', help='file extension')
+    parser.add_argument('--dir', metavar='PATH', default=os.getcwd(),
+        help='directory to search in (default: current directory)')
 
 def main(args):
-    for path in Path(args.path).rglob(f'*.{args.extension}'):
+    for path in Path(args.dir).rglob(f'*{args.ext}'):
         print(path.absolute())

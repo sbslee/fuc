@@ -2,24 +2,31 @@ from .. import api
 import pandas as pd
 from pandas.api.types import is_numeric_dtype
 
+description = f"""
+This command will summarize a table file. It essentially wraps the
+'pandas.Series.describe' and 'pandas.Series.value_counts' methods from the
+pandas pacakge.
+
+usage examples:
+  $ fuc {api.common._script_name()} table.tsv
+"""
+
 def create_parser(subparsers):
-    parser = subparsers.add_parser(
-        api.common.script_name(__file__),
+    parser = api.common._add_parser(
+        subparsers,
+        api.common._script_name(),
         help='[TABLE] summarize a table file',
-        description=
-            'This command will summarize a table file. It '
-            'essentially wraps the `pandas.Series.describe` '
-            'and `pandas.Series.value_counts` methods.'
+        description=description,
     )
     parser.add_argument(
         'table_file',
         help='table file'
     )
     parser.add_argument(
-        '--delimiter',
+        '--sep',
         metavar='TEXT',
         default='\t',
-        help="delimiter (default: '\\t')"
+        help="delimiter to use (default: '\\t')"
     )
     parser.add_argument(
         '--skiprows',
@@ -68,7 +75,7 @@ def main(args):
     else:
         skiprows = int(args.skiprows)
     df = pd.read_table(args.table_file,
-                       delimiter=args.delimiter,
+                       sep=args.sep,
                        skiprows=skiprows,
                        na_values=args.na_values,
                        keep_default_na=args.keep_default_na)

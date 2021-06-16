@@ -9,33 +9,35 @@ Introduction
 
 This section describes command line interface (CLI) for the fuc package.
 
-For getting help on CLI:
+For getting help on the fuc CLI:
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc -h
    usage: fuc [-h] [-v] COMMAND ...
    
    positional arguments:
      COMMAND        name of the command
-       bam_head     [BAM] print the header of a BAM file
-       bam_index    [BAM] index a BAM file
-       bam_rename   [BAM] add a new sample name to a BAM file
-       bam_slice    [BAM] slice a BAM file
+       bam_head     [BAM] print the header of a SAM/BAM/CRAM file
+       bam_index    [BAM] index a SAM/BAM/CRAM file
+       bam_rename   [BAM] rename the samples in a SAM/BAM/CRAM file
+       bam_slice    [BAM] slice a SAM/BAM/CRAM file
        bed_intxn    [BED] find intersection of two or more BED files
        bed_sum      [BED] summarize a BED file
        fq_count     [FASTQ] count sequence reads in FASTQ files
        fq_sum       [FASTQ] summarize a FASTQ file
        fuc_compf    [FUC] compare contents of two files
        fuc_demux    [FUC] parse Reports directory from bcl2fastq or bcl2fastq2
-       fuc_exist    [FUC] check whether files/dirs exist
+       fuc_exist    [FUC] check whether files/directories exist
        fuc_find     [FUC] find files with certain extension recursively
-       maf_oncoplt  [MAF] create an oncoplot from a MAF file
-       maf_sumplt   [MAF] create a summary plot for a MAF file
+       maf_maf2vcf  [MAF] convert a MAF file to a VCF file
+       maf_oncoplt  [MAF] create an oncoplot with a MAF file
+       maf_sumplt   [MAF] create a summary plot with a MAF file
        maf_vcf2maf  [MAF] convert an annotated VCF file to a MAF file
        tbl_merge    [TABLE] merge two table files
        tbl_sum      [TABLE] summarize a table file
        vcf_merge    [VCF] merge two or more VCF files
+       vcf_rename   [VCF] rename the samples in a VCF file.
        vcf_slice    [VCF] slice a VCF file
        vcf_vcf2bed  [VCF] convert a VCF file to a BED file
        vcf_vep      [VCF] filter a VCF file annotated by Ensemble VEP
@@ -46,22 +48,28 @@ For getting help on CLI:
 
 For getting help on a specific command (e.g. vcf_merge):
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc vcf_merge -h
 
 bam_head
 ========
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc bam_head -h
-   usage: fuc bam_head [-h] bam_file
+   usage: fuc bam_head [-h] bam
    
-   This command will print the header of a BAM file.
+   This command will print the header of a SAM/BAM/CRAM file. It essentially
+   wraps the 'pysam.view' method from the pysam package.
+   
+   usage examples:
+     $ fuc bam_head in.sam
+     $ fuc bam_head in.bam
+     $ fuc bam_head in.cram
    
    positional arguments:
-     bam_file    BAM file
+     bam         SAM/BAM/CRAM file
    
    optional arguments:
      -h, --help  show this help message and exit
@@ -69,15 +77,21 @@ bam_head
 bam_index
 =========
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc bam_index -h
-   usage: fuc bam_index [-h] bam_file
+   usage: fuc bam_index [-h] bam
    
-   This command will index a BAM file.
+   This command will index a SAM/BAM/CRAM file. It essentially wraps the
+   'pysam.index' method from the pysam package.
+   
+   usage examples:
+     $ fuc bam_index in.sam
+     $ fuc bam_index in.bam
+     $ fuc bam_index in.cram
    
    positional arguments:
-     bam_file    BAM file
+     bam         SAM/BAM/CRAM file
    
    optional arguments:
      -h, --help  show this help message and exit
@@ -85,17 +99,23 @@ bam_index
 bam_rename
 ==========
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc bam_rename -h
-   usage: fuc bam_rename [-h] input_bam name output_bam
+   usage: fuc bam_rename [-h] bam name out
    
-   This command will add a new sample name to a BAM file.
+   This command will rename the samples in a SAM/BAM/CRAM file. It essentially
+   wraps the 'pybam.rename' method from the fuc API.
+   
+   usage examples:
+     $ fuc bam_rename in.sam new_name out.sam
+     $ fuc bam_rename in.bam new_name out.bam
+     $ fuc bam_rename in.cram new_name out.cram
    
    positional arguments:
-     input_bam   input BAM file
+     bam         SAM/BAM/CRAM file
      name        sample name
-     output_bam  output BAM file
+     out         output file
    
    optional arguments:
      -h, --help  show this help message and exit
@@ -103,18 +123,26 @@ bam_rename
 bam_slice
 =========
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc bam_slice -h
-   usage: fuc bam_slice [-h] [--no_index] input_bam region output_bam
+   usage: fuc bam_slice [-h] [--no_index] bam region out
    
-   This command will slice a BAM file. By default, the command will create a
-   accompanying index file (.bai) for the output BAM file.
+   This command will slice a SAM/BAM/CRAM file. It essentially wraps the
+   'pysam.view' method from the pysam package.
+   
+   By default, the command will index the output file. Use the '--no_index' flag
+   to skip indexing.
+   
+   usage examples:
+     $ fuc bam_slice in.sam 4:300-400 out.sam
+     $ fuc bam_slice in.bam chr1:100-200 out.bam
+     $ fuc bam_slice in.cram chr1:100-200 out.cram --no_index
    
    positional arguments:
-     input_bam   input BAM file
-     region      target region
-     output_bam  output BAM file
+     bam         SAM/BAM/CRAM file
+     region      region ('chrom:start-end')
+     out         output file
    
    optional arguments:
      -h, --help  show this help message and exit
@@ -123,16 +151,19 @@ bam_slice
 bed_intxn
 =========
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc bed_intxn -h
-   usage: fuc bed_intxn [-h] bed_files [bed_files ...]
+   usage: fuc bed_intxn [-h] bed [bed ...]
    
    This command will compute intersections beween multiple BED files. It
-   essentially wraps the `pyranges.PyRanges.intersect` method.
+   essentially wraps the 'pybed.BedFrame.intersect' method from the fuc API.
+   
+   usage examples:
+     $ fuc bed_intxn 1.bed 2.bed 3.bed > intersect.bed
    
    positional arguments:
-     bed_files   BED files
+     bed         BED files
    
    optional arguments:
      -h, --help  show this help message and exit
@@ -140,38 +171,46 @@ bed_intxn
 bed_sum
 =======
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc bed_sum -h
-   usage: fuc bed_sum [-h] [--bases INTEGER] [--decimals INTEGER] bed_file
+   usage: fuc bed_sum [-h] [--bases INT] [--decimals INT] bed
    
-   This command will compute summary statstics of the BED file. This includes the
-   total numbers of probes and covered base pairs for each chromosome. By
-   default, covered base paris are displayed in bp, but if you prefer you can,
-   for example, use '--bases 1000' to display base pairs in kb.
+   This command will compute various summary statstics for a BED file. This
+   includes the total numbers of probes and covered base pairs for each
+   chromosome.
+   
+   By default, covered base paris are displayed in bp, but if you prefer you
+   can, for example, use '--bases 1000' to display in kb.
+   
+   usage examples:
+     $ fuc bed_sum in.bed
    
    positional arguments:
-     bed_file            input BED file
+     bed             BED file
    
    optional arguments:
-     -h, --help          show this help message and exit
-     --bases INTEGER     number used to divide the bases (default: 1)
-     --decimals INTEGER  maximum number of decimals (default: 0)
+     -h, --help      show this help message and exit
+     --bases INT     number to divide covered base pairs (default: 1)
+     --decimals INT  number of decimals (default: 0)
 
 fq_count
 ========
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc fq_count -h
-   usage: fuc fq_count [-h] [paths ...]
+   usage: fuc fq_count [-h] [fastq ...]
    
    This command will count sequence reads in FASTQ files (both zipped and
-   unzipped). It will look for stdin if there are no arguments (e.g. $ cat
-   files.list | fuc fq_count).
+   unzipped). It will look for stdin if there are no arguments.
+   
+   usage examples:
+     $ fuc fq_count in.fastq
+     $ cat fastq.list | fuc fq_count
    
    positional arguments:
-     paths       FASTQ file paths (default: stdin)
+     fastq       FASTQ files (default: stdin)
    
    optional arguments:
      -h, --help  show this help message and exit
@@ -179,18 +218,21 @@ fq_count
 fq_sum
 ======
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc fq_sum -h
-   usage: fuc fq_sum [-h] fastq_file
+   usage: fuc fq_sum [-h] fastq
    
    This command will output a summary of the input FASTQ file (both zipped and
    unqzipped). The summary includes the total number of sequence reads, the
    distribution of read lengths, and the numbers of unique and duplicate
    sequences.
    
+   usage examples:
+     $ fuc fq_sum in.fastq
+   
    positional arguments:
-     fastq_file  input FASTQ file
+     fastq       FASTQ file
    
    optional arguments:
      -h, --help  show this help message and exit
@@ -198,17 +240,21 @@ fq_sum
 fuc_compf
 =========
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc fuc_compf -h
-   usage: fuc fuc_compf [-h] file1 file2
+   usage: fuc fuc_compf [-h] left right
    
-   This command will compare the contents of two files. It will return 'True' if
-   they are identical and 'False' otherwise.
+   This command will compare the contents of two files. It will return 'True'
+   if they are identical and 'False' otherwise. It essentially wraps the
+   'filecmp.cmp' method from Python.
+   
+   usage examples:
+     $ fuc fuc_compf left.txt right.txt
    
    positional arguments:
-     file1       first file
-     file2       second file
+     left        left file
+     right       right file
    
    optional arguments:
      -h, --help  show this help message and exit
@@ -216,15 +262,22 @@ fuc_compf
 fuc_demux
 =========
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc fuc_demux -h
    usage: fuc fuc_demux [-h] reports_dir output_dir
    
-   This command will parse the Reports directory from the bcl2fastq or bcl2fastq2
-   prograrm. In the output directory, the command will create four files:
-   flowcell_summary.csv, lane_summary.csv, top_unknown_barcodes.csv, and
-   reports.pdf.
+   This command will parse the Reports directory from the bcl2fastq or
+   bcl2fastq2 prograrm. In the output directory, the command will create four
+   files:
+   
+   - flowcell_summary.csv
+   - lane_summary.csv
+   - top_unknown_barcodes.csv
+   - reports.pdf
+   
+   usage examples:
+     $ fuc fuc_demux reports_dir output_dir
    
    positional arguments:
      reports_dir  Reports directory
@@ -236,17 +289,22 @@ fuc_demux
 fuc_exist
 =========
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc fuc_exist -h
-   usage: fuc fuc_exist [-h] [paths ...]
+   usage: fuc fuc_exist [-h] [files ...]
    
-   This command will check whether files/dirs exist. It will return 'True' if
-   they exist and 'False' otherwise. The command will look for stdin if there are
-   no arguments (e.g. $ cat files.list | fuc fuc_exist).
+   This command will check whether files/directories exist. It will return
+   'True' if they exist and 'False' otherwise. The command will look for stdin
+   if there are no arguments.
+   
+   usage examples:
+     $ fuc fuc_exist test.txt
+     $ fuc fuc_exist test_dir
+     $ cat test.list | fuc fuc_exist
    
    positional arguments:
-     paths       file/dir paths (default: stdin)
+     files       test files/directories (default: stdin)
    
    optional arguments:
      -h, --help  show this help message and exit
@@ -254,47 +312,104 @@ fuc_exist
 fuc_find
 ========
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc fuc_find -h
-   usage: fuc fuc_find [-h] path extension
+   usage: fuc fuc_find [-h] [--dir PATH] ext
    
-   This command will recursively find files with a certain extension -- such as
-   '.txt' and '.vcf' -- withinthe given directory and return their absolute
-   paths.
+   This command will recursively find all files with a certain extension and
+   then return their absolute paths.
+   
+   usage examples:
+     $ fuc fuc_find .vcf
+     $ fuc fuc_find .vcf.gz
+     $ fuc fuc_find .vcf.gz --dir ~/test_dir
    
    positional arguments:
-     path        directory path
-     extension   extension
+     ext         file extension
    
    optional arguments:
      -h, --help  show this help message and exit
+     --dir PATH  directory to search in (default: current directory)
+
+maf_maf2vcf
+===========
+
+.. code-block:: text
+
+   $ fuc maf_maf2vcf -h
+   usage: fuc maf_maf2vcf [-h] [--fasta PATH] [--ignore_indels]
+                          [--cols TEXT [TEXT ...]] [--names TEXT [TEXT ...]]
+                          maf
+   
+   This command will convert a MAF file to a VCF file. It essentially wraps the
+   'pymaf.MafFrame.to_vcf' method from the fuc API.
+   
+   In order to handle INDELs the command makes use of a reference assembly
+   (i.e. FASTA file). If SNVs are your only concern, then you do not need a
+   FASTA file and can just use the '--ignore_indels' flag. If you are going to
+   provide a FASTA file, please make sure to select the appropriate one (e.g.
+   one that matches the genome assembly). For example, if your MAF file is
+   in hg19/GRCh37, use the 'hs37d5.fa' file which can be freely downloaded
+   from the 1000 Genomes Project. For more details on the conversion algorithm,
+   please visit the 'pymaf.MafFrame.to_vcf' method's documentation page.
+   
+   In addition to basic genotype calls (e.g. '0/1'), you can extract more
+   information from the MAF file by specifying the column(s) that contain
+   additional genotype data of interest with the '--cols' argument. If
+   provided, this argument will append the requested data to individual
+   sample genotypes (e.g. '0/1:0.23'). You can also control how these
+   additional genotype information appear in the FORMAT field (e.g. AF) with
+   the '--names' argument. If this argument is not provided, the original
+   column name(s) will be displayed.
+   
+   usage examples:
+     $ fuc maf_maf2vcf in.maf --fasta hs37d5.fa > out.vcf
+     $ fuc maf_maf2vcf in.maf --ignore_indels > out.vcf
+     $ fuc maf_maf2vcf in.maf --fasta hs37d5.fa \
+         --cols i_TumorVAF_WU --names AF > out.vcf
+   
+   positional arguments:
+     maf                   MAF file
+   
+   optional arguments:
+     -h, --help            show this help message and exit
+     --fasta PATH          FASTA file (required to include INDELs in the output)
+     --ignore_indels       use this flag to exclude INDELs from the output
+     --cols TEXT [TEXT ...]
+                           column(s) in the MAF file
+     --names TEXT [TEXT ...]
+                           name(s) to be displayed in the FORMAT field
 
 maf_oncoplt
 ===========
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc maf_oncoplt -h
-   usage: fuc maf_oncoplt [-h] [--count INTEGER] [--figsize FLOAT FLOAT]
+   usage: fuc maf_oncoplt [-h] [--count INT] [--figsize FLOAT FLOAT]
                           [--label_fontsize FLOAT] [--ticklabels_fontsize FLOAT]
                           [--legend_fontsize FLOAT]
-                          maf_file output_file
+                          maf out
    
-   This command will create an oncoplot from a MAF file. The format of output
-   image (PDF/PNG/JPEG/SVG) will be automatically determined by the output file's
-   extension. This command essentially wraps the `pymaf.plot_oncoplot` method.
-   Visit the method's documentation (https://sbslee-
-   fuc.readthedocs.io/en/latest/api.html#fuc.api.pymaf.MafFrame.plot_oncoplot) to
-   see example plots.
+   This command will create an oncoplot with a MAF file. It essentially wraps
+   the 'pymaf.plot_oncoplot' method from the fuc API. Visit the method's
+   documentation to see example plots.
+   
+   The format of output image (PDF/PNG/JPEG/SVG) will be automatically
+   determined by the output file's extension.
+   
+   usage examples:
+     $ fuc maf_oncoplt in.maf out.png
+     $ fuc maf_oncoplt in.maf out.pdf
    
    positional arguments:
-     maf_file              input MAF file
-     output_file           output inage file
+     maf                   MAF file
+     out                   image file
    
    optional arguments:
      -h, --help            show this help message and exit
-     --count INTEGER       number of top mutated genes to display (default: 10)
+     --count INT           number of top mutated genes to display (default: 10)
      --figsize FLOAT FLOAT
                            width, height in inches (default: [15, 10])
      --label_fontsize FLOAT
@@ -307,23 +422,27 @@ maf_oncoplt
 maf_sumplt
 ==========
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc maf_sumplt -h
    usage: fuc maf_sumplt [-h] [--figsize FLOAT FLOAT] [--title_fontsize FLOAT]
                          [--ticklabels_fontsize FLOAT] [--legend_fontsize FLOAT]
-                         maf_file output_file
+                         maf out
    
-   This command will create a summary plot for a MAF file. The format of output
-   image (PDF/PNG/JPEG/SVG) will be automatically determined by the output file's
-   extension. This command essentially wraps the `pymaf.plot_summary` method.
-   Visit the method's documentation (https://sbslee-
-   fuc.readthedocs.io/en/latest/api.html#fuc.api.pymaf.MafFrame.plot_summary) to
-   see example plots.
+   This command will create a summary plot with a MAF file. It essentially wraps
+   the 'pymaf.plot_summary' method from the fuc API. Visit the method's
+   documentation to see example plots.
+   
+   The format of output image (PDF/PNG/JPEG/SVG) will be automatically
+   determined by the output file's extension.
+   
+   usage examples:
+     $ fuc maf_sumplt in.maf out.png
+     $ fuc maf_sumplt in.maf out.pdf
    
    positional arguments:
-     maf_file              input MAF file
-     output_file           output image file
+     maf                   MAF file
+     out                   output image file
    
    optional arguments:
      -h, --help            show this help message and exit
@@ -339,15 +458,19 @@ maf_sumplt
 maf_vcf2maf
 ===========
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc maf_vcf2maf -h
-   usage: fuc maf_vcf2maf [-h] vcf_file
+   usage: fuc maf_vcf2maf [-h] vcf
    
-   This command will convert an annotated VCF file to a MAF file.
+   This command will convert an annotated VCF file to a MAF file. It essentially
+   wraps the 'pymaf.MafFrame.from_vcf' method from the fuc API.
+   
+   usage examples:
+     $ fuc maf_vcf2maf in.vcf > out.maf
    
    positional arguments:
-     vcf_file    annotated VCF file
+     vcf         VCF file
    
    optional arguments:
      -h, --help  show this help message and exit
@@ -355,53 +478,60 @@ maf_vcf2maf
 tbl_merge
 =========
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc tbl_merge -h
-   usage: fuc tbl_merge [-h] [--how TEXT] [--on TEXT [TEXT ...]]
-                        [--left_delimiter TEXT] [--right_delimiter TEXT]
-                        [--output_delimiter TEXT]
-                        left_file right_file
+   usage: fuc tbl_merge [-h] [--how TEXT] [--on TEXT [TEXT ...]] [--lsep TEXT]
+                        [--rsep TEXT] [--osep TEXT]
+                        left right
    
-   This command will merge two table files using one or more shared columns. This
-   essentially wraps the `pandas.DataFrame.merge` method.
+   This command will merge two table files using one or more shared columns.
+   It essentially wraps the 'pandas.DataFrame.merge' method from the pandas
+   package. For details on the merging algorithms, please visit the method's
+   documentation page.
+   
+   usage examples:
+     $ fuc tbl_merge left.tsv right.tsv > merged.tsv
+     $ fuc tbl_merge left.csv right.tsv --lsep , > merged.tsv
+     $ fuc tbl_merge left.tsv right.tsv --how outer > merged.tsv
    
    positional arguments:
-     left_file             left table file
-     right_file            right table file
+     left                  left file
+     right                 right file
    
    optional arguments:
      -h, --help            show this help message and exit
      --how TEXT            type of merge to be performed ['left', 'right',
                            'outer', 'inner', 'cross'] (default: 'inner')
      --on TEXT [TEXT ...]  column names to join on
-     --left_delimiter TEXT
-                           left delimiter (default: '\t')
-     --right_delimiter TEXT
-                           right delimiter (default: '\t')
-     --output_delimiter TEXT
-                           output delimiter (default: '\t')
+     --lsep TEXT           delimiter to use for the left file (default: '\t')
+     --rsep TEXT           delimiter to use for the right file (default: '\t')
+     --osep TEXT           delimiter to use for the output file (default: '\t')
 
 tbl_sum
 =======
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc tbl_sum -h
-   usage: fuc tbl_sum [-h] [--delimiter TEXT] [--skiprows TEXT]
+   usage: fuc tbl_sum [-h] [--sep TEXT] [--skiprows TEXT]
                       [--na_values TEXT [TEXT ...]] [--keep_default_na]
                       [--query TEXT] [--columns TEXT [TEXT ...]]
                       table_file
    
    This command will summarize a table file. It essentially wraps the
-   `pandas.Series.describe` and `pandas.Series.value_counts` methods.
+   'pandas.Series.describe' and 'pandas.Series.value_counts' methods from the
+   pandas pacakge.
+   
+   usage examples:
+     $ fuc tbl_sum table.tsv
    
    positional arguments:
      table_file            table file
    
    optional arguments:
      -h, --help            show this help message and exit
-     --delimiter TEXT      delimiter (default: '\t')
+     --sep TEXT            delimiter to use (default: '\t')
      --skiprows TEXT       comma-separated line numbers to skip (0-indexed) or
                            number of lines to skip at the start of the file (e.g.
                            `--skiprows 1,` will skip the second line, `--skiprows
@@ -424,16 +554,21 @@ tbl_sum
 vcf_merge
 =========
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc vcf_merge -h
    usage: fuc vcf_merge [-h] [--how TEXT] [--format TEXT] [--sort] [--collapse]
                         vcf_files [vcf_files ...]
    
-   This command will merge multiple VCF files (both zipped and unzipped). By
-   default, only the GT subfield of the FORMAT field will be included in the
+   This command will merge multiple VCF files (both zipped and unzipped). It
+   essentially wraps the 'pyvcf.merge' method from the fuc API.
+   
+   By default, only the GT subfield of the FORMAT field will be included in the
    merged VCF. Use '--format' to include additional FORMAT subfields such as AD
    and DP.
+   
+   usage examples:
+     $ fuc vcf_merge 1.vcf 2.vcf 3.vcf > merged.vcf
    
    positional arguments:
      vcf_files      VCF files
@@ -447,37 +582,85 @@ vcf_merge
      --sort         use this flag to turn off sorting of records (default: True)
      --collapse     use this flag to collapse duplicate records (default: False)
 
-vcf_slice
-=========
+vcf_rename
+==========
 
-.. code-block:: console
+.. code-block:: text
 
-   $ fuc vcf_slice -h
-   usage: fuc vcf_slice [-h] [--start INTEGER] [--end INTEGER] vcf_file chrom
+   $ fuc vcf_rename -h
+   usage: fuc vcf_rename [-h] [--mode TEXT] [--range INT INT] [--sep TEXT]
+                         vcf names
    
-   This command will slice a VCF file (both zipped and unzipped).
+   This command will rename the samples in a VCF file. It essentially wraps
+   the 'pyvcf.VcfFrame.rename' method from the fuc API.
+   
+   There are three renaming modes: 'MAP', 'INDICIES', and 'RANGE'. The default
+   mode is 'MAP' in which case the 'names' file must contain two columns, one
+   for the old names and the other for the new names. If the mode is 'INDICIES'
+   the first column should be the new names and the second column must be
+   0-based indicies of the samples to be renamed. Lastly, in the 'RANGE' mode
+   only the first column is required but the 'range' argument must be specified.
+   For more details on the renaming modes, please visit the
+   'pyvcf.VcfFrame.rename' method's documentation page.
+   
+   usage examples:
+     $ fuc vcf_rename in.vcf old_new.tsv > out.vcf
+     $ fuc vcf_rename in.vcf new_idx.tsv --mode INDICIES > out.vcf
+     $ fuc vcf_rename in.vcf new_only.tsv --mode RANGE --range 2 5 > out.vcf
+     $ fuc vcf_rename in.vcf old_new.csv --sep , > out.vcf
    
    positional arguments:
-     vcf_file         VCF file
-     chrom            chromosome
+     vcf              VCF file
+     names            delimited text file
    
    optional arguments:
      -h, --help       show this help message and exit
-     --start INTEGER  start position
-     --end INTEGER    end position
+     --mode TEXT      renaming mode (default: 'MAP') (choices: 'MAP', 'INDICIES',
+                      'RANGE')
+     --range INT INT  specify an index range
+     --sep TEXT       delimiter to use (default: '\t')
+
+vcf_slice
+=========
+
+.. code-block:: text
+
+   $ fuc vcf_slice -h
+   usage: fuc vcf_slice [-h] vcf region
+   
+   This command will slice a VCF file (both zipped and unzipped). It essentially
+   wraps the 'pyvcf.VcfFrame.slice' method from the fuc API.
+   
+   usage examples:
+     $ fuc vcf_slice in.vcf chr1 > sliced.vcf
+     $ fuc vcf_slice in.vcf chr1:100-300 > sliced.vcf
+     $ fuc vcf_slice in.vcf chr1:100 > sliced.vcf
+     $ fuc vcf_slice in.vcf chr1:100- > sliced.vcf
+     $ fuc vcf_slice in.vcf chr1:-300 > sliced.vcf
+   
+   positional arguments:
+     vcf         VCF file
+     region      region ('chrom:start-end')
+   
+   optional arguments:
+     -h, --help  show this help message and exit
 
 vcf_vcf2bed
 ===========
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc vcf_vcf2bed -h
-   usage: fuc vcf_vcf2bed [-h] vcf_file
+   usage: fuc vcf_vcf2bed [-h] vcf
    
-   This command will convert a VCF file to a BED file.
+   This command will convert a VCF file to a BED file. It essentially wraps the
+   'pyvcf.VcfFrame.to_bed' method from the fuc API.
+   
+   usage examples:
+     $ fuc vcf_vcf2bed in.vcf > out.bed
    
    positional arguments:
-     vcf_file    VCF file
+     vcf         VCF file
    
    optional arguments:
      -h, --help  show this help message and exit
@@ -485,19 +668,23 @@ vcf_vcf2bed
 vcf_vep
 =======
 
-.. code-block:: console
+.. code-block:: text
 
    $ fuc vcf_vep -h
    usage: fuc vcf_vep [-h] [--opposite] [--as_zero] vcf expr
    
-   This command will filter a VCF file annotated by Ensemble VEP. It essentially wraps the `pandas.DataFrame.query` method. For details on query expression, please visit the method's documentation page (https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.query.html#pandas-dataframe-query).
+   This command will filter a VCF file annotated by Ensemble VEP. It
+   essentially wraps the 'pyvep.filter_query' method from the fuc API. For
+   details on query expression, please visit the method's documentation page.
    
-   examples:
+   usage examples:
      $ fuc vcf_vep in.vcf 'SYMBOL == "TP53"' > out.vcf
      $ fuc vcf_vep in.vcf 'SYMBOL != "TP53"' > out.vcf
      $ fuc vcf_vep in.vcf 'SYMBOL == "TP53"' --opposite > out.vcf
-     $ fuc vcf_vep in.vcf 'Consequence in ["splice_donor_variant", "stop_gained"]' > out.vcf
-     $ fuc vcf_vep in.vcf '(SYMBOL == "TP53") and (Consequence.str.contains("stop_gained"))' > out.vcf
+     $ fuc vcf_vep in.vcf \
+         'Consequence in ["splice_donor_variant", "stop_gained"]' > out.vcf
+     $ fuc vcf_vep in.vcf \
+         '(SYMBOL == "TP53") and (Consequence.str.contains("stop_gained"))' > out.vcf
      $ fuc vcf_vep in.vcf 'gnomAD_AF < 0.001' > out.vcf
      $ fuc vcf_vep in.vcf 'gnomAD_AF < 0.001' --as_zero > out.vcf
    
@@ -507,6 +694,7 @@ vcf_vep
    
    optional arguments:
      -h, --help  show this help message and exit
-     --opposite  use this flag to return records that don’t meet the said criteria
+     --opposite  use this flag to return records that don’t meet the said
+                 criteria
      --as_zero   use this flag to treat missing values as zero instead of NaN
 

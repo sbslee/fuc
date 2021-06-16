@@ -44,6 +44,12 @@ following fields:
 +-----+------------------------+----------------------+-------------------------------+
 | 15  | Protein_Change         | Protein change       | 'p.L558Q'                     |
 +-----+------------------------+----------------------+-------------------------------+
+
+It is recommended to include additional custom fields such as variant
+allele frequecy (VAF) and transcript name.
+
+If sample annotation data are available for a given MAF file, use
+the :class:`AnnFrame` class to import the data.
 """
 
 import pandas as pd
@@ -53,7 +59,7 @@ import re
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import matplotlib.gridspec as gridspec
-from . import pyvcf
+from . import pyvcf, common
 import copy
 
 # Below is the list of calculated variant consequences from Ensemble VEP:
@@ -869,7 +875,8 @@ class MafFrame:
     def plot_genes(
         self, count=10, mode='variants', ax=None, figsize=None, **kwargs
     ):
-        """Create a bar plot for top mutated genes.
+        """
+        Create a bar plot showing variant distirbution for top mutated genes.
 
         Parameters
         ----------
@@ -1207,6 +1214,53 @@ class MafFrame:
         ax.set_xticks([])
         return ax
 
+    def plot_vaf(self, col, count=10, ax=None, figsize=None, **kwargs):
+        """
+        Create a bar plot showing VAF distribution for top mutated genes.
+
+        Parameters
+        ----------
+        col : str
+            VAF column.
+        count : int, default: 10
+            Number of top mutated genes to display.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+        kwargs
+            Other keyword arguments will be passed down to
+            :meth:`seaborn.boxplot`.
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+
+        Examples
+        --------
+
+        .. plot::
+
+            >>> import matplotlib.pyplot as plt
+            >>> from fuc import common, pymaf
+            >>> common.load_dataset('tcga-laml')
+            >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+            >>> mf = pymaf.MafFrame.from_file(f)
+            >>> mf.plot_vaf('i_TumorVAF_WU')
+            >>> plt.tight_layout()
+        """
+        genes = self.compute_genes(count=count).index.to_list()
+        s = self.df.groupby('Hugo_Symbol')[col].median()
+        genes = s[genes].sort_values(ascending=False).index.to_list()
+        df = self.df[self.df.Hugo_Symbol.isin(genes)]
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+        sns.boxplot(x='Hugo_Symbol', y=col, data=df, order=genes, ax=ax, **kwargs)
+        ax.set_xlabel('')
+        ax.set_ylabel('VAF')
+        return ax
+
     def plot_varcls(self, ax=None, figsize=None, **kwargs):
         """Create a bar plot for the nonsynonymous variant classes.
 
@@ -1380,6 +1434,143 @@ class MafFrame:
         ax.set_ylabel('')
 
         return ax
+
+    def to_vcf(
+        self, fasta=None, ignore_indels=False, cols=None, names=None
+    ):
+        """
+        Write the MafFrame to a VcfFrame.
+
+        Converting from MAF to VCF is pretty straightforward for SNVs, but it
+        can be challenging for INDELs and complex events involving multiple
+        nucleotides (e.g. 'AAGG' → 'CCCG'). This is because, for the latter
+        case we need to identify the "anchor" nucleotide for each event,
+        which is crucial for constructing a properly formatted VCF. For
+        example, a deletion event 'AGT' → '-' in MAF would have to be
+        converted to 'CAGT' → 'C' in the VCF where 'C' is our anchor
+        nucleotide. The position should be shifted by one as well.
+
+        In order to tackle this issue, the method makes use of a reference
+        assembly (i.e. FASTA file). If SNVs are your only concern, then you
+        do not need a FASTA file and can just set ``ignore_indels`` as True.
+        If you are going to provide a FASTA file, please make sure to select
+        the appropriate one (e.g. one that matches the genome assembly). For
+        example, if your MAF is in hg19/GRCh37, use the 'hs37d5.fa' file
+        which can be freely downloaded from the 1000 Genomes Project.
+
+        Parameters
+        ----------
+        fasta : str, optional
+            FASTA file. Required if ``ignore_indels`` is False.
+        ignore_indels : bool, default: False
+            If True, do not include INDELs in the VcfFrame. Useful when
+            a FASTA file is not available.
+        cols : str or list, optional
+            Column(s) in the MafFrame which contain additional genotype
+            data of interest. If provided, these data will be added to
+            individual sample genotypes (e.g. '0/1:0.23').
+        names : str or list, optional
+            Name(s) to be displayed in the FORMAT field (e.g. AD, AF, DP).
+            If not provided, the original column name(s) will be displayed.
+
+        Returns
+        -------
+        VcfFrame
+            The VcfFrame object.
+
+        Examples
+        --------
+
+        >>> from fuc import pymaf
+        >>> mf = pymaf.MafFrame.from_file('in.maf')
+        >>> vf = mf.to_vcf(fasta='hs37d5.fa')
+        >>> vf = mf.to_vcf(ignore_indels=True)
+        >>> vf = mf.to_vcf(fasta='hs37d5.fa', cols='i_TumorVAF_WU', names='AF')
+        """
+        if not ignore_indels and fasta is None:
+            raise ValueError("A FASTA file is required when 'ignore_indels' "
+                             "argument is False.")
+
+        if cols is None:
+            cols = []
+        if names is None:
+            names = []
+
+        if isinstance(cols, str):
+            cols = [cols]
+        if isinstance(names, str):
+            names = [names]
+
+        if cols and not names:
+            names = cols
+        if len(cols) != len(names):
+            raise ValueError("Arguments 'cols' and 'names' "
+                             "have different lengths.")
+
+        # Create the minimal VCF.
+        index_cols = ['Chromosome', 'Start_Position',
+                      'Reference_Allele', 'Tumor_Seq_Allele2']
+        df = self.df.pivot(index=index_cols,
+                           columns='Tumor_Sample_Barcode',
+                           values='Tumor_Seq_Allele2')
+        f = lambda x: '0/0' if pd.isnull(x) else '0/1'
+        df = df.applymap(f)
+        df.columns.name = None
+        df = df.reset_index()
+        df = df.rename(columns={'Chromosome': 'CHROM',
+                                'Start_Position': 'POS',
+                                'Reference_Allele': 'REF',
+                                'Tumor_Seq_Allele2': 'ALT'})
+        df['ID'] = '.'
+        df['QUAL'] = '.'
+        df['FILTER'] = '.'
+        df['INFO'] = '.'
+        df['FORMAT'] = 'GT'
+        df = df[pyvcf.HEADERS + self.samples]
+
+        # Add requested genotype information.
+        f = lambda x: '.' if pd.isnull(x) else str(x)
+        for i, col in enumerate(cols):
+            _ = self.df.pivot(index=index_cols,
+                              columns='Tumor_Sample_Barcode',
+                              values='i_TumorVAF_WU')
+            _ = _.reset_index()
+            _ = _.drop(index_cols, axis=1)
+            _ = _[self.samples]
+            _ = _.applymap(f)
+            df.iloc[:, 9:] = df.iloc[:, 9:] + ':' + _
+            df.FORMAT = df.FORMAT + ':' + names[i]
+
+        # Handle INDELs.
+        l = ['A', 'C', 'G', 'T']
+        if ignore_indels:
+            i = (df.REF.isin(l)) & (df.ALT.isin(l))
+            df = df[i]
+        else:
+            def one_row(r):
+                if r.REF in l and r.ALT in l:
+                    return r
+                region = f'{r.CHROM}:{r.POS-1}-{r.POS-1}'
+                anchor = common.extract_sequence(fasta, region)
+                if not anchor:
+                    return r
+                r.POS = r.POS - 1
+                if r.ALT == '-':
+                    r.REF = anchor + r.REF
+                    r.ALT = anchor
+                elif r.REF == '-':
+                    r.REF = anchor
+                    r.ALT = anchor + r.ALT
+                else:
+                    r.REF = anchor + r.REF
+                    r.ALT = anchor + r.ALT
+                return r
+            df = df.apply(one_row, axis=1)
+
+        # Create the VcfFrame.
+        vf = pyvcf.VcfFrame(['##fileformat=VCFv4.3'], df)
+
+        return vf
 
     def to_file(self, fn):
         """Write MafFrame to a MAF file.

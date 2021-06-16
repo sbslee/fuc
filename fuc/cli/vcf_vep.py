@@ -1,27 +1,28 @@
 from .. import api
-from argparse import RawTextHelpFormatter
-
-command = api.common.script_name(__file__)
 
 description = f"""
-This command will filter a VCF file annotated by Ensemble VEP. It essentially wraps the `pandas.DataFrame.query` method. For details on query expression, please visit the method's documentation page (https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.query.html#pandas-dataframe-query).
+This command will filter a VCF file annotated by Ensemble VEP. It
+essentially wraps the 'pyvep.filter_query' method from the fuc API. For
+details on query expression, please visit the method's documentation page.
 
-examples:
-  $ fuc {command} in.vcf 'SYMBOL == "TP53"' > out.vcf
-  $ fuc {command} in.vcf 'SYMBOL != "TP53"' > out.vcf
-  $ fuc {command} in.vcf 'SYMBOL == "TP53"' --opposite > out.vcf
-  $ fuc {command} in.vcf 'Consequence in ["splice_donor_variant", "stop_gained"]' > out.vcf
-  $ fuc {command} in.vcf '(SYMBOL == "TP53") and (Consequence.str.contains("stop_gained"))' > out.vcf
-  $ fuc {command} in.vcf 'gnomAD_AF < 0.001' > out.vcf
-  $ fuc {command} in.vcf 'gnomAD_AF < 0.001' --as_zero > out.vcf
+usage examples:
+  $ fuc {api.common._script_name()} in.vcf 'SYMBOL == "TP53"' > out.vcf
+  $ fuc {api.common._script_name()} in.vcf 'SYMBOL != "TP53"' > out.vcf
+  $ fuc {api.common._script_name()} in.vcf 'SYMBOL == "TP53"' --opposite > out.vcf
+  $ fuc {api.common._script_name()} in.vcf \\
+      'Consequence in ["splice_donor_variant", "stop_gained"]' > out.vcf
+  $ fuc {api.common._script_name()} in.vcf \\
+      '(SYMBOL == "TP53") and (Consequence.str.contains("stop_gained"))' > out.vcf
+  $ fuc {api.common._script_name()} in.vcf 'gnomAD_AF < 0.001' > out.vcf
+  $ fuc {api.common._script_name()} in.vcf 'gnomAD_AF < 0.001' --as_zero > out.vcf
 """
 
 def create_parser(subparsers):
-    parser = subparsers.add_parser(
-        command,
+    parser = api.common._add_parser(
+        subparsers,
+        api.common._script_name(),
         help='[VCF] filter a VCF file annotated by Ensemble VEP',
         description=description,
-        formatter_class=RawTextHelpFormatter,
     )
     parser.add_argument('vcf', help='Ensemble VEP-annotated VCF file')
     parser.add_argument('expr', help='query expression to evaluate')
@@ -38,5 +39,6 @@ def create_parser(subparsers):
 
 def main(args):
     vf = api.pyvcf.VcfFrame.from_file(args.vcf)
-    filtered_vf = api.pyvep.filter_query(vf, args.expr, opposite=args.opposite, as_zero=args.as_zero)
-    print(filtered_vf.to_string())
+    filtered_vf = api.pyvep.filter_query(vf, args.expr,
+        opposite=args.opposite, as_zero=args.as_zero)
+    print(filtered_vf.to_string(), end='')

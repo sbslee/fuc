@@ -1,6 +1,17 @@
 Changelog
 *********
 
+0.13.0 (2021-06-16)
+-------------------
+
+* Add new method :meth:`pymaf.MafFrame.to_vcf`.
+* :issue:`21`: Add new command :command:`maf_maf2vcf`.
+* Add new method :meth:`pyvcf.VcfFrame.rename`.
+* Add new command :command:`vcf_rename`.
+* Add new method :meth:`pymaf.MafFrame.plot_vaf`.
+* Update :meth:`pyvcf.VcfFrame.slice` method.
+* Update :command:`vcf_slice` command.
+
 0.12.0 (2021-06-12)
 -------------------
 
