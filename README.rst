@@ -164,14 +164,26 @@ For getting help on a specific submodule (e.g. pyvcf):
 CLI Examples
 ============
 
-SAM/BAM/CRAM
-------------
+BAM
+---
 
-To print the header of a BAM file:
+To print the header of a SAM file:
 
 .. code-block:: text
 
-   $ fuc bam_head example.bam
+   $ fuc bam_head in.sam
+
+To index a CRAM file:
+
+.. code-block:: text
+
+   $ fuc bam_head in.cram
+
+To slice a BAM file:
+
+.. code-block:: text
+
+   $ fuc bam_slice in.bam chr1:100-200 out.bam
 
 BED
 ---
@@ -204,7 +216,7 @@ To find all VCF files within the current directory recursively:
 
 .. code-block:: text
 
-   $ fuc fuc_find . vcf
+   $ fuc fuc_find .vcf.gz
 
 TABLE
 -----
@@ -213,7 +225,7 @@ To merge two tab-delimited files:
 
 .. code-block:: text
 
-   $ fuc tbl_merge left.txt right.txt > merged.txt
+   $ fuc tbl_merge left.tsv right.tsv > merged.tsv
 
 VCF
 ---
@@ -232,6 +244,20 @@ To filter a VCF file annotated by Ensemble VEP:
 
 API Examples
 ============
+
+BAM
+---
+
+To create read depth profile of a region from a CRAM file:
+
+.. code:: python3
+
+    >>> from fuc import pycov
+    >>> cf = pycov.CovFrame.from_file('HG00525.final.cram', zero=True,
+    ...    region='chr12:21161194-21239796', names=['HG00525'])
+    >>> cf.plot_region('chr12', start=21161194, end=21239796)
+
+.. image:: https://raw.githubusercontent.com/sbslee/fuc-data/main/images/coverage.png
 
 VCF
 ---
@@ -319,18 +345,4 @@ To create a summary figure for a MAF file:
     >>> mf.plot_summary()
 
 .. image:: https://raw.githubusercontent.com/sbslee/fuc-data/main/images/maf_summary.png
-
-SAM/BAM/CRAM
-------------
-
-To create read depth profile of a region from a CRAM file:
-
-.. code:: python3
-
-    >>> from fuc import pycov
-    >>> cf = pycov.CovFrame.from_file('HG00525.final.cram', zero=True,
-    ...    region='chr12:21161194-21239796', names=['HG00525'])
-    >>> cf.plot_region('chr12', start=21161194, end=21239796)
-
-.. image:: https://raw.githubusercontent.com/sbslee/fuc-data/main/images/coverage.png
 

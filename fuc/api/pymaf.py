@@ -1214,7 +1214,7 @@ class MafFrame:
         ax.set_xticks([])
         return ax
 
-    def plot_vaf(self, col, count=10, ax=None, figsize=None):
+    def plot_vaf(self, col, count=10, ax=None, figsize=None, **kwargs):
         """
         Create a bar plot showing VAF distribution for top mutated genes.
 
@@ -1228,6 +1228,9 @@ class MafFrame:
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
             Width, height in inches. Format: (float, float).
+        kwargs
+            Other keyword arguments will be passed down to
+            :meth:`seaborn.boxplot`.
 
         Returns
         -------
@@ -1253,7 +1256,7 @@ class MafFrame:
         df = self.df[self.df.Hugo_Symbol.isin(genes)]
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
-        sns.boxplot(x='Hugo_Symbol', y=col, data=df, order=genes, ax=ax)
+        sns.boxplot(x='Hugo_Symbol', y=col, data=df, order=genes, ax=ax, **kwargs)
         ax.set_xlabel('')
         ax.set_ylabel('VAF')
         return ax
