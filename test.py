@@ -69,7 +69,7 @@ class TestPyfq(unittest.TestCase):
 class TestCli(unittest.TestCase):
     def test_bfintxn(self):
         result = subprocess.run(['fuc', 'bed_intxn', bed_file1, bed_file2], capture_output=True, text=True, check=True)
-        self.assertEqual(len(result.stdout.split('\n')), 6)
+        self.assertEqual(len(result.stdout.split('\n')), 5)
 
     def test_bfsum(self):
         result = subprocess.run(['fuc', 'bed_sum', bed_file1], capture_output=True, text=True, check=True)
@@ -92,7 +92,7 @@ class TestCli(unittest.TestCase):
         self.assertTrue('True' in result.stdout)
 
     def test_fucfind(self):
-        result = subprocess.run(['fuc', 'fuc_find', FUC_PATH, 'vcf'], capture_output=True, text=True, check=True)
+        result = subprocess.run(['fuc', 'fuc_find', 'vcf'], capture_output=True, text=True, check=True)
         self.assertTrue('1.vcf' in result.stdout)
 
     def test_qfcount(self):
@@ -108,7 +108,7 @@ class TestCli(unittest.TestCase):
         self.assertEqual(len(result.stdout.strip().split('\n')), 10)
 
     def test_vfslice(self):
-        result = subprocess.run(['fuc', 'vcf_slice', vcf_file1, 'chr1', '--end', '300'], capture_output=True, text=True, check=True)
+        result = subprocess.run(['fuc', 'vcf_slice', vcf_file1, 'chr1:-300'], capture_output=True, text=True, check=True)
         self.assertEqual(len(result.stdout.strip().split('\n')), 5)
 
 if __name__ == '__main__':
