@@ -126,6 +126,7 @@ For getting help on the fuc CLI:
        maf_vcf2maf  [MAF] convert an annotated VCF file to a MAF file
        tbl_merge    [TABLE] merge two table files
        tbl_sum      [TABLE] summarize a table file
+       vcf_filter   [VCF] filter a VCF file
        vcf_merge    [VCF] merge two or more VCF files
        vcf_rename   [VCF] rename the samples in a VCF file.
        vcf_slice    [VCF] slice a VCF file

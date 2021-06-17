@@ -36,6 +36,7 @@ For getting help on the fuc CLI:
        maf_vcf2maf  [MAF] convert an annotated VCF file to a MAF file
        tbl_merge    [TABLE] merge two table files
        tbl_sum      [TABLE] summarize a table file
+       vcf_filter   [VCF] filter a VCF file
        vcf_merge    [VCF] merge two or more VCF files
        vcf_rename   [VCF] rename the samples in a VCF file.
        vcf_slice    [VCF] slice a VCF file
@@ -550,6 +551,40 @@ tbl_sum
      --columns TEXT [TEXT ...]
                            columns to be summarized (by default, all columns will
                            be included)
+
+vcf_filter
+==========
+
+.. code-block:: text
+
+   $ fuc vcf_filter -h
+   usage: fuc vcf_filter [-h] [--greedy] [--opposite] [--samples PATH] vcf expr
+   
+   This command will filter a VCF file (both zipped and unzipped). It essentially
+   wraps the 'pyvcf.VcfFrame.markmiss' method from the fuc API.
+   
+   usage examples:
+     $ fuc vcf_filter in.vcf 'GT == "0/0"' > out.vcf
+     $ fuc vcf_filter in.vcf 'GT != "0/0"' > out.vcf
+     $ fuc vcf_filter in.vcf 'DP < 30' > out.vcf
+     $ fuc vcf_filter in.vcf 'DP < 30' --greedy > out.vcf
+     $ fuc vcf_filter in.vcf 'AD[1] < 10' --greedy > out.vcf
+     $ fuc vcf_filter in.vcf 'AD[1] < 10 and DP < 30' --greedy > out.vcf
+     $ fuc vcf_filter in.vcf 'AD[1] < 10 or DP < 30' --greedy > out.vcf
+     $ fuc vcf_filter in.vcf 'AD[1] < 10 or DP < 30' --opposite > out.vcf
+     $ fuc vcf_filter in.vcf 'np.mean(AD) < 10' --greedy --samples sample.list > out.vcf
+   
+   positional arguments:
+     vcf             VCF file
+     expr            expression to evaluate
+   
+   optional arguments:
+     -h, --help      show this help message and exit
+     --greedy        use this flag to mark even ambiguous genotypes as missing
+     --opposite      use this flag to mark all genotypes that do not satisfy the
+                     query expression as missing and leave those that do intact
+     --samples PATH  file of sample names to apply the marking (one sample per
+                     line)
 
 vcf_merge
 =========

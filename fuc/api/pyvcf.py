@@ -2059,7 +2059,7 @@ class VcfFrame:
             If True, mark even ambiguous genotypes as missing.
         opposite : bool, default: False
             If True, mark all genotypes that do not satisfy the query
-            expression as missing and keep those that do.
+            expression as missing and leave those that do intact.
         sampels : list, optional
             If provided, apply the marking only to these samples.
         as_nan : bool, default: False
@@ -2098,7 +2098,7 @@ class VcfFrame:
 
         To mark as missing all genotypes with ``0/0``:
 
-        >>> vf.markmiss('_GT_ == "0/0"').df
+        >>> vf.markmiss('GT == "0/0"').df
           CHROM  POS ID REF ALT QUAL FILTER INFO    FORMAT             A        B            C
         0  chr1  100  .   G   A    .      .    .  GT:DP:AD       ./.:.:.  ./.:.:.  0/1:18:12,6
         1  chr1  101  .   T   C    .      .    .  GT:DP:AD  0/1:32:16,16  ./.:.:.      ./.:.:.
@@ -2106,7 +2106,7 @@ class VcfFrame:
 
         To mark as missing all genotypes that do not have ``0/0``:
 
-        >>> vf.markmiss('_GT_ != "0/0"').df
+        >>> vf.markmiss('GT != "0/0"').df
           CHROM  POS ID REF ALT QUAL FILTER INFO    FORMAT            A            B            C
         0  chr1  100  .   G   A    .      .    .  GT:DP:AD  0/0:26:0,26      ./.:.:.      ./.:.:.
         1  chr1  101  .   T   C    .      .    .  GT:DP:AD      ./.:.:.  0/0:31:29,2  0/0:24:24,0
@@ -2114,7 +2114,7 @@ class VcfFrame:
 
         To mark as missing all genotypes whose ``DP`` is below 30:
 
-        >>> vf.markmiss('_DP_ < 30').df
+        >>> vf.markmiss('DP < 30').df
           CHROM  POS ID REF ALT QUAL FILTER INFO    FORMAT             A            B        C
         0  chr1  100  .   G   A    .      .    .  GT:DP:AD       ./.:.:.      ./.:.:.  ./.:.:.
         1  chr1  101  .   T   C    .      .    .  GT:DP:AD  0/1:32:16,16  0/0:31:29,2  ./.:.:.
@@ -2125,7 +2125,7 @@ class VcfFrame:
         properly. To mark even ambiguous genotypes like this one as missing,
         you can set ``greedy`` as True:
 
-        >>> vf.markmiss('_DP_ < 30', greedy=True).df
+        >>> vf.markmiss('DP < 30', greedy=True).df
           CHROM  POS ID REF ALT QUAL FILTER INFO    FORMAT             A            B        C
         0  chr1  100  .   G   A    .      .    .  GT:DP:AD       ./.:.:.      ./.:.:.  ./.:.:.
         1  chr1  101  .   T   C    .      .    .  GT:DP:AD  0/1:32:16,16  0/0:31:29,2  ./.:.:.
@@ -2134,7 +2134,7 @@ class VcfFrame:
         To mark as missing all genotypes whose ALT allele has read depth
         below 10:
 
-        >>> vf.markmiss('_AD_[1] < 10', greedy=True).df
+        >>> vf.markmiss('AD[1] < 10', greedy=True).df
           CHROM  POS ID REF ALT QUAL FILTER INFO    FORMAT             A        B        C
         0  chr1  100  .   G   A    .      .    .  GT:DP:AD   0/0:26:0,26  ./.:.:.  ./.:.:.
         1  chr1  101  .   T   C    .      .    .  GT:DP:AD  0/1:32:16,16  ./.:.:.  ./.:.:.
@@ -2143,7 +2143,7 @@ class VcfFrame:
         To mark as missing all genotypes whose ALT allele has read depth
         below 10 and ``DP`` is below 30:
 
-        >>> vf.markmiss('_AD_[1] < 10 and _DP_ < 30', greedy=True).df
+        >>> vf.markmiss('AD[1] < 10 and DP < 30', greedy=True).df
           CHROM  POS ID REF ALT QUAL FILTER INFO    FORMAT             A            B        C
         0  chr1  100  .   G   A    .      .    .  GT:DP:AD   0/0:26:0,26      ./.:.:.  ./.:.:.
         1  chr1  101  .   T   C    .      .    .  GT:DP:AD  0/1:32:16,16  0/0:31:29,2  ./.:.:.
@@ -2152,7 +2152,7 @@ class VcfFrame:
         To mark as missing all genotypes whose ALT allele has read depth
         below 10 or ``DP`` is below 30:
 
-        >>> vf.markmiss('_AD_[1] < 10 or _DP_ < 30', greedy=True).df
+        >>> vf.markmiss('AD[1] < 10 or DP < 30', greedy=True).df
           CHROM  POS ID REF ALT QUAL FILTER INFO    FORMAT             A        B        C
         0  chr1  100  .   G   A    .      .    .  GT:DP:AD       ./.:.:.  ./.:.:.  ./.:.:.
         1  chr1  101  .   T   C    .      .    .  GT:DP:AD  0/1:32:16,16  ./.:.:.  ./.:.:.
@@ -2161,7 +2161,7 @@ class VcfFrame:
         To only retain genotypes whose ALT allele has read depth below 10 or
         ``DP`` is below 30:
 
-        >>> vf.markmiss('_AD_[1] < 10 or _DP_ < 30', opposite=True).df
+        >>> vf.markmiss('AD[1] < 10 or DP < 30', opposite=True).df
           CHROM  POS ID REF ALT QUAL FILTER INFO    FORMAT            A            B            C
         0  chr1  100  .   G   A    .      .    .  GT:DP:AD  0/0:26:0,26      ./.:.:.  0/1:18:12,6
         1  chr1  101  .   T   C    .      .    .  GT:DP:AD      ./.:.:.  0/0:31:29,2  0/0:24:24,0
@@ -2169,7 +2169,7 @@ class VcfFrame:
 
         To mark as missing all genotypes whose mean of ``AD`` is below 10:
 
-        >>> vf.markmiss('np.mean(_AD_) < 10', greedy=True).df
+        >>> vf.markmiss('np.mean(AD) < 10', greedy=True).df
           CHROM  POS ID REF ALT QUAL FILTER INFO    FORMAT             A            B            C
         0  chr1  100  .   G   A    .      .    .  GT:DP:AD   0/0:26:0,26      ./.:.:.      ./.:.:.
         1  chr1  101  .   T   C    .      .    .  GT:DP:AD  0/1:32:16,16  0/0:31:29,2  0/0:24:24,0
@@ -2177,7 +2177,7 @@ class VcfFrame:
 
         To do the same as above, but only for the samples A and B:
 
-        >>> vf.markmiss('np.mean(_AD_) < 10', greedy=True, samples=['A', 'B']).df
+        >>> vf.markmiss('np.mean(AD) < 10', greedy=True, samples=['A', 'B']).df
           CHROM  POS ID REF ALT QUAL FILTER INFO    FORMAT             A            B            C
         0  chr1  100  .   G   A    .      .    .  GT:DP:AD   0/0:26:0,26      ./.:.:.  0/1:18:12,6
         1  chr1  101  .   T   C    .      .    .  GT:DP:AD  0/1:32:16,16  0/0:31:29,2  0/0:24:24,0
@@ -2185,7 +2185,7 @@ class VcfFrame:
 
         To mark as ``NaN`` all genotypes whose sum of ``AD`` is below 10:
 
-        >>> vf.markmiss('sum(_AD_) < 10', as_nan=True).df
+        >>> vf.markmiss('sum(AD) < 10', as_nan=True).df
           CHROM  POS ID REF ALT QUAL FILTER INFO    FORMAT             A            B            C
         0  chr1  100  .   G   A    .      .    .  GT:DP:AD   0/0:26:0,26      ./.:.:.  0/1:18:12,6
         1  chr1  101  .   T   C    .      .    .  GT:DP:AD  0/1:32:16,16  0/0:31:29,2  0/0:24:24,0
@@ -2194,7 +2194,7 @@ class VcfFrame:
         Marking as ``NaN`` is useful when, for example, it is necessary to
         count how many genotypes are marked:
 
-        >>> vf.markmiss('sum(_AD_) < 10', as_nan=True).df.isna().sum().sum()
+        >>> vf.markmiss('sum(AD) < 10', as_nan=True).df.isna().sum().sum()
         1
         """
         genotype_keys = {**RESERVED_GENOTYPE_KEYS, **CUSTOM_GENOTYPE_KEYS}
@@ -2205,9 +2205,9 @@ class VcfFrame:
             else:
                 types[k] = lambda x: [v['type'](x) for x in x.split(',')]
         # Extract unique genotype keys from the expression.
-        target_keys = re.findall(r'_(\w+)_', expr)
+        target_keys = re.findall('[a-z]+', expr, flags=re.IGNORECASE)
         target_keys = list(set(target_keys))
-        expr = expr.replace('_', '')
+        target_keys = [x for x in target_keys if x in genotype_keys]
         # Define the marking algorithm for each row.
         def one_row(r):
             row_keys = r.FORMAT.split(':')
