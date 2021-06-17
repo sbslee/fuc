@@ -1,6 +1,11 @@
 Changelog
 *********
 
+0.14.0 (in development)
+-----------------------
+
+* Deprecate methods :meth:`pyvcf.VcfFrame.markmiss_ad/af/dp` and add new method :meth:`pyvcf.VcfFrame.markmiss`.
+
 0.13.0 (2021-06-16)
 -------------------
 
