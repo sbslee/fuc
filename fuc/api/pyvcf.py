@@ -62,6 +62,7 @@ import os
 import seaborn as sns
 import scipy.stats as stats
 from . import pybed, common
+import re
 
 HEADERS = ['CHROM', 'POS', 'ID', 'REF', 'ALT',
            'QUAL', 'FILTER', 'INFO', 'FORMAT']
@@ -74,6 +75,32 @@ CONTIGS = [
     'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr21', 'chr22',
     'chrX', 'chrY', 'chrM'
 ]
+
+# Below are reserved genotype keys copied from Table 2 of the VCF
+# specification: https://samtools.github.io/hts-specs/VCFv4.3.pdf
+
+RESERVED_GENOTYPE_KEYS = {
+    'AD':  {'number': 'R', 'type': int},   # Read depth for each allele
+    'ADF': {'number': 'R', 'type': int},   # Read depth for each allele on the forward strand
+    'ADR': {'number': 'R', 'type': int},   # Read depth for each allele on the reverse strand
+    'DP':  {'number': 1,   'type': int},   # Read depth
+    'EC':  {'number': 'A', 'type': int},   # Expected alternate allele counts
+    'FT':  {'number': 1,   'type': str},   # Filter indicating if this genotype was “called”
+    'GL':  {'number': 'G', 'type': float}, # Genotype likelihoods
+    'GP':  {'number': 'G', 'type': float}, # Genotype posterior probabilities
+    'GQ':  {'number': 1,   'type': int},   # Conditional genotype quality
+    'GT':  {'number': 1,   'type': str},   # Genotype
+    'HQ':  {'number': 2,   'type': int},   # Haplotype quality
+    'MQ':  {'number': 1,   'type': int},   # RMS mapping quality
+    'PL':  {'number': 'G', 'type': int},   # Phred-scaled genotype likelihoods rounded to the closest integer
+    'PP':  {'number': 'G', 'type': int},   # Phred-scaled genotype posterior probabilities rounded to the closest integer
+    'PQ':  {'number': 1,   'type': int},   # Phasing quality
+    'PS':  {'number': 1,   'type': int},   # Phase set
+}
+
+CUSTOM_GENOTYPE_KEYS = {
+    'AF':  {'number': 1,   'type': float},  # Allele fraction of the event in the tumor
+}
 
 def gt_miss(g):
     """Return True if sample genotype is missing.
@@ -2017,6 +2044,155 @@ class VcfFrame:
             fig, ax = plt.subplots(figsize=figsize)
         sns.regplot(x=s[a], y=s[b], ax=ax, **kwargs)
         return ax
+
+    def markmiss(self, expr, samples=None, opposite=False, as_nan=False, greedy=False):
+        """
+        Mark all genotypes that satisfy the query expression as missing.
+
+        Parameters
+        ----------
+        expr : str
+            The expression to evaluate. See the examples below for details.
+        sampels : list, optional
+            If provided, apply the marking only to these samples.
+        opposite : bool, default: False
+            If True, mark all genotypes that do not satisfy the query
+            expression as missing.
+        as_nan : bool, default: False
+            If True, mark genotypes as ``NaN`` instead of as missing.
+
+        Returns
+        -------
+        VcfFrame
+            Updated VcfFrame.
+
+        Examples
+        --------
+        Assume we have the following data:
+
+        >>> from fuc import pyvcf
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102],
+        ...     'ID': ['.', '.', '.'],
+        ...     'REF': ['G', 'T', 'T'],
+        ...     'ALT': ['A', 'C', 'G'],
+        ...     'QUAL': ['.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.'],
+        ...     'INFO': ['.', '.', '.'],
+        ...     'FORMAT': ['GT:DP:AD', 'GT:DP:AD', 'GT:DP:AD'],
+        ...     'A': ['0/0:26:0,26', '0/1:32:16,16', '0/0:.:.'],
+        ...     'B': ['./.:.:.', '0/0:31:29,2', './.:.:.'],
+        ...     'C': ['0/1:18:12,6', '0/0:24:24,0', '1/1:8:0,8'],
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF ALT  ... INFO    FORMAT             A            B            C
+        0  chr1  100  .   G   A  ...    .  GT:DP:AD   0/0:26:0,26      ./.:.:.  0/1:18:12,6
+        1  chr1  101  .   T   C  ...    .  GT:DP:AD  0/1:32:16,16  0/0:31:29,2  0/0:24:24,0
+        2  chr1  102  .   T   G  ...    .  GT:DP:AD       0/0:.:.      ./.:.:.    1/1:8:0,8
+
+        [3 rows x 12 columns]
+        >>> vf.markmiss('`GT` == "0/0"').df
+          CHROM  POS ID REF ALT QUAL FILTER INFO    FORMAT             A        B            C
+        0  chr1  100  .   G   A    .      .    .  GT:DP:AD       ./.:.:.  ./.:.:.  0/1:18:12,6
+        1  chr1  101  .   T   C    .      .    .  GT:DP:AD  0/1:32:16,16  ./.:.:.      ./.:.:.
+        2  chr1  102  .   T   G    .      .    .  GT:DP:AD       ./.:.:.  ./.:.:.    1/1:8:0,8
+        >>> vf.markmiss('`GT` != "0/0"').df
+          CHROM  POS ID REF ALT QUAL FILTER INFO    FORMAT            A            B            C
+        0  chr1  100  .   G   A    .      .    .  GT:DP:AD  0/0:26:0,26      ./.:.:.      ./.:.:.
+        1  chr1  101  .   T   C    .      .    .  GT:DP:AD      ./.:.:.  0/0:31:29,2  0/0:24:24,0
+        2  chr1  102  .   T   G    .      .    .  GT:DP:AD      0/0:.:.      ./.:.:.      ./.:.:.
+        >>> vf.markmiss('`DP` < 30').df
+          CHROM  POS ID REF ALT QUAL FILTER INFO    FORMAT             A            B        C
+        0  chr1  100  .   G   A    .      .    .  GT:DP:AD       ./.:.:.      ./.:.:.  ./.:.:.
+        1  chr1  101  .   T   C    .      .    .  GT:DP:AD  0/1:32:16,16  0/0:31:29,2  ./.:.:.
+        2  chr1  102  .   T   G    .      .    .  GT:DP:AD       0/0:.:.      ./.:.:.  ./.:.:.
+        >>> vf.markmiss('`DP` < 30', greedy=True).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO    FORMAT             A            B        C
+        0  chr1  100  .   G   A    .      .    .  GT:DP:AD       ./.:.:.      ./.:.:.  ./.:.:.
+        1  chr1  101  .   T   C    .      .    .  GT:DP:AD  0/1:32:16,16  0/0:31:29,2  ./.:.:.
+        2  chr1  102  .   T   G    .      .    .  GT:DP:AD       ./.:.:.      ./.:.:.  ./.:.:.
+        >>> vf.markmiss('`AD`[1] < 10', greedy=True).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO    FORMAT             A        B        C
+        0  chr1  100  .   G   A    .      .    .  GT:DP:AD   0/0:26:0,26  ./.:.:.  ./.:.:.
+        1  chr1  101  .   T   C    .      .    .  GT:DP:AD  0/1:32:16,16  ./.:.:.  ./.:.:.
+        2  chr1  102  .   T   G    .      .    .  GT:DP:AD       ./.:.:.  ./.:.:.  ./.:.:.
+        >>> vf.markmiss('`AD`[1] < 10 and `DP` < 30', greedy=True).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO    FORMAT             A            B        C
+        0  chr1  100  .   G   A    .      .    .  GT:DP:AD   0/0:26:0,26      ./.:.:.  ./.:.:.
+        1  chr1  101  .   T   C    .      .    .  GT:DP:AD  0/1:32:16,16  0/0:31:29,2  ./.:.:.
+        2  chr1  102  .   T   G    .      .    .  GT:DP:AD       ./.:.:.      ./.:.:.  ./.:.:.
+        >>> vf.markmiss('`AD`[1] < 10 or `DP` < 30', greedy=True).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO    FORMAT             A        B        C
+        0  chr1  100  .   G   A    .      .    .  GT:DP:AD       ./.:.:.  ./.:.:.  ./.:.:.
+        1  chr1  101  .   T   C    .      .    .  GT:DP:AD  0/1:32:16,16  ./.:.:.  ./.:.:.
+        2  chr1  102  .   T   G    .      .    .  GT:DP:AD       ./.:.:.  ./.:.:.  ./.:.:.
+        >>> vf.markmiss('`AD`[1] < 10 or `DP` < 30', opposite=True).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO    FORMAT            A            B            C
+        0  chr1  100  .   G   A    .      .    .  GT:DP:AD  0/0:26:0,26      ./.:.:.  0/1:18:12,6
+        1  chr1  101  .   T   C    .      .    .  GT:DP:AD      ./.:.:.  0/0:31:29,2  0/0:24:24,0
+        2  chr1  102  .   T   G    .      .    .  GT:DP:AD      ./.:.:.      ./.:.:.    1/1:8:0,8
+        >>> vf.markmiss('`DP` < 30 or np.mean(`AD`) < 10', greedy=True).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO    FORMAT             A            B        C
+        0  chr1  100  .   G   A    .      .    .  GT:DP:AD       ./.:.:.      ./.:.:.  ./.:.:.
+        1  chr1  101  .   T   C    .      .    .  GT:DP:AD  0/1:32:16,16  0/0:31:29,2  ./.:.:.
+        2  chr1  102  .   T   G    .      .    .  GT:DP:AD       ./.:.:.      ./.:.:.  ./.:.:.
+        >>> vf.markmiss('`DP` < 30 or np.mean(`AD`) < 10', greedy=True, samples=['A', 'B']).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO    FORMAT             A            B            C
+        0  chr1  100  .   G   A    .      .    .  GT:DP:AD       ./.:.:.      ./.:.:.  0/1:18:12,6
+        1  chr1  101  .   T   C    .      .    .  GT:DP:AD  0/1:32:16,16  0/0:31:29,2  0/0:24:24,0
+        2  chr1  102  .   T   G    .      .    .  GT:DP:AD       ./.:.:.      ./.:.:.    1/1:8:0,8
+
+        """
+        genotype_keys = {**RESERVED_GENOTYPE_KEYS, **CUSTOM_GENOTYPE_KEYS}
+        types = {}
+        for k, v in genotype_keys.items():
+            if v['number'] == 1:
+                types[k] = v['type']
+            else:
+                types[k] = lambda x: [v['type'](x) for x in x.split(',')]
+        target_keys = re.findall(r'`(\w+)`', expr)
+        expr = expr.replace('`', '')
+        # Define the marking algorithm.
+        def one_row(r):
+            row_keys = r.FORMAT.split(':')
+            # Infer the most appropriate missing value.
+            if as_nan:
+                missing = np.nan
+            else:
+                missing = row_missval(r)
+            def one_gt(g):
+                if opposite:
+                    matched, unmatched = g, missing
+                else:
+                    matched, unmatched = missing, g
+                subfields = g.split(':')
+                for target_key in target_keys:
+                    i = row_keys.index(target_key)
+                    x = subfields[i]
+                    ambiguous = not x.replace(
+                        '.', '').replace('/', '').replace('|', '')
+                    if ambiguous:
+                        if greedy:
+                            return matched
+                        else:
+                            return unmatched
+                    locals()[target_key] = types[target_key](x)
+                if eval(expr):
+                    return matched
+                else:
+                    return unmatched
+            # Apply the marking to each genotype.
+            if samples is None:
+                r[9:] = r[9:].apply(one_gt)
+            else:
+                r[samples] = r[samples].apply(one_gt)
+            return r
+        # Apply the marking to each row.
+        df = self.df.apply(one_row, axis=1)
+        vf = self.__class__(self.copy_meta(), df)
+        return vf
 
     def markmiss_ad(self, threshold, samples=None, full=False, as_nan=False):
         """Mark genotypes whose AD is below threshold as missing.
