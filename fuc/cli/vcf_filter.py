@@ -42,6 +42,11 @@ def create_parser(subparsers):
         metavar='PATH',
         help='file of sample names to apply the marking (one sample per line)'
     )
+    parser.add_argument(
+        '--filter_empty',
+        action='store_true',
+        help='use this flag to remove rows with no genotype calls at all'
+    )
 
 def main(args):
     vf = api.pyvcf.VcfFrame.from_file(args.vcf)
@@ -53,4 +58,6 @@ def main(args):
                               greedy=args.greedy,
                               opposite=args.opposite,
                               samples=samples)
+    if args.filter_empty:
+        filtered_vf = filtered_vf.filter_empty()
     print(filtered_vf.to_string(), end='')
