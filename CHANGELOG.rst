@@ -5,6 +5,7 @@ Changelog
 -----------------------
 
 * Deprecate methods :meth:`pyvcf.VcfFrame.markmiss_ad/af/dp` and add new method :meth:`pyvcf.VcfFrame.markmiss`.
+* Add new command :command:`vcf_filter`.
 
 0.13.0 (2021-06-16)
 -------------------
