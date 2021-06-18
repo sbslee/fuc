@@ -52,7 +52,16 @@ class CovFrame:
     4       chr1      1004  35.641304  20.359149
     """
     def __init__(self, df):
-        self.df = df.reset_index(drop=True)
+        self._df = df.reset_index(drop=True)
+
+    @property
+    def df(self):
+        """pandas.DataFrame : DataFrame containing read depth data."""
+        return self._df
+
+    @df.setter
+    def df(self, value):
+        self._df = value.reset_index(drop=True)
 
     @property
     def samples(self):
@@ -76,7 +85,7 @@ class CovFrame:
         Returns
         -------
         CovFrame
-            CovFrame.
+            CovFrame object.
 
         See Also
         --------
@@ -111,18 +120,21 @@ class CovFrame:
     def from_file(
         cls, fn, zero=False, region=None, map_qual=None, names=None
     ):
-        """Construct CovFrame from one or more SAM/BAM/CRAM files.
+        """Construct a CovFrame from one or more SAM/BAM/CRAM files.
 
-        This method essentially wraps the ``samtools depth`` command.
+        Under the hood, this method computes read depth from the input files
+        using the ``depth`` command from the SAMtools program.
 
         Parameters
         ----------
         fn : str or list
-            SAM/BAM/CRAM file path(s).
+            SAM/BAM/CRAM file(s).
         zero : bool, default: False
             If True, output all positions (including those with zero depth).
         region : str, optional
-            Only report depth in specified region (format: CHR:FROM-TO).
+            Only report depth in the specified region ('chrom:start-end').
+            Requires the input file(s) to be indexed. Will increase the speed
+            significantly.
         map_qual: int, optional
             Only count reads with mapping quality greater than orequal to
             this number.
@@ -131,6 +143,11 @@ class CovFrame:
 
         Returns
         -------
+        CovFrame
+            CovFrame object.
+
+        See Also
+        --------
         CovFrame
             CovFrame.
         CovFrame.from_dict
