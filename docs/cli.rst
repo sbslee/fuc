@@ -558,7 +558,9 @@ vcf_filter
 .. code-block:: text
 
    $ fuc vcf_filter -h
-   usage: fuc vcf_filter [-h] [--greedy] [--opposite] [--samples PATH] vcf expr
+   usage: fuc vcf_filter [-h] [--greedy] [--opposite] [--samples PATH]
+                         [--filter_empty]
+                         vcf expr
    
    This command will filter a VCF file (both zipped and unzipped). It essentially
    wraps the 'pyvcf.VcfFrame.markmiss' method from the fuc API.
@@ -585,6 +587,7 @@ vcf_filter
                      query expression as missing and leave those that do intact
      --samples PATH  file of sample names to apply the marking (one sample per
                      line)
+     --filter_empty  use this flag to remove rows with no genotype calls at all
 
 vcf_merge
 =========
