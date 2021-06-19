@@ -7,6 +7,7 @@ Changelog
 * :issue:`23`: Deprecate methods :meth:`pyvcf.VcfFrame.markmiss_ad/af/dp` and add new method :meth:`pyvcf.VcfFrame.markmiss`.
 * Add new command :command:`vcf_filter`.
 * Update methods :meth:`pycov.CovFrame.slice/plot_region`.
+* :issue:`24`: Add new method :meth:`pyvcf.VcfFrame.drop_duplicates`.
 
 0.13.0 (2021-06-16)
 -------------------

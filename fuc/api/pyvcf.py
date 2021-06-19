@@ -3901,3 +3901,65 @@ class VcfFrame:
         vf.df.columns = columns
 
         return vf
+
+    def drop_duplicates(self, subset=None, keep='first'):
+        """
+        Return VcfFrame with duplicate rows removed.
+
+        This method essentially wraps the
+        :meth:`pandas.DataFrame.drop_duplicates` method.
+
+        Considering certain columns is optional.
+
+        Parameters
+        ----------
+        subset : column label or sequence of labels, optional
+            Only consider certain columns for identifying duplicates, by
+            default use all of the columns.
+        keep : {'first', 'last', False}, default 'first'
+            Determines which duplicates (if any) to keep.
+
+            - ``first`` : Drop duplicates except for the first occurrence.
+            - ``last`` : Drop duplicates except for the last occurrence.
+            - False : Drop all duplicates.
+
+        Returns
+        -------
+        VcfFrame
+            VcfFrame with duplicates removed.
+
+        Examples
+        --------
+
+        >>> from fuc import pyvcf
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr2', 'chr2'],
+        ...     'POS': [100, 100, 200, 200],
+        ...     'ID': ['.', '.', '.', '.'],
+        ...     'REF': ['A', 'A', 'C', 'C'],
+        ...     'ALT': ['C', 'T', 'G', 'G,A'],
+        ...     'QUAL': ['.', '.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.', '.'],
+        ...     'INFO': ['.', '.', '.', '.'],
+        ...     'FORMAT': ['GT', 'GT', 'GT', 'GT'],
+        ...     'A': ['0/1', './.', '0/1', './.'],
+        ...     'B': ['./.', '0/1', './.', '1/2'],
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF  ALT QUAL FILTER INFO FORMAT    A    B
+        0  chr1  100  .   A    C    .      .    .     GT  0/1  ./.
+        1  chr1  100  .   A    T    .      .    .     GT  ./.  0/1
+        2  chr2  200  .   C    G    .      .    .     GT  0/1  ./.
+        3  chr2  200  .   C  G,A    .      .    .     GT  ./.  1/2
+        >>> vf.drop_duplicates(['CHROM', 'POS', 'REF']).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    B
+        0  chr1  100  .   A   C    .      .    .     GT  0/1  ./.
+        1  chr2  200  .   C   G    .      .    .     GT  0/1  ./.
+        >>> vf.drop_duplicates(['CHROM', 'POS', 'REF'], keep='last').df
+          CHROM  POS ID REF  ALT QUAL FILTER INFO FORMAT    A    B
+        0  chr1  100  .   A    T    .      .    .     GT  ./.  0/1
+        1  chr2  200  .   C  G,A    .      .    .     GT  ./.  1/2
+        """
+        df = self.df.drop_duplicates(subset=subset, keep=keep)
+        return self.__class__(self.copy_meta(), df)
