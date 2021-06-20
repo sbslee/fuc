@@ -558,36 +558,45 @@ vcf_filter
 .. code-block:: text
 
    $ fuc vcf_filter -h
-   usage: fuc vcf_filter [-h] [--greedy] [--opposite] [--samples PATH]
+   usage: fuc vcf_filter [-h] [--expr TEXT] [--samples PATH]
+                         [--drop_duplicates [TEXT ...]] [--greedy] [--opposite]
                          [--filter_empty]
-                         vcf expr
+                         vcf
    
    This command will filter a VCF file (both zipped and unzipped). It essentially
-   wraps the 'pyvcf.VcfFrame.markmiss' method from the fuc API.
+   wraps multiple methods from the fuc API.
    
    usage examples:
-     $ fuc vcf_filter in.vcf 'GT == "0/0"' > out.vcf
-     $ fuc vcf_filter in.vcf 'GT != "0/0"' > out.vcf
-     $ fuc vcf_filter in.vcf 'DP < 30' > out.vcf
-     $ fuc vcf_filter in.vcf 'DP < 30' --greedy > out.vcf
-     $ fuc vcf_filter in.vcf 'AD[1] < 10' --greedy > out.vcf
-     $ fuc vcf_filter in.vcf 'AD[1] < 10 and DP < 30' --greedy > out.vcf
-     $ fuc vcf_filter in.vcf 'AD[1] < 10 or DP < 30' --greedy > out.vcf
-     $ fuc vcf_filter in.vcf 'AD[1] < 10 or DP < 30' --opposite > out.vcf
-     $ fuc vcf_filter in.vcf 'np.mean(AD) < 10' --greedy --samples sample.list > out.vcf
+     $ fuc vcf_filter in.vcf --expr 'GT == "0/0"' > out.vcf
+     $ fuc vcf_filter in.vcf --expr 'GT != "0/0"' > out.vcf
+     $ fuc vcf_filter in.vcf --expr 'DP < 30' > out.vcf
+     $ fuc vcf_filter in.vcf --expr 'DP < 30' --greedy > out.vcf
+     $ fuc vcf_filter in.vcf --expr 'AD[1] < 10' --greedy > out.vcf
+     $ fuc vcf_filter in.vcf --expr 'AD[1] < 10 and DP < 30' --greedy > out.vcf
+     $ fuc vcf_filter in.vcf --expr 'AD[1] < 10 or DP < 30' --greedy > out.vcf
+     $ fuc vcf_filter in.vcf --expr 'AD[1] < 10 or DP < 30' --opposite > out.vcf
+     $ fuc vcf_filter in.vcf --expr 'np.mean(AD) < 10' --greedy --samples sample.list > out.vcf
+     $ fuc vcf_filter in.vcf --drop_duplicates CHROM POS REF ALT > out.vcf
+     $ fuc vcf_filter in.vcf --filter_empty > out.vcf
    
    positional arguments:
-     vcf             VCF file
-     expr            expression to evaluate
+     vcf                   VCF file
    
    optional arguments:
-     -h, --help      show this help message and exit
-     --greedy        use this flag to mark even ambiguous genotypes as missing
-     --opposite      use this flag to mark all genotypes that do not satisfy the
-                     query expression as missing and leave those that do intact
-     --samples PATH  file of sample names to apply the marking (one sample per
-                     line)
-     --filter_empty  use this flag to remove rows with no genotype calls at all
+     -h, --help            show this help message and exit
+     --expr TEXT           expression to evaluate
+     --samples PATH        file of sample names to apply the marking (one sample
+                           per line)
+     --drop_duplicates [TEXT ...]
+                           only consider certain columns for identifying
+                           duplicates, by default use all of the columns.
+     --greedy              use this flag to mark even ambiguous genotypes as
+                           missing
+     --opposite            use this flag to mark all genotypes that do not
+                           satisfy the query expression as missing and leave
+                           those that do intact
+     --filter_empty        use this flag to remove rows with no genotype calls at
+                           all
 
 vcf_merge
 =========
