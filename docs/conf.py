@@ -31,6 +31,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
     'sphinx.ext.linkcode',
+    'sphinx.ext.autosectionlabel',
     'sphinx_rtd_theme',
     'sphinx_issues',
     'autodocsumm',
@@ -50,6 +51,8 @@ autodoc_default_options = {
 issues_github_path = 'sbslee/fuc'
 
 napoleon_use_param = False
+
+autosectionlabel_prefix_document = True
 
 # Include the example source for plots in API docs
 plot_include_source = True

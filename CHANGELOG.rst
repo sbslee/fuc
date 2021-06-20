@@ -1,6 +1,16 @@
 Changelog
 *********
 
+0.14.0 (2021-06-20)
+-------------------
+
+* :issue:`23`: Deprecate methods :meth:`pyvcf.VcfFrame.markmiss_ad/af/dp` and add new method :meth:`pyvcf.VcfFrame.markmiss`.
+* Add new command :command:`vcf_filter`.
+* Update methods :meth:`pycov.CovFrame.slice/plot_region`.
+* :issue:`24`: Add new method :meth:`pyvcf.VcfFrame.drop_duplicates`.
+* Update :meth:`pymaf.MafFrame.plot_snvcls` method to support various plotting modes.
+* Rename ``horizontal`` argument of :meth:`pymaf.MafFrame.plot_varsum` method to ``flip``.
+
 0.13.0 (2021-06-16)
 -------------------
 

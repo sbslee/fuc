@@ -11,6 +11,7 @@ Welcome to fuc's documentation!
    :caption: Contents:
 
    readme
+   glossary
    cli
    api
    tutorials

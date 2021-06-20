@@ -154,19 +154,19 @@ NONSYN_COLORS = [
     'tab:cyan', 'tab:pink', 'tab:orange', 'tab:brown'
 ]
 
-SNVCLS = {
-    'A>C': {'REP': 'T>G'},
-    'A>G': {'REP': 'T>C'},
-    'A>T': {'REP': 'T>A'},
-    'C>A': {'REP': 'C>A'},
-    'C>G': {'REP': 'C>G'},
-    'C>T': {'REP': 'C>T'},
-    'G>A': {'REP': 'C>T'},
-    'G>C': {'REP': 'C>G'},
-    'G>T': {'REP': 'C>A'},
-    'T>A': {'REP': 'T>A'},
-    'T>C': {'REP': 'T>C'},
-    'T>G': {'REP': 'T>G'},
+SNV_CLASSES = {
+    'A>C': {'class': 'T>G', 'type': 'Tv'},
+    'A>G': {'class': 'T>C', 'type': 'Ti'},
+    'A>T': {'class': 'T>A', 'type': 'Tv'},
+    'C>A': {'class': 'C>A', 'type': 'Tv'},
+    'C>G': {'class': 'C>G', 'type': 'Tv'},
+    'C>T': {'class': 'C>T', 'type': 'Ti'},
+    'G>A': {'class': 'C>T', 'type': 'Ti'},
+    'G>C': {'class': 'C>G', 'type': 'Tv'},
+    'G>T': {'class': 'C>A', 'type': 'Tv'},
+    'T>A': {'class': 'T>A', 'type': 'Tv'},
+    'T>C': {'class': 'T>C', 'type': 'Ti'},
+    'T>G': {'class': 'T>G', 'type': 'Tv'},
 }
 
 def legend_handles(name='regular'):
@@ -1015,18 +1015,42 @@ class MafFrame:
         plt.tight_layout()
         plt.subplots_adjust(wspace=0.01, hspace=0.01)
 
-    def plot_snvcls(self, ax=None, figsize=None, **kwargs):
-        """Create a bar plot for SNV class.
+    def plot_snvcls(
+        self, mode='count', cmap='Pastel1', flip=False, ax=None,
+        figsize=None, **kwargs
+    ):
+        """
+        Create various kinds of plot showing the distrubtion of SNV classes.
 
         Parameters
         ----------
+        mode : {'count', 'proportion', 'samples', 'titv'}, default: 'count'
+            Determines the plotting mode.
+
+            - ``count``: Bar plot showing the total counts of SNV classes
+              for all samples. It uses :meth:`seaborn.barplot` as the
+              plotting method.
+            - ``proportion``: Box plot showing the proportions of SNV classes
+              for all samples. It uses :meth:`seaborn.boxplot` as the
+              plotting method.
+            - ``samples``: Stacked bar plot showing the proportions of SNV classes
+              for each sample. It uses :meth:`pandas.DataFrame.plot.bar/barh`
+              as the plotting method.
+            - ``titv``: Box plot showing the proprtions of transition (Ti)
+              and transversion (Tv) events for all samples. It uses
+              :meth:`seaborn.boxplot` as the plotting method.
+
+        cmap : str, default: 'Pastel1'
+            Name of the colormap according to :meth:`matplotlib.cm.get_cmap`.
+        flip : bool, default: False
+            If True, flip the x and y axes.
         ax : matplotlib.axes.Axes, optional
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
             Width, height in inches. Format: (float, float).
         kwargs
-            Other keyword arguments will be passed down to
-            :meth:`matplotlib.axes.Axes.bar` and :meth:`seaborn.barplot`.
+            Other keyword arguments will be passed down to the respective
+            plotting method.
 
         Returns
         -------
@@ -1037,6 +1061,7 @@ class MafFrame:
         --------
 
         .. plot::
+            :context: close-figs
 
             >>> import matplotlib.pyplot as plt
             >>> from fuc import common, pymaf
@@ -1045,28 +1070,134 @@ class MafFrame:
             >>> mf = pymaf.MafFrame.from_file(f)
             >>> mf.plot_snvcls()
             >>> plt.tight_layout()
+
+        .. plot::
+            :context: close-figs
+
+            >>> mf.plot_snvcls(mode='proportion')
+            >>> plt.tight_layout()
+
+        .. plot::
+            :context: close-figs
+
+            >>> mf.plot_snvcls(mode='samples')
+            >>> plt.tight_layout()
+
+        .. plot::
+            :context: close-figs
+
+            >>> mf.plot_snvcls(mode='titv')
+            >>> plt.tight_layout()
         """
-        def one_row(r):
-            ref = r.Reference_Allele
-            alt = r.Tumor_Seq_Allele2
-            if (ref == '-' or
-                alt == '-' or
-                len(alt) != 1 or
-                len(ref) != 1 or
-                ref == alt):
-                return np.nan
-            return SNVCLS[f'{ref}>{alt}']['REP']
-        s = self.df.apply(one_row, axis=1).value_counts()
-        i = sorted(set([v['REP'] for k, v in SNVCLS.items()]))
-        s = s.reindex(index=i)
-        df = s.to_frame().reset_index()
-        df.columns = ['SNV', 'Count']
+        modes = {
+            'count': self._plot_snvcls_count,
+            'proportion': self._plot_snvcls_proportion,
+            'samples': self._plot_snvcls_samples,
+            'titv': self._plot_snvcls_titv,
+        }
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
-        sns.barplot(x='Count', y='SNV', data=df, ax=ax,
-            palette='pastel', **kwargs)
-        ax.set_xlabel('Count')
-        ax.set_ylabel('')
+        df = self.df[self.df.Variant_Type == 'SNP']
+        def one_row(r):
+            change = r.Reference_Allele + '>' + r.Tumor_Seq_Allele2
+            return SNV_CLASSES[change]['class']
+        s = df.apply(one_row, axis=1)
+        s.name = 'SNV_Class'
+        df = pd.concat([df, s], axis=1)
+        ax = modes[mode](df, flip, ax, cmap, **kwargs)
+        return ax
+
+    def _plot_snvcls_count(self, df, flip, ax, cmap, **kwargs):
+        s = df.SNV_Class.value_counts()
+        i = sorted(set([v['class'] for k, v in SNV_CLASSES.items()]))
+        s = s.reindex(index=i)
+        df = s.to_frame().reset_index()
+        df.columns = ['SNV_Class', 'Count']
+        kwargs = {'ax': ax,
+                  'data': df,
+                  'palette': cmap,
+                  **kwargs}
+        if flip:
+            sns.barplot(x='SNV_Class', y='Count', **kwargs)
+            ax.set_xlabel('')
+        else:
+            sns.barplot(x='Count', y='SNV_Class', **kwargs)
+            ax.set_ylabel('')
+        return ax
+
+    def _plot_snvcls_proportion(self, df, flip, ax, cmap, **kwargs):
+        s = df.groupby('Tumor_Sample_Barcode')['SNV_Class'].value_counts()
+        s.name = 'Count'
+        df = s.to_frame().reset_index()
+        df = df.pivot(index='Tumor_Sample_Barcode', columns='SNV_Class')
+        df = df.fillna(0)
+        df = df.apply(lambda r: r/r.sum(), axis=1)
+        df.columns = df.columns.get_level_values(1)
+        df.columns.name = ''
+        df = pd.melt(df, var_name='SNV_Class', value_name='Proportion')
+        kwargs = {'ax': ax,
+                  'data': df,
+                  'palette': cmap,
+                  **kwargs}
+        if flip:
+            sns.boxplot(x='Proportion', y='SNV_Class', **kwargs)
+            ax.set_ylabel('')
+        else:
+            sns.boxplot(x='SNV_Class', y='Proportion', **kwargs)
+            ax.set_xlabel('')
+        return ax
+
+    def _plot_snvcls_samples(self, df, flip, ax, cmap, **kwargs):
+        s = df.groupby('Tumor_Sample_Barcode')['SNV_Class'].value_counts()
+        s.name = 'Count'
+        df = s.to_frame().reset_index()
+        df = df.pivot(index='Tumor_Sample_Barcode', columns='SNV_Class')
+        df = df.fillna(0)
+        df = df.apply(lambda r: r/r.sum(), axis=1)
+        df.columns = df.columns.get_level_values(1)
+        df.columns.name = ''
+        kwargs = {'ax': ax,
+                  'stacked': True,
+                  'legend': False,
+                  'width': 1,
+                  'color': plt.cm.get_cmap(cmap).colors,
+                  **kwargs}
+        if flip:
+            df.plot.barh(**kwargs)
+            ax.set_yticks([])
+            ax.set_xlabel('Proportion')
+            ax.set_ylabel('Samples')
+        else:
+            df.plot.bar(**kwargs)
+            ax.set_xticks([])
+            ax.set_xlabel('Samples')
+            ax.set_ylabel('Proportion')
+        return ax
+
+    def _plot_snvcls_titv(self, df, flip, ax, cmap, **kwargs):
+        def one_row(r):
+            return SNV_CLASSES[r.SNV_Class]['type']
+        s = df.apply(one_row, axis=1)
+        s.name = 'SNV_Type'
+        df = pd.concat([df, s], axis=1)
+        s = df.groupby('Tumor_Sample_Barcode')['SNV_Type'].value_counts()
+        s.name = 'Count'
+        df = s.to_frame().reset_index()
+        df = df.pivot(index='Tumor_Sample_Barcode', columns='SNV_Type')
+        df = df.fillna(0)
+        df = df.apply(lambda r: r/r.sum(), axis=1)
+        df.columns = df.columns.get_level_values(1)
+        df.columns.name = ''
+        df = pd.melt(df, var_name='SNV_Type', value_name='Proportion')
+        kwargs = {'ax': ax,
+                  'data': df,
+                  **kwargs}
+        if flip:
+            sns.boxplot(x='Proportion', y='SNV_Type', **kwargs)
+            ax.set_ylabel('')
+        else:
+            sns.boxplot(x='SNV_Type', y='Proportion', **kwargs)
+            ax.set_xlabel('')
         return ax
 
     def plot_summary(
@@ -1182,7 +1313,7 @@ class MafFrame:
             Samples to be drawn (in the exact order).
         kwargs
             Other keyword arguments will be passed down to
-            :meth:`pandas.DataFrame.plot.barh`.
+            :meth:`pandas.DataFrame.plot.bar`.
 
         Returns
         -------
@@ -1207,7 +1338,7 @@ class MafFrame:
             df = df.loc[samples]
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
-        df.plot.bar(stacked=True, ax=ax, width=1.0, legend=False,
+        df.plot.bar(stacked=True, ax=ax, width=1, legend=False,
             color=NONSYN_COLORS, **kwargs)
         ax.set_xlabel('Samples')
         ax.set_ylabel('Count')
@@ -1309,13 +1440,13 @@ class MafFrame:
         ax.set_ylabel('')
         return ax
 
-    def plot_varsum(self, horizontal=False, ax=None, figsize=None):
+    def plot_varsum(self, flip=False, ax=None, figsize=None):
         """Create a summary box plot for variant classifications.
 
         Parameters
         ----------
-        horizontal : bool, default: False
-            If True, orientation of the plot will be set to horizontal.
+        flip : bool, default: False
+            If True, flip the x and y axes.
         ax : matplotlib.axes.Axes, optional
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
@@ -1325,12 +1456,25 @@ class MafFrame:
         -------
         matplotlib.axes.Axes
             The matplotlib axes containing the plot.
+
+        Examples
+        --------
+
+        .. plot::
+
+            >>> import matplotlib.pyplot as plt
+            >>> from fuc import common, pymaf
+            >>> common.load_dataset('tcga-laml')
+            >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+            >>> mf = pymaf.MafFrame.from_file(f)
+            >>> mf.plot_varsum()
+            >>> plt.tight_layout()
         """
         df = self.compute_tmb()
         df = pd.melt(df, value_vars=df.columns)
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
-        if horizontal:
+        if flip:
             x, y = 'variable', 'value'
             xlabel, ylabel = '', 'Samples'
         else:

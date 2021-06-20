@@ -6,11 +6,11 @@ the `pysam <https://pysam.readthedocs.io/en/latest/api.html>`_ package to
 allow fast computation and easy manipulation.
 """
 
+from . import common, pybam
 import pysam
 import numpy as np
 import pandas as pd
 from io import StringIO
-from . import pybam
 import seaborn as sns
 import matplotlib.pyplot as plt
 
@@ -52,7 +52,16 @@ class CovFrame:
     4       chr1      1004  35.641304  20.359149
     """
     def __init__(self, df):
-        self.df = df.reset_index(drop=True)
+        self._df = df.reset_index(drop=True)
+
+    @property
+    def df(self):
+        """pandas.DataFrame : DataFrame containing read depth data."""
+        return self._df
+
+    @df.setter
+    def df(self, value):
+        self._df = value.reset_index(drop=True)
 
     @property
     def samples(self):
@@ -76,7 +85,7 @@ class CovFrame:
         Returns
         -------
         CovFrame
-            CovFrame.
+            CovFrame object.
 
         See Also
         --------
@@ -111,18 +120,21 @@ class CovFrame:
     def from_file(
         cls, fn, zero=False, region=None, map_qual=None, names=None
     ):
-        """Construct CovFrame from one or more SAM/BAM/CRAM files.
+        """Construct a CovFrame from one or more SAM/BAM/CRAM files.
 
-        This method essentially wraps the ``samtools depth`` command.
+        Under the hood, this method computes read depth from the input files
+        using the ``depth`` command from the SAMtools program.
 
         Parameters
         ----------
         fn : str or list
-            SAM/BAM/CRAM file path(s).
+            SAM/BAM/CRAM file(s).
         zero : bool, default: False
             If True, output all positions (including those with zero depth).
         region : str, optional
-            Only report depth in specified region (format: CHR:FROM-TO).
+            Only report depth in the specified region ('chrom:start-end').
+            Requires the input file(s) to be indexed. Will increase the speed
+            significantly.
         map_qual: int, optional
             Only count reads with mapping quality greater than orequal to
             this number.
@@ -131,6 +143,11 @@ class CovFrame:
 
         Returns
         -------
+        CovFrame
+            CovFrame object.
+
+        See Also
+        --------
         CovFrame
             CovFrame.
         CovFrame.from_dict
@@ -176,19 +193,15 @@ class CovFrame:
         return cls(df)
 
     def plot_region(
-        self, chrom, start=None, end=None, names=None, ax=None,
-        figsize=None, **kwargs
+        self, region, names=None, ax=None, figsize=None, **kwargs
     ):
-        """Create a read depth profile for the given region.
+        """
+        Create a read depth profile for the region.
 
         Parameters
         ----------
-        chrom : str
-            Chromosome.
-        start : int, optional
-            Start position.
-        end : int, optional
-            End position.
+        region : str
+            Region (‘chrom:start-end’).
         names : str or list, optional
             Sample name or list of sample names.
         ax : matplotlib.axes.Axes, optional
@@ -197,7 +210,7 @@ class CovFrame:
             Width, height in inches. Format: (float, float).
         kwargs
             Other keyword arguments will be passed down to
-            :meth:`matplotlib.axes.Axes.plot` and :meth:`seaborn.lineplot`.
+            :meth:`seaborn.lineplot`.
 
         Returns
         -------
@@ -209,20 +222,21 @@ class CovFrame:
 
         .. plot::
 
-            >>> import matplotlib.pyplot as plt
-            >>> import numpy as np
-            >>> from fuc import pycov
-            >>> data = {
-            ...    'Chromosome': ['chr1'] * 1000,
-            ...    'Position': np.arange(1000, 2000),
-            ...    'Steven': np.random.normal(35, 5, 1000),
-            ...    'Jane': np.random.normal(25, 7, 1000)
-            ... }
-            >>> cf = pycov.CovFrame.from_dict(data)
-            >>> cf.plot_region('chr1')
-            >>> plt.tight_layout()
+            import matplotlib.pyplot as plt
+            import numpy as np
+            from fuc import pycov
+            data = {
+               'Chromosome': ['chr1'] * 1000,
+               'Position': np.arange(1000, 2000),
+               'A': np.random.normal(35, 5, 1000),
+               'B': np.random.normal(25, 7, 1000)
+            }
+            cf = pycov.CovFrame.from_dict(data)
+            cf.plot_region('chr1:1500-1800')
+            plt.tight_layout()
         """
-        cf = self.slice(chrom, start=start, end=end)
+        chrom, start, end = common.parse_region(region)
+        cf = self.slice(region)
         if names is None:
             names = cf.samples
         if isinstance(names, str):
@@ -238,17 +252,14 @@ class CovFrame:
         ax.set_ylabel('Depth')
         return ax
 
-    def slice(self, chrom, start=None, end=None):
-        """Return a sliced CovFrame for the given region.
+    def slice(self, region):
+        """
+        Slice the CovFrame for the region.
 
         Parameters
         ----------
-        chrom : str
-            Chromosome.
-        start : int, optional
-            Start position.
-        end : int, optional
-            End position.
+        region : str
+            Region (‘chrom:start-end’).
 
         Returns
         -------
@@ -258,22 +269,38 @@ class CovFrame:
         Examples
         --------
 
+        >>> import numpy as np
         >>> from fuc import pycov
         >>> data = {
         ...     'Chromosome': ['chr1']*500 + ['chr2']*500,
         ...     'Position': np.arange(1000, 2000),
-        ...     'Steven': np.random.normal(35, 5, 1000),
-        ...     'Jane': np.random.normal(25, 7, 1000)
+        ...     'A': np.random.normal(35, 5, 1000).astype(int),
+        ...     'B': np.random.normal(25, 7, 1000).astype(int)
         ... }
         >>> cf = pycov.CovFrame.from_dict(data)
         >>> cf.slice('chr2').df.head()
-          Chromosome  Position     Steven       Jane
-        0       chr2      1500  31.408382  20.409376
-        1       chr2      1501  36.173578  22.327581
-        2       chr2      1502  22.867945   9.962580
-        3       chr2      1503  29.047738  17.589284
-        4       chr2      1504  41.343270  26.612494
+          Chromosome  Position   A   B
+        0       chr2      1500  39  22
+        1       chr2      1501  28  31
+        2       chr2      1502  35  29
+        3       chr2      1503  38  22
+        4       chr2      1504  30  20
+        >>> cf.slice('chr2:1500-1504').df
+          Chromosome  Position   A   B
+        0       chr2      1500  39  22
+        1       chr2      1501  28  31
+        2       chr2      1502  35  29
+        3       chr2      1503  38  22
+        4       chr2      1504  30  20
+        >>> cf.slice('chr2:-1504').df
+          Chromosome  Position   A   B
+        0       chr2      1500  39  22
+        1       chr2      1501  28  31
+        2       chr2      1502  35  29
+        3       chr2      1503  38  22
+        4       chr2      1504  30  20
         """
+        chrom, start, end = common.parse_region(region)
         df = self.df[self.df.Chromosome == chrom]
         if start:
             df = df[df.Position >= start]

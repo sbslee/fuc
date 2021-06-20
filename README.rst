@@ -126,6 +126,7 @@ For getting help on the fuc CLI:
        maf_vcf2maf  [MAF] convert an annotated VCF file to a MAF file
        tbl_merge    [TABLE] merge two table files
        tbl_sum      [TABLE] summarize a table file
+       vcf_filter   [VCF] filter a VCF file
        vcf_merge    [VCF] merge two or more VCF files
        vcf_rename   [VCF] rename the samples in a VCF file.
        vcf_slice    [VCF] slice a VCF file
@@ -164,8 +165,7 @@ For getting help on a specific submodule (e.g. pyvcf):
 CLI Examples
 ============
 
-BAM
----
+**BAM**
 
 To print the header of a SAM file:
 
@@ -185,8 +185,7 @@ To slice a BAM file:
 
    $ fuc bam_slice in.bam chr1:100-200 out.bam
 
-BED
----
+**BED**
 
 To find intersection between BED files:
 
@@ -194,8 +193,7 @@ To find intersection between BED files:
 
    $ fuc bed_intxn 1.bed 2.bed 3.bed > intersect.bed
 
-FASTQ
------
+**FASTQ**
 
 To count sequence reads in a FASTQ file:
 
@@ -203,8 +201,7 @@ To count sequence reads in a FASTQ file:
 
    $ fuc fq_count example.fastq
 
-FUC
----
+**FUC**
 
 To check whether a file exists in the operating system:
 
@@ -218,8 +215,7 @@ To find all VCF files within the current directory recursively:
 
    $ fuc fuc_find .vcf.gz
 
-TABLE
------
+**TABLE**
 
 To merge two tab-delimited files:
 
@@ -227,8 +223,7 @@ To merge two tab-delimited files:
 
    $ fuc tbl_merge left.tsv right.tsv > merged.tsv
 
-VCF
----
+**VCF**
 
 To merge VCF files:
 
@@ -245,8 +240,7 @@ To filter a VCF file annotated by Ensemble VEP:
 API Examples
 ============
 
-BAM
----
+**BAM**
 
 To create read depth profile of a region from a CRAM file:
 
@@ -259,8 +253,7 @@ To create read depth profile of a region from a CRAM file:
 
 .. image:: https://raw.githubusercontent.com/sbslee/fuc-data/main/images/coverage.png
 
-VCF
----
+**VCF**
 
 To filter a VCF file based on a BED file:
 
@@ -315,8 +308,7 @@ To create various figures for normal-tumor analysis:
 
 .. image:: https://raw.githubusercontent.com/sbslee/fuc-data/main/images/normal-tumor.png
 
-MAF
----
+**MAF**
 
 To create an oncoplot with a MAF file:
 
