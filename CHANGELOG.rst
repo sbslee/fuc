@@ -1,6 +1,12 @@
 Changelog
 *********
 
+0.15.0 (in development)
+-----------------------
+
+* Update :command:`vcf_filter` command.
+* Update :command:`tbl_sum` command.
+
 0.14.0 (2021-06-20)
 -------------------
 

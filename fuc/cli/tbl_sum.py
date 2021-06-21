@@ -9,6 +9,7 @@ pandas pacakge.
 
 usage examples:
   $ fuc {api.common._script_name()} table.tsv
+  $ fuc {api.common._script_name()} table.csv --sep ,
 """
 
 def create_parser(subparsers):
@@ -51,10 +52,10 @@ def create_parser(subparsers):
         '--keep_default_na',
         action='store_false',
         help='whether or not to include the default NaN values when '
-             'parsing the data (see `pandas.read_table` for details)'
+             "parsing the data (see 'pandas.read_table' for details)"
     )
     parser.add_argument(
-        '--query',
+        '--expr',
         metavar='TEXT',
         help='query the columns of a pandas.DataFrame with a '
              """boolean expression (e.g. `--query "A == 'yes'"`)"""
@@ -66,6 +67,13 @@ def create_parser(subparsers):
         help='columns to be summarized (by default, all columns '
              'will be included)'
     )
+    parser.add_argument(
+        '--dtypes',
+        metavar='PATH',
+        help="file of column names and their data types (etheir "
+            "'categorical' or 'numeric'); one tab-delimited pair of column "
+            "name and data type per line"
+    )
 
 def main(args):
     if args.skiprows is None:
@@ -74,23 +82,44 @@ def main(args):
         skiprows = [int(x) for x in args.skiprows.split(',') if x]
     else:
         skiprows = int(args.skiprows)
+
     df = pd.read_table(args.table_file,
                        sep=args.sep,
                        skiprows=skiprows,
                        na_values=args.na_values,
                        keep_default_na=args.keep_default_na)
-    if args.query:
-        df = df.query(args.query)
+
+    if args.dtypes is not None:
+        with open(args.dtypes) as f:
+            for line in f:
+                fields = line.strip().split('\t')
+                col = fields[0]
+                dtype = fields[1]
+                if dtype == 'numeric':
+                    dtype = float
+                elif dtype == 'categorical':
+                    dtype = 'category'
+                else:
+                    raise TypeError("Data type must be either numeric or "
+                        "categorical.")
+                df[col] = df[col].astype(dtype)
+
+    if args.expr:
+        df = df.query(args.expr)
+
     if args.columns:
         headers = args.columns
     else:
         headers = df.columns
+
     print('='*70)
+
     for header in headers:
-        column = df[header]
-        if is_numeric_dtype(column):
-            print(column.describe())
-            print('='*70)
+        s = df[header]
+        print(f'Name: {header}')
+        print('Summary:')
+        if is_numeric_dtype(s):
+            print(s.describe().to_string())
         else:
-            print(column.value_counts())
-            print('='*70)
+            print(s.value_counts().sort_index().to_string())
+        print('='*70)
