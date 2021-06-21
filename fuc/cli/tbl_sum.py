@@ -117,6 +117,7 @@ def main(args):
     for header in headers:
         s = df[header]
         print(f'Name: {header}')
+        print(f'Count: {len(s)}')
         print('Summary:')
         if is_numeric_dtype(s):
             print(s.describe().to_string())
