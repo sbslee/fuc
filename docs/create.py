@@ -237,7 +237,7 @@ To create read depth profile of a region from a CRAM file:
     >>> from fuc import pycov
     >>> cf = pycov.CovFrame.from_file('HG00525.final.cram', zero=True,
     ...    region='chr12:21161194-21239796', names=['HG00525'])
-    >>> cf.plot_region('chr12', start=21161194, end=21239796)
+    >>> cf.plot_region('chr12:21161194-21239796')
 
 .. image:: https://raw.githubusercontent.com/sbslee/fuc-data/main/images/coverage.png
 

@@ -517,7 +517,7 @@ tbl_sum
    $ fuc tbl_sum -h
    usage: fuc tbl_sum [-h] [--sep TEXT] [--skiprows TEXT]
                       [--na_values TEXT [TEXT ...]] [--keep_default_na]
-                      [--query TEXT] [--columns TEXT [TEXT ...]]
+                      [--expr TEXT] [--columns TEXT [TEXT ...]] [--dtypes PATH]
                       table_file
    
    This command will summarize a table file. It essentially wraps the
@@ -526,6 +526,7 @@ tbl_sum
    
    usage examples:
      $ fuc tbl_sum table.tsv
+     $ fuc tbl_sum table.csv --sep ,
    
    positional arguments:
      table_file            table file
@@ -545,12 +546,15 @@ tbl_sum
                            '-NaN', '-nan', '1.#IND', '1.#QNAN', '<NA>', 'N/A',
                            'NA', 'NULL', 'NaN', 'n/a', 'nan', 'null')
      --keep_default_na     whether or not to include the default NaN values when
-                           parsing the data (see `pandas.read_table` for details)
-     --query TEXT          query the columns of a pandas.DataFrame with a boolean
+                           parsing the data (see 'pandas.read_table' for details)
+     --expr TEXT           query the columns of a pandas.DataFrame with a boolean
                            expression (e.g. `--query "A == 'yes'"`)
      --columns TEXT [TEXT ...]
                            columns to be summarized (by default, all columns will
                            be included)
+     --dtypes PATH         file of column names and their data types (etheir
+                           'categorical' or 'numeric'); one tab-delimited pair of
+                           column name and data type per line
 
 vcf_filter
 ==========
