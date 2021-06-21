@@ -380,7 +380,8 @@ class AnnFrame:
 
     @classmethod
     def from_file(cls, fn, sample_col='Tumor_Sample_Barcode', sep='\t'):
-        """Construct AnnFrame from a delimited text file.
+        """
+        Construct an AnnFrame from a delimited text file.
 
         The text file must have at least one column that represents
         sample names which are used as index for pandas.DataFrame.
@@ -864,7 +865,7 @@ class MafFrame:
         df = df.rename_axis(None, axis=1)
         return df
 
-    def matrix_waterfall(self, count=10, samples=None, keep_empty=False):
+    def matrix_waterfall(self, count=10, keep_empty=False):
         """
         Compute a matrix of variant classifications with a shape of
         (genes, samples).
@@ -876,8 +877,6 @@ class MafFrame:
         ----------
         count : int, default: 10
             Number of top mutated genes to include.
-        samples : list, optional
-            List of samples that should be used to compute the matrix.
         keep_empty : bool, default: False
             If True, keep samples with all ``NaN``'s.
 
@@ -887,9 +886,6 @@ class MafFrame:
             Dataframe containing waterfall data.
         """
         df = self.df[self.df.Variant_Classification.isin(NONSYN_NAMES)]
-
-        if samples is not None:
-            df = df[df.Tumor_Sample_Barcode.isin(samples)]
 
         f = lambda x: ''.join(x) if len(x) == 1 else 'Multi_Hit'
         df = df.groupby(['Hugo_Symbol', 'Tumor_Sample_Barcode'])[
@@ -1576,8 +1572,7 @@ class MafFrame:
         return ax
 
     def plot_waterfall(
-        self, count=10, keep_empty=False, af=None, sort_by=None,
-        sample_order=None, ax=None, figsize=None, **kwargs
+        self, count=10, keep_empty=False, samples=None, ax=None, figsize=None, **kwargs
     ):
         """Create a waterfall plot.
 
@@ -1587,11 +1582,7 @@ class MafFrame:
             Number of top mutated genes to display.
         keep_empty : bool, default: False
             If True, display samples that do not have any mutations.
-        af : AnnFrame, optional
-            AnnFrame containing sample annoation data for the MafFrame.
-        sort_by : list, optional
-            Columns in the AnnFrame to sort the samples by.
-        sample_order : list, optional
+        samples : list, optional
             List of samples to display.
         ax : matplotlib.axes.Axes, optional
             Pre-existing axes for the plot. Otherwise, crete a new one.
@@ -1621,13 +1612,8 @@ class MafFrame:
         """
         df = self.matrix_waterfall(count=count, keep_empty=keep_empty)
 
-        if sort_by is not None:
-            _ = af.df.loc[df.columns]
-            _ = _.sort_values(sort_by)
-            df = df[_.index]
-
-        if sample_order is not None:
-            df = df[sample_order]
+        if samples is not None:
+            df = df[samples]
 
         # Apply the mapping between items and integers.
         l = reversed(NONSYN_NAMES + ['Multi_Hit', 'None'])
@@ -1802,3 +1788,38 @@ class MafFrame:
             String representation of MafFrame.
         """
         return self.df.to_csv(index=False, sep='\t')
+
+    def filter_annot(self, af, expr):
+        """
+        Filter the MafFrame using sample annotation data.
+
+        Samples are selected by querying the columns of an AnnFrame with a
+        boolean expression. Samples not present in the MafFrame will be
+        excluded automatically.
+
+        Parameters
+        ----------
+        af : AnnFrame
+            AnnFrame with sample annotaton data.
+        expr : str
+            Query expression to evaluate.
+
+        Returns
+        -------
+        MafFrame
+            Filtered MafFrame.
+
+        Examples
+        --------
+
+        >>> from fuc import common, pymaf
+        >>> common.load_dataset('tcga-laml')
+        >>> mf = pymaf.MafFrame.from_file('~/fuc-data/tcga-laml/tcga_laml.maf.gz')
+        >>> af = pymaf.AnnFrame.from_file('~/fuc-data/tcga-laml/tcga_laml_annot.tsv')
+        >>> filtered_mf = mf.filter_annot(af, "FAB_classification == 'M4')
+        """
+        samples = af.df.query(expr).index
+        i = self.df.Tumor_Sample_Barcode.isin(samples)
+        df = self.df[i]
+        mf = self.__class__(df)
+        return mf
