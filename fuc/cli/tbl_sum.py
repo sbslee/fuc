@@ -100,8 +100,8 @@ def main(args):
                 elif dtype == 'categorical':
                     dtype = 'category'
                 else:
-                    raise TypeError("Data type must be either numeric or "
-                        "categorical.")
+                    raise TypeError("Data type must be either 'numeric' or "
+                        "'categorical'.")
                 df[col] = df[col].astype(dtype)
 
     if args.expr:
