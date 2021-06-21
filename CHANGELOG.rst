@@ -6,6 +6,9 @@ Changelog
 
 * Update :command:`vcf_filter` command.
 * Update :command:`tbl_sum` command.
+* Add ``samples`` and ``shape`` attributes to :class:`pymaf.AnnFrame` class.
+* Rename :meth:`pymaf.MafFrame.compute_genes/tmb/waterfall` methods to :meth:`pymaf.MafFrame.matrix_genes/tmb/waterfall`.
+* Add ``keep_empty`` argument to :meth:`pymaf.MafFrame.matrix_waterfall/plot_oncoplot/plot_waterfall` methods.
 
 0.14.0 (2021-06-20)
 -------------------

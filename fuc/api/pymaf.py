@@ -283,14 +283,15 @@ class AnnFrame:
     Sara_N                  Sara  Normal   57
     Sara_T                  Sara   Tumor   57
     """
-    def __init__(self, df):
-        self._df = self._check_df(df)
 
     def _check_df(self, df):
         if type(df.index) == pd.RangeIndex:
             m = "Index must be sample names, not 'pandas.RangeIndex'."
             raise ValueError(m)
         return df
+
+    def __init__(self, df):
+        self._df = self._check_df(df)
 
     @property
     def df(self):
@@ -300,6 +301,33 @@ class AnnFrame:
     @df.setter
     def df(self, value):
         self._df = self._check_df(value)
+
+    @property
+    def samples(self):
+        """list : List of the sample names."""
+        return list(self.df.index.to_list())
+
+    @property
+    def shape(self):
+        """tuple : Dimensionality of AnnFrame (samples, annotations)."""
+        return self.df.shape
+
+    def filter_mf(self, mf):
+        """
+        Filter the AnnFrame for the samples in the MafFrame.
+
+        Parameters
+        ----------
+        mf : MafFrame
+            MafFrame containing target samples.
+
+        Returns
+        -------
+        AnnFrame
+            Filtered AnnFrame object.
+        """
+        df = self.df.loc[mf.samples]
+        return self.__class__(df)
 
     @classmethod
     def from_dict(cls, data, sample_col='Tumor_Sample_Barcode'):
@@ -765,8 +793,10 @@ class MafFrame:
 
         return cls(df)
 
-    def compute_genes(self, count=10, mode='variants'):
-        """Compute a matrix of counts for genes and variant classifications.
+    def matrix_genes(self, count=10, mode='variants'):
+        """
+        Compute a matrix of variant counts with a shape of (genes, variant
+        classifications).
 
         Parameters
         ----------
@@ -796,7 +826,7 @@ class MafFrame:
             df = df[:count]
             df = df.rename_axis(None, axis=1)
         elif mode == 'samples':
-            df = self.compute_waterfall(count)
+            df = self.matrix_waterfall(count)
             df = df.apply(lambda r: r.value_counts(), axis=1)
             for varcls in NONSYN_NAMES + ['Multi_Hit']:
                 if varcls not in df.columns:
@@ -807,8 +837,10 @@ class MafFrame:
             raise ValueError(f'Found incorrect mode: {mode}')
         return df
 
-    def compute_tmb(self):
-        """Compute a matrix of counts for samples and variant classifications.
+    def matrix_tmb(self):
+        """
+        Compute a matrix of variant counts with a shape of (samples, variant
+        classifications).
 
         Returns
         -------
@@ -832,13 +864,22 @@ class MafFrame:
         df = df.rename_axis(None, axis=1)
         return df
 
-    def compute_waterfall(self, count=10):
-        """Compute a matrix of variant classifications for genes and samples.
+    def matrix_waterfall(self, count=10, samples=None, keep_empty=False):
+        """
+        Compute a matrix of variant classifications with a shape of
+        (genes, samples).
+
+        If there are multiple variant classifications available for a given
+        cell, they will be replaced as 'Multi_Hit'.
 
         Parameters
         ----------
         count : int, default: 10
-            Number of top mutated genes to display.
+            Number of top mutated genes to include.
+        samples : list, optional
+            List of samples that should be used to compute the matrix.
+        keep_empty : bool, default: False
+            If True, keep samples with all ``NaN``'s.
 
         Returns
         -------
@@ -846,6 +887,10 @@ class MafFrame:
             Dataframe containing waterfall data.
         """
         df = self.df[self.df.Variant_Classification.isin(NONSYN_NAMES)]
+
+        if samples is not None:
+            df = df[df.Tumor_Sample_Barcode.isin(samples)]
+
         f = lambda x: ''.join(x) if len(x) == 1 else 'Multi_Hit'
         df = df.groupby(['Hugo_Symbol', 'Tumor_Sample_Barcode'])[
             'Variant_Classification'].apply(f).to_frame()
@@ -860,8 +905,9 @@ class MafFrame:
         # Select the top mutated genes.
         df = df[:count]
 
-        # Remove columns (samples) with all NaN's.
-        df = df.dropna(axis=1, how='all')
+        # Drop samples with all NaN's.
+        if not keep_empty:
+            df = df.dropna(axis=1, how='all')
 
         # Sort the columns (samples).
         c = df.applymap(lambda x: 0 if pd.isnull(x) else 1).sort_values(
@@ -921,7 +967,7 @@ class MafFrame:
             colors = NONSYN_COLORS + ['k']
         else:
             raise ValueError(f'Found incorrect mode: {mode}')
-        df = self.compute_genes(count, mode=mode)
+        df = self.matrix_genes(count, mode=mode)
         df = df.iloc[::-1]
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
@@ -932,7 +978,7 @@ class MafFrame:
         return ax
 
     def plot_oncoplot(
-        self, count=10, figsize=(15, 10), label_fontsize=15,
+        self, count=10, keep_empty=False, figsize=(15, 10), label_fontsize=15,
         ticklabels_fontsize=15, legend_fontsize=15
     ):
         """Create an oncoplot.
@@ -941,6 +987,8 @@ class MafFrame:
         ----------
         count : int, default: 10
             Number of top mutated genes to display.
+        keep_empty : bool, default: False
+            If True, display samples that do not have any mutations.
         figsize : tuple, default: (15, 10)
             Width, height in inches. Format: (float, float).
         label_fontsize : float, default: 15
@@ -967,14 +1015,14 @@ class MafFrame:
         [[ax1, ax2], [ax3, ax4], [ax5, ax6]] = axes
 
         # Create the TMB plot.
-        samples = list(self.compute_waterfall(count).columns)
+        samples = list(self.matrix_waterfall(count=count, keep_empty=keep_empty).columns)
         self.plot_tmb(ax=ax1, samples=samples)
         ax1.set_xlabel('')
         ax1.spines['right'].set_visible(False)
         ax1.spines['top'].set_visible(False)
         ax1.spines['bottom'].set_visible(False)
         ax1.set_ylabel('TMB', fontsize=label_fontsize)
-        ax1.set_yticks([0, self.compute_tmb().sum(axis=1).max()])
+        ax1.set_yticks([0, self.matrix_tmb().sum(axis=1).max()])
         ax1.tick_params(axis='y', which='major',
                         labelsize=ticklabels_fontsize)
 
@@ -982,7 +1030,7 @@ class MafFrame:
         ax2.remove()
 
         # Create the waterfall plot.
-        self.plot_waterfall(count=count, ax=ax3, linewidths=1)
+        self.plot_waterfall(count=count, ax=ax3, linewidths=1, keep_empty=keep_empty)
         ax3.set_xlabel('')
         ax3.tick_params(axis='y', which='major', labelrotation=0,
                         labelsize=ticklabels_fontsize)
@@ -994,7 +1042,7 @@ class MafFrame:
         ax4.spines['top'].set_visible(False)
         ax4.set_yticks([])
         ax4.set_xlabel('Samples', fontsize=label_fontsize)
-        ax4.set_xticks([0, self.compute_genes(
+        ax4.set_xticks([0, self.matrix_genes(
             10, mode='samples').sum(axis=1).max()])
         ax4.set_ylim(-0.5, count-0.5)
         ax4.tick_params(axis='x', which='major',
@@ -1262,7 +1310,7 @@ class MafFrame:
                         labelsize=ticklabels_fontsize)
 
         # Create the 'Variants per sample' figure.
-        median = self.compute_tmb().sum(axis=1).median()
+        median = self.matrix_tmb().sum(axis=1).median()
         self.plot_tmb(ax=ax4)
         ax4.set_title(f'Variants per sample (median={median:.1f})',
                       fontsize=title_fontsize)
@@ -1333,7 +1381,7 @@ class MafFrame:
             >>> mf.plot_tmb()
             >>> plt.tight_layout()
         """
-        df = self.compute_tmb()
+        df = self.matrix_tmb()
         if samples is not None:
             df = df.loc[samples]
         if ax is None:
@@ -1381,7 +1429,7 @@ class MafFrame:
             >>> mf.plot_vaf('i_TumorVAF_WU')
             >>> plt.tight_layout()
         """
-        genes = self.compute_genes(count=count).index.to_list()
+        genes = self.matrix_genes(count=count).index.to_list()
         s = self.df.groupby('Hugo_Symbol')[col].median()
         genes = s[genes].sort_values(ascending=False).index.to_list()
         df = self.df[self.df.Hugo_Symbol.isin(genes)]
@@ -1470,7 +1518,7 @@ class MafFrame:
             >>> mf.plot_varsum()
             >>> plt.tight_layout()
         """
-        df = self.compute_tmb()
+        df = self.matrix_tmb()
         df = pd.melt(df, value_vars=df.columns)
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
@@ -1527,20 +1575,30 @@ class MafFrame:
         ax.set_ylabel('')
         return ax
 
-    def plot_waterfall(self, count=10, ax=None, figsize=None, **kwargs):
+    def plot_waterfall(
+        self, count=10, keep_empty=False, af=None, sort_by=None,
+        sample_order=None, ax=None, figsize=None, **kwargs
+    ):
         """Create a waterfall plot.
 
         Parameters
         ----------
         count : int, default: 10
             Number of top mutated genes to display.
+        keep_empty : bool, default: False
+            If True, display samples that do not have any mutations.
+        af : AnnFrame, optional
+            AnnFrame containing sample annoation data for the MafFrame.
+        sort_by : list, optional
+            Columns in the AnnFrame to sort the samples by.
+        sample_order : list, optional
+            List of samples to display.
         ax : matplotlib.axes.Axes, optional
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
             Width, height in inches. Format: (float, float).
         kwargs
             Other keyword arguments will be passed down to
-            :meth:`matplotlib.axes.Axes.pcolormesh()` and
             :meth:`seaborn.heatmap`.
 
         Returns
@@ -1561,7 +1619,15 @@ class MafFrame:
             >>> mf.plot_waterfall(linewidths=0.5)
             >>> plt.tight_layout()
         """
-        df = self.compute_waterfall(count)
+        df = self.matrix_waterfall(count=count, keep_empty=keep_empty)
+
+        if sort_by is not None:
+            _ = af.df.loc[df.columns]
+            _ = _.sort_values(sort_by)
+            df = df[_.index]
+
+        if sample_order is not None:
+            df = df[sample_order]
 
         # Apply the mapping between items and integers.
         l = reversed(NONSYN_NAMES + ['Multi_Hit', 'None'])

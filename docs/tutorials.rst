@@ -36,14 +36,14 @@ We can (relatively) easily achieve above thanks to the LEGO block-like plotting 
     fig.suptitle('Customized oncoplot', fontsize=20)
 
     # Create the TMB plot.
-    samples = list(mf.compute_waterfall(count).columns)
+    samples = list(mf.matrix_waterfall(count).columns)
     mf.plot_tmb(ax=ax1, samples=samples)
     ax1.set_xlabel('')
     ax1.spines['right'].set_visible(False)
     ax1.spines['top'].set_visible(False)
     ax1.spines['bottom'].set_visible(False)
     ax1.set_ylabel('TMB', fontsize=label_fontsize)
-    ax1.set_yticks([0, mf.compute_tmb().sum(axis=1).max()])
+    ax1.set_yticks([0, mf.matrix_tmb().sum(axis=1).max()])
     ax1.tick_params(axis='y', which='major', labelsize=ticklabels_fontsize)
 
     ax2.remove()
@@ -60,7 +60,7 @@ We can (relatively) easily achieve above thanks to the LEGO block-like plotting 
     ax4.spines['top'].set_visible(False)
     ax4.set_yticks([])
     ax4.set_xlabel('Samples', fontsize=label_fontsize)
-    ax4.set_xticks([0, mf.compute_genes(10, mode='samples').sum(axis=1).max()])
+    ax4.set_xticks([0, mf.matrix_genes(10, mode='samples').sum(axis=1).max()])
     ax4.set_ylim(-0.5, count-0.5)
     ax4.tick_params(axis='x', which='major', labelsize=ticklabels_fontsize)
 
