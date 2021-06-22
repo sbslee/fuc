@@ -1816,7 +1816,7 @@ class MafFrame:
         >>> common.load_dataset('tcga-laml')
         >>> mf = pymaf.MafFrame.from_file('~/fuc-data/tcga-laml/tcga_laml.maf.gz')
         >>> af = pymaf.AnnFrame.from_file('~/fuc-data/tcga-laml/tcga_laml_annot.tsv')
-        >>> filtered_mf = mf.filter_annot(af, "FAB_classification == 'M4')
+        >>> filtered_mf = mf.filter_annot(af, "FAB_classification == 'M4'")
         """
         samples = af.df.query(expr).index
         i = self.df.Tumor_Sample_Barcode.isin(samples)
