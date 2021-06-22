@@ -11,6 +11,8 @@ Changelog
 * Add ``keep_empty`` argument to :meth:`pymaf.MafFrame.matrix_waterfall/plot_oncoplot/plot_waterfall` methods.
 * Add :meth:`pymaf.MafFrame.filter_annot` method.
 * Add :meth:`pymaf.AnnFrame.sorted_samples` method.
+* Fix minor bug in :meth:`pymaf.MafFrame.to_frame` method.
+* Deprecate :meth:`pyvep.filter_lof` method.
 
 0.14.0 (2021-06-20)
 -------------------

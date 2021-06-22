@@ -505,7 +505,11 @@ def to_frame(vf, as_zero=False):
     else:
         df = df.replace('', np.nan)
     df.columns = annot_names(vf)
-    df = df.astype(DATA_TYPES)
+    d = {}
+    for col in df.columns:
+        if col in DATA_TYPES:
+            d[col] = DATA_TYPES[col]
+    df = df.astype(d)
     return df
 
 def pick_result(vf, mode='mostsevere'):
@@ -592,48 +596,6 @@ def annot_names(vf):
             l = re.search(r'Format: (.*?)">', vf.meta[i]).group(1).split('|')
     return l
 
-def filter_lof(vf, opposite=None, as_index=False):
-    """Select rows whose conseuqence annotation is deleterious and/or LoF.
-
-    Parameters
-    ----------
-    opposite : bool, default: False
-        If True, return rows that don't meet the said criteria.
-    as_index : bool, default: False
-        If True, return boolean index array instead of VcfFrame.
-
-    Returns
-    -------
-    VcfFrame or pandas.Series
-        Filtered VcfFrame or boolean index array.
-    """
-    consequence_index = annot_names(vf).index('Consequence')
-    impact_index = annot_names(vf).index('IMPACT')
-    polyphen_index = annot_names(vf).index('PolyPhen')
-    sift_index = annot_names(vf).index('SIFT')
-    def one_row(r):
-        l = row_firstann(r).split('|')
-        consequence = l[consequence_index]
-        impact = l[impact_index]
-        polyphen = l[polyphen_index]
-        sift = l[sift_index]
-        if impact not in ['HIGH', 'MODERATE']:
-            return False
-        if consequence == 'missense_variant':
-            if 'damaging' in polyphen or 'deleterious' in sift:
-                return True
-            else:
-                return False
-        return True
-    i = vf.df.apply(one_row, axis=1)
-    if opposite:
-        i = ~i
-    if as_index:
-        return i
-    df = vf.df[i]
-    vf = vf.__class__(vf.copy_meta(), df)
-    return vf
-
 def filter_query(vf, expr, opposite=None, as_index=False, as_zero=False):
     """
     Select rows that satisfy the query expression.
@@ -655,6 +617,22 @@ def filter_query(vf, expr, opposite=None, as_index=False, as_zero=False):
     -------
     VcfFrame or pandas.Series
         Filtered VcfFrame or boolean index array.
+
+    Examples
+    --------
+
+    >>> from fuc import common, pyvcf, pyvep
+    >>> common.load_dataset('tcga-laml')
+    >>> fn = '~/fuc-data/tcga-laml/tcga_laml_vep.vcf'
+    >>> vf = pyvcf.VcfFrame.from_file(fn)
+    >>> filtered_vf = pyvep.filter_query(vf, "SYMBOL == 'TP53'")
+    >>> filtered_vf = pyvep.filter_query(vf, "SYMBOL != 'TP53'")
+    >>> filtered_vf = pyvep.filter_query(vf, "SYMBOL != 'TP53'", opposite=True)
+    >>> filtered_vf = pyvep.filter_query(vf, "Consequence in ['splice_donor_variant', 'stop_gained']")
+    >>> filtered_vf = pyvep.filter_query(vf, "(SYMBOL == 'TP53') and (Consequence.str.contains('stop_gained'))")
+    >>> filtered_vf = pyvep.filter_query(vf, "gnomAD_AF < 0.001")
+    >>> filtered_vf = pyvep.filter_query(vf, "gnomAD_AF < 0.001", as_zero=True)
+    >>> filtered_vf = pyvep.filter_query(vf, "(IMPACT == 'HIGH') or (Consequence.str.contains('missense_variant') and (PolyPhen.str.contains('damaging') or SIFT.str.contains('deleterious')))")
     """
     df = to_frame(vf, as_zero=as_zero)
     i = vf.df.index.isin(df.query(expr).index)
