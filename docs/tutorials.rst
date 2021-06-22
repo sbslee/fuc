@@ -17,3 +17,7 @@ We can (relatively) easily achieve above thanks to the LEGO block-like plotting 
 We can go one step further and sort the samples by one or more annotations (:download:`customized_oncoplot_2.py <examples/customized_oncoplot_2.py>`):
 
 .. image:: https://raw.githubusercontent.com/sbslee/fuc-data/main/images/customized_oncoplot_2.png
+
+Finally, we can also subset the samples with annotation data (:download:`customized_oncoplot_3.py <examples/customized_oncoplot_3.py>`):
+
+.. image:: https://raw.githubusercontent.com/sbslee/fuc-data/main/images/customized_oncoplot_3.png
