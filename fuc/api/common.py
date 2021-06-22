@@ -79,6 +79,8 @@ def load_dataset(name, force=False):
             'tcga_cohort.txt.gz',
             'tcga_laml.maf.gz',
             'tcga_laml_annot.tsv',
+            'tcga_laml.vcf',
+            'tcga_laml_vep.vcf',
         ],
         'pyvcf': [
             'plot_comparison.vcf',
