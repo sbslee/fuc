@@ -13,6 +13,7 @@ Changelog
 * Add :meth:`pymaf.AnnFrame.sorted_samples` method.
 * Fix minor bug in :meth:`pymaf.MafFrame.to_frame` method.
 * Deprecate :meth:`pyvep.filter_lof/clinsig` methods.
+* Update :meth:`pymaf.MafFrame.from_vcf` method to extract genotype keys (e.g. DP, AD, AF).
 
 0.14.0 (2021-06-20)
 -------------------

@@ -699,7 +699,7 @@ class MafFrame:
         return cls(df)
 
     @classmethod
-    def from_vcf(cls, vcf):
+    def from_vcf(cls, vcf, keys=None, names=None):
         """Construct a MafFrame from a VCF file or VcfFrame.
 
         The input VCF should already contain functional annotation data
@@ -712,6 +712,10 @@ class MafFrame:
         ----------
         vcf : str or VcfFrame
             VCF file or VcfFrame.
+        keys : str or list
+            Genotype key or list of genotype keys.
+        names : str or list
+            Column name or list of column names to use in the MafFrame.
 
         Examples
         --------
@@ -813,6 +817,10 @@ class MafFrame:
                 Tumor_Seq_Allele2 = tumor_seq_allele2,
                 Tumor_Sample_Barcode = tumor_sample_barcode,
                 Protein_Change = protein_change,
+                CHROM = r.CHROM,
+                POS = r.POS,
+                REF = r.REF,
+                ALT = r.ALT,
             )
 
             return pd.Series(d)
@@ -827,6 +835,32 @@ class MafFrame:
         s.name = 'Tumor_Sample_Barcode'
         del df['Tumor_Sample_Barcode']
         df = df.join(s)
+
+        # Append the genotype keys.
+        if keys is None:
+            keys = []
+        if names is None:
+            names = []
+        if isinstance(keys, str):
+            keys = [keys]
+        if isinstance(names, str):
+            names = [names]
+        for i, key in enumerate(keys):
+            temp_df = vf.extract(key)
+            temp_df = pd.concat([vf.df.iloc[:, :9], temp_df], axis=1)
+            temp_df = temp_df.drop(
+                columns=['ID', 'QUAL', 'FILTER', 'INFO', 'FORMAT'])
+            temp_df = pd.melt(
+                temp_df,
+                id_vars=['CHROM', 'POS', 'REF', 'ALT'],
+                var_name='Tumor_Sample_Barcode',
+            )
+            temp_df = temp_df[temp_df.value != '.']
+            df = df.merge(temp_df,
+                on=['CHROM', 'POS', 'REF', 'ALT', 'Tumor_Sample_Barcode'])
+            df = df.rename(columns={'value': names[i]})
+
+        df = df.drop(columns=['CHROM', 'POS', 'REF', 'ALT'])
 
         return cls(df)
 
