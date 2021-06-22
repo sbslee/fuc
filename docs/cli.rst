@@ -729,18 +729,16 @@ vcf_vep
    details on query expression, please visit the method's documentation page.
    
    usage examples:
-     $ fuc vcf_vep in.vcf 'SYMBOL == "TP53"' > out.vcf
-     $ fuc vcf_vep in.vcf 'SYMBOL != "TP53"' > out.vcf
-     $ fuc vcf_vep in.vcf 'SYMBOL == "TP53"' --opposite > out.vcf
-     $ fuc vcf_vep in.vcf \
-         'Consequence in ["splice_donor_variant", "stop_gained"]' > out.vcf
-     $ fuc vcf_vep in.vcf \
-         '(SYMBOL == "TP53") and (Consequence.str.contains("stop_gained"))' > out.vcf
-     $ fuc vcf_vep in.vcf 'gnomAD_AF < 0.001' > out.vcf
-     $ fuc vcf_vep in.vcf 'gnomAD_AF < 0.001' --as_zero > out.vcf
+     $ fuc vcf_vep in.vcf "SYMBOL == 'TP53'" > out.vcf
+     $ fuc vcf_vep in.vcf "SYMBOL != 'TP53'" > out.vcf
+     $ fuc vcf_vep in.vcf "SYMBOL == 'TP53'" --opposite > out.vcf
+     $ fuc vcf_vep in.vcf "Consequence in ['splice_donor_variant', 'stop_gained']" > out.vcf
+     $ fuc vcf_vep in.vcf "(SYMBOL == 'TP53') and (Consequence.str.contains('stop_gained'))" > out.vcf
+     $ fuc vcf_vep in.vcf "gnomAD_AF < 0.001" > out.vcf
+     $ fuc vcf_vep in.vcf "gnomAD_AF < 0.001" --as_zero > out.vcf
    
    positional arguments:
-     vcf         Ensemble VEP-annotated VCF file
+     vcf         VCF file annotated with Ensemble VEP
      expr        query expression to evaluate
    
    optional arguments:
