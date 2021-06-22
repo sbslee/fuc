@@ -528,6 +528,9 @@ class AnnFrame:
         divide the values into equal-sized intervals, with the number of
         intervals determined by ``segments``.
 
+        See the :ref:`tutorials:Create customized oncoplots` tutorial to
+        learn how to create customized oncoplots.
+
         Parameters
         ----------
         col : str
@@ -998,7 +1001,11 @@ class MafFrame:
         self, count=10, keep_empty=False, figsize=(15, 10), label_fontsize=15,
         ticklabels_fontsize=15, legend_fontsize=15
     ):
-        """Create an oncoplot.
+        """
+        Create a standard oncoplot.
+
+        See the :ref:`tutorials:Create customized oncoplots` tutorial to
+        learn how to create customized oncoplots.
 
         Parameters
         ----------
@@ -1595,7 +1602,11 @@ class MafFrame:
     def plot_waterfall(
         self, count=10, keep_empty=False, samples=None, ax=None, figsize=None, **kwargs
     ):
-        """Create a waterfall plot.
+        """
+        Create a waterfall plot.
+
+        See the :ref:`tutorials:Create customized oncoplots` tutorial to
+        learn how to create customized oncoplots.
 
         Parameters
         ----------

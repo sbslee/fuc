@@ -12,4 +12,8 @@ While the plot is pleasing to the eye, one may wish to customize it to add, for 
 
 .. image:: https://raw.githubusercontent.com/sbslee/fuc-data/main/images/customized_oncoplot_1.png
 
-We can (relatively) easily achieve above thanks to the LEGO block-like plotting methods in the ``pymaf`` submodule (:download:`click <examples/customized_oncoplot_1.py>`).
+We can (relatively) easily achieve above thanks to the LEGO block-like plotting methods in the ``pymaf`` submodule (:download:`customized_oncoplot_1.py <examples/customized_oncoplot_1.py>`).
+
+We can go one step further and sort the samples by one or more annotations (:download:`customized_oncoplot_2.py <examples/customized_oncoplot_2.py>`):
+
+.. image:: https://raw.githubusercontent.com/sbslee/fuc-data/main/images/customized_oncoplot_2.png

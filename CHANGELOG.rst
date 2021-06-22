@@ -10,6 +10,7 @@ Changelog
 * Rename :meth:`pymaf.MafFrame.compute_genes/tmb/waterfall` methods to :meth:`pymaf.MafFrame.matrix_genes/tmb/waterfall`.
 * Add ``keep_empty`` argument to :meth:`pymaf.MafFrame.matrix_waterfall/plot_oncoplot/plot_waterfall` methods.
 * Add :meth:`pymaf.MafFrame.filter_annot` method.
+* Add :meth:`pymaf.AnnFrame.sorted_samples` method.
 
 0.14.0 (2021-06-20)
 -------------------
