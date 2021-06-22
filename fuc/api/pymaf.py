@@ -645,22 +645,31 @@ class MafFrame:
 
     @classmethod
     def from_file(cls, fn):
-        """Construct MafFrame from a MAF file.
+        """
+        Construct a MafFrame from a MAF file.
 
         Parameters
         ----------
         fn : str
-            MAF file path (zipped or unzipped).
+            MAF file (zipped or unzipped).
 
         Returns
         -------
         MafFrame
-            MafFrame.
+            MafFrame object.
 
         See Also
         --------
         MafFrame
             MafFrame object creation using constructor.
+
+        Examples
+        --------
+
+        >>> from fuc import common, pymaf
+        >>> common.load_dataset('tcga-laml')
+        >>> fn = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+        >>> mf = pymaf.MafFrame.from_file(fn)
         """
         # Read the MAF file.
         df = pd.read_table(fn)
@@ -683,6 +692,9 @@ class MafFrame:
         # If necessary, match the letter case.
         if case_dict:
             df = df.rename(columns=case_dict)
+
+        # Set the data types.
+        df.Chromosome = df.Chromosome.astype(str)
 
         return cls(df)
 
@@ -1795,8 +1807,14 @@ class MafFrame:
                 return r
             df = df.apply(one_row, axis=1)
 
+        # Create the metadata.
+        meta = [
+            '##fileformat=VCFv4.3',
+            '##source=fuc.api.pymaf.MafFrame.to_vcf',
+        ]
+
         # Create the VcfFrame.
-        vf = pyvcf.VcfFrame(['##fileformat=VCFv4.3'], df)
+        vf = pyvcf.VcfFrame(meta, df)
 
         return vf
 
