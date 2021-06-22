@@ -12,7 +12,7 @@ Changelog
 * Add :meth:`pymaf.MafFrame.filter_annot` method.
 * Add :meth:`pymaf.AnnFrame.sorted_samples` method.
 * Fix minor bug in :meth:`pymaf.MafFrame.to_frame` method.
-* Deprecate :meth:`pyvep.filter_lof` method.
+* Deprecate :meth:`pyvep.filter_lof/clinsig` methods.
 
 0.14.0 (2021-06-20)
 -------------------
