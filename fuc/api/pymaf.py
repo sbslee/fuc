@@ -700,7 +700,7 @@ class MafFrame:
 
     @classmethod
     def from_vcf(cls, vcf):
-        """Construct MafFrame from a VCF file or VcfFrame.
+        """Construct a MafFrame from a VCF file or VcfFrame.
 
         The input VCF should already contain functional annotation data
         from a tool such as Ensemble VEP, SnpEff, and ANNOVAR. The
