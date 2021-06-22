@@ -240,10 +240,11 @@ def legend_handles(name='regular'):
     return handles
 
 class AnnFrame:
-    """Class for storing sample annotation data.
+    """
+    Class for storing sample annotation data.
 
-    This class stores sample annotation data as pandas.DataFrame with sample
-    names as index.
+    This class stores sample annotation data as :class:`pandas.DataFrame`
+    with sample names as index.
 
     Note that an AnnFrame can have a different set of samples than its
     accompanying MafFrame.
@@ -520,11 +521,12 @@ class AnnFrame:
         self, col, samples=None, numeric=False, segments=5, decimals=0,
         cmap='Pastel1', ax=None, figsize=None, **kwargs
     ):
-        """Create a 1D categorical heatmap for the given column.
+        """
+        Create a 1D categorical heatmap of the column.
 
-        In the case of a numeric column, use ``numeric=True`` which will
+        In the case of a numeric column, set ``numeric`` as True which will
         divide the values into equal-sized intervals, with the number of
-        intervals determined by the `segments` option.
+        intervals determined by ``segments``.
 
         Parameters
         ----------
@@ -587,6 +589,25 @@ class AnnFrame:
         ax.set_xticks([])
         ax.set_yticks([])
         return ax
+
+    def sorted_samples(self, by, mf=None, keep_empty=False, nonsyn=False):
+        """
+        Return a sorted list of sample names.
+
+        Parameters
+        ----------
+        df : str or list
+            Column or list of columns to sort by.
+        """
+        df = self.df.copy()
+
+        if nonsyn:
+            samples = mf.matrix_waterfall(keep_empty=keep_empty).columns
+            df = df.loc[samples]
+
+        df = df.sort_values(by=by)
+
+        return df.index.to_list()
 
 class MafFrame:
     """Class for storing MAF data.
