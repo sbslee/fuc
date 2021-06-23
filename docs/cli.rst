@@ -20,7 +20,7 @@ For getting help on the fuc CLI:
      COMMAND
        bam_head     [BAM] Print the header of a SAM/BAM/CRAM file.
        bam_index    [BAM] Index a SAM/BAM/CRAM file.
-       bam_rename   [BAM] Rename the samples in a BAM/CRAM file.
+       bam_rename   [BAM] Rename the samples in a SAM/BAM/CRAM file.
        bam_slice    [BAM] Slice a SAM/BAM/CRAM file.
        bed_intxn    [BED] Find the intersection of two or more BED files.
        bed_sum      [BED] Summarize a BED file.
@@ -103,14 +103,15 @@ bam_rename
    $ fuc bam_rename -h
    usage: fuc bam_rename [-h] bam name
    
-   This command will rename the sample(s) in the input BAM/CRAM file.
+   This command will rename the sample(s) in the input SAM/BAM/CRAM file.
    
    usage examples:
+     $ fuc bam_rename in.sam NA12878 > out.sam
      $ fuc bam_rename in.bam NA12878 > out.bam
      $ fuc bam_rename in.cram NA12878 > out.cram
    
    positional arguments:
-     bam         BAM/CRAM file.
+     bam         SAM/BAM/CRAM file.
      name        New sample name.
    
    optional arguments:

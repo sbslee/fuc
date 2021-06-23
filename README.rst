@@ -110,7 +110,7 @@ For getting help on the fuc CLI:
      COMMAND
        bam_head     [BAM] Print the header of a SAM/BAM/CRAM file.
        bam_index    [BAM] Index a SAM/BAM/CRAM file.
-       bam_rename   [BAM] Rename the samples in a BAM/CRAM file.
+       bam_rename   [BAM] Rename the samples in a SAM/BAM/CRAM file.
        bam_slice    [BAM] Slice a SAM/BAM/CRAM file.
        bed_intxn    [BED] Find the intersection of two or more BED files.
        bed_sum      [BED] Summarize a BED file.
@@ -165,7 +165,7 @@ For getting help on a specific submodule (e.g. pyvcf):
 CLI Examples
 ============
 
-**BAM**
+**SAM/BAM/CRAM**
 
 To print the header of a SAM file:
 
@@ -179,11 +179,17 @@ To index a CRAM file:
 
    $ fuc bam_index in.cram
 
+To rename the samples in a SAM file:
+
+.. code-block:: text
+
+   $ fuc bam_rename in.sam NA12878 > out.sam
+
 To slice a BAM file:
 
 .. code-block:: text
 
-   $ fuc bam_slice in.bam chr1:100-200 out.bam
+   $ fuc bam_slice in.bam chr1:100-200 > out.bam
 
 **BED**
 

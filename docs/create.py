@@ -153,7 +153,7 @@ For getting help on a specific submodule (e.g. pyvcf):
 CLI Examples
 ============
 
-**BAM**
+**SAM/BAM/CRAM**
 
 To print the header of a SAM file:
 
@@ -167,11 +167,17 @@ To index a CRAM file:
 
    $ fuc bam_index in.cram
 
+To rename the samples in a SAM file:
+
+.. code-block:: text
+
+   $ fuc bam_rename in.sam NA12878 > out.sam
+
 To slice a BAM file:
 
 .. code-block:: text
 
-   $ fuc bam_slice in.bam chr1:100-200 out.bam
+   $ fuc bam_slice in.bam chr1:100-200 > out.bam
 
 **BED**
 
