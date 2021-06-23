@@ -46,7 +46,7 @@ def create_parser(subparsers):
     )
 
 def main(args):
-    options = []
+    options = ['--no-PG']
 
     # Determine the output format.
     if args.format == 'BAM':

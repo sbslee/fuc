@@ -24,7 +24,7 @@ def create_parser(subparsers):
     parser.add_argument('name', help='New sample name.')
 
 def main(args):
-    old_lines = pysam.view('-H', args.bam).strip().split('\n')
+    old_lines = pysam.view('-H', args.bam, '--no-PG').strip().split('\n')
     new_lines = []
 
     for old_line in old_lines:
@@ -49,4 +49,5 @@ def main(args):
         with open(f'{t}/header.sam', 'w') as f:
             f.write('\n'.join(new_lines))
 
-        sys.stdout.buffer.write(pysam.reheader(f'{t}/header.sam', args.bam))
+        alignments = pysam.reheader(f'{t}/header.sam', args.bam, '--no-PG')
+        sys.stdout.buffer.write(alignments)

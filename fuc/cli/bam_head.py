@@ -23,5 +23,5 @@ def create_parser(subparsers):
     parser.add_argument('bam', help='SAM/BAM/CRAM file.')
 
 def main(args):
-    header = pysam.view('-H', args.bam)
+    header = pysam.view('-H', args.bam, '--no-PG')
     sys.stdout.write(header)
