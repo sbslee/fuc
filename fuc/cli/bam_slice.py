@@ -37,7 +37,7 @@ def create_parser(subparsers):
         choices=['SAM', 'BAM', 'CRAM'],
         help=
             "Output format (default: 'BAM') (choices: 'SAM', 'BAM', 'CRAM'). "
-            "A FASTA file ('--fasta') is required for 'CRAM'."
+            "A FASTA file must be specified with '--fasta' for 'CRAM'."
     )
     parser.add_argument(
         '--fasta',
@@ -51,10 +51,15 @@ def main(args):
     # Determine the output format.
     if args.format == 'BAM':
         stdout_method = sys.stdout.buffer.write
-        options.append('-b')
+        options += ['-b']
     elif args.format == 'CRAM':
         stdout_method = sys.stdout.buffer.write
-        options.append('-C')
+        if args.fasta is None:
+            raise ValueError(
+                "A FASTA file must be specified with '--fasta' "
+                "when '--format' is 'CRAM'."
+            )
+        options += ['-C', '-T', args.fasta]
     else:
         stdout_method = sys.stdout.write
 

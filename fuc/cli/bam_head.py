@@ -1,9 +1,11 @@
+import sys
+
 from .. import api
+
 import pysam
 
 description = f"""
-This command will print the header of a SAM/BAM/CRAM file. It essentially
-wraps the 'pysam.view' method from the pysam package.
+This command will print the header of the input SAM/BAM/CRAM file.
 
 usage examples:
   $ fuc {api.common._script_name()} in.sam
@@ -18,8 +20,8 @@ def create_parser(subparsers):
         help='[BAM] Print the header of a SAM/BAM/CRAM file.',
         description=description,
     )
-    parser.add_argument('bam', help='SAM/BAM/CRAM file')
+    parser.add_argument('bam', help='SAM/BAM/CRAM file.')
 
 def main(args):
     header = pysam.view('-H', args.bam)
-    print(header, end='')
+    sys.stdout.write(header)
