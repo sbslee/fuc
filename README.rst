@@ -177,7 +177,7 @@ To index a CRAM file:
 
 .. code-block:: text
 
-   $ fuc bam_head in.cram
+   $ fuc bam_index in.cram
 
 To slice a BAM file:
 
