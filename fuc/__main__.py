@@ -4,18 +4,27 @@ from .version import __version__
 from .cli import commands
 
 def main():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        add_help=False,
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
+    parser.add_argument(
+        '-h',
+        '--help',
+        action='help',
+        default=argparse.SUPPRESS,
+        help='Show this help message and exit.',
+    )
     parser.add_argument(
         '-v',
         '--version',
         action='version',
         version=f'%(prog)s {__version__}',
-        help='show the version number and exit'
+        help='Show the version number and exit.'
     )
     subparsers = parser.add_subparsers(
         dest='command',
         metavar='COMMAND',
-        help='name of the command',
         required=True,
     )
     for name, command in commands.items():

@@ -15,7 +15,7 @@ def create_parser(subparsers):
     parser = api.common._add_parser(
         subparsers,
         api.common._script_name(),
-        help='[BAM] print the header of a SAM/BAM/CRAM file',
+        help='[BAM] Print the header of a SAM/BAM/CRAM file.',
         description=description,
     )
     parser.add_argument('bam', help='SAM/BAM/CRAM file')

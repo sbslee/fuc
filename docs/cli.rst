@@ -17,35 +17,35 @@ For getting help on the fuc CLI:
    usage: fuc [-h] [-v] COMMAND ...
    
    positional arguments:
-     COMMAND        name of the command
-       bam_head     [BAM] print the header of a SAM/BAM/CRAM file
-       bam_index    [BAM] index a SAM/BAM/CRAM file
-       bam_rename   [BAM] rename the samples in a SAM/BAM/CRAM file
-       bam_slice    [BAM] slice a SAM/BAM/CRAM file
-       bed_intxn    [BED] find intersection of two or more BED files
-       bed_sum      [BED] summarize a BED file
-       fq_count     [FASTQ] count sequence reads in FASTQ files
-       fq_sum       [FASTQ] summarize a FASTQ file
-       fuc_compf    [FUC] compare contents of two files
-       fuc_demux    [FUC] parse Reports directory from bcl2fastq or bcl2fastq2
-       fuc_exist    [FUC] check whether files/directories exist
-       fuc_find     [FUC] find files with certain extension recursively
-       maf_maf2vcf  [MAF] convert a MAF file to a VCF file
-       maf_oncoplt  [MAF] create an oncoplot with a MAF file
-       maf_sumplt   [MAF] create a summary plot with a MAF file
-       maf_vcf2maf  [MAF] convert an annotated VCF file to a MAF file
-       tbl_merge    [TABLE] merge two table files
-       tbl_sum      [TABLE] summarize a table file
-       vcf_filter   [VCF] filter a VCF file
-       vcf_merge    [VCF] merge two or more VCF files
-       vcf_rename   [VCF] rename the samples in a VCF file.
-       vcf_slice    [VCF] slice a VCF file
-       vcf_vcf2bed  [VCF] convert a VCF file to a BED file
-       vcf_vep      [VCF] filter a VCF file annotated by Ensemble VEP
+     COMMAND
+       bam_head     [BAM] Print the header of a SAM/BAM/CRAM file.
+       bam_index    [BAM] Index a SAM/BAM/CRAM file.
+       bam_rename   [BAM] Rename the samples in a SAM/BAM/CRAM file.
+       bam_slice    [BAM] Slice a SAM/BAM/CRAM file.
+       bed_intxn    [BED] Find the intersection of two or more BED files.
+       bed_sum      [BED] Summarize a BED file.
+       fq_count     [FASTQ] Count sequence reads in FASTQ files.
+       fq_sum       [FASTQ] Summarize a FASTQ file.
+       fuc_compf    [FUC] Compare the contents of two files.
+       fuc_demux    [FUC] Parse the Reports directory from bcl2fastq.
+       fuc_exist    [FUC] Check whether certain files exist.
+       fuc_find     [FUC] Find all files with a certain extension recursively.
+       maf_maf2vcf  [MAF] Convert a MAF file to a VCF file.
+       maf_oncoplt  [MAF] Create an oncoplot with a MAF file.
+       maf_sumplt   [MAF] Create a summary plot with a MAF file.
+       maf_vcf2maf  [MAF] Convert a VCF file to a MAF file.
+       tbl_merge    [TABLE] Merge two table files.
+       tbl_sum      [TABLE] Summarize a table file.
+       vcf_filter   [VCF] Filter a VCF file.
+       vcf_merge    [VCF] Merge two or more VCF files.
+       vcf_rename   [VCF] Rename the samples in a VCF file.
+       vcf_slice    [VCF] Slice a VCF file.
+       vcf_vcf2bed  [VCF] Convert a VCF file to a BED file.
+       vcf_vep      [VCF] Filter a VCF file annotated by Ensemble VEP.
    
    optional arguments:
-     -h, --help     show this help message and exit
-     -v, --version  show the version number and exit
+     -h, --help     Show this help message and exit.
+     -v, --version  Show the version number and exit.
 
 For getting help on a specific command (e.g. vcf_merge):
 
@@ -73,7 +73,7 @@ bam_head
      bam         SAM/BAM/CRAM file
    
    optional arguments:
-     -h, --help  show this help message and exit
+     -h, --help  Show this help message and exit.
 
 bam_index
 =========
@@ -95,7 +95,7 @@ bam_index
      bam         SAM/BAM/CRAM file
    
    optional arguments:
-     -h, --help  show this help message and exit
+     -h, --help  Show this help message and exit.
 
 bam_rename
 ==========
@@ -119,7 +119,7 @@ bam_rename
      out         output file
    
    optional arguments:
-     -h, --help  show this help message and exit
+     -h, --help  Show this help message and exit.
 
 bam_slice
 =========
@@ -127,27 +127,21 @@ bam_slice
 .. code-block:: text
 
    $ fuc bam_slice -h
-   usage: fuc bam_slice [-h] [--no_index] bam region out
+   usage: fuc bam_slice [-h] [--format TEXT] bam region [region ...]
    
-   This command will slice a SAM/BAM/CRAM file. It essentially wraps the
-   'pysam.view' method from the pysam package.
-   
-   By default, the command will index the output file. Use the '--no_index' flag
-   to skip indexing.
+   This command will slice the input SAM/BAM/CRAM file for the specified region(s).
    
    usage examples:
-     $ fuc bam_slice in.sam 4:300-400 out.sam
-     $ fuc bam_slice in.bam chr1:100-200 out.bam
-     $ fuc bam_slice in.cram chr1:100-200 out.cram --no_index
+     $ fuc bam_slice in.bam chr1:100-200 > out.bam
+     $ fuc bam_slice in.bam chr1:100-200 chr2:100-200 > out.bam
    
    positional arguments:
-     bam         SAM/BAM/CRAM file
-     region      region ('chrom:start-end')
-     out         output file
+     bam            SAM/BAM/CRAM file
+     region         space-separated regions ('chrom:start-end')
    
    optional arguments:
-     -h, --help  show this help message and exit
-     --no_index  use this flag to skip indexing
+     -h, --help     Show this help message and exit.
+     --format TEXT  output format (default: 'BAM') (choices: 'SAM', 'BAM', 'CRAM')
 
 bed_intxn
 =========
@@ -167,7 +161,7 @@ bed_intxn
      bed         BED files
    
    optional arguments:
-     -h, --help  show this help message and exit
+     -h, --help  Show this help message and exit.
 
 bed_sum
 =======
@@ -191,7 +185,7 @@ bed_sum
      bed             BED file
    
    optional arguments:
-     -h, --help      show this help message and exit
+     -h, --help      Show this help message and exit.
      --bases INT     number to divide covered base pairs (default: 1)
      --decimals INT  number of decimals (default: 0)
 
@@ -214,7 +208,7 @@ fq_count
      fastq       FASTQ files (default: stdin)
    
    optional arguments:
-     -h, --help  show this help message and exit
+     -h, --help  Show this help message and exit.
 
 fq_sum
 ======
@@ -236,7 +230,7 @@ fq_sum
      fastq       FASTQ file
    
    optional arguments:
-     -h, --help  show this help message and exit
+     -h, --help  Show this help message and exit.
 
 fuc_compf
 =========
@@ -258,7 +252,7 @@ fuc_compf
      right       right file
    
    optional arguments:
-     -h, --help  show this help message and exit
+     -h, --help  Show this help message and exit.
 
 fuc_demux
 =========
@@ -285,7 +279,7 @@ fuc_demux
      output_dir   output directory
    
    optional arguments:
-     -h, --help   show this help message and exit
+     -h, --help   Show this help message and exit.
 
 fuc_exist
 =========
@@ -295,7 +289,7 @@ fuc_exist
    $ fuc fuc_exist -h
    usage: fuc fuc_exist [-h] [files ...]
    
-   This command will check whether files/directories exist. It will return
+   This command will check whether files exist. It will return
    'True' if they exist and 'False' otherwise. The command will look for stdin
    if there are no arguments.
    
@@ -308,7 +302,7 @@ fuc_exist
      files       test files/directories (default: stdin)
    
    optional arguments:
-     -h, --help  show this help message and exit
+     -h, --help  Show this help message and exit.
 
 fuc_find
 ========
@@ -330,7 +324,7 @@ fuc_find
      ext         file extension
    
    optional arguments:
-     -h, --help  show this help message and exit
+     -h, --help  Show this help message and exit.
      --dir PATH  directory to search in (default: current directory)
 
 maf_maf2vcf
@@ -374,7 +368,7 @@ maf_maf2vcf
      maf                   MAF file
    
    optional arguments:
-     -h, --help            show this help message and exit
+     -h, --help            Show this help message and exit.
      --fasta PATH          FASTA file (required to include INDELs in the output)
      --ignore_indels       use this flag to exclude INDELs from the output
      --cols TEXT [TEXT ...]
@@ -409,7 +403,7 @@ maf_oncoplt
      out                   image file
    
    optional arguments:
-     -h, --help            show this help message and exit
+     -h, --help            Show this help message and exit.
      --count INT           number of top mutated genes to display (default: 10)
      --figsize FLOAT FLOAT
                            width, height in inches (default: [15, 10])
@@ -446,7 +440,7 @@ maf_sumplt
      out                   output image file
    
    optional arguments:
-     -h, --help            show this help message and exit
+     -h, --help            Show this help message and exit.
      --figsize FLOAT FLOAT
                            width, height in inches (default: [15, 10])
      --title_fontsize FLOAT
@@ -474,7 +468,7 @@ maf_vcf2maf
      vcf         VCF file
    
    optional arguments:
-     -h, --help  show this help message and exit
+     -h, --help  Show this help message and exit.
 
 tbl_merge
 =========
@@ -501,9 +495,8 @@ tbl_merge
      right                 right file
    
    optional arguments:
-     -h, --help            show this help message and exit
-     --how TEXT            type of merge to be performed ['left', 'right',
-                           'outer', 'inner', 'cross'] (default: 'inner')
+     -h, --help            Show this help message and exit.
+     --how TEXT            type of merge to be performed ['left', 'right', 'outer', 'inner', 'cross'] (default: 'inner')
      --on TEXT [TEXT ...]  column names to join on
      --lsep TEXT           delimiter to use for the left file (default: '\t')
      --rsep TEXT           delimiter to use for the right file (default: '\t')
@@ -532,29 +525,16 @@ tbl_sum
      table_file            table file
    
    optional arguments:
-     -h, --help            show this help message and exit
+     -h, --help            Show this help message and exit.
      --sep TEXT            delimiter to use (default: '\t')
-     --skiprows TEXT       comma-separated line numbers to skip (0-indexed) or
-                           number of lines to skip at the start of the file (e.g.
-                           `--skiprows 1,` will skip the second line, `--skiprows
-                           2,4` will skip the third and fifth lines, and
-                           `--skiprows 10` will skip the first 10 lines)
+     --skiprows TEXT       comma-separated line numbers to skip (0-indexed) or number of lines to skip at the start of the file (e.g. `--skiprows 1,` will skip the second line, `--skiprows 2,4` will skip the third and fifth lines, and `--skiprows 10` will skip the first 10 lines)
      --na_values TEXT [TEXT ...]
-                           additional strings to recognize as NA/NaN (by default,
-                           the following values are interpreted as NaN: '',
-                           '#N/A', '#N/A N/A', '#NA', '-1.#IND', '-1.#QNAN',
-                           '-NaN', '-nan', '1.#IND', '1.#QNAN', '<NA>', 'N/A',
-                           'NA', 'NULL', 'NaN', 'n/a', 'nan', 'null')
-     --keep_default_na     whether or not to include the default NaN values when
-                           parsing the data (see 'pandas.read_table' for details)
-     --expr TEXT           query the columns of a pandas.DataFrame with a boolean
-                           expression (e.g. `--query "A == 'yes'"`)
+                           additional strings to recognize as NA/NaN (by default, the following values are interpreted as NaN: '', '#N/A', '#N/A N/A', '#NA', '-1.#IND', '-1.#QNAN', '-NaN', '-nan', '1.#IND', '1.#QNAN', '<NA>', 'N/A', 'NA', 'NULL', 'NaN', 'n/a', 'nan', 'null')
+     --keep_default_na     whether or not to include the default NaN values when parsing the data (see 'pandas.read_table' for details)
+     --expr TEXT           query the columns of a pandas.DataFrame with a boolean expression (e.g. `--query "A == 'yes'"`)
      --columns TEXT [TEXT ...]
-                           columns to be summarized (by default, all columns will
-                           be included)
-     --dtypes PATH         file of column names and their data types (etheir
-                           'categorical' or 'numeric'); one tab-delimited pair of
-                           column name and data type per line
+                           columns to be summarized (by default, all columns will be included)
+     --dtypes PATH         file of column names and their data types (etheir 'categorical' or 'numeric'); one tab-delimited pair of column name and data type per line
 
 vcf_filter
 ==========
@@ -587,20 +567,14 @@ vcf_filter
      vcf                   VCF file
    
    optional arguments:
-     -h, --help            show this help message and exit
+     -h, --help            Show this help message and exit.
      --expr TEXT           expression to evaluate
-     --samples PATH        file of sample names to apply the marking (one sample
-                           per line)
+     --samples PATH        file of sample names to apply the marking (one sample per line)
      --drop_duplicates [TEXT ...]
-                           only consider certain columns for identifying
-                           duplicates, by default use all of the columns.
-     --greedy              use this flag to mark even ambiguous genotypes as
-                           missing
-     --opposite            use this flag to mark all genotypes that do not
-                           satisfy the query expression as missing and leave
-                           those that do intact
-     --filter_empty        use this flag to remove rows with no genotype calls at
-                           all
+                           only consider certain columns for identifying duplicates, by default use all of the columns.
+     --greedy              use this flag to mark even ambiguous genotypes as missing
+     --opposite            use this flag to mark all genotypes that do not satisfy the query expression as missing and leave those that do intact
+     --filter_empty        use this flag to remove rows with no genotype calls at all
 
 vcf_merge
 =========
@@ -625,11 +599,9 @@ vcf_merge
      vcf_files      VCF files
    
    optional arguments:
-     -h, --help     show this help message and exit
-     --how TEXT     type of merge as defined in `pandas.DataFrame.merge`
-                    (default: 'inner')
-     --format TEXT  FORMAT subfields to be retained (e.g. 'GT:AD:DP') (default:
-                    'GT')
+     -h, --help     Show this help message and exit.
+     --how TEXT     type of merge as defined in `pandas.DataFrame.merge` (default: 'inner')
+     --format TEXT  FORMAT subfields to be retained (e.g. 'GT:AD:DP') (default: 'GT')
      --sort         use this flag to turn off sorting of records (default: True)
      --collapse     use this flag to collapse duplicate records (default: False)
 
@@ -665,9 +637,8 @@ vcf_rename
      names            delimited text file
    
    optional arguments:
-     -h, --help       show this help message and exit
-     --mode TEXT      renaming mode (default: 'MAP') (choices: 'MAP', 'INDICIES',
-                      'RANGE')
+     -h, --help       Show this help message and exit.
+     --mode TEXT      renaming mode (default: 'MAP') (choices: 'MAP', 'INDICIES', 'RANGE')
      --range INT INT  specify an index range
      --sep TEXT       delimiter to use (default: '\t')
 
@@ -694,7 +665,7 @@ vcf_slice
      region      region ('chrom:start-end')
    
    optional arguments:
-     -h, --help  show this help message and exit
+     -h, --help  Show this help message and exit.
 
 vcf_vcf2bed
 ===========
@@ -714,7 +685,7 @@ vcf_vcf2bed
      vcf         VCF file
    
    optional arguments:
-     -h, --help  show this help message and exit
+     -h, --help  Show this help message and exit.
 
 vcf_vep
 =======
@@ -742,8 +713,7 @@ vcf_vep
      expr        query expression to evaluate
    
    optional arguments:
-     -h, --help  show this help message and exit
-     --opposite  use this flag to return records that don’t meet the said
-                 criteria
+     -h, --help  Show this help message and exit.
+     --opposite  use this flag to return records that don’t meet the said criteria
      --as_zero   use this flag to treat missing values as zero instead of NaN
 

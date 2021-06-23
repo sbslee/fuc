@@ -14,7 +14,7 @@ def create_parser(subparsers):
     parser = api.common._add_parser(
         subparsers,
         api.common._script_name(),
-        help='[FUC] compare contents of two files',
+        help='[FUC] Compare the contents of two files.',
         description=description,
     )
     parser.add_argument('left', help='left file')

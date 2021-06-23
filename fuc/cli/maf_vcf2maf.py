@@ -12,7 +12,7 @@ def create_parser(subparsers):
     parser = api.common._add_parser(
         subparsers,
         api.common._script_name(),
-        help='[MAF] convert an annotated VCF file to a MAF file',
+        help='[MAF] Convert a VCF file to a MAF file.',
         description=description,
     )
     parser.add_argument('vcf', help='VCF file')

@@ -18,7 +18,7 @@ def create_parser(subparsers):
     parser = api.common._add_parser(
         subparsers,
         api.common._script_name(),
-        help='[MAF] create an oncoplot with a MAF file',
+        help='[MAF] Create an oncoplot with a MAF file.',
         description=description,
     )
     parser.add_argument('maf', help='MAF file')
