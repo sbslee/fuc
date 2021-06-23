@@ -110,7 +110,7 @@ For getting help on the fuc CLI:
      COMMAND
        bam_head     [BAM] Print the header of a SAM/BAM/CRAM file.
        bam_index    [BAM] Index a SAM/BAM/CRAM file.
-       bam_rename   [BAM] Rename the samples in a SAM/BAM/CRAM file.
+       bam_rename   [BAM] Rename the samples in a BAM/CRAM file.
        bam_slice    [BAM] Slice a SAM/BAM/CRAM file.
        bed_intxn    [BED] Find the intersection of two or more BED files.
        bed_sum      [BED] Summarize a BED file.

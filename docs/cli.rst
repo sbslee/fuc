@@ -20,7 +20,7 @@ For getting help on the fuc CLI:
      COMMAND
        bam_head     [BAM] Print the header of a SAM/BAM/CRAM file.
        bam_index    [BAM] Index a SAM/BAM/CRAM file.
-       bam_rename   [BAM] Rename the samples in a SAM/BAM/CRAM file.
+       bam_rename   [BAM] Rename the samples in a BAM/CRAM file.
        bam_slice    [BAM] Slice a SAM/BAM/CRAM file.
        bed_intxn    [BED] Find the intersection of two or more BED files.
        bed_sum      [BED] Summarize a BED file.
@@ -61,8 +61,7 @@ bam_head
    $ fuc bam_head -h
    usage: fuc bam_head [-h] bam
    
-   This command will print the header of a SAM/BAM/CRAM file. It essentially
-   wraps the 'pysam.view' method from the pysam package.
+   This command will print the header of the input SAM/BAM/CRAM file.
    
    usage examples:
      $ fuc bam_head in.sam
@@ -70,7 +69,7 @@ bam_head
      $ fuc bam_head in.cram
    
    positional arguments:
-     bam         SAM/BAM/CRAM file
+     bam         SAM/BAM/CRAM file.
    
    optional arguments:
      -h, --help  Show this help message and exit.
@@ -83,8 +82,7 @@ bam_index
    $ fuc bam_index -h
    usage: fuc bam_index [-h] bam
    
-   This command will index a SAM/BAM/CRAM file. It essentially wraps the
-   'pysam.index' method from the pysam package.
+   This command will index the input SAM/BAM/CRAM file.
    
    usage examples:
      $ fuc bam_index in.sam
@@ -92,7 +90,7 @@ bam_index
      $ fuc bam_index in.cram
    
    positional arguments:
-     bam         SAM/BAM/CRAM file
+     bam         SAM/BAM/CRAM file.
    
    optional arguments:
      -h, --help  Show this help message and exit.
@@ -103,20 +101,17 @@ bam_rename
 .. code-block:: text
 
    $ fuc bam_rename -h
-   usage: fuc bam_rename [-h] bam name out
+   usage: fuc bam_rename [-h] bam name
    
-   This command will rename the samples in a SAM/BAM/CRAM file. It essentially
-   wraps the 'pybam.rename' method from the fuc API.
+   This command will rename the sample(s) in the input BAM/CRAM file.
    
    usage examples:
-     $ fuc bam_rename in.sam new_name out.sam
-     $ fuc bam_rename in.bam new_name out.bam
-     $ fuc bam_rename in.cram new_name out.cram
+     $ fuc bam_rename in.bam NA12878 > out.bam
+     $ fuc bam_rename in.cram NA12878 > out.cram
    
    positional arguments:
-     bam         SAM/BAM/CRAM file
-     name        sample name
-     out         output file
+     bam         BAM/CRAM file.
+     name        New sample name.
    
    optional arguments:
      -h, --help  Show this help message and exit.
@@ -127,21 +122,25 @@ bam_slice
 .. code-block:: text
 
    $ fuc bam_slice -h
-   usage: fuc bam_slice [-h] [--format TEXT] bam region [region ...]
+   usage: fuc bam_slice [-h] [--format TEXT] [--fasta PATH]
+                        bam region [region ...]
    
    This command will slice the input SAM/BAM/CRAM file for the specified region(s).
    
    usage examples:
      $ fuc bam_slice in.bam chr1:100-200 > out.bam
      $ fuc bam_slice in.bam chr1:100-200 chr2:100-200 > out.bam
+     $ fuc bam_slice in.bam chr1:100-200 --format SAM > out.sam
+     $ fuc bam_slice in.bam chr1:100-200 --format CRAM --fasta ref.fa > out.cram
    
    positional arguments:
-     bam            SAM/BAM/CRAM file
-     region         space-separated regions ('chrom:start-end')
+     bam            SAM/BAM/CRAM file.
+     region         Space-separated regions ('chrom:start-end').
    
    optional arguments:
      -h, --help     Show this help message and exit.
-     --format TEXT  output format (default: 'BAM') (choices: 'SAM', 'BAM', 'CRAM')
+     --format TEXT  Output format (default: 'BAM') (choices: 'SAM', 'BAM', 'CRAM'). A FASTA file must be specified with '--fasta' for 'CRAM'.
+     --fasta PATH   FASTA file. Required when '--format' is 'CRAM'.
 
 bed_intxn
 =========

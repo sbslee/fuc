@@ -14,7 +14,7 @@ Changelog
 * Fix minor bug in :meth:`pymaf.MafFrame.to_frame` method.
 * Deprecate :meth:`pyvep.filter_lof/clinsig` methods.
 * Update :meth:`pymaf.MafFrame.from_vcf` method to extract genotype keys (e.g. DP, AD, AF).
-* Update :command:`bam_slice` command.
+* Update :command:`bam_slice` and :command:`bam_rename` commands.
 
 0.14.0 (2021-06-20)
 -------------------
