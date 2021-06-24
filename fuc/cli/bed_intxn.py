@@ -4,7 +4,7 @@ description = f"""
 This command will compute intersections beween multiple BED files. It
 essentially wraps the 'pybed.BedFrame.intersect' method from the fuc API.
 
-usage examples:
+Usage examples:
   $ fuc {api.common._script_name()} 1.bed 2.bed 3.bed > intersect.bed
 """
 

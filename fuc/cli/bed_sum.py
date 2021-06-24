@@ -8,7 +8,7 @@ chromosome.
 By default, covered base paris are displayed in bp, but if you prefer you
 can, for example, use '--bases 1000' to display in kb.
 
-usage examples:
+Usage examples:
   $ fuc {api.common._script_name()} in.bed
 """
 

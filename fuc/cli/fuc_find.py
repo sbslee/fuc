@@ -7,7 +7,7 @@ description = f"""
 This command will recursively find all files with a certain extension and
 then return their absolute paths.
 
-usage examples:
+Usage examples:
   $ fuc {api.common._script_name()} .vcf
   $ fuc {api.common._script_name()} .vcf.gz
   $ fuc {api.common._script_name()} .vcf.gz --dir ~/test_dir

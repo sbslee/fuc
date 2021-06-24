@@ -7,7 +7,7 @@ This command will summarize a table file. It essentially wraps the
 'pandas.Series.describe' and 'pandas.Series.value_counts' methods from the
 pandas pacakge.
 
-usage examples:
+Usage examples:
   $ fuc {api.common._script_name()} table.tsv
   $ fuc {api.common._script_name()} table.csv --sep ,
 """

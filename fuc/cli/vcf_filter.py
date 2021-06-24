@@ -5,7 +5,7 @@ description = f"""
 This command will filter a VCF file (both zipped and unzipped). It essentially
 wraps multiple methods from the fuc API.
 
-usage examples:
+Usage examples:
   $ fuc {api.common._script_name()} in.vcf --expr 'GT == "0/0"' > out.vcf
   $ fuc {api.common._script_name()} in.vcf --expr 'GT != "0/0"' > out.vcf
   $ fuc {api.common._script_name()} in.vcf --expr 'DP < 30' > out.vcf

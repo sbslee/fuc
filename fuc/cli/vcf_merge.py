@@ -8,7 +8,7 @@ By default, only the GT subfield of the FORMAT field will be included in the
 merged VCF. Use '--format' to include additional FORMAT subfields such as AD
 and DP.
 
-usage examples:
+Usage examples:
   $ fuc {api.common._script_name()} 1.vcf 2.vcf 3.vcf > merged.vcf
 """
 

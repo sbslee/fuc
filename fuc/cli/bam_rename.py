@@ -8,7 +8,7 @@ import pysam
 description = f"""
 This command will rename the sample(s) in the input SAM/BAM/CRAM file.
 
-usage examples:
+Usage examples:
   $ fuc {api.common._script_name()} in.sam NA12878 > out.sam
   $ fuc {api.common._script_name()} in.bam NA12878 > out.bam
   $ fuc {api.common._script_name()} in.cram NA12878 > out.cram

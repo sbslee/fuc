@@ -4,7 +4,7 @@ description = f"""
 This command will convert a VCF file to a BED file. It essentially wraps the
 'pyvcf.VcfFrame.to_bed' method from the fuc API.
 
-usage examples:
+Usage examples:
   $ fuc {api.common._script_name()} in.vcf > out.bed
 """
 

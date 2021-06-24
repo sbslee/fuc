@@ -22,7 +22,7 @@ additional genotype information appear in the FORMAT field (e.g. AF) with
 the '--names' argument. If this argument is not provided, the original
 column name(s) will be displayed.
 
-usage examples:
+Usage examples:
   $ fuc {api.common._script_name()} in.maf --fasta hs37d5.fa > out.vcf
   $ fuc {api.common._script_name()} in.maf --ignore_indels > out.vcf
   $ fuc {api.common._script_name()} in.maf --fasta hs37d5.fa \\

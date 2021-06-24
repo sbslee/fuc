@@ -7,7 +7,7 @@ It essentially wraps the 'pandas.DataFrame.merge' method from the pandas
 package. For details on the merging algorithms, please visit the method's
 documentation page.
 
-usage examples:
+Usage examples:
   $ fuc {api.common._script_name()} left.tsv right.tsv > merged.tsv
   $ fuc {api.common._script_name()} left.csv right.tsv --lsep , > merged.tsv
   $ fuc {api.common._script_name()} left.tsv right.tsv --how outer > merged.tsv

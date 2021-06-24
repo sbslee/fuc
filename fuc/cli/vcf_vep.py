@@ -5,7 +5,7 @@ This command will filter a VCF file annotated by Ensemble VEP. It
 essentially wraps the 'pyvep.filter_query' method from the fuc API. For
 details on query expression, please visit the method's documentation page.
 
-usage examples:
+Usage examples:
   $ fuc {api.common._script_name()} in.vcf "SYMBOL == 'TP53'" > out.vcf
   $ fuc {api.common._script_name()} in.vcf "SYMBOL != 'TP53'" > out.vcf
   $ fuc {api.common._script_name()} in.vcf "SYMBOL == 'TP53'" --opposite > out.vcf

@@ -5,7 +5,7 @@ import pysam
 description = f"""
 This command will index the input SAM/BAM/CRAM file.
 
-usage examples:
+Usage examples:
   $ fuc {api.common._script_name()} in.sam
   $ fuc {api.common._script_name()} in.bam
   $ fuc {api.common._script_name()} in.cram

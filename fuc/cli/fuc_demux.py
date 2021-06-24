@@ -15,7 +15,7 @@ files:
 - top_unknown_barcodes.csv
 - reports.pdf
 
-usage examples:
+Usage examples:
   $ fuc {api.common._script_name()} reports_dir output_dir
 """
 

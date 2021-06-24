@@ -6,7 +6,7 @@ unqzipped). The summary includes the total number of sequence reads, the
 distribution of read lengths, and the numbers of unique and duplicate
 sequences.
 
-usage examples:
+Usage examples:
   $ fuc {api.common._script_name()} in.fastq
 """
 

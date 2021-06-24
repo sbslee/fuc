@@ -5,7 +5,7 @@ description = f"""
 This command will count sequence reads in FASTQ files (both zipped and
 unzipped). It will look for stdin if there are no arguments.
 
-usage examples:
+Usage examples:
   $ fuc {api.common._script_name()} in.fastq
   $ cat fastq.list | fuc {api.common._script_name()}
 """

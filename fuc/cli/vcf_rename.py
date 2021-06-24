@@ -14,7 +14,7 @@ only the first column is required but the 'range' argument must be specified.
 For more details on the renaming modes, please visit the
 'pyvcf.VcfFrame.rename' method's documentation page.
 
-usage examples:
+Usage examples:
   $ fuc {api.common._script_name()} in.vcf old_new.tsv > out.vcf
   $ fuc {api.common._script_name()} in.vcf new_idx.tsv --mode INDICIES > out.vcf
   $ fuc {api.common._script_name()} in.vcf new_only.tsv --mode RANGE --range 2 5 > out.vcf

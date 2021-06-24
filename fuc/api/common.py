@@ -20,7 +20,7 @@ FUC_PATH = pathlib.Path(__file__).parent.parent.parent.absolute()
 def _script_name():
     """Return the current script's file name."""
     fn = inspect.stack()[1].filename
-    return pathlib.Path(fn).stem
+    return pathlib.Path(fn).stem.replace('_', '-')
 
 def _add_parser(subparsers, name, **kwargs):
     """Return a formatted parser."""
@@ -30,6 +30,8 @@ def _add_parser(subparsers, name, **kwargs):
         formatter_class=RawTextHelpFormatter,
         **kwargs,
     )
+    parser._positionals.title = 'Positional arguments'
+    parser._optionals.title = 'Optional arguments'
     parser.add_argument(
         '-h',
         '--help',

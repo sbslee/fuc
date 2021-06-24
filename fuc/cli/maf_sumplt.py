@@ -9,7 +9,7 @@ documentation to see example plots.
 The format of output image (PDF/PNG/JPEG/SVG) will be automatically
 determined by the output file's extension.
 
-usage examples:
+Usage examples:
   $ fuc {api.common._script_name()} in.maf out.png
   $ fuc {api.common._script_name()} in.maf out.pdf
 """

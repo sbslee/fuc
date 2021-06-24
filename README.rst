@@ -108,30 +108,30 @@ For getting help on the fuc CLI:
    
    positional arguments:
      COMMAND
-       bam_head     [BAM] Print the header of a SAM/BAM/CRAM file.
-       bam_index    [BAM] Index a SAM/BAM/CRAM file.
-       bam_rename   [BAM] Rename the samples in a SAM/BAM/CRAM file.
-       bam_slice    [BAM] Slice a SAM/BAM/CRAM file.
-       bed_intxn    [BED] Find the intersection of two or more BED files.
-       bed_sum      [BED] Summarize a BED file.
-       fq_count     [FASTQ] Count sequence reads in FASTQ files.
-       fq_sum       [FASTQ] Summarize a FASTQ file.
-       fuc_compf    [FUC] Compare the contents of two files.
-       fuc_demux    [FUC] Parse the Reports directory from bcl2fastq.
-       fuc_exist    [FUC] Check whether certain files exist.
-       fuc_find     [FUC] Find all files with a certain extension recursively.
-       maf_maf2vcf  [MAF] Convert a MAF file to a VCF file.
-       maf_oncoplt  [MAF] Create an oncoplot with a MAF file.
-       maf_sumplt   [MAF] Create a summary plot with a MAF file.
-       maf_vcf2maf  [MAF] Convert a VCF file to a MAF file.
-       tbl_merge    [TABLE] Merge two table files.
-       tbl_sum      [TABLE] Summarize a table file.
-       vcf_filter   [VCF] Filter a VCF file.
-       vcf_merge    [VCF] Merge two or more VCF files.
-       vcf_rename   [VCF] Rename the samples in a VCF file.
-       vcf_slice    [VCF] Slice a VCF file.
-       vcf_vcf2bed  [VCF] Convert a VCF file to a BED file.
-       vcf_vep      [VCF] Filter a VCF file annotated by Ensemble VEP.
+       bam-head     [BAM] Print the header of a SAM/BAM/CRAM file.
+       bam-index    [BAM] Index a SAM/BAM/CRAM file.
+       bam-rename   [BAM] Rename the samples in a SAM/BAM/CRAM file.
+       bam-slice    [BAM] Slice a SAM/BAM/CRAM file.
+       bed-intxn    [BED] Find the intersection of two or more BED files.
+       bed-sum      [BED] Summarize a BED file.
+       fq-count     [FASTQ] Count sequence reads in FASTQ files.
+       fq-sum       [FASTQ] Summarize a FASTQ file.
+       fuc-compf    [FUC] Compare the contents of two files.
+       fuc-demux    [FUC] Parse the Reports directory from bcl2fastq.
+       fuc-exist    [FUC] Check whether certain files exist.
+       fuc-find     [FUC] Find all files with a certain extension recursively.
+       maf-maf2vcf  [MAF] Convert a MAF file to a VCF file.
+       maf-oncoplt  [MAF] Create an oncoplot with a MAF file.
+       maf-sumplt   [MAF] Create a summary plot with a MAF file.
+       maf-vcf2maf  [MAF] Convert a VCF file to a MAF file.
+       tbl-merge    [TABLE] Merge two table files.
+       tbl-sum      [TABLE] Summarize a table file.
+       vcf-filter   [VCF] Filter a VCF file.
+       vcf-merge    [VCF] Merge two or more VCF files.
+       vcf-rename   [VCF] Rename the samples in a VCF file.
+       vcf-slice    [VCF] Slice a VCF file.
+       vcf-vcf2bed  [VCF] Convert a VCF file to a BED file.
+       vcf-vep      [VCF] Filter a VCF file annotated by Ensemble VEP.
    
    optional arguments:
      -h, --help     Show this help message and exit.

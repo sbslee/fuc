@@ -7,7 +7,7 @@ This command will check whether files exist. It will return
 'True' if they exist and 'False' otherwise. The command will look for stdin
 if there are no arguments.
 
-usage examples:
+Usage examples:
   $ fuc {api.common._script_name()} test.txt
   $ fuc {api.common._script_name()} test_dir
   $ cat test.list | fuc {api.common._script_name()}
