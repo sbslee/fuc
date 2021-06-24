@@ -14,7 +14,7 @@ def create_parser(subparsers):
     parser = api.common._add_parser(
         subparsers,
         api.common._script_name(),
-        help='[FASTQ] count sequence reads in FASTQ files',
+        help='[FASTQ] Count sequence reads in FASTQ files.',
         description=description,
     )
     parser.add_argument('fastq', nargs='*',

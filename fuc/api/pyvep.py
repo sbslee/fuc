@@ -13,37 +13,37 @@ A typical VEP-annotated VCF file contains many fields ranging from gene
 symbol to protein change. However, most of the analysis in pyvep uses the
 following fields:
 
-+-----+--------------------+---------------------+----------------------------------------------+
-| No. | Name               | Description         | Examples                                     |
-+=====+====================+=====================+==============================================+
-| 1   | Allele             | Variant allele      | 'C', 'T', 'CG'                               |
-+-----+--------------------+---------------------+----------------------------------------------+
-| 2   | Consequence        | Consequence type    | 'missense_variant', 'stop_gained'            |
-+-----+--------------------+---------------------+----------------------------------------------+
-| 3   | IMPACT             | Consequence impact  | 'MODERATE', 'HIGH'                           |
-+-----+--------------------+---------------------+----------------------------------------------+
-| 4   | SYMBOL             | Gene symbol         | 'TP53', 'APC'                                |
-+-----+--------------------+---------------------+----------------------------------------------+
-| 5   | Gene               | Ensembl ID          | 7157, 55294                                  |
-+-----+--------------------+---------------------+----------------------------------------------+
-| 6   | BIOTYPE            | Transcript biotype  | 'protein_coding', 'pseudogene', 'miRNA'      |
-+-----+--------------------+---------------------+----------------------------------------------+
-| 7   | EXON               | Exon number         | '8/17', '17/17'                              |
-+-----+--------------------+---------------------+----------------------------------------------+
-| 8   | Protein_position   | Amino acid position | 234, 1510                                    |
-+-----+--------------------+---------------------+----------------------------------------------+
-| 9   | Amino_acids        | Amino acid changes  | 'R/\*', 'A/X', 'V/A'                         |
-+-----+--------------------+---------------------+----------------------------------------------+
-| 10  | Existing_variation | Variant identifier  | 'rs17851045', 'rs786201856&COSV57325157'     |
-+-----+--------------------+---------------------+----------------------------------------------+
-| 11  | STRAND             | Genomic strand      | 1, -1                                        |
-+-----+--------------------+---------------------+----------------------------------------------+
-| 12  | SIFT               | SIFT prediction     | 'deleterious(0)', 'tolerated(0.6)'           |
-+-----+--------------------+---------------------+----------------------------------------------+
-| 13  | PolyPhen           | PolyPhen prediction | 'benign(0.121)', 'probably_damaging(0.999)'  |
-+-----+--------------------+---------------------+----------------------------------------------+
-| 14  | CLIN_SIG           | ClinVar prediction  | 'pathogenic', 'likely_pathogenic&pathogenic' |
-+-----+--------------------+---------------------+----------------------------------------------+
++-----+--------------------+---------------------+----------------------------------------------------------------------------------------------------------+
+| No. | Name               | Description         | Examples                                                                                                 |
++=====+====================+=====================+==========================================================================================================+
+| 1   | Allele             | Variant allele      | 'C', 'T', 'CG'                                                                                           |
++-----+--------------------+---------------------+----------------------------------------------------------------------------------------------------------+
+| 2   | Consequence        | Consequence type    | 'missense_variant', 'stop_gained'                                                                        |
++-----+--------------------+---------------------+----------------------------------------------------------------------------------------------------------+
+| 3   | IMPACT             | Consequence impact  | 'MODERATE', 'HIGH'                                                                                       |
++-----+--------------------+---------------------+----------------------------------------------------------------------------------------------------------+
+| 4   | SYMBOL             | Gene symbol         | 'TP53', 'APC'                                                                                            |
++-----+--------------------+---------------------+----------------------------------------------------------------------------------------------------------+
+| 5   | Gene               | Ensembl ID          | 7157, 55294                                                                                              |
++-----+--------------------+---------------------+----------------------------------------------------------------------------------------------------------+
+| 6   | BIOTYPE            | Transcript biotype  | 'protein_coding', 'pseudogene', 'miRNA'                                                                  |
++-----+--------------------+---------------------+----------------------------------------------------------------------------------------------------------+
+| 7   | EXON               | Exon number         | '8/17', '17/17'                                                                                          |
++-----+--------------------+---------------------+----------------------------------------------------------------------------------------------------------+
+| 8   | Protein_position   | Amino acid position | 234, 1510                                                                                                |
++-----+--------------------+---------------------+----------------------------------------------------------------------------------------------------------+
+| 9   | Amino_acids        | Amino acid changes  | 'R/\*', 'A/X', 'V/A'                                                                                     |
++-----+--------------------+---------------------+----------------------------------------------------------------------------------------------------------+
+| 10  | Existing_variation | Variant identifier  | 'rs17851045', 'rs786201856&COSV57325157'                                                                 |
++-----+--------------------+---------------------+----------------------------------------------------------------------------------------------------------+
+| 11  | STRAND             | Genomic strand      | 1, -1                                                                                                    |
++-----+--------------------+---------------------+----------------------------------------------------------------------------------------------------------+
+| 12  | SIFT               | SIFT prediction     | 'tolerated(0.6)', 'tolerated_low_confidence(0.37)', 'deleterious_low_confidence(0.03)', 'deleterious(0)' |
++-----+--------------------+---------------------+----------------------------------------------------------------------------------------------------------+
+| 13  | PolyPhen           | PolyPhen prediction | 'benign(0.121)', 'possibly_damaging(0.459)', 'probably_damaging(0.999)'                                  |
++-----+--------------------+---------------------+----------------------------------------------------------------------------------------------------------+
+| 14  | CLIN_SIG           | ClinVar prediction  | 'pathogenic', 'likely_pathogenic&pathogenic'                                                             |
++-----+--------------------+---------------------+----------------------------------------------------------------------------------------------------------+
 """
 
 import re
@@ -259,128 +259,6 @@ def row_mostsevere(r):
     f = lambda x: SEVERITIY.index(x.split('|')[1].split('&')[0])
     return sorted(results.split(','), key=f)[0]
 
-def filter_clinsig(vf, whitelist=None, blacklist=None, opposite=False,
-                   index=False):
-    """Select rows based on the given CLIN_SIG values.
-
-    List of CLIN_SIG values:
-
-        - benign
-        - likely_benign
-        - pathogenic
-        - likely_pathogenic
-        - drug_response
-        - risk_factor
-        - uncertain_significance
-        - conflicting_interpretations_of_pathogenicity
-        - not_provided
-        - other
-        - benign/likely_benign
-        - pathogenic/likely_pathogenic
-        - ...
-
-    Parameters
-    ----------
-    vf : VcfFrame
-        VcfFrame.
-    whilelist : list, default: None
-        If these CLIN_SIG values are present, select the row.
-    blacklist : list, default: None
-        If these CLIN_SIG values are present, do not select the row.
-    opposite : bool, default: False
-        If True, return rows that don't meet the said criteria.
-    index : bool, default: False
-        If True, return boolean index array instead of VcfFrame.
-
-    Returns
-    -------
-    VcfFrame or pandas.Series
-        Filtered VcfFrame or boolean index array.
-
-    Examples
-    --------
-    Assume we have the following data:
-
-    >>> meta = [
-    ...     '##fileformat=VCFv4.1',
-    ...     '##VEP="v104" time="2021-05-20 10:50:12" cache="/net/isilonP/public/ro/ensweb-data/latest/tools/grch37/e104/vep/cache/homo_sapiens/104_GRCh37" db="homo_sapiens_core_104_37@hh-mysql-ens-grch37-web" 1000genomes="phase3" COSMIC="92" ClinVar="202012" HGMD-PUBLIC="20204" assembly="GRCh37.p13" dbSNP="154" gencode="GENCODE 19" genebuild="2011-04" gnomAD="r2.1" polyphen="2.2.2" regbuild="1.0" sift="sift5.2.2"',
-    ...     '##INFO=<ID=CSQ,Number=.,Type=String,Description="Consequence annotations from Ensembl VEP. Format: Allele|Consequence|IMPACT|SYMBOL|Gene|Feature_type|Feature|BIOTYPE|EXON|INTRON|HGVSc|HGVSp|cDNA_position|CDS_position|Protein_position|Amino_acids|Codons|Existing_variation|DISTANCE|STRAND|FLAGS|SYMBOL_SOURCE|HGNC_ID|MANE_SELECT|MANE_PLUS_CLINICAL|TSL|APPRIS|SIFT|PolyPhen|AF|CLIN_SIG|SOMATIC|PHENO|PUBMED|MOTIF_NAME|MOTIF_POS|HIGH_INF_POS|MOTIF_SCORE_CHANGE|TRANSCRIPTION_FACTORS">'
-    ... ]
-    >>> data = {
-    ...     'CHROM': ['chr1', 'chr1', 'chr2', 'chr2'],
-    ...     'POS': [100, 101, 200, 201],
-    ...     'ID': ['.', '.', '.', '.'],
-    ...     'REF': ['G', 'C', 'CAG', 'C'],
-    ...     'ALT': ['T', 'T', 'C', 'T'],
-    ...     'QUAL': ['.', '.', '.', '.'],
-    ...     'FILTER': ['.', '.', '.', '.'],
-    ...     'INFO': [
-    ...         'CSQ=T|missense_variant|MODERATE|MTOR|ENSG00000198793|Transcript|ENST00000361445.4|protein_coding|47/58||||6721|6644|2215|S/Y|tCt/tAt|rs587777894&COSV63868278&COSV63868313||-1||HGNC|3942|||||deleterious(0)|possibly_damaging(0.876)||likely_pathogenic&pathogenic|0&1&1|1&1&1|26619011&27159400&24631838&26018084&27830187|||||',
-    ...         'CSQ=T|synonymous_variant|LOW|MTOR|ENSG00000198793|Transcript|ENST00000361445.4|protein_coding|49/58||||6986|6909|2303|L|ctG/ctA|rs11121691&COSV63870864||-1||HGNC|3942|||||||0.2206|benign|0&1|1&1|24996771|||||',
-    ...         'CSQ=-|frameshift_variant|HIGH|BRCA2|ENSG00000139618|Transcript|ENST00000380152.3|protein_coding|18/27||||8479-8480|8246-8247|2749|Q/X|cAG/c|rs80359701||1||HGNC|1101||||||||pathogenic||1|26467025&26295337&15340362|||||',
-    ...         'CSQ=T|missense_variant|MODERATE|MTOR|ENSG00000198793|Transcript|ENST00000361445.4|protein_coding|30/58||||4516|4439|1480|R/H|cGc/cAc|rs780930764&COSV63868373||-1||HGNC|3942|||||tolerated(0.13)|benign(0)||likely_benign|0&1|1&1||||||'
-    ...     ],
-    ...     'FORMAT': ['GT', 'GT', 'GT', 'GT'],
-    ...     'Steven': ['0/1', '0/1', '0/1', '0/1'],
-    ... }
-    >>> vf = pyvcf.VcfFrame.from_dict(meta, data)
-    >>> pyvep.parseann(vf, ['CLIN_SIG']).df
-      CHROM  POS ID  REF ALT QUAL FILTER                          INFO FORMAT Steven
-    0  chr1  100  .    G   T    .      .  likely_pathogenic&pathogenic     GT    0/1
-    1  chr1  101  .    C   T    .      .                        benign     GT    0/1
-    2  chr2  200  .  CAG   C    .      .                    pathogenic     GT    0/1
-    3  chr2  201  .    C   T    .      .                 likely_benign     GT    0/1
-
-    We can select rows with pathogenic or likely_pathogenic:
-
-    >>> whitelist=['pathogenic', 'likely_pathogenic']
-    >>> temp_vf = pyvep.filter_clinsig(vf, whitelist=whitelist)
-    >>> pyvep.parseann(temp_vf, ['CLIN_SIG']).df
-      CHROM  POS ID  REF ALT QUAL FILTER                          INFO FORMAT Steven
-    0  chr1  100  .    G   T    .      .  likely_pathogenic&pathogenic     GT    0/1
-    1  chr2  200  .  CAG   C    .      .                    pathogenic     GT    0/1
-
-    We can also remove those rows:
-
-    >>> temp_vf = pyvep.filter_clinsig(vf, whitelist=whitelist, opposite=True)
-    >>> pyvep.parseann(temp_vf, ['CLIN_SIG']).df
-      CHROM  POS ID REF ALT QUAL FILTER           INFO FORMAT Steven
-    0  chr1  101  .   C   T    .      .         benign     GT    0/1
-    1  chr2  201  .   C   T    .      .  likely_benign     GT    0/1
-
-    Finally, we can return boolean index array from the filtering:
-
-    >>> pyvep.filter_clinsig(vf, whitelist=whitelist, index=True)
-    0     True
-    1    False
-    2     True
-    3    False
-    dtype: bool
-    """
-    if whitelist is None and blacklist is None:
-        raise ValueError('must provide either whitelist or blcklist')
-    if whitelist is None:
-        whitelist = []
-    if blacklist is None:
-        blacklist = []
-    def func(r):
-        ann = row_firstann(r)
-        i = annot_names(vf).index('CLIN_SIG')
-        values = ann.split('|')[i].split('&')
-        if not list(set(values) & set(whitelist)):
-            return False
-        if list(set(values) & set(blacklist)):
-            return False
-        return True
-    i = vf.df.apply(func, axis=1)
-    if opposite:
-        i = ~i
-    if index:
-        return i
-    df = vf.df[i].reset_index(drop=True)
-    vf = vf.__class__(vf.copy_meta(), df)
-    return vf
-
 def parseann(vf, targets, sep=' | ', as_series=False):
     """Parse variant annotations in VcfFrame.
 
@@ -505,7 +383,11 @@ def to_frame(vf, as_zero=False):
     else:
         df = df.replace('', np.nan)
     df.columns = annot_names(vf)
-    df = df.astype(DATA_TYPES)
+    d = {}
+    for col in df.columns:
+        if col in DATA_TYPES:
+            d[col] = DATA_TYPES[col]
+    df = df.astype(d)
     return df
 
 def pick_result(vf, mode='mostsevere'):
@@ -592,48 +474,6 @@ def annot_names(vf):
             l = re.search(r'Format: (.*?)">', vf.meta[i]).group(1).split('|')
     return l
 
-def filter_lof(vf, opposite=None, as_index=False):
-    """Select rows whose conseuqence annotation is deleterious and/or LoF.
-
-    Parameters
-    ----------
-    opposite : bool, default: False
-        If True, return rows that don't meet the said criteria.
-    as_index : bool, default: False
-        If True, return boolean index array instead of VcfFrame.
-
-    Returns
-    -------
-    VcfFrame or pandas.Series
-        Filtered VcfFrame or boolean index array.
-    """
-    consequence_index = annot_names(vf).index('Consequence')
-    impact_index = annot_names(vf).index('IMPACT')
-    polyphen_index = annot_names(vf).index('PolyPhen')
-    sift_index = annot_names(vf).index('SIFT')
-    def one_row(r):
-        l = row_firstann(r).split('|')
-        consequence = l[consequence_index]
-        impact = l[impact_index]
-        polyphen = l[polyphen_index]
-        sift = l[sift_index]
-        if impact not in ['HIGH', 'MODERATE']:
-            return False
-        if consequence == 'missense_variant':
-            if 'damaging' in polyphen or 'deleterious' in sift:
-                return True
-            else:
-                return False
-        return True
-    i = vf.df.apply(one_row, axis=1)
-    if opposite:
-        i = ~i
-    if as_index:
-        return i
-    df = vf.df[i]
-    vf = vf.__class__(vf.copy_meta(), df)
-    return vf
-
 def filter_query(vf, expr, opposite=None, as_index=False, as_zero=False):
     """
     Select rows that satisfy the query expression.
@@ -655,6 +495,22 @@ def filter_query(vf, expr, opposite=None, as_index=False, as_zero=False):
     -------
     VcfFrame or pandas.Series
         Filtered VcfFrame or boolean index array.
+
+    Examples
+    --------
+
+    >>> from fuc import common, pyvcf, pyvep
+    >>> common.load_dataset('tcga-laml')
+    >>> fn = '~/fuc-data/tcga-laml/tcga_laml_vep.vcf'
+    >>> vf = pyvcf.VcfFrame.from_file(fn)
+    >>> filtered_vf = pyvep.filter_query(vf, "SYMBOL == 'TP53'")
+    >>> filtered_vf = pyvep.filter_query(vf, "SYMBOL != 'TP53'")
+    >>> filtered_vf = pyvep.filter_query(vf, "SYMBOL != 'TP53'", opposite=True)
+    >>> filtered_vf = pyvep.filter_query(vf, "Consequence in ['splice_donor_variant', 'stop_gained']")
+    >>> filtered_vf = pyvep.filter_query(vf, "(SYMBOL == 'TP53') and (Consequence.str.contains('stop_gained'))")
+    >>> filtered_vf = pyvep.filter_query(vf, "gnomAD_AF < 0.001")
+    >>> filtered_vf = pyvep.filter_query(vf, "gnomAD_AF < 0.001", as_zero=True)
+    >>> filtered_vf = pyvep.filter_query(vf, "(IMPACT == 'HIGH') or (Consequence.str.contains('missense_variant') and (PolyPhen.str.contains('damaging') or SIFT.str.contains('deleterious')))")
     """
     df = to_frame(vf, as_zero=as_zero)
     i = vf.df.index.isin(df.query(expr).index)

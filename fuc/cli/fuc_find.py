@@ -17,7 +17,7 @@ def create_parser(subparsers):
     parser = api.common._add_parser(
         subparsers,
         api.common._script_name(),
-        help='[FUC] find files with certain extension recursively',
+        help='[FUC] Find all files with a certain extension recursively.',
         description=description,
     )
     parser.add_argument('ext', help='file extension')

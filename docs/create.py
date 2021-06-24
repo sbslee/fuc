@@ -153,7 +153,7 @@ For getting help on a specific submodule (e.g. pyvcf):
 CLI Examples
 ============
 
-**BAM**
+**SAM/BAM/CRAM**
 
 To print the header of a SAM file:
 
@@ -165,13 +165,19 @@ To index a CRAM file:
 
 .. code-block:: text
 
-   $ fuc bam_head in.cram
+   $ fuc bam_index in.cram
+
+To rename the samples in a SAM file:
+
+.. code-block:: text
+
+   $ fuc bam_rename in.sam NA12878 > out.sam
 
 To slice a BAM file:
 
 .. code-block:: text
 
-   $ fuc bam_slice in.bam chr1:100-200 out.bam
+   $ fuc bam_slice in.bam chr1:100-200 > out.bam
 
 **BED**
 
@@ -237,7 +243,7 @@ To create read depth profile of a region from a CRAM file:
     >>> from fuc import pycov
     >>> cf = pycov.CovFrame.from_file('HG00525.final.cram', zero=True,
     ...    region='chr12:21161194-21239796', names=['HG00525'])
-    >>> cf.plot_region('chr12', start=21161194, end=21239796)
+    >>> cf.plot_region('chr12:21161194-21239796')
 
 .. image:: https://raw.githubusercontent.com/sbslee/fuc-data/main/images/coverage.png
 

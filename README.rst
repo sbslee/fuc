@@ -107,35 +107,35 @@ For getting help on the fuc CLI:
    usage: fuc [-h] [-v] COMMAND ...
    
    positional arguments:
-     COMMAND        name of the command
-       bam_head     [BAM] print the header of a SAM/BAM/CRAM file
-       bam_index    [BAM] index a SAM/BAM/CRAM file
-       bam_rename   [BAM] rename the samples in a SAM/BAM/CRAM file
-       bam_slice    [BAM] slice a SAM/BAM/CRAM file
-       bed_intxn    [BED] find intersection of two or more BED files
-       bed_sum      [BED] summarize a BED file
-       fq_count     [FASTQ] count sequence reads in FASTQ files
-       fq_sum       [FASTQ] summarize a FASTQ file
-       fuc_compf    [FUC] compare contents of two files
-       fuc_demux    [FUC] parse Reports directory from bcl2fastq or bcl2fastq2
-       fuc_exist    [FUC] check whether files/directories exist
-       fuc_find     [FUC] find files with certain extension recursively
-       maf_maf2vcf  [MAF] convert a MAF file to a VCF file
-       maf_oncoplt  [MAF] create an oncoplot with a MAF file
-       maf_sumplt   [MAF] create a summary plot with a MAF file
-       maf_vcf2maf  [MAF] convert an annotated VCF file to a MAF file
-       tbl_merge    [TABLE] merge two table files
-       tbl_sum      [TABLE] summarize a table file
-       vcf_filter   [VCF] filter a VCF file
-       vcf_merge    [VCF] merge two or more VCF files
-       vcf_rename   [VCF] rename the samples in a VCF file.
-       vcf_slice    [VCF] slice a VCF file
-       vcf_vcf2bed  [VCF] convert a VCF file to a BED file
-       vcf_vep      [VCF] filter a VCF file annotated by Ensemble VEP
+     COMMAND
+       bam_head     [BAM] Print the header of a SAM/BAM/CRAM file.
+       bam_index    [BAM] Index a SAM/BAM/CRAM file.
+       bam_rename   [BAM] Rename the samples in a SAM/BAM/CRAM file.
+       bam_slice    [BAM] Slice a SAM/BAM/CRAM file.
+       bed_intxn    [BED] Find the intersection of two or more BED files.
+       bed_sum      [BED] Summarize a BED file.
+       fq_count     [FASTQ] Count sequence reads in FASTQ files.
+       fq_sum       [FASTQ] Summarize a FASTQ file.
+       fuc_compf    [FUC] Compare the contents of two files.
+       fuc_demux    [FUC] Parse the Reports directory from bcl2fastq.
+       fuc_exist    [FUC] Check whether certain files exist.
+       fuc_find     [FUC] Find all files with a certain extension recursively.
+       maf_maf2vcf  [MAF] Convert a MAF file to a VCF file.
+       maf_oncoplt  [MAF] Create an oncoplot with a MAF file.
+       maf_sumplt   [MAF] Create a summary plot with a MAF file.
+       maf_vcf2maf  [MAF] Convert a VCF file to a MAF file.
+       tbl_merge    [TABLE] Merge two table files.
+       tbl_sum      [TABLE] Summarize a table file.
+       vcf_filter   [VCF] Filter a VCF file.
+       vcf_merge    [VCF] Merge two or more VCF files.
+       vcf_rename   [VCF] Rename the samples in a VCF file.
+       vcf_slice    [VCF] Slice a VCF file.
+       vcf_vcf2bed  [VCF] Convert a VCF file to a BED file.
+       vcf_vep      [VCF] Filter a VCF file annotated by Ensemble VEP.
    
    optional arguments:
-     -h, --help     show this help message and exit
-     -v, --version  show the version number and exit
+     -h, --help     Show this help message and exit.
+     -v, --version  Show the version number and exit.
 
 For getting help on a specific command (e.g. vcf_merge):
 
@@ -165,7 +165,7 @@ For getting help on a specific submodule (e.g. pyvcf):
 CLI Examples
 ============
 
-**BAM**
+**SAM/BAM/CRAM**
 
 To print the header of a SAM file:
 
@@ -177,13 +177,19 @@ To index a CRAM file:
 
 .. code-block:: text
 
-   $ fuc bam_head in.cram
+   $ fuc bam_index in.cram
+
+To rename the samples in a SAM file:
+
+.. code-block:: text
+
+   $ fuc bam_rename in.sam NA12878 > out.sam
 
 To slice a BAM file:
 
 .. code-block:: text
 
-   $ fuc bam_slice in.bam chr1:100-200 out.bam
+   $ fuc bam_slice in.bam chr1:100-200 > out.bam
 
 **BED**
 
@@ -249,7 +255,7 @@ To create read depth profile of a region from a CRAM file:
     >>> from fuc import pycov
     >>> cf = pycov.CovFrame.from_file('HG00525.final.cram', zero=True,
     ...    region='chr12:21161194-21239796', names=['HG00525'])
-    >>> cf.plot_region('chr12', start=21161194, end=21239796)
+    >>> cf.plot_region('chr12:21161194-21239796')
 
 .. image:: https://raw.githubusercontent.com/sbslee/fuc-data/main/images/coverage.png
 

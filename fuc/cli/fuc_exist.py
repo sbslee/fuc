@@ -3,7 +3,7 @@ from pathlib import Path
 import sys
 
 description = f"""
-This command will check whether files/directories exist. It will return
+This command will check whether files exist. It will return
 'True' if they exist and 'False' otherwise. The command will look for stdin
 if there are no arguments.
 
@@ -17,7 +17,7 @@ def create_parser(subparsers):
     parser = api.common._add_parser(
         subparsers,
         api.common._script_name(),
-        help='[FUC] check whether files/directories exist',
+        help='[FUC] Check whether certain files exist.',
         description=description,
     )
     parser.add_argument('files', nargs='*',

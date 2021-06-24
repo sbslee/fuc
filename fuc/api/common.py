@@ -13,7 +13,7 @@ from pathlib import Path
 import pysam
 import warnings
 import inspect
-from argparse import RawDescriptionHelpFormatter
+from argparse import RawTextHelpFormatter, SUPPRESS
 
 FUC_PATH = pathlib.Path(__file__).parent.parent.parent.absolute()
 
@@ -24,8 +24,19 @@ def _script_name():
 
 def _add_parser(subparsers, name, **kwargs):
     """Return a formatted parser."""
-    parser = subparsers.add_parser(name,
-        formatter_class=RawDescriptionHelpFormatter, **kwargs)
+    parser = subparsers.add_parser(
+        name,
+        add_help=False,
+        formatter_class=RawTextHelpFormatter,
+        **kwargs,
+    )
+    parser.add_argument(
+        '-h',
+        '--help',
+        action='help',
+        default=SUPPRESS,
+        help='Show this help message and exit.',
+    )
     return parser
 
 def get_similarity(a, b):
@@ -79,6 +90,8 @@ def load_dataset(name, force=False):
             'tcga_cohort.txt.gz',
             'tcga_laml.maf.gz',
             'tcga_laml_annot.tsv',
+            'tcga_laml.vcf',
+            'tcga_laml_vep.vcf',
         ],
         'pyvcf': [
             'plot_comparison.vcf',
