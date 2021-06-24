@@ -134,7 +134,7 @@ For getting help on the fuc CLI:
    $ fuc -h
 {fuc_help}
 
-For getting help on a specific command (e.g. vcf_merge):
+For getting help on a specific command (e.g. vcf-merge):
 
 .. code-block:: text
 
@@ -358,7 +358,7 @@ For getting help on the fuc CLI:
    $ fuc -h
 {fuc_help}
 
-For getting help on a specific command (e.g. vcf_merge):
+For getting help on a specific command (e.g. vcf-merge):
 
 .. code-block:: text
 

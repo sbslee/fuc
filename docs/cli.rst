@@ -47,7 +47,7 @@ For getting help on the fuc CLI:
      -h, --help     Show this help message and exit.
      -v, --version  Show the version number and exit.
 
-For getting help on a specific command (e.g. vcf_merge):
+For getting help on a specific command (e.g. vcf-merge):
 
 .. code-block:: text
 
