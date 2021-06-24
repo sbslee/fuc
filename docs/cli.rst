@@ -51,7 +51,7 @@ For getting help on a specific command (e.g. vcf_merge):
 
 .. code-block:: text
 
-   $ fuc vcf_merge -h
+   $ fuc vcf-merge -h
 
 bam-head
 ========
