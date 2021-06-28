@@ -6,7 +6,7 @@ Changelog
 
 * Rename the commands (e.g. :command:`vcf_merge` to :command:`vcf-merge`).
 * Add ``flip`` argument to :meth:`pymaf.MafFrame.plot_vaf` method.
-* Update :meth:`pymaf.MafFrame.plot_vaf` method to create a grouped bar plot.
+* Update :meth:`pymaf.MafFrame.plot_vaf` method to support creation of a grouped bar plot.
 
 0.15.0 (2021-06-24)
 -------------------
