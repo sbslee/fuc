@@ -1463,16 +1463,30 @@ class MafFrame:
         ax.set_xticks([])
         return ax
 
-    def plot_vaf(self, col, count=10, ax=None, figsize=None, **kwargs):
+    def plot_vaf(
+        self, col, count=10, af=None, group=None, group_order=None,
+        flip=False, ax=None, figsize=None, **kwargs
+    ):
         """
-        Create a bar plot showing VAF distribution for top mutated genes.
+        Create a box plot showing VAF distribution for top mutated genes.
+
+        A grouped bar plot can be created with ``group`` (requires an
+        AnnFrame).
 
         Parameters
         ----------
         col : str
-            VAF column.
+            Column in the MafFrame containing VAF data.
         count : int, default: 10
             Number of top mutated genes to display.
+        af : AnnFrame, optional
+            AnnFrame containing sample annotation data.
+        group : str, optional
+            Column in the AnnFrame containing grouping information.
+        group_order : list, optional
+            Order to plot the group levels in.
+        flip : bool, default: False
+            If True, flip the x and y axes.
         ax : matplotlib.axes.Axes, optional
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
@@ -1489,25 +1503,60 @@ class MafFrame:
         Examples
         --------
 
+        Below is a simple example:
+
         .. plot::
+            :context: close-figs
 
             >>> import matplotlib.pyplot as plt
             >>> from fuc import common, pymaf
             >>> common.load_dataset('tcga-laml')
-            >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
-            >>> mf = pymaf.MafFrame.from_file(f)
+            >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+            >>> mf = pymaf.MafFrame.from_file(maf_file)
             >>> mf.plot_vaf('i_TumorVAF_WU')
             >>> plt.tight_layout()
+
+        We can create a grouped bar plot based on FAB classification:
+
+        .. plot::
+            :context: close-figs
+
+            >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
+            >>> af = pymaf.AnnFrame.from_file(annot_file)
+            >>> mf.plot_vaf('i_TumorVAF_WU',
+            ...             af=af,
+            ...             group='FAB_classification',
+            ...             group_order=['M1', 'M2', 'M3'],
+            ...             count=5)
+            >>> plt.tight_layout()
         """
-        genes = self.matrix_genes(count=count).index.to_list()
-        s = self.df.groupby('Hugo_Symbol')[col].median()
-        genes = s[genes].sort_values(ascending=False).index.to_list()
-        df = self.df[self.df.Hugo_Symbol.isin(genes)]
+        medians = self.df.groupby('Hugo_Symbol')[col].median()
+        top_genes = self.matrix_genes(count=count).index.to_list()
+        sorted_genes = medians[top_genes].sort_values(
+            ascending=False).index.to_list()
+
+        df = self.df[self.df.Hugo_Symbol.isin(sorted_genes)]
+
+        if group is not None:
+            df = pd.merge(df, af.df, left_on='Tumor_Sample_Barcode',
+                right_index=True)
+
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
-        sns.boxplot(x='Hugo_Symbol', y=col, data=df, order=genes, ax=ax, **kwargs)
-        ax.set_xlabel('')
-        ax.set_ylabel('VAF')
+
+        if flip:
+            x, y = col, 'Hugo_Symbol'
+            xlabel, ylabel = 'VAF', ''
+        else:
+            x, y = 'Hugo_Symbol', col
+            xlabel, ylabel = '', 'VAF'
+
+        sns.boxplot(x=x, y=y, data=df, ax=ax, order=sorted_genes,
+            hue=group, hue_order=group_order, **kwargs)
+
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
+
         return ax
 
     def plot_varcls(self, ax=None, figsize=None, **kwargs):
