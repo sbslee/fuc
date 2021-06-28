@@ -1,6 +1,11 @@
 Changelog
 *********
 
+0.16.0 (in development)
+-----------------------
+
+* Rename the commands (e.g. :command:`vcf_merge` to :command:`vcf-merge`).
+
 0.15.0 (2021-06-24)
 -------------------
 
