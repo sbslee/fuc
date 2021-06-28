@@ -1,4 +1,7 @@
 Glossary
 ********
 
-This section is currently empty.
+Tumor mutational burden (TMB)
+=============================
+
+Number of genetic alternations detected within an individual.

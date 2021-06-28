@@ -1142,7 +1142,7 @@ class MafFrame:
 
         Parameters
         ----------
-        mode : {'count', 'proportion', 'samples', 'titv'}, default: 'count'
+        mode : {'count', 'proportion', 'samples'}, default: 'count'
             Determines the plotting mode.
 
             - ``count``: Bar plot showing the total counts of SNV classes
@@ -1154,9 +1154,6 @@ class MafFrame:
             - ``samples``: Stacked bar plot showing the proportions of SNV classes
               for each sample. It uses :meth:`pandas.DataFrame.plot.bar/barh`
               as the plotting method.
-            - ``titv``: Box plot showing the proprtions of transition (Ti)
-              and transversion (Tv) events for all samples. It uses
-              :meth:`seaborn.boxplot` as the plotting method.
 
         cmap : str, default: 'Pastel1'
             Name of the colormap according to :meth:`matplotlib.cm.get_cmap`.
@@ -1200,18 +1197,11 @@ class MafFrame:
 
             >>> mf.plot_snvcls(mode='samples')
             >>> plt.tight_layout()
-
-        .. plot::
-            :context: close-figs
-
-            >>> mf.plot_snvcls(mode='titv')
-            >>> plt.tight_layout()
         """
         modes = {
             'count': self._plot_snvcls_count,
             'proportion': self._plot_snvcls_proportion,
             'samples': self._plot_snvcls_samples,
-            'titv': self._plot_snvcls_titv,
         }
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
@@ -1292,9 +1282,71 @@ class MafFrame:
             ax.set_ylabel('Proportion')
         return ax
 
-    def _plot_snvcls_titv(self, df, flip, ax, cmap, **kwargs):
+    def plot_titv(
+        self, af=None, hue=None, hue_order=None, flip=False, ax=None,
+        figsize=None, **kwargs
+    ):
+        """
+        Create a box plot showing the proportions of Ti and Tv.
+
+        A grouped box plot can be created with ``hue`` (requires an
+        AnnFrame).
+
+        Parameters
+        ----------
+        af : AnnFrame, optional
+            AnnFrame containing sample annotation data.
+        hue : str, optional
+            Column in the AnnFrame containing information about sample groups.
+        hue_order : list, optional
+            Order to plot the group levels in.
+        flip : bool, default: False
+            If True, flip the x and y axes.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+        kwargs
+            Other keyword arguments will be passed down to
+            :meth:`seaborn.boxplot`.
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+
+        Examples
+        --------
+
+        Below is a simple example:
+
+        .. plot::
+            :context: close-figs
+
+            >>> import matplotlib.pyplot as plt
+            >>> from fuc import common, pymaf
+            >>> common.load_dataset('tcga-laml')
+            >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+            >>> mf = pymaf.MafFrame.from_file(maf_file)
+            >>> mf.plot_titv()
+            >>> plt.tight_layout()
+
+        We can create a grouped bar plot based on FAB classification:
+
+        .. plot::
+            :context: close-figs
+
+            >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
+            >>> af = pymaf.AnnFrame.from_file(annot_file)
+            >>> mf.plot_titv(af=af,
+            ...              hue='FAB_classification',
+            ...              hue_order=['M0', 'M1', 'M2'])
+            >>> plt.tight_layout()
+        """
+        df = self.df[self.df.Variant_Type == 'SNP']
         def one_row(r):
-            return SNV_CLASSES[r.SNV_Class]['type']
+            change = r.Reference_Allele + '>' + r.Tumor_Seq_Allele2
+            return SNV_CLASSES[change]['type']
         s = df.apply(one_row, axis=1)
         s.name = 'SNV_Type'
         df = pd.concat([df, s], axis=1)
@@ -1302,20 +1354,38 @@ class MafFrame:
         s.name = 'Count'
         df = s.to_frame().reset_index()
         df = df.pivot(index='Tumor_Sample_Barcode', columns='SNV_Type')
+
         df = df.fillna(0)
         df = df.apply(lambda r: r/r.sum(), axis=1)
         df.columns = df.columns.get_level_values(1)
         df.columns.name = ''
-        df = pd.melt(df, var_name='SNV_Type', value_name='Proportion')
-        kwargs = {'ax': ax,
-                  'data': df,
-                  **kwargs}
-        if flip:
-            sns.boxplot(x='Proportion', y='SNV_Type', **kwargs)
-            ax.set_ylabel('')
+
+        if hue is not None:
+            df = pd.merge(df, af.df[hue], left_index=True, right_index=True)
+            df = df.reset_index(drop=True)
+            df = df.set_index(hue)
+            df = pd.melt(df, var_name='SNV_Type', value_name='Proportion',
+                ignore_index=False)
+            df = df.reset_index()
         else:
-            sns.boxplot(x='SNV_Type', y='Proportion', **kwargs)
-            ax.set_xlabel('')
+            df = pd.melt(df, var_name='SNV_Type', value_name='Proportion')
+
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
+        if flip:
+            x, y = 'Proportion', 'SNV_Type'
+            xlabel, ylabel = 'Proportion', ''
+        else:
+            x, y = 'SNV_Type', 'Proportion'
+            xlabel, ylabel = '', 'Proportion'
+
+        sns.boxplot(x=x, y=y, data=df, hue=hue, hue_order=hue_order, ax=ax,
+            **kwargs)
+
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
+
         return ax
 
     def plot_summary(
@@ -1419,7 +1489,9 @@ class MafFrame:
         plt.tight_layout()
 
     def plot_tmb(self, ax=None, figsize=None, samples=None, **kwargs):
-        """Create a bar plot for tumor mutational burden (TMB) per sample.
+        """
+        Create a bar plot showing the :ref:`TMB <glossary:Tumor mutational
+        burden (TMB)>` distributions of samples.
 
         Parameters
         ----------
@@ -1464,13 +1536,13 @@ class MafFrame:
         return ax
 
     def plot_vaf(
-        self, col, count=10, af=None, group=None, group_order=None,
+        self, col, count=10, af=None, hue=None, hue_order=None,
         flip=False, ax=None, figsize=None, **kwargs
     ):
         """
-        Create a box plot showing VAF distribution for top mutated genes.
+        Create a box plot showing the VAF distributions of top mutated genes.
 
-        A grouped bar plot can be created with ``group`` (requires an
+        A grouped box plot can be created with ``hue`` (requires an
         AnnFrame).
 
         Parameters
@@ -1481,9 +1553,9 @@ class MafFrame:
             Number of top mutated genes to display.
         af : AnnFrame, optional
             AnnFrame containing sample annotation data.
-        group : str, optional
-            Column in the AnnFrame containing grouping information.
-        group_order : list, optional
+        hue : str, optional
+            Column in the AnnFrame containing information about sample groups.
+        hue_order : list, optional
             Order to plot the group levels in.
         flip : bool, default: False
             If True, flip the x and y axes.
@@ -1525,8 +1597,8 @@ class MafFrame:
             >>> af = pymaf.AnnFrame.from_file(annot_file)
             >>> mf.plot_vaf('i_TumorVAF_WU',
             ...             af=af,
-            ...             group='FAB_classification',
-            ...             group_order=['M1', 'M2', 'M3'],
+            ...             hue='FAB_classification',
+            ...             hue_order=['M1', 'M2', 'M3'],
             ...             count=5)
             >>> plt.tight_layout()
         """
@@ -1537,7 +1609,7 @@ class MafFrame:
 
         df = self.df[self.df.Hugo_Symbol.isin(sorted_genes)]
 
-        if group is not None:
+        if hue is not None:
             df = pd.merge(df, af.df, left_on='Tumor_Sample_Barcode',
                 right_index=True)
 
@@ -1552,7 +1624,7 @@ class MafFrame:
             xlabel, ylabel = '', 'VAF'
 
         sns.boxplot(x=x, y=y, data=df, ax=ax, order=sorted_genes,
-            hue=group, hue_order=group_order, **kwargs)
+            hue=hue, hue_order=hue_order, **kwargs)
 
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
