@@ -1310,7 +1310,8 @@ class MafFrame:
         figsize=None, **kwargs
     ):
         """
-        Create a box plot showing the proportions of Ti and Tv.
+        Create a box plot showing the :ref:`Ti/Tv <glossary:Transitions (Ti)
+        and transversions (Tv)>` proportions of samples.
 
         A grouped box plot can be created with ``hue`` (requires an
         AnnFrame).
