@@ -9,7 +9,7 @@ Number of genetic alternations detected within an individual.
 Transitions (Ti) and transversions (Tv)
 =======================================
 
-DNA substitution mutations are of two types. Transitions are interchanges of two-ring purines (A ↔ G) or of one-ring pyrimidines (C ↔ T): they therefore involve bases of similar shape. Transversions are interchanges of purine for pyrimidine bases, which therefore involve exchange of one-ring and two-ring structures.
+DNA substitution mutations are of two types. Transitions are interchanges of two-ring purines (A↔G) or of one-ring pyrimidines (C↔T): they therefore involve bases of similar shape. Transversions are interchanges of purine for pyrimidine bases, which therefore involve exchange of one-ring and two-ring structures.
 
 References:
 

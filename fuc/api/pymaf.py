@@ -1156,30 +1156,12 @@ class MafFrame:
         plt.tight_layout()
         plt.subplots_adjust(wspace=0.01, hspace=0.01)
 
-    def plot_snvcls(
-        self, mode='count', cmap='Pastel1', flip=False, ax=None,
-        figsize=None, **kwargs
-    ):
+    def plot_snvclsc(self, flip=False, ax=None, figsize=None, **kwargs):
         """
-        Create various kinds of plot showing the distrubtion of SNV classes.
+        Create a bar plot showing the count distrubtions of SNV classes.
 
         Parameters
         ----------
-        mode : {'count', 'proportion', 'samples'}, default: 'count'
-            Determines the plotting mode.
-
-            - ``count``: Bar plot showing the total counts of SNV classes
-              for all samples. It uses :meth:`seaborn.barplot` as the
-              plotting method.
-            - ``proportion``: Box plot showing the proportions of SNV classes
-              for all samples. It uses :meth:`seaborn.boxplot` as the
-              plotting method.
-            - ``samples``: Stacked bar plot showing the proportions of SNV classes
-              for each sample. It uses :meth:`pandas.DataFrame.plot.bar/barh`
-              as the plotting method.
-
-        cmap : str, default: 'Pastel1'
-            Name of the colormap according to :meth:`matplotlib.cm.get_cmap`.
         flip : bool, default: False
             If True, flip the x and y axes.
         ax : matplotlib.axes.Axes, optional
@@ -1187,8 +1169,8 @@ class MafFrame:
         figsize : tuple, optional
             Width, height in inches. Format: (float, float).
         kwargs
-            Other keyword arguments will be passed down to the respective
-            plotting method.
+            Other keyword arguments will be passed down to
+            :meth:`seaborn.barplot`.
 
         Returns
         -------
@@ -1199,35 +1181,15 @@ class MafFrame:
         --------
 
         .. plot::
-            :context: close-figs
 
             >>> import matplotlib.pyplot as plt
             >>> from fuc import common, pymaf
             >>> common.load_dataset('tcga-laml')
-            >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
-            >>> mf = pymaf.MafFrame.from_file(f)
-            >>> mf.plot_snvcls()
-            >>> plt.tight_layout()
-
-        .. plot::
-            :context: close-figs
-
-            >>> mf.plot_snvcls(mode='proportion')
-            >>> plt.tight_layout()
-
-        .. plot::
-            :context: close-figs
-
-            >>> mf.plot_snvcls(mode='samples')
+            >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+            >>> mf = pymaf.MafFrame.from_file(maf_file)
+            >>> mf.plot_snvclsc()
             >>> plt.tight_layout()
         """
-        modes = {
-            'count': self._plot_snvcls_count,
-            'proportion': self._plot_snvcls_proportion,
-            'samples': self._plot_snvcls_samples,
-        }
-        if ax is None:
-            fig, ax = plt.subplots(figsize=figsize)
         df = self.df[self.df.Variant_Type == 'SNP']
         def one_row(r):
             change = r.Reference_Allele + '>' + r.Tumor_Seq_Allele2
@@ -1235,28 +1197,70 @@ class MafFrame:
         s = df.apply(one_row, axis=1)
         s.name = 'SNV_Class'
         df = pd.concat([df, s], axis=1)
-        ax = modes[mode](df, flip, ax, cmap, **kwargs)
-        return ax
-
-    def _plot_snvcls_count(self, df, flip, ax, cmap, **kwargs):
         s = df.SNV_Class.value_counts()
         i = sorted(set([v['class'] for k, v in SNV_CLASSES.items()]))
         s = s.reindex(index=i)
         df = s.to_frame().reset_index()
         df.columns = ['SNV_Class', 'Count']
-        kwargs = {'ax': ax,
-                  'data': df,
-                  'palette': cmap,
-                  **kwargs}
+
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
         if flip:
-            sns.barplot(x='SNV_Class', y='Count', **kwargs)
-            ax.set_xlabel('')
+            x, y = 'SNV_Class', 'Count'
+            xlabel, ylabel = '', 'Count'
         else:
-            sns.barplot(x='Count', y='SNV_Class', **kwargs)
-            ax.set_ylabel('')
+            x, y = 'Count', 'SNV_Class'
+            xlabel, ylabel = 'Count', ''
+
+        sns.barplot(x=x, y=y, data=df, ax=ax, **kwargs)
+
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
+
         return ax
 
-    def _plot_snvcls_proportion(self, df, flip, ax, cmap, **kwargs):
+    def plot_snvclsp(self, flip=False, ax=None, figsize=None, **kwargs):
+        """
+        Create a bar plot showing the proportion distrubtions of SNV classes.
+
+        Parameters
+        ----------
+        flip : bool, default: False
+            If True, flip the x and y axes.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+        kwargs
+            Other keyword arguments will be passed down to
+            :meth:`seaborn.barplot`.
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+
+        Examples
+        --------
+
+        .. plot::
+
+            >>> import matplotlib.pyplot as plt
+            >>> from fuc import common, pymaf
+            >>> common.load_dataset('tcga-laml')
+            >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+            >>> mf = pymaf.MafFrame.from_file(maf_file)
+            >>> mf.plot_snvclsp()
+            >>> plt.tight_layout()
+        """
+        df = self.df[self.df.Variant_Type == 'SNP']
+        def one_row(r):
+            change = r.Reference_Allele + '>' + r.Tumor_Seq_Allele2
+            return SNV_CLASSES[change]['class']
+        s = df.apply(one_row, axis=1)
+        s.name = 'SNV_Class'
+        df = pd.concat([df, s], axis=1)
         s = df.groupby('Tumor_Sample_Barcode')['SNV_Class'].value_counts()
         s.name = 'Count'
         df = s.to_frame().reset_index()
@@ -1266,19 +1270,65 @@ class MafFrame:
         df.columns = df.columns.get_level_values(1)
         df.columns.name = ''
         df = pd.melt(df, var_name='SNV_Class', value_name='Proportion')
-        kwargs = {'ax': ax,
-                  'data': df,
-                  'palette': cmap,
-                  **kwargs}
+
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
         if flip:
-            sns.boxplot(x='Proportion', y='SNV_Class', **kwargs)
-            ax.set_ylabel('')
+            x, y = 'Proportion', 'SNV_Class'
+            xlabel, ylabel = 'Proportion', ''
         else:
-            sns.boxplot(x='SNV_Class', y='Proportion', **kwargs)
-            ax.set_xlabel('')
+            x, y = 'SNV_Class', 'Proportion'
+            xlabel, ylabel = '', 'Proportion'
+
+        sns.boxplot(x=x, y=y, data=df, ax=ax, **kwargs)
+
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
+
         return ax
 
-    def _plot_snvcls_samples(self, df, flip, ax, cmap, **kwargs):
+    def plot_snvclss(self, flip=False, ax=None, figsize=None, **kwargs):
+        """
+        Create a bar plot showing the proportion distrubtions of SNV classes.
+
+        Parameters
+        ----------
+        flip : bool, default: False
+            If True, flip the x and y axes.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+        kwargs
+            Other keyword arguments will be passed down to
+            :meth:`seaborn.barplot`.
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+
+        Examples
+        --------
+
+        .. plot::
+
+            >>> import matplotlib.pyplot as plt
+            >>> from fuc import common, pymaf
+            >>> common.load_dataset('tcga-laml')
+            >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+            >>> mf = pymaf.MafFrame.from_file(maf_file)
+            >>> mf.plot_snvclss()
+            >>> plt.tight_layout()
+        """
+        df = self.df[self.df.Variant_Type == 'SNP']
+        def one_row(r):
+            change = r.Reference_Allele + '>' + r.Tumor_Seq_Allele2
+            return SNV_CLASSES[change]['class']
+        s = df.apply(one_row, axis=1)
+        s.name = 'SNV_Class'
+        df = pd.concat([df, s], axis=1)
         s = df.groupby('Tumor_Sample_Barcode')['SNV_Class'].value_counts()
         s.name = 'Count'
         df = s.to_frame().reset_index()
@@ -1287,11 +1337,14 @@ class MafFrame:
         df = df.apply(lambda r: r/r.sum(), axis=1)
         df.columns = df.columns.get_level_values(1)
         df.columns.name = ''
+
+
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
         kwargs = {'ax': ax,
                   'stacked': True,
                   'legend': False,
                   'width': 1,
-                  'color': plt.cm.get_cmap(cmap).colors,
                   **kwargs}
         if flip:
             df.plot.barh(**kwargs)
@@ -1303,6 +1356,7 @@ class MafFrame:
             ax.set_xticks([])
             ax.set_xlabel('Samples')
             ax.set_ylabel('Proportion')
+
         return ax
 
     def plot_titv(
@@ -1339,9 +1393,13 @@ class MafFrame:
         matplotlib.axes.Axes
             The matplotlib axes containing the plot.
 
+        See Also
+        --------
+        fuc.api.pyvcf.VcfFrame.plot_titv
+            Similar method for the :class:`fuc.api.pyvcf.VcfFrame` class.
+
         Examples
         --------
-
         Below is a simple example:
 
         .. plot::
@@ -1467,7 +1525,7 @@ class MafFrame:
                         labelsize=ticklabels_fontsize)
 
         # Create the 'SNV class' figure.
-        self.plot_snvcls(ax=ax3)
+        self.plot_snvclsc(ax=ax3)
         ax3.set_title('SNV class', fontsize=title_fontsize)
         ax3.set_xlabel('')
         ax3.tick_params(axis='both', which='major',

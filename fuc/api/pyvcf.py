@@ -4009,9 +4009,13 @@ class VcfFrame:
         matplotlib.axes.Axes
             The matplotlib axes containing the plot.
 
+        See Also
+        --------
+        fuc.api.pymaf.MafFrame.plot_titv
+            Similar method for the :class:`fuc.api.pymaf.MafFrame` class.
+
         Examples
         --------
-
         Below is a simple example:
 
         .. plot::

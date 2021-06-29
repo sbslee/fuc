@@ -7,7 +7,11 @@ Changelog
 * Rename the commands (e.g. :command:`vcf_merge` to :command:`vcf-merge`).
 * Add ``flip`` argument to :meth:`pymaf.MafFrame.plot_vaf` method.
 * Update :meth:`pymaf.MafFrame.plot_vaf` method to support creation of a grouped bar plot.
+* Factor out ``count`` mode of :meth:`pymaf.MafFrame.plot_snvcls` method to new method :meth:`pymaf.MafFrame.plot_snvclsc`.
+* Factor out ``proportion`` mode of :meth:`pymaf.MafFrame.plot_snvcls` method to new method :meth:`pymaf.MafFrame.plot_snvclsp`.
+* Factor out ``samples`` mode of :meth:`pymaf.MafFrame.plot_snvcls` method to new method :meth:`pymaf.MafFrame.plot_snvclss`.
 * Factor out ``titv`` mode of :meth:`pymaf.MafFrame.plot_snvcls` method to new method :meth:`pymaf.MafFrame.plot_titv`.
+* Deprecate :meth:`pymaf.MafFrame.plot_snvcls` method.
 * Add ``hue_order`` argument to :meth:`pyvcf.VcfFrame.plot_hist` method.
 * Update aesthetic aspect of :meth:`pymaf.MafFrame.plot_oncoplot` method.
 * Add ``width`` argument to :meth:`pymaf.MafFrame.plot_tmb` method.
