@@ -8,6 +8,7 @@ Changelog
 * Add ``flip`` argument to :meth:`pymaf.MafFrame.plot_vaf` method.
 * Update :meth:`pymaf.MafFrame.plot_vaf` method to support creation of a grouped bar plot.
 * Factor out ``titv`` mode of :meth:`pymaf.MafFrame.plot_snvcls` method to new method :meth:`pymaf.MafFrame.plot_titv`.
+* Add ``hue_order`` argument to :meth:`pyvcf.VcfFrame.plot_hist` method.
 
 0.15.0 (2021-06-24)
 -------------------

@@ -1876,15 +1876,19 @@ class VcfFrame:
         """
         Create a histogram showing AD/AF/DP distribution.
 
+        A grouped histogram can be created with ``hue`` (requires an
+        AnnFrame).
+
         Parameters
         ----------
         k : {'AD', 'AF', 'DP'}
             Genotype key.
         af : pyvcf.AnnFrame
-            AnnFrame containing sample annotation data (requires ``hue``).
+            AnnFrame containing sample annotation data.
         hue : list, optional
-            Grouping variable that will produce multiple histograms with
-            different colors (requires ``af``).
+            Column in the AnnFrame containing information about sample groups.
+        hue_order : list, optional
+            Order to plot the group levels in.
         kde : bool, default: True
             Compute a kernel density estimate to smooth the distribution.
         ax : matplotlib.axes.Axes, optional
