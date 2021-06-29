@@ -700,7 +700,8 @@ class MafFrame:
 
     @classmethod
     def from_vcf(cls, vcf, keys=None, names=None):
-        """Construct a MafFrame from a VCF file or VcfFrame.
+        """
+        Construct a MafFrame from a VCF file or VcfFrame.
 
         The input VCF should already contain functional annotation data
         from a tool such as Ensemble VEP, SnpEff, and ANNOVAR. The
@@ -729,14 +730,25 @@ class MafFrame:
         else:
             vf = vcf
 
+        # Set some default values in case the VCF is not annotated.
+        ncbi_build = '.'
+
         # Get the NCBI_Build data.
         for line in vf.meta:
             if line.startswith('##VEP'):
                 ncbi_build = re.search(r'assembly="(.*?)"', line).group(1)
+                break
 
         # Define the conversion algorithm.
         def one_row(r):
-            fields = r.INFO.replace('CSQ=', '').split(',')[0].split('|')
+            has_annot = 'CSQ=' in r.INFO
+
+            # Set some default values in case the VCF is not annotated.
+            strand = '.'
+            variant_classification = '.'
+            protein_change = '.'
+            hugo_symbol = '.'
+            entrez_gene_id = '.'
 
             # Get the sequence data.
             inframe = abs(len(r.REF) - len(r.ALT)) / 3 == 0
@@ -762,48 +774,56 @@ class MafFrame:
                 tumor_seq_allele1 = r.ALT[1:]
                 tumor_seq_allele2 = r.ALT[1:]
 
+            fields = r.INFO.replace('CSQ=', '').split(',')[0].split('|')
+
             # Get the Strand data.
-            strand = '+' if fields[19] == '1' else '-'
+            if has_annot:
+                strand = '+' if fields[19] == '1' else '-'
 
             # Get the Variant_Classification data.
-            consequence = fields[1].split('&')[0]
-            if consequence == 'frameshift_variant':
-                if variant_type == 'DEL':
-                    variant_classification = 'Frame_Shift_Del'
-                else:
-                    variant_classification = 'Frame_Shift_Ins'
-            elif consequence == 'protein_altering_variant':
-                if inframe:
-                    if variant_type == 'DEL':
-                        variant_classification = 'In_Frame_Del'
-                    else:
-                        variant_classification = 'In_Frame_Ins'
-                else:
+            if has_annot:
+                consequence = fields[1].split('&')[0]
+                if consequence == 'frameshift_variant':
                     if variant_type == 'DEL':
                         variant_classification = 'Frame_Shift_Del'
                     else:
                         variant_classification = 'Frame_Shift_Ins'
-            elif consequence in VEP_CONSEQUENCES:
-                variant_classification = VEP_CONSEQUENCES[consequence]
-            else:
-                m = f'Found unknown Ensemble VEP consequence: {consequence}'
-                raise ValueError(m)
+                elif consequence == 'protein_altering_variant':
+                    if inframe:
+                        if variant_type == 'DEL':
+                            variant_classification = 'In_Frame_Del'
+                        else:
+                            variant_classification = 'In_Frame_Ins'
+                    else:
+                        if variant_type == 'DEL':
+                            variant_classification = 'Frame_Shift_Del'
+                        else:
+                            variant_classification = 'Frame_Shift_Ins'
+                elif consequence in VEP_CONSEQUENCES:
+                    variant_classification = VEP_CONSEQUENCES[consequence]
+                else:
+                    m = f'Found unknown Ensemble VEP consequence: {consequence}'
+                    raise ValueError(m)
 
             # Get the Tumor_Sample_Barcode data.
             s = r[9:].apply(pyvcf.gt_hasvar)
             tumor_sample_barcode = ','.join(s[s].index.to_list())
 
             # Get the Protein_Change data.
-            pos = fields[14]
-            aa = fields[15].split('/')
-            if len(aa) > 1:
-                protein_change = f'p.{aa[0]}{pos}{aa[1]}'
-            else:
-                protein_change = '.'
+            if has_annot:
+                pos = fields[14]
+                aa = fields[15].split('/')
+                if len(aa) > 1:
+                    protein_change = f'p.{aa[0]}{pos}{aa[1]}'
+
+            # Get other data.
+            if has_annot:
+                hugo_symbol = fields[3]
+                entrez_gene_id = fields[4]
 
             d = dict(
-                Hugo_Symbol = fields[3],
-                Entrez_Gene_Id = fields[4],
+                Hugo_Symbol = hugo_symbol,
+                Entrez_Gene_Id = entrez_gene_id,
                 Center = '.',
                 NCBI_Build = ncbi_build,
                 Chromosome = r.CHROM,
@@ -817,10 +837,10 @@ class MafFrame:
                 Tumor_Seq_Allele2 = tumor_seq_allele2,
                 Tumor_Sample_Barcode = tumor_sample_barcode,
                 Protein_Change = protein_change,
-                CHROM = r.CHROM,
-                POS = r.POS,
-                REF = r.REF,
-                ALT = r.ALT,
+                CHROM = r.CHROM, # will be dropped
+                POS = r.POS,     # will be dropped
+                REF = r.REF,     # will be dropped
+                ALT = r.ALT,     # will be dropped
             )
 
             return pd.Series(d)
@@ -860,6 +880,7 @@ class MafFrame:
                 on=['CHROM', 'POS', 'REF', 'ALT', 'Tumor_Sample_Barcode'])
             df = df.rename(columns={'value': names[i]})
 
+        # Drop the extra columns.
         df = df.drop(columns=['CHROM', 'POS', 'REF', 'ALT'])
 
         return cls(df)

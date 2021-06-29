@@ -51,18 +51,20 @@ If sample annotation data are available for a given VCF file, use
 the :class:`AnnFrame` class to import the data.
 """
 
-import pandas as pd
-import numpy as np
+import os
+import re
 import gzip
 from copy import deepcopy
+
+from . import pybed, common, pymaf
+
+import pandas as pd
+import numpy as np
 from Bio import bgzf
 import matplotlib.pyplot as plt
 from matplotlib_venn import venn2, venn3
-import os
 import seaborn as sns
 import scipy.stats as stats
-from . import pybed, common
-import re
 
 HEADERS = ['CHROM', 'POS', 'ID', 'REF', 'ALT',
            'QUAL', 'FILTER', 'INFO', 'FORMAT']
@@ -551,10 +553,11 @@ def row_missval(r):
     return m
 
 class AnnFrame:
-    """Class for storing sample annotation data.
+    """
+    Class for storing sample annotation data.
 
-    This class stores sample annotation data as pandas.DataFrame with sample
-    names as index.
+    This class stores sample annotation data as :class:`pandas.DataFrame`
+    with sample names as index.
 
     Note that an AnnFrame can have a different set of samples than its
     accompanying VcfFrame.
@@ -562,7 +565,7 @@ class AnnFrame:
     Parameters
     ----------
     df : pandas.DataFrame
-        DataFrame containing sample annotation data. Index must be
+        DataFrame containing sample annotation data. The index must be
         sample names.
 
     See Also
@@ -3967,3 +3970,80 @@ class VcfFrame:
         """
         df = self.df.drop_duplicates(subset=subset, keep=keep)
         return self.__class__(self.copy_meta(), df)
+
+    def plot_titv(
+        self, af=None, hue=None, hue_order=None, flip=False, ax=None,
+        figsize=None, **kwargs
+    ):
+        """
+        Create a box plot showing the proportions of Ti and Tv.
+
+        A grouped box plot can be created with ``hue`` (requires an
+        AnnFrame).
+
+        Under the hood, this method simply converts the VcfFrame to the
+        :class:`pymaf.MafFrame` class and then applies the
+        :meth:`pymaf.MafFrame.plot_titv` method.
+
+        Parameters
+        ----------
+        af : AnnFrame, optional
+            AnnFrame containing sample annotation data.
+        hue : str, optional
+            Column in the AnnFrame containing information about sample groups.
+        hue_order : list, optional
+            Order to plot the group levels in.
+        flip : bool, default: False
+            If True, flip the x and y axes.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+        kwargs
+            Other keyword arguments will be passed down to
+            :meth:`seaborn.boxplot`.
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+
+        Examples
+        --------
+
+        Below is a simple example:
+
+        .. plot::
+            :context: close-figs
+
+            >>> import matplotlib.pyplot as plt
+            >>> from fuc import common, pyvcf
+            >>> common.load_dataset('tcga-laml')
+            >>> vcf_file = '~/fuc-data/tcga-laml/tcga_laml.vcf'
+            >>> vf = pyvcf.VcfFrame.from_file(vcf_file)
+            >>> vf.plot_titv()
+            >>> plt.tight_layout()
+
+        We can create a grouped bar plot based on FAB classification:
+
+        .. plot::
+            :context: close-figs
+
+            >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
+            >>> af = pyvcf.AnnFrame.from_file(annot_file, 'Tumor_Sample_Barcode')
+            >>> vf.plot_titv(af=af,
+            ...              hue='FAB_classification',
+            ...              hue_order=['M0', 'M1', 'M2'])
+            >>> plt.tight_layout()
+        """
+        mf = pymaf.MafFrame.from_vcf(self)
+
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
+        mf.plot_titv(
+            af=af, hue=hue, hue_order=hue_order, flip=flip, ax=ax,
+            figsize=figsize, **kwargs
+        )
+
+        return ax
