@@ -1091,6 +1091,7 @@ class MafFrame:
         ax1.spines['right'].set_visible(False)
         ax1.spines['top'].set_visible(False)
         ax1.spines['bottom'].set_visible(False)
+        ax1.set_xlim(-0.5, len(samples)-0.5)
         ax1.set_ylabel('TMB', fontsize=label_fontsize)
         ax1.set_yticks([0, self.matrix_tmb().sum(axis=1).max()])
         ax1.tick_params(axis='y', which='major',
