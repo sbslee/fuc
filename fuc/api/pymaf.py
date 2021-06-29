@@ -1076,8 +1076,8 @@ class MafFrame:
             >>> import matplotlib.pyplot as plt
             >>> from fuc import common, pymaf
             >>> common.load_dataset('tcga-laml')
-            >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
-            >>> mf = pymaf.MafFrame.from_file(f)
+            >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+            >>> mf = pymaf.MafFrame.from_file(maf_file)
             >>> mf.plot_oncoplot()
         """
         g = {'height_ratios': [1, 10, 1], 'width_ratios': [10, 1]}
@@ -1085,8 +1085,9 @@ class MafFrame:
         [[ax1, ax2], [ax3, ax4], [ax5, ax6]] = axes
 
         # Create the TMB plot.
-        samples = list(self.matrix_waterfall(count=count, keep_empty=keep_empty).columns)
-        self.plot_tmb(ax=ax1, samples=samples)
+        samples = list(self.matrix_waterfall(count=count,
+            keep_empty=keep_empty).columns)
+        self.plot_tmb(ax=ax1, samples=samples, width=0.95)
         ax1.set_xlabel('')
         ax1.spines['right'].set_visible(False)
         ax1.spines['top'].set_visible(False)
@@ -1489,19 +1490,21 @@ class MafFrame:
 
         plt.tight_layout()
 
-    def plot_tmb(self, ax=None, figsize=None, samples=None, **kwargs):
+    def plot_tmb(self, samples=None, width=0.8, ax=None, figsize=None, **kwargs):
         """
         Create a bar plot showing the :ref:`TMB <glossary:Tumor mutational
         burden (TMB)>` distributions of samples.
 
         Parameters
         ----------
+        samples : list, optional
+            Samples to be drawn (in the exact order).
+        width : float, default: 0.8
+            The width of the bars.
         ax : matplotlib.axes.Axes, optional
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
             Width, height in inches. Format: (float, float).
-        samples : list, optional
-            Samples to be drawn (in the exact order).
         kwargs
             Other keyword arguments will be passed down to
             :meth:`pandas.DataFrame.plot.bar`.
@@ -1513,15 +1516,16 @@ class MafFrame:
 
         Examples
         --------
+        Below is a simple example:
 
         .. plot::
 
             >>> import matplotlib.pyplot as plt
             >>> from fuc import common, pymaf
             >>> common.load_dataset('tcga-laml')
-            >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
-            >>> mf = pymaf.MafFrame.from_file(f)
-            >>> mf.plot_tmb()
+            >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+            >>> mf = pymaf.MafFrame.from_file(maf_file)
+            >>> mf.plot_tmb(width=1)
             >>> plt.tight_layout()
         """
         df = self.matrix_tmb()
@@ -1529,7 +1533,7 @@ class MafFrame:
             df = df.loc[samples]
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
-        df.plot.bar(stacked=True, ax=ax, width=1, legend=False,
+        df.plot.bar(stacked=True, ax=ax, width=width, legend=False,
             color=NONSYN_COLORS, **kwargs)
         ax.set_xlabel('Samples')
         ax.set_ylabel('Count')
