@@ -1166,7 +1166,7 @@ class MafFrame:
         Create a bar plot summarizing the count distrubtions of the six
         :ref:`glossary:SNV classes` for all samples.
 
-        A grouped box plot can be created with ``hue`` (requires an AnnFrame).
+        A grouped bar plot can be created with ``hue`` (requires an AnnFrame).
 
         Parameters
         ----------
@@ -1273,14 +1273,23 @@ class MafFrame:
         return ax
 
     def plot_snvclsp(
-        self, palette=None, flip=False, ax=None, figsize=None, **kwargs
+        self, af=None, hue=None, hue_order=None, palette=None, flip=False,
+        ax=None, figsize=None, **kwargs
     ):
         """
         Create a box plot summarizing the proportion distrubtions of the six
         :ref:`glossary:SNV classes` for all sample.
 
+        A grouped box plot can be created with ``hue`` (requires an AnnFrame).
+
         Parameters
         ----------
+        af : AnnFrame, optional
+            AnnFrame containing sample annotation data.
+        hue : str, optional
+            Column in the AnnFrame containing information about sample groups.
+        hue_order : list, optional
+            Order to plot the group levels in.
         palette : str, optional
             Name of seaborn palette. See the :ref:`tutorials:Control plot
             colors` tutorial for details.
@@ -1310,8 +1319,10 @@ class MafFrame:
 
         Examples
         --------
+        Below is a simple example:
 
         .. plot::
+            :context: close-figs
 
             >>> import matplotlib.pyplot as plt
             >>> import seaborn as sns
@@ -1320,6 +1331,18 @@ class MafFrame:
             >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
             >>> mf = pymaf.MafFrame.from_file(maf_file)
             >>> mf.plot_snvclsp(palette=sns.color_palette('Pastel1'))
+            >>> plt.tight_layout()
+
+        We can create a grouped bar plot based on FAB classification:
+
+        .. plot::
+            :context: close-figs
+
+            >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
+            >>> af = pymaf.AnnFrame.from_file(annot_file)
+            >>> mf.plot_snvclsp(af=af,
+            ...                 hue='FAB_classification',
+            ...                 hue_order=['M0', 'M1', 'M2'])
             >>> plt.tight_layout()
         """
         # Add the SNV_Class column.
@@ -1340,7 +1363,13 @@ class MafFrame:
         df = df.apply(lambda r: r/r.sum(), axis=1)
         df.columns = df.columns.get_level_values(1)
         df.columns.name = ''
-        df = pd.melt(df, var_name='SNV_Class', value_name='Proportion')
+
+        if hue is None:
+            df = pd.melt(df, var_name='SNV_Class', value_name='Proportion')
+        else:
+            df = pd.merge(df, af.df[hue], left_index=True, right_index=True)
+            df = pd.melt(df, id_vars=[hue], var_name='SNV_Class',
+                value_name='Proportion')
 
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
@@ -1352,7 +1381,10 @@ class MafFrame:
             x, y = 'SNV_Class', 'Proportion'
             xlabel, ylabel = '', 'Proportion'
 
-        sns.boxplot(x=x, y=y, data=df, palette=palette, ax=ax, **kwargs)
+        sns.boxplot(
+            x=x, y=y, data=df, hue=hue, hue_order=hue_order, palette=palette,
+            ax=ax, **kwargs
+        )
 
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
