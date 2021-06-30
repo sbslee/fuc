@@ -17,6 +17,7 @@ Changelog
 * Add ``width`` argument to :meth:`pymaf.MafFrame.plot_tmb` method.
 * Add :meth:`fuc.api.pyvcf.VcfFrame.plot_titv` method.
 * Add ``palette`` and ``flip`` arguments to :meth:`fuc.api.pymaf.MafFrame.plot_vartype` method.
+* Update :meth:`fuc.api.pymaf.MafFrame.plot_snvclsc` method to support creation of a grouped bar plot.
 
 0.15.0 (2021-06-24)
 -------------------

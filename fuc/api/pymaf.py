@@ -1159,14 +1159,23 @@ class MafFrame:
         plt.subplots_adjust(wspace=0.01, hspace=0.01)
 
     def plot_snvclsc(
-        self, palette=None, flip=False, ax=None, figsize=None, **kwargs
+        self, af=None, hue=None, hue_order=None, palette=None,
+        flip=False, ax=None, figsize=None, **kwargs
     ):
         """
         Create a bar plot summarizing the count distrubtions of the six
         :ref:`glossary:SNV classes` for all samples.
 
+        A grouped box plot can be created with ``hue`` (requires an AnnFrame).
+
         Parameters
         ----------
+        af : AnnFrame, optional
+            AnnFrame containing sample annotation data.
+        hue : str, optional
+            Column in the AnnFrame containing information about sample groups.
+        hue_order : list, optional
+            Order to plot the group levels in.
         palette : str, optional
             Name of seaborn palette. See the :ref:`tutorials:Control plot
             colors` tutorial for details.
@@ -1187,8 +1196,10 @@ class MafFrame:
 
         Examples
         --------
+        Below is a simple example:
 
         .. plot::
+            :context: close-figs
 
             >>> import matplotlib.pyplot as plt
             >>> import seaborn as sns
@@ -1197,6 +1208,18 @@ class MafFrame:
             >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
             >>> mf = pymaf.MafFrame.from_file(maf_file)
             >>> mf.plot_snvclsc(palette=sns.color_palette('Pastel1'))
+            >>> plt.tight_layout()
+
+        We can create a grouped bar plot based on FAB classification:
+
+        .. plot::
+            :context: close-figs
+
+            >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
+            >>> af = pymaf.AnnFrame.from_file(annot_file)
+            >>> mf.plot_snvclsc(af=af,
+            ...                 hue='FAB_classification',
+            ...                 hue_order=['M0', 'M1', 'M2'])
             >>> plt.tight_layout()
         """
         # Add the SNV_Class column.
@@ -1209,10 +1232,16 @@ class MafFrame:
         df = pd.concat([df, s], axis=1)
 
         # Count the occurance of each SNV class.
-        s = df.SNV_Class.value_counts()
-        s = s.reindex(index=SNV_CLASS_ORDER)
-        df = s.to_frame().reset_index()
-        df.columns = ['SNV_Class', 'Count']
+        if hue is not None:
+            df = pd.merge(df, af.df[hue], left_on='Tumor_Sample_Barcode',
+                right_index=True)
+            s = df.groupby([hue]).SNV_Class.value_counts()
+            df = s.to_frame().rename(columns={'SNV_Class': 'Count'}
+                ).reset_index()
+        else:
+            s = df.SNV_Class.value_counts()
+            df = s.to_frame().reset_index()
+            df.columns = ['SNV_Class', 'Count']
 
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
@@ -1224,7 +1253,10 @@ class MafFrame:
             x, y = 'SNV_Class', 'Count'
             xlabel, ylabel = '', 'Count'
 
-        sns.barplot(x=x, y=y, data=df, ax=ax, palette=palette, **kwargs)
+        sns.barplot(
+            x=x, y=y, data=df, ax=ax, hue=hue, hue_order=hue_order,
+            palette=palette, order=SNV_CLASS_ORDER, **kwargs
+        )
 
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
