@@ -1194,6 +1194,15 @@ class MafFrame:
         matplotlib.axes.Axes
             The matplotlib axes containing the plot.
 
+        See Also
+        --------
+        MafFrame.plot_snvclsp
+            Create a box plot summarizing the proportion distrubtions of
+            the six :ref:`glossary:SNV classes` for all sample.
+        MafFrame.plot_snvclss
+            Create a bar plot showing the proportions of the six
+            :ref:`glossary:SNV classes` for individual samples.
+
         Examples
         --------
         Below is a simple example:
@@ -1290,6 +1299,15 @@ class MafFrame:
         matplotlib.axes.Axes
             The matplotlib axes containing the plot.
 
+        See Also
+        --------
+        MafFrame.plot_snvclsc
+            Create a bar plot summarizing the count distrubtions of the six
+            :ref:`glossary:SNV classes` for all samples.
+        MafFrame.plot_snvclss
+            Create a bar plot showing the proportions of the six
+            :ref:`glossary:SNV classes` for individual samples.
+
         Examples
         --------
 
@@ -1376,6 +1394,15 @@ class MafFrame:
         -------
         matplotlib.axes.Axes
             The matplotlib axes containing the plot.
+
+        See Also
+        --------
+        MafFrame.plot_snvclsc
+            Create a bar plot summarizing the count distrubtions of the six
+            :ref:`glossary:SNV classes` for all samples.
+        MafFrame.plot_snvclsp
+            Create a box plot summarizing the proportion distrubtions of
+            the six :ref:`glossary:SNV classes` for all sample.
 
         Examples
         --------
