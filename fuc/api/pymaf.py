@@ -1207,14 +1207,12 @@ class MafFrame:
         s = df.apply(one_row, axis=1)
         s.name = 'SNV_Class'
         df = pd.concat([df, s], axis=1)
-        print(df.head())
 
         # Count the occurance of each SNV class.
         s = df.SNV_Class.value_counts()
         s = s.reindex(index=SNV_CLASS_ORDER)
         df = s.to_frame().reset_index()
         df.columns = ['SNV_Class', 'Count']
-        print(df.head())
 
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
