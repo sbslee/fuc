@@ -100,13 +100,13 @@ The following packages are required to run fuc:
    scipy
    seaborn
 
-There are various ways you can install fuc. The recommended way is via conda:
+There are various ways you can install fuc. The recommended way is via conda (`Anaconda <https://www.anaconda.com/>`__):
 
 .. code-block:: text
 
    $ conda install -c bioconda fuc
 
-Above will automatically download and install all the dependencies as well. Alternatively, you can use pip to install fuc and all of its dependencies:
+Above will automatically download and install all the dependencies as well. Alternatively, you can use pip (`PyPI <https://pypi.org/>`__) to install fuc and all of its dependencies:
 
 .. code-block:: text
 

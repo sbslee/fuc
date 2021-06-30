@@ -1,10 +1,14 @@
 Glossary
 ********
 
-Tumor mutational burden (TMB)
-=============================
+SNV classes
+===========
 
-Number of genetic alternations detected within an individual.
+Considering the pyrimidines of the Watson-Crick base pairs, there are only six different possible substitutions: C>A, C>G, C>T, T>A, T>C, and T>G.
+
+References:
+
+- `Single Base Substitution (SBS) Signatures <https://cancer.sanger.ac.uk/signatures/sbs/>`__
 
 Transitions (Ti) and transversions (Tv)
 =======================================
@@ -13,4 +17,9 @@ DNA substitution mutations are of two types. Transitions are interchanges of two
 
 References:
 
-- `Transitions vs. transversions <https://www.mun.ca/biology/scarr/Transitions_vs_Transversions.html>`__
+- `Transitions vs. Transversions <https://www.mun.ca/biology/scarr/Transitions_vs_Transversions.html>`__
+
+Tumor mutational burden (TMB)
+=============================
+
+Number of genetic alternations detected within an individual.
