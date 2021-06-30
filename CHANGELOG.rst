@@ -15,7 +15,8 @@ Changelog
 * Add ``hue_order`` argument to :meth:`pyvcf.VcfFrame.plot_hist` method.
 * Update aesthetic aspect of :meth:`pymaf.MafFrame.plot_oncoplot` method.
 * Add ``width`` argument to :meth:`pymaf.MafFrame.plot_tmb` method.
-* Add :meth:`pyvcf.VcfFrame.plot_titv` method.
+* Add :meth:`fuc.api.pyvcf.VcfFrame.plot_titv` method.
+* Add ``palette`` and ``flip`` arguments to :meth:`fuc.api.pymaf.MafFrame.plot_vartype` method.
 
 0.15.0 (2021-06-24)
 -------------------

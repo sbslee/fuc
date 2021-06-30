@@ -1191,11 +1191,12 @@ class MafFrame:
         .. plot::
 
             >>> import matplotlib.pyplot as plt
+            >>> import seaborn as sns
             >>> from fuc import common, pymaf
             >>> common.load_dataset('tcga-laml')
             >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
             >>> mf = pymaf.MafFrame.from_file(maf_file)
-            >>> mf.plot_snvclsc()
+            >>> mf.plot_snvclsc(palette=sns.color_palette('Pastel1'))
             >>> plt.tight_layout()
         """
         # Add the SNV_Class column.
@@ -1206,37 +1207,44 @@ class MafFrame:
         s = df.apply(one_row, axis=1)
         s.name = 'SNV_Class'
         df = pd.concat([df, s], axis=1)
+        print(df.head())
 
         # Count the occurance of each SNV class.
         s = df.SNV_Class.value_counts()
         s = s.reindex(index=SNV_CLASS_ORDER)
         df = s.to_frame().reset_index()
         df.columns = ['SNV_Class', 'Count']
+        print(df.head())
 
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
         if flip:
-            x, y = 'SNV_Class', 'Count'
-            xlabel, ylabel = '', 'Count'
-        else:
             x, y = 'Count', 'SNV_Class'
             xlabel, ylabel = 'Count', ''
+        else:
+            x, y = 'SNV_Class', 'Count'
+            xlabel, ylabel = '', 'Count'
 
-        sns.barplot(x=x, y=y, data=df, ax=ax, **kwargs)
+        sns.barplot(x=x, y=y, data=df, ax=ax, palette=palette, **kwargs)
 
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
 
         return ax
 
-    def plot_snvclsp(self, flip=False, ax=None, figsize=None, **kwargs):
+    def plot_snvclsp(
+        self, palette=None, flip=False, ax=None, figsize=None, **kwargs
+    ):
         """
         Create a box plot summarizing the proportion distrubtions of the six
         :ref:`glossary:SNV classes` for all sample.
 
         Parameters
         ----------
+        palette : str, optional
+            Name of seaborn palette. See the :ref:`tutorials:Control plot
+            colors` tutorial for details.
         flip : bool, default: False
             If True, flip the x and y axes.
         ax : matplotlib.axes.Axes, optional
@@ -1258,11 +1266,12 @@ class MafFrame:
         .. plot::
 
             >>> import matplotlib.pyplot as plt
+            >>> import seaborn as sns
             >>> from fuc import common, pymaf
             >>> common.load_dataset('tcga-laml')
             >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
             >>> mf = pymaf.MafFrame.from_file(maf_file)
-            >>> mf.plot_snvclsp()
+            >>> mf.plot_snvclsp(palette=sns.color_palette('Pastel1'))
             >>> plt.tight_layout()
         """
         # Add the SNV_Class column.
@@ -1295,7 +1304,7 @@ class MafFrame:
             x, y = 'SNV_Class', 'Proportion'
             xlabel, ylabel = '', 'Proportion'
 
-        sns.boxplot(x=x, y=y, data=df, ax=ax, **kwargs)
+        sns.boxplot(x=x, y=y, data=df, palette=palette, ax=ax, **kwargs)
 
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
@@ -1313,10 +1322,11 @@ class MafFrame:
         Parameters
         ----------
         color : list, optional
-            List of color tuples.
+            List of color tuples. See the :ref:`tutorials:Control plot
+            colors` tutorial for details.
         colormap : str or matplotlib colormap object, optional
-            Colormap to select colors from. If string, load colormap with
-            that name from matplotlib.
+            Colormap to select colors from. See the :ref:`tutorials:Control
+            plot colors` tutorial for details.
         width : float, default: 0.8
             The width of the bars.
         legend : bool, default: True
@@ -1347,7 +1357,7 @@ class MafFrame:
             >>> common.load_dataset('tcga-laml')
             >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
             >>> mf = pymaf.MafFrame.from_file(maf_file)
-            >>> ax = mf.plot_snvclss(width=1)
+            >>> ax = mf.plot_snvclss(width=1, color=plt.get_cmap('Pastel1').colors)
             >>> ax.legend(loc='upper right')
             >>> plt.tight_layout()
         """
@@ -1553,14 +1563,14 @@ class MafFrame:
                         labelsize=ticklabels_fontsize)
 
         # Create the 'Variant type' figure.
-        self.plot_vartype(ax=ax2)
+        self.plot_vartype(ax=ax2, palette='Dark2', flip=True)
         ax2.set_title('Variant type', fontsize=title_fontsize)
         ax2.set_xlabel('')
         ax2.tick_params(axis='both', which='major',
                         labelsize=ticklabels_fontsize)
 
         # Create the 'SNV class' figure.
-        self.plot_snvclsc(ax=ax3, palette='pastel')
+        self.plot_snvclsc(ax=ax3, flip=True, palette=sns.color_palette('Pastel1'))
         ax3.set_title('SNV class', fontsize=title_fontsize)
         ax3.set_xlabel('')
         ax3.tick_params(axis='both', which='major',
@@ -1845,18 +1855,25 @@ class MafFrame:
         ax.set_ylabel(ylabel)
         return ax
 
-    def plot_vartype(self, ax=None, figsize=None, **kwargs):
-        """Create a bar plot for viaration type.
+    def plot_vartype(self, palette=None, flip=False, ax=None, figsize=None, **kwargs):
+        """
+        Create a bar plot summarizing the count distrubtions of viaration
+        types for all samples.
 
         Parameters
         ----------
+        palette : str, optional
+            Name of seaborn palette. See the :ref:`tutorials:Control plot
+            colors` tutorial for details.
+        flip : bool, default: False
+            If True, flip the x and y axes.
         ax : matplotlib.axes.Axes, optional
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
             Width, height in inches. Format: (float, float).
         kwargs
             Other keyword arguments will be passed down to
-            :meth:`matplotlib.axes.Axes.bar` and :meth:`seaborn.barplot`.
+            :meth:`seaborn.barplot`.
 
         Returns
         -------
@@ -1878,12 +1895,22 @@ class MafFrame:
         """
         s = self.df.Variant_Type.value_counts()
         df = s.to_frame().reset_index()
+
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
-        sns.barplot(x='Variant_Type', y='index', data=df, ax=ax,
-            palette='pastel', **kwargs)
-        ax.set_xlabel('Count')
-        ax.set_ylabel('')
+
+        if flip:
+            x, y = 'Variant_Type', 'index'
+            xlabel, ylabel = 'Count', ''
+        else:
+            x, y = 'index', 'Variant_Type'
+            xlabel, ylabel = '', 'Count'
+
+        sns.barplot(x=x, y=y, data=df, ax=ax, palette=palette, **kwargs)
+
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
+
         return ax
 
     def plot_waterfall(
