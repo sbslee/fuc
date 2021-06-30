@@ -1158,18 +1158,18 @@ class MafFrame:
         plt.tight_layout()
         plt.subplots_adjust(wspace=0.01, hspace=0.01)
 
-    def plot_snvclsc(self, flip=False, ax=None, figsize=None, **kwargs):
+    def plot_snvclsc(
+        self, palette=None, flip=False, ax=None, figsize=None, **kwargs
+    ):
         """
         Create a bar plot summarizing the count distrubtions of the six
         :ref:`glossary:SNV classes` for all samples.
 
         Parameters
         ----------
-        palette : palette name, list, or dict
-            Colors to use for the different levels of the hue variable.
-            Should be something that can be interpreted by
-            :meth:`seaborn.color_palette`, or a dictionary mapping hue levels
-            to matplotlib colors.
+        palette : str, optional
+            Name of seaborn palette. See the :ref:`tutorials:Control plot
+            colors` tutorial for details.
         flip : bool, default: False
             If True, flip the x and y axes.
         ax : matplotlib.axes.Axes, optional
@@ -1531,8 +1531,8 @@ class MafFrame:
             >>> import matplotlib.pyplot as plt
             >>> from fuc import common, pymaf
             >>> common.load_dataset('tcga-laml')
-            >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
-            >>> mf = pymaf.MafFrame.from_file(f)
+            >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+            >>> mf = pymaf.MafFrame.from_file(maf_file)
             >>> mf.plot_summary()
         """
         g = {'height_ratios': [10, 10, 1]}
