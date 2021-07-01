@@ -2,9 +2,9 @@ from .. import api
 import filecmp
 
 description = f"""
-This command will compare the contents of two files. It will return 'True'
-if they are identical and 'False' otherwise. It essentially wraps the
-'filecmp.cmp' method from Python.
+This command will compare the contents of two files.
+
+It will return 'True' if they are identical and 'False' otherwise.
 
 Usage examples:
   $ fuc {api.common._script_name()} left.txt right.txt

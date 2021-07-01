@@ -1,8 +1,9 @@
+import sys
+
 from .. import api
 
 description = f"""
-This command will compute intersections beween multiple BED files. It
-essentially wraps the 'pybed.BedFrame.intersect' method from the fuc API.
+This command will compute the intersection beween multiple BED files.
 
 Usage examples:
   $ fuc {api.common._script_name()} 1.bed 2.bed 3.bed > intersect.bed
@@ -15,11 +16,11 @@ def create_parser(subparsers):
         help='[BED] Find the intersection of two or more BED files.',
         description=description,
     )
-    parser.add_argument('bed', help='BED files', nargs='+')
+    parser.add_argument('bed', help='BED files.', nargs='+')
 
 def main(args):
     bfs = [api.pybed.BedFrame.from_file(x) for x in args.bed]
     final_bf = bfs[0]
     for bf in bfs[1:]:
         final_bf = final_bf.intersect(bf)
-    print(final_bf.to_string(), end='')
+    sys.stdout.write(final_bf.to_string())

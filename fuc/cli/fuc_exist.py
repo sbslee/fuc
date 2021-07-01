@@ -3,9 +3,11 @@ from pathlib import Path
 import sys
 
 description = f"""
-This command will check whether files exist. It will return
-'True' if they exist and 'False' otherwise. The command will look for stdin
-if there are no arguments.
+This command will check whether files exist.
+
+It will return 'True' if they exist and 'False' otherwise.
+
+The command will look for stdin if there are no arguments.
 
 Usage examples:
   $ fuc {api.common._script_name()} test.txt
@@ -21,7 +23,7 @@ def create_parser(subparsers):
         description=description,
     )
     parser.add_argument('files', nargs='*',
-        help='test files/directories (default: stdin)')
+        help='Files and directories to be tested (default: stdin).')
 
 def main(args):
     if args.files:

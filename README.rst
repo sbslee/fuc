@@ -328,7 +328,7 @@ To create an oncoplot with a MAF file:
 
 .. image:: https://raw.githubusercontent.com/sbslee/fuc-data/main/images/oncoplot.png
 
-To create a customized oncoplot with a MAF file, see the 'Create customized oncoplot' tutorial:
+To create a customized oncoplot with a MAF file, see the `Create customized oncoplot <https://sbslee-fuc.readthedocs.io/en/latest/tutorials.html#create-customized-oncoplots>`__ tutorial:
 
 .. image:: https://raw.githubusercontent.com/sbslee/fuc-data/main/images/customized_oncoplot.png
 
@@ -342,5 +342,5 @@ To create a summary figure for a MAF file:
     >>> mf = pymaf.MafFrame.from_file(f)
     >>> mf.plot_summary()
 
-.. image:: https://raw.githubusercontent.com/sbslee/fuc-data/main/images/maf_summary.png
+.. image:: https://raw.githubusercontent.com/sbslee/fuc-data/main/images/maf_summary-2.png
 

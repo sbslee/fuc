@@ -4,8 +4,7 @@ import os
 from pathlib import Path
 
 description = f"""
-This command will recursively find all files with a certain extension and
-then return their absolute paths.
+This command will recursively find all files with a certain extension and then return their absolute paths.
 
 Usage examples:
   $ fuc {api.common._script_name()} .vcf
@@ -20,9 +19,16 @@ def create_parser(subparsers):
         help='[FUC] Find all files with a certain extension recursively.',
         description=description,
     )
-    parser.add_argument('ext', help='file extension')
-    parser.add_argument('--dir', metavar='PATH', default=os.getcwd(),
-        help='directory to search in (default: current directory)')
+    parser.add_argument(
+        'ext',
+        help='File extension.'
+    )
+    parser.add_argument(
+        '--dir',
+        metavar='PATH',
+        default=os.getcwd(),
+        help='Directory to search in (default: current directory).'
+    )
 
 def main(args):
     for path in Path(args.dir).rglob(f'*{args.ext}'):

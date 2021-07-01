@@ -151,14 +151,13 @@ bed-intxn
    $ fuc bed-intxn -h
    usage: fuc bed-intxn [-h] bed [bed ...]
    
-   This command will compute intersections beween multiple BED files. It
-   essentially wraps the 'pybed.BedFrame.intersect' method from the fuc API.
+   This command will compute the intersection beween multiple BED files.
    
    Usage examples:
      $ fuc bed-intxn 1.bed 2.bed 3.bed > intersect.bed
    
    Positional arguments:
-     bed         BED files
+     bed         BED files.
    
    Optional arguments:
      -h, --help  Show this help message and exit.
@@ -171,23 +170,22 @@ bed-sum
    $ fuc bed-sum -h
    usage: fuc bed-sum [-h] [--bases INT] [--decimals INT] bed
    
-   This command will compute various summary statstics for a BED file. This
-   includes the total numbers of probes and covered base pairs for each
-   chromosome.
+   This command will compute various summary statstics for a BED file.
    
-   By default, covered base paris are displayed in bp, but if you prefer you
-   can, for example, use '--bases 1000' to display in kb.
+   The returned statistics include the total numbers of probes and covered base pairs for each chromosome.
+   
+   By default, covered base paris are displayed in bp, but if you prefer you can, for example, use '--bases 1000' to display in kb.
    
    Usage examples:
      $ fuc bed-sum in.bed
    
    Positional arguments:
-     bed             BED file
+     bed             BED file.
    
    Optional arguments:
      -h, --help      Show this help message and exit.
-     --bases INT     number to divide covered base pairs (default: 1)
-     --decimals INT  number of decimals (default: 0)
+     --bases INT     Number to divide covered base pairs (default: 1).
+     --decimals INT  Number of decimals (default: 0).
 
 fq-count
 ========
@@ -197,15 +195,16 @@ fq-count
    $ fuc fq-count -h
    usage: fuc fq-count [-h] [fastq ...]
    
-   This command will count sequence reads in FASTQ files (both zipped and
-   unzipped). It will look for stdin if there are no arguments.
+   This command will count sequence reads in FASTQ files (both zipped and unzipped).
+   
+   It will look for stdin if there are no arguments.
    
    Usage examples:
      $ fuc fq-count in.fastq
      $ cat fastq.list | fuc fq-count
    
    Positional arguments:
-     fastq       FASTQ files (default: stdin)
+     fastq       FASTQ files (default: stdin).
    
    Optional arguments:
      -h, --help  Show this help message and exit.
@@ -218,16 +217,15 @@ fq-sum
    $ fuc fq-sum -h
    usage: fuc fq-sum [-h] fastq
    
-   This command will output a summary of the input FASTQ file (both zipped and
-   unqzipped). The summary includes the total number of sequence reads, the
-   distribution of read lengths, and the numbers of unique and duplicate
-   sequences.
+   This command will output a summary of the input FASTQ file (both zipped and unqzipped).
+   
+   The summary includes the total number of sequence reads, the distribution of read lengths, and the numbers of unique and duplicate sequences.
    
    Usage examples:
      $ fuc fq-sum in.fastq
    
    Positional arguments:
-     fastq       FASTQ file
+     fastq       FASTQ file.
    
    Optional arguments:
      -h, --help  Show this help message and exit.
@@ -240,9 +238,9 @@ fuc-compf
    $ fuc fuc-compf -h
    usage: fuc fuc-compf [-h] left right
    
-   This command will compare the contents of two files. It will return 'True'
-   if they are identical and 'False' otherwise. It essentially wraps the
-   'filecmp.cmp' method from Python.
+   This command will compare the contents of two files.
+   
+   It will return 'True' if they are identical and 'False' otherwise.
    
    Usage examples:
      $ fuc fuc-compf left.txt right.txt
@@ -262,14 +260,13 @@ fuc-demux
    $ fuc fuc-demux -h
    usage: fuc fuc-demux [-h] reports_dir output_dir
    
-   This command will parse the Reports directory from the bcl2fastq or
-   bcl2fastq2 prograrm. In the output directory, the command will create four
-   files:
+   This command will parse the Reports directory from the bcl2fastq or bcl2fastq2 prograrm.
    
-   - flowcell_summary.csv
-   - lane_summary.csv
-   - top_unknown_barcodes.csv
-   - reports.pdf
+   In the output directory, the command will create four files:
+     - flowcell_summary.csv
+     - lane_summary.csv
+     - top_unknown_barcodes.csv
+     - reports.pdf
    
    Usage examples:
      $ fuc fuc-demux reports_dir output_dir
@@ -289,9 +286,11 @@ fuc-exist
    $ fuc fuc-exist -h
    usage: fuc fuc-exist [-h] [files ...]
    
-   This command will check whether files exist. It will return
-   'True' if they exist and 'False' otherwise. The command will look for stdin
-   if there are no arguments.
+   This command will check whether files exist.
+   
+   It will return 'True' if they exist and 'False' otherwise.
+   
+   The command will look for stdin if there are no arguments.
    
    Usage examples:
      $ fuc fuc-exist test.txt
@@ -299,7 +298,7 @@ fuc-exist
      $ cat test.list | fuc fuc-exist
    
    Positional arguments:
-     files       test files/directories (default: stdin)
+     files       Files and directories to be tested (default: stdin).
    
    Optional arguments:
      -h, --help  Show this help message and exit.
@@ -312,8 +311,7 @@ fuc-find
    $ fuc fuc-find -h
    usage: fuc fuc-find [-h] [--dir PATH] ext
    
-   This command will recursively find all files with a certain extension and
-   then return their absolute paths.
+   This command will recursively find all files with a certain extension and then return their absolute paths.
    
    Usage examples:
      $ fuc fuc-find .vcf
@@ -321,11 +319,11 @@ fuc-find
      $ fuc fuc-find .vcf.gz --dir ~/test_dir
    
    Positional arguments:
-     ext         file extension
+     ext         File extension.
    
    Optional arguments:
      -h, --help  Show this help message and exit.
-     --dir PATH  directory to search in (default: current directory)
+     --dir PATH  Directory to search in (default: current directory).
 
 maf-maf2vcf
 ===========
@@ -337,44 +335,32 @@ maf-maf2vcf
                           [--cols TEXT [TEXT ...]] [--names TEXT [TEXT ...]]
                           maf
    
-   This command will convert a MAF file to a VCF file. It essentially wraps the
-   'pymaf.MafFrame.to_vcf' method from the fuc API.
+   This command will convert a MAF file to a VCF file.
    
-   In order to handle INDELs the command makes use of a reference assembly
-   (i.e. FASTA file). If SNVs are your only concern, then you do not need a
-   FASTA file and can just use the '--ignore_indels' flag. If you are going to
-   provide a FASTA file, please make sure to select the appropriate one (e.g.
-   one that matches the genome assembly). For example, if your MAF file is
-   in hg19/GRCh37, use the 'hs37d5.fa' file which can be freely downloaded
-   from the 1000 Genomes Project. For more details on the conversion algorithm,
-   please visit the 'pymaf.MafFrame.to_vcf' method's documentation page.
+   In order to handle INDELs the command makes use of a reference assembly (i.e. FASTA file). If SNVs are your only concern, then you do not need a FASTA file and can just use the '--ignore_indels' flag.
    
-   In addition to basic genotype calls (e.g. '0/1'), you can extract more
-   information from the MAF file by specifying the column(s) that contain
-   additional genotype data of interest with the '--cols' argument. If
-   provided, this argument will append the requested data to individual
-   sample genotypes (e.g. '0/1:0.23'). You can also control how these
-   additional genotype information appear in the FORMAT field (e.g. AF) with
-   the '--names' argument. If this argument is not provided, the original
-   column name(s) will be displayed.
+   If you are going to provide a FASTA file, please make sure to select the appropriate one (e.g. one that matches the genome assembly).
+   
+   In addition to basic genotype calls (e.g. '0/1'), you can extract more information from the MAF file by specifying the column(s) that contain additional genotype data of interest with the '--cols' argument. If provided, this argument will append the requested data to individual sample genotypes (e.g. '0/1:0.23').
+   
+   You can also control how these additional genotype information appear in the FORMAT field (e.g. AF) with the '--names' argument. If this argument is not provided, the original column name(s) will be displayed.
    
    Usage examples:
      $ fuc maf-maf2vcf in.maf --fasta hs37d5.fa > out.vcf
      $ fuc maf-maf2vcf in.maf --ignore_indels > out.vcf
-     $ fuc maf-maf2vcf in.maf --fasta hs37d5.fa \
-         --cols i_TumorVAF_WU --names AF > out.vcf
+     $ fuc maf-maf2vcf in.maf --fasta hs37d5.fa --cols i_TumorVAF_WU --names AF > out.vcf
    
    Positional arguments:
-     maf                   MAF file
+     maf                   MAF file.
    
    Optional arguments:
      -h, --help            Show this help message and exit.
-     --fasta PATH          FASTA file (required to include INDELs in the output)
-     --ignore_indels       use this flag to exclude INDELs from the output
+     --fasta PATH          FASTA file (required to include INDELs in the output).
+     --ignore_indels       Use this flag to exclude INDELs from the output.
      --cols TEXT [TEXT ...]
-                           column(s) in the MAF file
+                           Column(s) in the MAF file.
      --names TEXT [TEXT ...]
-                           name(s) to be displayed in the FORMAT field
+                           Name(s) to be displayed in the FORMAT field.
 
 maf-oncoplt
 ===========

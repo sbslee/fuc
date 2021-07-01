@@ -1,10 +1,9 @@
 from .. import api
 
 description = f"""
-This command will output a summary of the input FASTQ file (both zipped and
-unqzipped). The summary includes the total number of sequence reads, the
-distribution of read lengths, and the numbers of unique and duplicate
-sequences.
+This command will output a summary of the input FASTQ file (both zipped and unqzipped).
+
+The summary includes the total number of sequence reads, the distribution of read lengths, and the numbers of unique and duplicate sequences.
 
 Usage examples:
   $ fuc {api.common._script_name()} in.fastq
@@ -17,7 +16,7 @@ def create_parser(subparsers):
         help='[FASTQ] Summarize a FASTQ file.',
         description=description,
     )
-    parser.add_argument('fastq', help='FASTQ file')
+    parser.add_argument('fastq', help='FASTQ file.')
 
 def main(args):
     qf = api.pyfq.FqFrame.from_file(args.fastq)
