@@ -705,11 +705,13 @@ class MafFrame:
         """
         Construct a MafFrame from a VCF file or VcfFrame.
 
-        The input VCF should already contain functional annotation data
-        from a tool such as Ensemble VEP, SnpEff, and ANNOVAR. The
-        recommended method is Ensemble VEP with "RefSeq transcripts" as the
-        transcript database and the filtering option "Show one selected
-        consequence per variant".
+        It is recommended that the input VCF be functionally annotated by a
+        tool such as Ensemble VEP, SnpEff, and ANNOVAR; however, the method
+        can handle unannotated VCF as well.
+
+        The preferred tool for functional annotation is Ensemble VEP with
+        "RefSeq transcripts" as the transcript database and the filtering
+        option "Show one selected consequence per variant".
 
         Parameters
         ----------
@@ -725,6 +727,32 @@ class MafFrame:
 
         >>> from fuc import pymaf
         >>> mf = pymaf.MafFrame.from_vcf('annotated.vcf')
+
+        The method can handle unannotated VCF as well:
+
+        >>> from fuc import pyvcf, pymaf
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr2'],
+        ...     'POS': [100, 101],
+        ...     'ID': ['.', '.'],
+        ...     'REF': ['G', 'T'],
+        ...     'ALT': ['A', 'C'],
+        ...     'QUAL': ['.', '.'],
+        ...     'FILTER': ['.', '.'],
+        ...     'INFO': ['.', '.'],
+        ...     'FORMAT': ['GT', 'GT'],
+        ...     'A': ['0/1', '1/1']
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A
+        0  chr1  100  .   G   A    .      .    .     GT  0/1
+        1  chr2  101  .   T   C    .      .    .     GT  1/1
+        >>> mf = pymaf.MafFrame.from_vcf(vf)
+        >>> mf.df
+          Hugo_Symbol Entrez_Gene_Id Center NCBI_Build Chromosome  Start_Position  End_Position Strand Variant_Classification Variant_Type Reference_Allele Tumor_Seq_Allele1 Tumor_Seq_Allele2 Protein_Change Tumor_Sample_Barcode
+        0           .              .      .          .       chr1             100           100      .                      .          SNP                G                 A                 A              .                    A
+        1           .              .      .          .       chr2             101           101      .                      .          SNP                T                 C                 C              .                    A
         """
         # Parse the input VCF.
         if isinstance(vcf, str):
