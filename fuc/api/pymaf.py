@@ -706,8 +706,8 @@ class MafFrame:
         Construct a MafFrame from a VCF file or VcfFrame.
 
         It is recommended that the input VCF data be functionally annotated
-        by a tool such as Ensemble VEP, SnpEff, and ANNOVAR; however, the
-        method can handle unannotated VCF data as well.
+        by an annotation tool such as Ensemble VEP, SnpEff, and ANNOVAR;
+        however, the method can handle unannotated VCF data as well.
 
         The preferred tool for functional annotation is Ensemble VEP with
         "RefSeq transcripts" as the transcript database and the filtering
@@ -724,11 +724,38 @@ class MafFrame:
 
         Examples
         --------
+        Below is a simple example:
+
+        >>> from fuc import pyvcf, pymaf
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr2'],
+        ...     'POS': [100, 101],
+        ...     'ID': ['.', '.'],
+        ...     'REF': ['G', 'T'],
+        ...     'ALT': ['A', 'C'],
+        ...     'QUAL': ['.', '.'],
+        ...     'FILTER': ['.', '.'],
+        ...     'INFO': ['CSQ=T|missense_variant|MODERATE|MTOR|2475|Transcript|NM_001386500.1|protein_coding|47/58||||6792|6644|2215|S/Y|tCt/tAt|rs587777894&COSV63868278&COSV63868313||-1||EntrezGene||||||||G|G||deleterious(0)|possibly_damaging(0.876)||||||||||||||||||likely_pathogenic&pathogenic|0&1&1|1&1&1|26619011&27159400&24631838&26018084&27830187|||||', 'CSQ=C|splice_donor_variant|HIGH|MTOR|2475|Transcript|NM_001386500.1|protein_coding||46/57||||||||||-1||EntrezGene||||||||A|A|||||||||||||||||||||||||||||'],
+        ...     'FORMAT': ['GT', 'GT'],
+        ...     'A': ['0/1', '1/1']
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF ALT QUAL FILTER                                               INFO FORMAT    A
+        0  chr1  100  .   G   A    .      .  CSQ=T|missense_variant|MODERATE|MTOR|2475|Tran...     GT  0/1
+        1  chr2  101  .   T   C    .      .  CSQ=C|splice_donor_variant|HIGH|MTOR|2475|Tran...     GT  1/1
+        >>> mf = pymaf.MafFrame.from_vcf(vf)
+        >>> mf.df
+          Hugo_Symbol Entrez_Gene_Id Center NCBI_Build Chromosome  Start_Position  End_Position Strand Variant_Classification Variant_Type Reference_Allele Tumor_Seq_Allele1 Tumor_Seq_Allele2 Protein_Change Tumor_Sample_Barcode
+        0        MTOR           2475      .          .       chr1             100           100      -      Missense_Mutation          SNP                G                 A                 A       p.S2215Y                    A
+        1        MTOR           2475      .          .       chr2             101           101      -            Splice_Site          SNP                T                 C                 C              .                    A
+
+        The method also accepts a VCF file as input:
 
         >>> from fuc import pymaf
         >>> mf = pymaf.MafFrame.from_vcf('annotated.vcf')
 
-        The method can handle unannotated VCF as well:
+        The method can handle unannotated VCF data:
 
         >>> from fuc import pyvcf, pymaf
         >>> data = {
