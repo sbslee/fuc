@@ -15,10 +15,13 @@ Changelog
 * Add ``hue_order`` argument to :meth:`pyvcf.VcfFrame.plot_hist` method.
 * Update aesthetic aspect of :meth:`pymaf.MafFrame.plot_oncoplot` method.
 * Add ``width`` argument to :meth:`pymaf.MafFrame.plot_tmb` method.
-* Add :meth:`fuc.api.pyvcf.VcfFrame.plot_titv` method.
-* Add ``palette`` and ``flip`` arguments to :meth:`fuc.api.pymaf.MafFrame.plot_vartype` method.
-* Update :meth:`fuc.api.pymaf.MafFrame.plot_snvclsc` method to support creation of a grouped bar plot.
-* Update :meth:`fuc.api.pymaf.MafFrame.plot_snvclsp` method to support creation of a grouped box plot.
+* Add ``palette`` and ``flip`` arguments to :meth:`pymaf.MafFrame.plot_vartype` method.
+* Update :meth:`pymaf.MafFrame.plot_snvclsc` method to support creation of a grouped bar plot.
+* Update :meth:`pymaf.MafFrame.plot_snvclsp` method to support creation of a grouped box plot.
+* Add :meth:`pyvcf.VcfFrame.plot_snvclsc` method (simply wraps :meth:`pymaf.MafFrame.plot_snvclsc` method).
+* Add :meth:`pyvcf.VcfFrame.plot_snvclsp` method (simply wraps :meth:`pymaf.MafFrame.plot_snvclsp` method).
+* Add :meth:`pyvcf.VcfFrame.plot_snvclss` method (simply wraps :meth:`pymaf.MafFrame.plot_snvclss` method).
+* Add :meth:`pyvcf.VcfFrame.plot_titv` method (simply wraps :meth:`pymaf.MafFrame.plot_titv` method).
 
 0.15.0 (2021-06-24)
 -------------------
