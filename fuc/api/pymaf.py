@@ -705,9 +705,9 @@ class MafFrame:
         """
         Construct a MafFrame from a VCF file or VcfFrame.
 
-        It is recommended that the input VCF be functionally annotated by a
-        tool such as Ensemble VEP, SnpEff, and ANNOVAR; however, the method
-        can handle unannotated VCF as well.
+        It is recommended that the input VCF data be functionally annotated
+        by a tool such as Ensemble VEP, SnpEff, and ANNOVAR; however, the
+        method can handle unannotated VCF data as well.
 
         The preferred tool for functional annotation is Ensemble VEP with
         "RefSeq transcripts" as the transcript database and the filtering
