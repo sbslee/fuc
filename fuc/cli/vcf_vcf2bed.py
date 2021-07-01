@@ -1,8 +1,9 @@
+import sys
+
 from .. import api
 
 description = f"""
-This command will convert a VCF file to a BED file. It essentially wraps the
-'pyvcf.VcfFrame.to_bed' method from the fuc API.
+This command will convert a VCF file to a BED file.
 
 Usage examples:
   $ fuc {api.common._script_name()} in.vcf > out.bed
@@ -15,9 +16,12 @@ def create_parser(subparsers):
         help='[VCF] Convert a VCF file to a BED file.',
         description=description,
     )
-    parser.add_argument('vcf', help='VCF file')
+    parser.add_argument(
+        'vcf',
+        help='VCF file.'
+    )
 
 def main(args):
     vf = api.pyvcf.VcfFrame.from_file(args.vcf)
     bf = vf.to_bed()
-    print(bf.to_string(), end='')
+    sys.stdout.write(bf.to_string())

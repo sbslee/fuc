@@ -1,4 +1,7 @@
+import sys
+
 from .. import api
+
 import pandas as pd
 
 description = f"""
@@ -22,23 +25,49 @@ def create_parser(subparsers):
         help='[TABLE] Merge two table files.',
         description=description,
     )
-    parser.add_argument('left', help='left file')
-    parser.add_argument('right', help='right file')
-    parser.add_argument('--how', metavar='TEXT', choices=CHOICES,
-         default='inner', help=f'type of merge to be performed {CHOICES} '
-        "(default: 'inner')")
-    parser.add_argument('--on', metavar='TEXT', nargs='+',
-        help='column names to join on')
-    parser.add_argument('--lsep', metavar='TEXT', default='\t',
-        help="delimiter to use for the left file (default: '\\t')")
-    parser.add_argument('--rsep', metavar='TEXT', default='\t',
-        help="delimiter to use for the right file (default: '\\t')")
-    parser.add_argument('--osep', metavar='TEXT', default='\t',
-        help="delimiter to use for the output file (default: '\\t')")
+    parser.add_argument(
+        'left',
+        help='Left file.'
+    )
+    parser.add_argument(
+        'right',
+        help='Right file.'
+    )
+    parser.add_argument(
+        '--how',
+        metavar='TEXT',
+        choices=CHOICES,
+        default='inner',
+        help=f"Type of merge to be performed {CHOICES} (default: 'inner')."
+    )
+    parser.add_argument(
+        '--on',
+        metavar='TEXT',
+        nargs='+',
+        help='Column names to join on.'
+    )
+    parser.add_argument(
+        '--lsep',
+        metavar='TEXT',
+        default='\t',
+        help="Delimiter to use for the left file (default: '\\t')."
+    )
+    parser.add_argument(
+        '--rsep',
+        metavar='TEXT',
+        default='\t',
+        help="Delimiter to use for the right file (default: '\\t')."
+    )
+    parser.add_argument(
+        '--osep',
+        metavar='TEXT',
+        default='\t',
+        help="Delimiter to use for the output file (default: '\\t')."
+    )
     return parser
 
 def main(args):
     df1 = pd.read_table(args.left, sep=args.lsep)
     df2 = pd.read_table(args.right, sep=args.rsep)
     df3 = df1.merge(df2, on=args.on, how=args.how)
-    print(df3.to_csv(sep=args.osep, index=False), end='')
+    sys.stdout.write(df3.to_csv(sep=args.osep, index=False))

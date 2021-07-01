@@ -1,9 +1,11 @@
-from .. import api
+import os
 from pathlib import Path
+
+from .. import api
+
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
-import os
 
 description = f"""
 This command will parse the Reports directory from the bcl2fastq or bcl2fastq2 prograrm.
@@ -25,8 +27,8 @@ def create_parser(subparsers):
         help='[FUC] Parse the Reports directory from bcl2fastq.',
         description=description,
     )
-    parser.add_argument('reports_dir', help='Reports directory')
-    parser.add_argument('output_dir', help='output directory')
+    parser.add_argument('reports_dir', help='Reports directory.')
+    parser.add_argument('output_dir', help='Output directory.')
 
 def main(args):
     for path in Path(args.reports_dir).rglob('all/all/all/laneBarcode.html'):

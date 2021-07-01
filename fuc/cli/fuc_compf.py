@@ -1,10 +1,9 @@
-from .. import api
 import filecmp
 
-description = f"""
-This command will compare the contents of two files.
+from .. import api
 
-It will return 'True' if they are identical and 'False' otherwise.
+description = f"""
+This command will compare the contents of two files, returning 'True' if they are identical and 'False' otherwise.
 
 Usage examples:
   $ fuc {api.common._script_name()} left.txt right.txt
@@ -17,8 +16,8 @@ def create_parser(subparsers):
         help='[FUC] Compare the contents of two files.',
         description=description,
     )
-    parser.add_argument('left', help='left file')
-    parser.add_argument('right', help='right file')
+    parser.add_argument('left', help='Left file.')
+    parser.add_argument('right', help='Right file.')
 
 def main(args):
     print(filecmp.cmp(args.left, args.right))

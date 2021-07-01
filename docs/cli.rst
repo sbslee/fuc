@@ -238,16 +238,14 @@ fuc-compf
    $ fuc fuc-compf -h
    usage: fuc fuc-compf [-h] left right
    
-   This command will compare the contents of two files.
-   
-   It will return 'True' if they are identical and 'False' otherwise.
+   This command will compare the contents of two files, returning 'True' if they are identical and 'False' otherwise.
    
    Usage examples:
      $ fuc fuc-compf left.txt right.txt
    
    Positional arguments:
-     left        left file
-     right       right file
+     left        Left file.
+     right       Right file.
    
    Optional arguments:
      -h, --help  Show this help message and exit.
@@ -272,8 +270,8 @@ fuc-demux
      $ fuc fuc-demux reports_dir output_dir
    
    Positional arguments:
-     reports_dir  Reports directory
-     output_dir   output directory
+     reports_dir  Reports directory.
+     output_dir   Output directory.
    
    Optional arguments:
      -h, --help   Show this help message and exit.
@@ -286,9 +284,7 @@ fuc-exist
    $ fuc fuc-exist -h
    usage: fuc fuc-exist [-h] [files ...]
    
-   This command will check whether files exist.
-   
-   It will return 'True' if they exist and 'False' otherwise.
+   This command will check whether or not specified files including directoires exist, returning 'True' if they exist and 'False' otherwise.
    
    The command will look for stdin if there are no arguments.
    
@@ -373,32 +369,29 @@ maf-oncoplt
                           [--legend_fontsize FLOAT]
                           maf out
    
-   This command will create an oncoplot with a MAF file. It essentially wraps
-   the 'pymaf.plot_oncoplot' method from the fuc API. Visit the method's
-   documentation to see example plots.
+   This command will create an oncoplot with a MAF file.
    
-   The format of output image (PDF/PNG/JPEG/SVG) will be automatically
-   determined by the output file's extension.
+   The format of output image (PDF/PNG/JPEG/SVG) will be automatically determined by the output file's extension.
    
    Usage examples:
      $ fuc maf-oncoplt in.maf out.png
      $ fuc maf-oncoplt in.maf out.pdf
    
    Positional arguments:
-     maf                   MAF file
-     out                   image file
+     maf                   MAF file.
+     out                   Output image file.
    
    Optional arguments:
      -h, --help            Show this help message and exit.
-     --count INT           number of top mutated genes to display (default: 10)
+     --count INT           Number of top mutated genes to display (default: 10).
      --figsize FLOAT FLOAT
-                           width, height in inches (default: [15, 10])
+                           Width, height in inches (default: [15, 10]).
      --label_fontsize FLOAT
-                           font size of labels (default: 15)
+                           Font size of labels (default: 15).
      --ticklabels_fontsize FLOAT
-                           font size of tick labels (default: 15)
+                           Font size of tick labels (default: 15).
      --legend_fontsize FLOAT
-                           font size of legend texts (default: 15)
+                           Font size of legend texts (default: 15).
 
 maf-sumplt
 ==========
@@ -410,20 +403,17 @@ maf-sumplt
                          [--ticklabels_fontsize FLOAT] [--legend_fontsize FLOAT]
                          maf out
    
-   This command will create a summary plot with a MAF file. It essentially wraps
-   the 'pymaf.plot_summary' method from the fuc API. Visit the method's
-   documentation to see example plots.
+   This command will create a summary plot with a MAF file.
    
-   The format of output image (PDF/PNG/JPEG/SVG) will be automatically
-   determined by the output file's extension.
+   The format of output image (PDF/PNG/JPEG/SVG) will be automatically determined by the output file's extension.
    
    Usage examples:
      $ fuc maf-sumplt in.maf out.png
      $ fuc maf-sumplt in.maf out.pdf
    
    Positional arguments:
-     maf                   MAF file
-     out                   output image file
+     maf                   MAF file.
+     out                   Output image file.
    
    Optional arguments:
      -h, --help            Show this help message and exit.
@@ -444,14 +434,13 @@ maf-vcf2maf
    $ fuc maf-vcf2maf -h
    usage: fuc maf-vcf2maf [-h] vcf
    
-   This command will convert an annotated VCF file to a MAF file. It essentially
-   wraps the 'pymaf.MafFrame.from_vcf' method from the fuc API.
+   This command will convert an annotated VCF file to a MAF file.
    
    Usage examples:
      $ fuc maf-vcf2maf in.vcf > out.maf
    
    Positional arguments:
-     vcf         VCF file
+     vcf         VCF file.
    
    Optional arguments:
      -h, --help  Show this help message and exit.
@@ -477,16 +466,16 @@ tbl-merge
      $ fuc tbl-merge left.tsv right.tsv --how outer > merged.tsv
    
    Positional arguments:
-     left                  left file
-     right                 right file
+     left                  Left file.
+     right                 Right file.
    
    Optional arguments:
      -h, --help            Show this help message and exit.
-     --how TEXT            type of merge to be performed ['left', 'right', 'outer', 'inner', 'cross'] (default: 'inner')
-     --on TEXT [TEXT ...]  column names to join on
-     --lsep TEXT           delimiter to use for the left file (default: '\t')
-     --rsep TEXT           delimiter to use for the right file (default: '\t')
-     --osep TEXT           delimiter to use for the output file (default: '\t')
+     --how TEXT            Type of merge to be performed ['left', 'right', 'outer', 'inner', 'cross'] (default: 'inner').
+     --on TEXT [TEXT ...]  Column names to join on.
+     --lsep TEXT           Delimiter to use for the left file (default: '\t').
+     --rsep TEXT           Delimiter to use for the right file (default: '\t').
+     --osep TEXT           Delimiter to use for the output file (default: '\t').
 
 tbl-sum
 =======
@@ -508,19 +497,19 @@ tbl-sum
      $ fuc tbl-sum table.csv --sep ,
    
    Positional arguments:
-     table_file            table file
+     table_file            Table file.
    
    Optional arguments:
      -h, --help            Show this help message and exit.
-     --sep TEXT            delimiter to use (default: '\t')
-     --skiprows TEXT       comma-separated line numbers to skip (0-indexed) or number of lines to skip at the start of the file (e.g. `--skiprows 1,` will skip the second line, `--skiprows 2,4` will skip the third and fifth lines, and `--skiprows 10` will skip the first 10 lines)
+     --sep TEXT            Delimiter to use (default: '\t').
+     --skiprows TEXT       Comma-separated line numbers to skip (0-indexed) or number of lines to skip at the start of the file (e.g. `--skiprows 1,` will skip the second line, `--skiprows 2,4` will skip the third and fifth lines, and `--skiprows 10` will skip the first 10 lines).
      --na_values TEXT [TEXT ...]
-                           additional strings to recognize as NA/NaN (by default, the following values are interpreted as NaN: '', '#N/A', '#N/A N/A', '#NA', '-1.#IND', '-1.#QNAN', '-NaN', '-nan', '1.#IND', '1.#QNAN', '<NA>', 'N/A', 'NA', 'NULL', 'NaN', 'n/a', 'nan', 'null')
-     --keep_default_na     whether or not to include the default NaN values when parsing the data (see 'pandas.read_table' for details)
-     --expr TEXT           query the columns of a pandas.DataFrame with a boolean expression (e.g. `--query "A == 'yes'"`)
+                           Additional strings to recognize as NA/NaN (by default, the following values are interpreted as NaN: '', '#N/A', '#N/A N/A', '#NA', '-1.#IND', '-1.#QNAN', '-NaN', '-nan', '1.#IND', '1.#QNAN', '<NA>', 'N/A', 'NA', 'NULL', 'NaN', 'n/a', 'nan', 'null').
+     --keep_default_na     Wwhether or not to include the default NaN values when parsing the data (see 'pandas.read_table' for details).
+     --expr TEXT           Query the columns of a pandas.DataFrame with a boolean expression (e.g. `--query "A == 'yes'"`).
      --columns TEXT [TEXT ...]
-                           columns to be summarized (by default, all columns will be included)
-     --dtypes PATH         file of column names and their data types (etheir 'categorical' or 'numeric'); one tab-delimited pair of column name and data type per line
+                           Columns to be summarized (by default, all columns will be included).
+     --dtypes PATH         File of column names and their data types (etheir 'categorical' or 'numeric'); one tab-delimited pair of column name and data type per line.
 
 vcf-filter
 ==========
@@ -533,8 +522,7 @@ vcf-filter
                          [--filter_empty]
                          vcf
    
-   This command will filter a VCF file (both zipped and unzipped). It essentially
-   wraps multiple methods from the fuc API.
+   This command will filter a VCF file (both zipped and unzipped).
    
    Usage examples:
      $ fuc vcf-filter in.vcf --expr 'GT == "0/0"' > out.vcf
@@ -554,13 +542,13 @@ vcf-filter
    
    Optional arguments:
      -h, --help            Show this help message and exit.
-     --expr TEXT           expression to evaluate
-     --samples PATH        file of sample names to apply the marking (one sample per line)
+     --expr TEXT           Expression to evaluate.
+     --samples PATH        File of sample names to apply the marking (one sample per line).
      --drop_duplicates [TEXT ...]
-                           only consider certain columns for identifying duplicates, by default use all of the columns.
-     --greedy              use this flag to mark even ambiguous genotypes as missing
-     --opposite            use this flag to mark all genotypes that do not satisfy the query expression as missing and leave those that do intact
-     --filter_empty        use this flag to remove rows with no genotype calls at all
+                           Only consider certain columns for identifying duplicates, by default use all of the columns.
+     --greedy              Use this flag to mark even ambiguous genotypes as missing.
+     --opposite            Use this flag to mark all genotypes that do not satisfy the query expression as missing and leave those that do intact.
+     --filter_empty        Use this flag to remove rows with no genotype calls at all.
 
 vcf-merge
 =========
@@ -571,25 +559,21 @@ vcf-merge
    usage: fuc vcf-merge [-h] [--how TEXT] [--format TEXT] [--sort] [--collapse]
                         vcf_files [vcf_files ...]
    
-   This command will merge multiple VCF files (both zipped and unzipped). It
-   essentially wraps the 'pyvcf.merge' method from the fuc API.
-   
-   By default, only the GT subfield of the FORMAT field will be included in the
-   merged VCF. Use '--format' to include additional FORMAT subfields such as AD
-   and DP.
+   This command will merge multiple VCF files.
    
    Usage examples:
      $ fuc vcf-merge 1.vcf 2.vcf 3.vcf > merged.vcf
+     $ fuc vcf-merge 1.vcf 2.vcf --format GT:AD:DP > merged.vcf
    
    Positional arguments:
-     vcf_files      VCF files
+     vcf_files      VCF files (zipped or unzipped).
    
    Optional arguments:
      -h, --help     Show this help message and exit.
-     --how TEXT     type of merge as defined in `pandas.DataFrame.merge` (default: 'inner')
-     --format TEXT  FORMAT subfields to be retained (e.g. 'GT:AD:DP') (default: 'GT')
-     --sort         use this flag to turn off sorting of records (default: True)
-     --collapse     use this flag to collapse duplicate records (default: False)
+     --how TEXT     Type of merge as defined in `pandas.DataFrame.merge` (default: 'inner').
+     --format TEXT  FORMAT subfields to be retained (e.g. 'GT:AD:DP') (default: 'GT').
+     --sort         Use this flag to turn off sorting of records (default: True).
+     --collapse     Use this flag to collapse duplicate records (default: False).
 
 vcf-rename
 ==========
@@ -600,8 +584,7 @@ vcf-rename
    usage: fuc vcf-rename [-h] [--mode TEXT] [--range INT INT] [--sep TEXT]
                          vcf names
    
-   This command will rename the samples in a VCF file. It essentially wraps
-   the 'pyvcf.VcfFrame.rename' method from the fuc API.
+   This command will rename the samples in a VCF file.
    
    There are three renaming modes: 'MAP', 'INDICIES', and 'RANGE'. The default
    mode is 'MAP' in which case the 'names' file must contain two columns, one
@@ -636,8 +619,7 @@ vcf-slice
    $ fuc vcf-slice -h
    usage: fuc vcf-slice [-h] vcf region
    
-   This command will slice a VCF file (both zipped and unzipped). It essentially
-   wraps the 'pyvcf.VcfFrame.slice' method from the fuc API.
+   This command will slice a VCF file (both zipped and unzipped).
    
    Usage examples:
      $ fuc vcf-slice in.vcf chr1 > sliced.vcf
@@ -647,8 +629,8 @@ vcf-slice
      $ fuc vcf-slice in.vcf chr1:-300 > sliced.vcf
    
    Positional arguments:
-     vcf         VCF file
-     region      region ('chrom:start-end')
+     vcf         VCF file.
+     region      Region ('chrom:start-end').
    
    Optional arguments:
      -h, --help  Show this help message and exit.
@@ -661,14 +643,13 @@ vcf-vcf2bed
    $ fuc vcf-vcf2bed -h
    usage: fuc vcf-vcf2bed [-h] vcf
    
-   This command will convert a VCF file to a BED file. It essentially wraps the
-   'pyvcf.VcfFrame.to_bed' method from the fuc API.
+   This command will convert a VCF file to a BED file.
    
    Usage examples:
      $ fuc vcf-vcf2bed in.vcf > out.bed
    
    Positional arguments:
-     vcf         VCF file
+     vcf         VCF file.
    
    Optional arguments:
      -h, --help  Show this help message and exit.
@@ -681,9 +662,7 @@ vcf-vep
    $ fuc vcf-vep -h
    usage: fuc vcf-vep [-h] [--opposite] [--as_zero] vcf expr
    
-   This command will filter a VCF file annotated by Ensemble VEP. It
-   essentially wraps the 'pyvep.filter_query' method from the fuc API. For
-   details on query expression, please visit the method's documentation page.
+   This command will filter a VCF file annotated by Ensemble VEP.
    
    Usage examples:
      $ fuc vcf-vep in.vcf "SYMBOL == 'TP53'" > out.vcf
@@ -695,11 +674,11 @@ vcf-vep
      $ fuc vcf-vep in.vcf "gnomAD_AF < 0.001" --as_zero > out.vcf
    
    Positional arguments:
-     vcf         VCF file annotated with Ensemble VEP
-     expr        query expression to evaluate
+     vcf         VCF file annotated by Ensemble VEP.
+     expr        Query expression to evaluate.
    
    Optional arguments:
      -h, --help  Show this help message and exit.
-     --opposite  use this flag to return records that don’t meet the said criteria
-     --as_zero   use this flag to treat missing values as zero instead of NaN
+     --opposite  Use this flag to return only records that don't meet the said criteria.
+     --as_zero   Use this flag to treat missing values as zero instead of NaN.
 

@@ -1,7 +1,7 @@
-from .. import api
-
 import os
 from pathlib import Path
+
+from .. import api
 
 description = f"""
 This command will recursively find all files with a certain extension and then return their absolute paths.

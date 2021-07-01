@@ -1,9 +1,11 @@
+import sys
+
 from .. import api
+
 import pandas as pd
 
 description = f"""
-This command will rename the samples in a VCF file. It essentially wraps
-the 'pyvcf.VcfFrame.rename' method from the fuc API.
+This command will rename the samples in a VCF file.
 
 There are three renaming modes: 'MAP', 'INDICIES', and 'RANGE'. The default
 mode is 'MAP' in which case the 'names' file must contain two columns, one
@@ -47,4 +49,4 @@ def main(args):
         names = df[0].to_list()
         indicies = tuple(args.range)
     vf = vf.rename(names, indicies=indicies)
-    print(vf.to_string(), end='')
+    sys.stdout.write(vf.to_string())

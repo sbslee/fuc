@@ -1,13 +1,11 @@
 from .. import api
+
 import matplotlib.pyplot as plt
 
 description = f"""
-This command will create a summary plot with a MAF file. It essentially wraps
-the 'pymaf.plot_summary' method from the fuc API. Visit the method's
-documentation to see example plots.
+This command will create a summary plot with a MAF file.
 
-The format of output image (PDF/PNG/JPEG/SVG) will be automatically
-determined by the output file's extension.
+The format of output image (PDF/PNG/JPEG/SVG) will be automatically determined by the output file's extension.
 
 Usage examples:
   $ fuc {api.common._script_name()} in.maf out.png
@@ -21,8 +19,14 @@ def create_parser(subparsers):
         help='[MAF] Create a summary plot with a MAF file.',
         description=description,
     )
-    parser.add_argument('maf', help='MAF file')
-    parser.add_argument('out', help='output image file')
+    parser.add_argument(
+        'maf',
+        help='MAF file.'
+    )
+    parser.add_argument(
+        'out',
+        help='Output image file.'
+    )
     parser.add_argument(
         '--figsize',
         metavar='FLOAT',

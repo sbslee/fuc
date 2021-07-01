@@ -1,9 +1,9 @@
+import sys
+
 from .. import api
 
 description = f"""
-This command will filter a VCF file annotated by Ensemble VEP. It
-essentially wraps the 'pyvep.filter_query' method from the fuc API. For
-details on query expression, please visit the method's documentation page.
+This command will filter a VCF file annotated by Ensemble VEP.
 
 Usage examples:
   $ fuc {api.common._script_name()} in.vcf "SYMBOL == 'TP53'" > out.vcf
@@ -22,21 +22,29 @@ def create_parser(subparsers):
         help='[VCF] Filter a VCF file annotated by Ensemble VEP.',
         description=description,
     )
-    parser.add_argument('vcf', help='VCF file annotated with Ensemble VEP')
-    parser.add_argument('expr', help='query expression to evaluate')
+    parser.add_argument(
+        'vcf',
+        help='VCF file annotated by Ensemble VEP.'
+    )
+    parser.add_argument(
+        'expr',
+        help='Query expression to evaluate.'
+    )
     parser.add_argument(
         '--opposite',
         action='store_true',
-        help='use this flag to return records that don’t meet the said criteria'
+        help=
+            "Use this flag to return only records that don't "
+            "meet the said criteria."
     )
     parser.add_argument(
         '--as_zero',
         action='store_true',
-        help='use this flag to treat missing values as zero instead of NaN'
+        help='Use this flag to treat missing values as zero instead of NaN.'
     )
 
 def main(args):
     vf = api.pyvcf.VcfFrame.from_file(args.vcf)
     filtered_vf = api.pyvep.filter_query(vf, args.expr,
         opposite=args.opposite, as_zero=args.as_zero)
-    print(filtered_vf.to_string(), end='')
+    sys.stdout.write(filtered_vf.to_string())

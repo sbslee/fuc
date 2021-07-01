@@ -1,11 +1,10 @@
-from .. import api
-from pathlib import Path
 import sys
+from pathlib import Path
+
+from .. import api
 
 description = f"""
-This command will check whether files exist.
-
-It will return 'True' if they exist and 'False' otherwise.
+This command will check whether or not specified files including directoires exist, returning 'True' if they exist and 'False' otherwise.
 
 The command will look for stdin if there are no arguments.
 

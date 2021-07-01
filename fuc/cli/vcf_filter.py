@@ -1,9 +1,11 @@
+import sys
+
 from .. import api
+
 import pandas as pd
 
 description = f"""
-This command will filter a VCF file (both zipped and unzipped). It essentially
-wraps multiple methods from the fuc API.
+This command will filter a VCF file (both zipped and unzipped).
 
 Usage examples:
   $ fuc {api.common._script_name()} in.vcf --expr 'GT == "0/0"' > out.vcf
@@ -30,35 +32,37 @@ def create_parser(subparsers):
     parser.add_argument(
         '--expr',
         metavar='TEXT',
-        help='expression to evaluate'
+        help='Expression to evaluate.'
     )
     parser.add_argument(
         '--samples',
         metavar='PATH',
-        help='file of sample names to apply the marking (one sample per line)'
+        help='File of sample names to apply the marking (one sample per line).'
     )
     parser.add_argument(
         '--drop_duplicates',
         metavar='TEXT',
         nargs='*',
-        help='only consider certain columns for identifying duplicates, '
+        help=
+            'Only consider certain columns for identifying duplicates, '
             'by default use all of the columns.'
     )
     parser.add_argument(
         '--greedy',
         action='store_true',
-        help='use this flag to mark even ambiguous genotypes as missing'
+        help='Use this flag to mark even ambiguous genotypes as missing.'
     )
     parser.add_argument(
         '--opposite',
         action='store_true',
-        help='use this flag to mark all genotypes that do not satisfy the '
-            'query expression as missing and leave those that do intact'
+        help=
+            'Use this flag to mark all genotypes that do not satisfy the '
+            'query expression as missing and leave those that do intact.'
     )
     parser.add_argument(
         '--filter_empty',
         action='store_true',
-        help='use this flag to remove rows with no genotype calls at all'
+        help='Use this flag to remove rows with no genotype calls at all.'
     )
 
 def main(args):
@@ -81,4 +85,4 @@ def main(args):
     if args.filter_empty:
         vf = vf.filter_empty()
 
-    print(vf.to_string(), end='')
+    sys.stdout.write(vf.to_string())

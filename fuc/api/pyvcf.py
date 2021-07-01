@@ -1609,7 +1609,8 @@ class VcfFrame:
         f.close()
 
     def to_string(self):
-        """Render the VcfFrame to a console-friendly tabular output.
+        """
+        Render the VcfFrame to a console-friendly tabular output.
 
         Returns
         -------
