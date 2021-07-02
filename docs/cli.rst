@@ -18,428 +18,404 @@ For getting help on the fuc CLI:
    
    positional arguments:
      COMMAND
-       bam_head     [BAM] Print the header of a SAM/BAM/CRAM file.
-       bam_index    [BAM] Index a SAM/BAM/CRAM file.
-       bam_rename   [BAM] Rename the samples in a SAM/BAM/CRAM file.
-       bam_slice    [BAM] Slice a SAM/BAM/CRAM file.
-       bed_intxn    [BED] Find the intersection of two or more BED files.
-       bed_sum      [BED] Summarize a BED file.
-       fq_count     [FASTQ] Count sequence reads in FASTQ files.
-       fq_sum       [FASTQ] Summarize a FASTQ file.
-       fuc_compf    [FUC] Compare the contents of two files.
-       fuc_demux    [FUC] Parse the Reports directory from bcl2fastq.
-       fuc_exist    [FUC] Check whether certain files exist.
-       fuc_find     [FUC] Find all files with a certain extension recursively.
-       maf_maf2vcf  [MAF] Convert a MAF file to a VCF file.
-       maf_oncoplt  [MAF] Create an oncoplot with a MAF file.
-       maf_sumplt   [MAF] Create a summary plot with a MAF file.
-       maf_vcf2maf  [MAF] Convert a VCF file to a MAF file.
-       tbl_merge    [TABLE] Merge two table files.
-       tbl_sum      [TABLE] Summarize a table file.
-       vcf_filter   [VCF] Filter a VCF file.
-       vcf_merge    [VCF] Merge two or more VCF files.
-       vcf_rename   [VCF] Rename the samples in a VCF file.
-       vcf_slice    [VCF] Slice a VCF file.
-       vcf_vcf2bed  [VCF] Convert a VCF file to a BED file.
-       vcf_vep      [VCF] Filter a VCF file annotated by Ensemble VEP.
+       bam-head     [BAM] Print the header of a SAM/BAM/CRAM file.
+       bam-index    [BAM] Index a SAM/BAM/CRAM file.
+       bam-rename   [BAM] Rename the samples in a SAM/BAM/CRAM file.
+       bam-slice    [BAM] Slice a SAM/BAM/CRAM file.
+       bed-intxn    [BED] Find the intersection of two or more BED files.
+       bed-sum      [BED] Summarize a BED file.
+       fq-count     [FASTQ] Count sequence reads in FASTQ files.
+       fq-sum       [FASTQ] Summarize a FASTQ file.
+       fuc-compf    [FUC] Compare the contents of two files.
+       fuc-demux    [FUC] Parse the Reports directory from bcl2fastq.
+       fuc-exist    [FUC] Check whether certain files exist.
+       fuc-find     [FUC] Find all files with a certain extension recursively.
+       maf-maf2vcf  [MAF] Convert a MAF file to a VCF file.
+       maf-oncoplt  [MAF] Create an oncoplot with a MAF file.
+       maf-sumplt   [MAF] Create a summary plot with a MAF file.
+       maf-vcf2maf  [MAF] Convert a VCF file to a MAF file.
+       tbl-merge    [TABLE] Merge two table files.
+       tbl-sum      [TABLE] Summarize a table file.
+       vcf-filter   [VCF] Filter a VCF file.
+       vcf-merge    [VCF] Merge two or more VCF files.
+       vcf-rename   [VCF] Rename the samples in a VCF file.
+       vcf-slice    [VCF] Slice a VCF file.
+       vcf-vcf2bed  [VCF] Convert a VCF file to a BED file.
+       vcf-vep      [VCF] Filter a VCF file annotated by Ensemble VEP.
    
    optional arguments:
      -h, --help     Show this help message and exit.
      -v, --version  Show the version number and exit.
 
-For getting help on a specific command (e.g. vcf_merge):
+For getting help on a specific command (e.g. vcf-merge):
 
 .. code-block:: text
 
-   $ fuc vcf_merge -h
+   $ fuc vcf-merge -h
 
-bam_head
+bam-head
 ========
 
 .. code-block:: text
 
-   $ fuc bam_head -h
-   usage: fuc bam_head [-h] bam
+   $ fuc bam-head -h
+   usage: fuc bam-head [-h] bam
    
    This command will print the header of the input SAM/BAM/CRAM file.
    
-   usage examples:
-     $ fuc bam_head in.sam
-     $ fuc bam_head in.bam
-     $ fuc bam_head in.cram
+   Usage examples:
+     $ fuc bam-head in.sam
+     $ fuc bam-head in.bam
+     $ fuc bam-head in.cram
    
-   positional arguments:
+   Positional arguments:
      bam         SAM/BAM/CRAM file.
    
-   optional arguments:
+   Optional arguments:
      -h, --help  Show this help message and exit.
 
-bam_index
+bam-index
 =========
 
 .. code-block:: text
 
-   $ fuc bam_index -h
-   usage: fuc bam_index [-h] bam
+   $ fuc bam-index -h
+   usage: fuc bam-index [-h] bam
    
    This command will index the input SAM/BAM/CRAM file.
    
-   usage examples:
-     $ fuc bam_index in.sam
-     $ fuc bam_index in.bam
-     $ fuc bam_index in.cram
+   Usage examples:
+     $ fuc bam-index in.sam
+     $ fuc bam-index in.bam
+     $ fuc bam-index in.cram
    
-   positional arguments:
+   Positional arguments:
      bam         SAM/BAM/CRAM file.
    
-   optional arguments:
+   Optional arguments:
      -h, --help  Show this help message and exit.
 
-bam_rename
+bam-rename
 ==========
 
 .. code-block:: text
 
-   $ fuc bam_rename -h
-   usage: fuc bam_rename [-h] bam name
+   $ fuc bam-rename -h
+   usage: fuc bam-rename [-h] bam name
    
    This command will rename the sample(s) in the input SAM/BAM/CRAM file.
    
-   usage examples:
-     $ fuc bam_rename in.sam NA12878 > out.sam
-     $ fuc bam_rename in.bam NA12878 > out.bam
-     $ fuc bam_rename in.cram NA12878 > out.cram
+   Usage examples:
+     $ fuc bam-rename in.sam NA12878 > out.sam
+     $ fuc bam-rename in.bam NA12878 > out.bam
+     $ fuc bam-rename in.cram NA12878 > out.cram
    
-   positional arguments:
+   Positional arguments:
      bam         SAM/BAM/CRAM file.
      name        New sample name.
    
-   optional arguments:
+   Optional arguments:
      -h, --help  Show this help message and exit.
 
-bam_slice
+bam-slice
 =========
 
 .. code-block:: text
 
-   $ fuc bam_slice -h
-   usage: fuc bam_slice [-h] [--format TEXT] [--fasta PATH]
+   $ fuc bam-slice -h
+   usage: fuc bam-slice [-h] [--format TEXT] [--fasta PATH]
                         bam region [region ...]
    
    This command will slice the input SAM/BAM/CRAM file for the specified region(s).
    
-   usage examples:
-     $ fuc bam_slice in.bam chr1:100-200 > out.bam
-     $ fuc bam_slice in.bam chr1:100-200 chr2:100-200 > out.bam
-     $ fuc bam_slice in.bam chr1:100-200 --format SAM > out.sam
-     $ fuc bam_slice in.bam chr1:100-200 --format CRAM --fasta ref.fa > out.cram
+   Usage examples:
+     $ fuc bam-slice in.bam chr1:100-200 > out.bam
+     $ fuc bam-slice in.bam chr1:100-200 chr2:100-200 > out.bam
+     $ fuc bam-slice in.bam chr1:100-200 --format SAM > out.sam
+     $ fuc bam-slice in.bam chr1:100-200 --format CRAM --fasta ref.fa > out.cram
    
-   positional arguments:
+   Positional arguments:
      bam            SAM/BAM/CRAM file.
      region         Space-separated regions ('chrom:start-end').
    
-   optional arguments:
+   Optional arguments:
      -h, --help     Show this help message and exit.
      --format TEXT  Output format (default: 'BAM') (choices: 'SAM', 'BAM', 'CRAM'). A FASTA file must be specified with '--fasta' for 'CRAM'.
      --fasta PATH   FASTA file. Required when '--format' is 'CRAM'.
 
-bed_intxn
+bed-intxn
 =========
 
 .. code-block:: text
 
-   $ fuc bed_intxn -h
-   usage: fuc bed_intxn [-h] bed [bed ...]
+   $ fuc bed-intxn -h
+   usage: fuc bed-intxn [-h] bed [bed ...]
    
-   This command will compute intersections beween multiple BED files. It
-   essentially wraps the 'pybed.BedFrame.intersect' method from the fuc API.
+   This command will compute the intersection beween multiple BED files.
    
-   usage examples:
-     $ fuc bed_intxn 1.bed 2.bed 3.bed > intersect.bed
+   Usage examples:
+     $ fuc bed-intxn 1.bed 2.bed 3.bed > intersect.bed
    
-   positional arguments:
-     bed         BED files
+   Positional arguments:
+     bed         BED files.
    
-   optional arguments:
+   Optional arguments:
      -h, --help  Show this help message and exit.
 
-bed_sum
+bed-sum
 =======
 
 .. code-block:: text
 
-   $ fuc bed_sum -h
-   usage: fuc bed_sum [-h] [--bases INT] [--decimals INT] bed
+   $ fuc bed-sum -h
+   usage: fuc bed-sum [-h] [--bases INT] [--decimals INT] bed
    
-   This command will compute various summary statstics for a BED file. This
-   includes the total numbers of probes and covered base pairs for each
-   chromosome.
+   This command will compute various summary statstics for a BED file.
    
-   By default, covered base paris are displayed in bp, but if you prefer you
-   can, for example, use '--bases 1000' to display in kb.
+   The returned statistics include the total numbers of probes and covered base pairs for each chromosome.
    
-   usage examples:
-     $ fuc bed_sum in.bed
+   By default, covered base paris are displayed in bp, but if you prefer you can, for example, use '--bases 1000' to display in kb.
    
-   positional arguments:
-     bed             BED file
+   Usage examples:
+     $ fuc bed-sum in.bed
    
-   optional arguments:
+   Positional arguments:
+     bed             BED file.
+   
+   Optional arguments:
      -h, --help      Show this help message and exit.
-     --bases INT     number to divide covered base pairs (default: 1)
-     --decimals INT  number of decimals (default: 0)
+     --bases INT     Number to divide covered base pairs (default: 1).
+     --decimals INT  Number of decimals (default: 0).
 
-fq_count
+fq-count
 ========
 
 .. code-block:: text
 
-   $ fuc fq_count -h
-   usage: fuc fq_count [-h] [fastq ...]
+   $ fuc fq-count -h
+   usage: fuc fq-count [-h] [fastq ...]
    
-   This command will count sequence reads in FASTQ files (both zipped and
-   unzipped). It will look for stdin if there are no arguments.
+   This command will count sequence reads in FASTQ files (both zipped and unzipped).
    
-   usage examples:
-     $ fuc fq_count in.fastq
-     $ cat fastq.list | fuc fq_count
+   It will look for stdin if there are no arguments.
    
-   positional arguments:
-     fastq       FASTQ files (default: stdin)
+   Usage examples:
+     $ fuc fq-count in.fastq
+     $ cat fastq.list | fuc fq-count
    
-   optional arguments:
+   Positional arguments:
+     fastq       FASTQ files (default: stdin).
+   
+   Optional arguments:
      -h, --help  Show this help message and exit.
 
-fq_sum
+fq-sum
 ======
 
 .. code-block:: text
 
-   $ fuc fq_sum -h
-   usage: fuc fq_sum [-h] fastq
+   $ fuc fq-sum -h
+   usage: fuc fq-sum [-h] fastq
    
-   This command will output a summary of the input FASTQ file (both zipped and
-   unqzipped). The summary includes the total number of sequence reads, the
-   distribution of read lengths, and the numbers of unique and duplicate
-   sequences.
+   This command will output a summary of the input FASTQ file (both zipped and unqzipped).
    
-   usage examples:
-     $ fuc fq_sum in.fastq
+   The summary includes the total number of sequence reads, the distribution of read lengths, and the numbers of unique and duplicate sequences.
    
-   positional arguments:
-     fastq       FASTQ file
+   Usage examples:
+     $ fuc fq-sum in.fastq
    
-   optional arguments:
+   Positional arguments:
+     fastq       FASTQ file.
+   
+   Optional arguments:
      -h, --help  Show this help message and exit.
 
-fuc_compf
+fuc-compf
 =========
 
 .. code-block:: text
 
-   $ fuc fuc_compf -h
-   usage: fuc fuc_compf [-h] left right
+   $ fuc fuc-compf -h
+   usage: fuc fuc-compf [-h] left right
    
-   This command will compare the contents of two files. It will return 'True'
-   if they are identical and 'False' otherwise. It essentially wraps the
-   'filecmp.cmp' method from Python.
+   This command will compare the contents of two files, returning 'True' if they are identical and 'False' otherwise.
    
-   usage examples:
-     $ fuc fuc_compf left.txt right.txt
+   Usage examples:
+     $ fuc fuc-compf left.txt right.txt
    
-   positional arguments:
-     left        left file
-     right       right file
+   Positional arguments:
+     left        Left file.
+     right       Right file.
    
-   optional arguments:
+   Optional arguments:
      -h, --help  Show this help message and exit.
 
-fuc_demux
+fuc-demux
 =========
 
 .. code-block:: text
 
-   $ fuc fuc_demux -h
-   usage: fuc fuc_demux [-h] reports_dir output_dir
+   $ fuc fuc-demux -h
+   usage: fuc fuc-demux [-h] reports_dir output_dir
    
-   This command will parse the Reports directory from the bcl2fastq or
-   bcl2fastq2 prograrm. In the output directory, the command will create four
-   files:
+   This command will parse the Reports directory from the bcl2fastq or bcl2fastq2 prograrm.
    
-   - flowcell_summary.csv
-   - lane_summary.csv
-   - top_unknown_barcodes.csv
-   - reports.pdf
+   In the output directory, the command will create four files:
+     - flowcell_summary.csv
+     - lane_summary.csv
+     - top_unknown_barcodes.csv
+     - reports.pdf
    
-   usage examples:
-     $ fuc fuc_demux reports_dir output_dir
+   Usage examples:
+     $ fuc fuc-demux reports_dir output_dir
    
-   positional arguments:
-     reports_dir  Reports directory
-     output_dir   output directory
+   Positional arguments:
+     reports_dir  Reports directory.
+     output_dir   Output directory.
    
-   optional arguments:
+   Optional arguments:
      -h, --help   Show this help message and exit.
 
-fuc_exist
+fuc-exist
 =========
 
 .. code-block:: text
 
-   $ fuc fuc_exist -h
-   usage: fuc fuc_exist [-h] [files ...]
+   $ fuc fuc-exist -h
+   usage: fuc fuc-exist [-h] [files ...]
    
-   This command will check whether files exist. It will return
-   'True' if they exist and 'False' otherwise. The command will look for stdin
-   if there are no arguments.
+   This command will check whether or not specified files including directoires exist, returning 'True' if they exist and 'False' otherwise.
    
-   usage examples:
-     $ fuc fuc_exist test.txt
-     $ fuc fuc_exist test_dir
-     $ cat test.list | fuc fuc_exist
+   The command will look for stdin if there are no arguments.
    
-   positional arguments:
-     files       test files/directories (default: stdin)
+   Usage examples:
+     $ fuc fuc-exist test.txt
+     $ fuc fuc-exist test_dir
+     $ cat test.list | fuc fuc-exist
    
-   optional arguments:
+   Positional arguments:
+     files       Files and directories to be tested (default: stdin).
+   
+   Optional arguments:
      -h, --help  Show this help message and exit.
 
-fuc_find
+fuc-find
 ========
 
 .. code-block:: text
 
-   $ fuc fuc_find -h
-   usage: fuc fuc_find [-h] [--dir PATH] ext
+   $ fuc fuc-find -h
+   usage: fuc fuc-find [-h] [--dir PATH] ext
    
-   This command will recursively find all files with a certain extension and
-   then return their absolute paths.
+   This command will recursively find all files with a certain extension and then return their absolute paths.
    
-   usage examples:
-     $ fuc fuc_find .vcf
-     $ fuc fuc_find .vcf.gz
-     $ fuc fuc_find .vcf.gz --dir ~/test_dir
+   Usage examples:
+     $ fuc fuc-find .vcf
+     $ fuc fuc-find .vcf.gz
+     $ fuc fuc-find .vcf.gz --dir ~/test_dir
    
-   positional arguments:
-     ext         file extension
+   Positional arguments:
+     ext         File extension.
    
-   optional arguments:
+   Optional arguments:
      -h, --help  Show this help message and exit.
-     --dir PATH  directory to search in (default: current directory)
+     --dir PATH  Directory to search in (default: current directory).
 
-maf_maf2vcf
+maf-maf2vcf
 ===========
 
 .. code-block:: text
 
-   $ fuc maf_maf2vcf -h
-   usage: fuc maf_maf2vcf [-h] [--fasta PATH] [--ignore_indels]
+   $ fuc maf-maf2vcf -h
+   usage: fuc maf-maf2vcf [-h] [--fasta PATH] [--ignore_indels]
                           [--cols TEXT [TEXT ...]] [--names TEXT [TEXT ...]]
                           maf
    
-   This command will convert a MAF file to a VCF file. It essentially wraps the
-   'pymaf.MafFrame.to_vcf' method from the fuc API.
+   This command will convert a MAF file to a VCF file.
    
-   In order to handle INDELs the command makes use of a reference assembly
-   (i.e. FASTA file). If SNVs are your only concern, then you do not need a
-   FASTA file and can just use the '--ignore_indels' flag. If you are going to
-   provide a FASTA file, please make sure to select the appropriate one (e.g.
-   one that matches the genome assembly). For example, if your MAF file is
-   in hg19/GRCh37, use the 'hs37d5.fa' file which can be freely downloaded
-   from the 1000 Genomes Project. For more details on the conversion algorithm,
-   please visit the 'pymaf.MafFrame.to_vcf' method's documentation page.
+   In order to handle INDELs the command makes use of a reference assembly (i.e. FASTA file). If SNVs are your only concern, then you do not need a FASTA file and can just use the '--ignore_indels' flag.
    
-   In addition to basic genotype calls (e.g. '0/1'), you can extract more
-   information from the MAF file by specifying the column(s) that contain
-   additional genotype data of interest with the '--cols' argument. If
-   provided, this argument will append the requested data to individual
-   sample genotypes (e.g. '0/1:0.23'). You can also control how these
-   additional genotype information appear in the FORMAT field (e.g. AF) with
-   the '--names' argument. If this argument is not provided, the original
-   column name(s) will be displayed.
+   If you are going to provide a FASTA file, please make sure to select the appropriate one (e.g. one that matches the genome assembly).
    
-   usage examples:
-     $ fuc maf_maf2vcf in.maf --fasta hs37d5.fa > out.vcf
-     $ fuc maf_maf2vcf in.maf --ignore_indels > out.vcf
-     $ fuc maf_maf2vcf in.maf --fasta hs37d5.fa \
-         --cols i_TumorVAF_WU --names AF > out.vcf
+   In addition to basic genotype calls (e.g. '0/1'), you can extract more information from the MAF file by specifying the column(s) that contain additional genotype data of interest with the '--cols' argument. If provided, this argument will append the requested data to individual sample genotypes (e.g. '0/1:0.23').
    
-   positional arguments:
-     maf                   MAF file
+   You can also control how these additional genotype information appear in the FORMAT field (e.g. AF) with the '--names' argument. If this argument is not provided, the original column name(s) will be displayed.
    
-   optional arguments:
+   Usage examples:
+     $ fuc maf-maf2vcf in.maf --fasta hs37d5.fa > out.vcf
+     $ fuc maf-maf2vcf in.maf --ignore_indels > out.vcf
+     $ fuc maf-maf2vcf in.maf --fasta hs37d5.fa --cols i_TumorVAF_WU --names AF > out.vcf
+   
+   Positional arguments:
+     maf                   MAF file.
+   
+   Optional arguments:
      -h, --help            Show this help message and exit.
-     --fasta PATH          FASTA file (required to include INDELs in the output)
-     --ignore_indels       use this flag to exclude INDELs from the output
+     --fasta PATH          FASTA file (required to include INDELs in the output).
+     --ignore_indels       Use this flag to exclude INDELs from the output.
      --cols TEXT [TEXT ...]
-                           column(s) in the MAF file
+                           Column(s) in the MAF file.
      --names TEXT [TEXT ...]
-                           name(s) to be displayed in the FORMAT field
+                           Name(s) to be displayed in the FORMAT field.
 
-maf_oncoplt
+maf-oncoplt
 ===========
 
 .. code-block:: text
 
-   $ fuc maf_oncoplt -h
-   usage: fuc maf_oncoplt [-h] [--count INT] [--figsize FLOAT FLOAT]
+   $ fuc maf-oncoplt -h
+   usage: fuc maf-oncoplt [-h] [--count INT] [--figsize FLOAT FLOAT]
                           [--label_fontsize FLOAT] [--ticklabels_fontsize FLOAT]
                           [--legend_fontsize FLOAT]
                           maf out
    
-   This command will create an oncoplot with a MAF file. It essentially wraps
-   the 'pymaf.plot_oncoplot' method from the fuc API. Visit the method's
-   documentation to see example plots.
+   This command will create an oncoplot with a MAF file.
    
-   The format of output image (PDF/PNG/JPEG/SVG) will be automatically
-   determined by the output file's extension.
+   The format of output image (PDF/PNG/JPEG/SVG) will be automatically determined by the output file's extension.
    
-   usage examples:
-     $ fuc maf_oncoplt in.maf out.png
-     $ fuc maf_oncoplt in.maf out.pdf
+   Usage examples:
+     $ fuc maf-oncoplt in.maf out.png
+     $ fuc maf-oncoplt in.maf out.pdf
    
-   positional arguments:
-     maf                   MAF file
-     out                   image file
+   Positional arguments:
+     maf                   MAF file.
+     out                   Output image file.
    
-   optional arguments:
+   Optional arguments:
      -h, --help            Show this help message and exit.
-     --count INT           number of top mutated genes to display (default: 10)
+     --count INT           Number of top mutated genes to display (default: 10).
      --figsize FLOAT FLOAT
-                           width, height in inches (default: [15, 10])
+                           Width, height in inches (default: [15, 10]).
      --label_fontsize FLOAT
-                           font size of labels (default: 15)
+                           Font size of labels (default: 15).
      --ticklabels_fontsize FLOAT
-                           font size of tick labels (default: 15)
+                           Font size of tick labels (default: 15).
      --legend_fontsize FLOAT
-                           font size of legend texts (default: 15)
+                           Font size of legend texts (default: 15).
 
-maf_sumplt
+maf-sumplt
 ==========
 
 .. code-block:: text
 
-   $ fuc maf_sumplt -h
-   usage: fuc maf_sumplt [-h] [--figsize FLOAT FLOAT] [--title_fontsize FLOAT]
+   $ fuc maf-sumplt -h
+   usage: fuc maf-sumplt [-h] [--figsize FLOAT FLOAT] [--title_fontsize FLOAT]
                          [--ticklabels_fontsize FLOAT] [--legend_fontsize FLOAT]
                          maf out
    
-   This command will create a summary plot with a MAF file. It essentially wraps
-   the 'pymaf.plot_summary' method from the fuc API. Visit the method's
-   documentation to see example plots.
+   This command will create a summary plot with a MAF file.
    
-   The format of output image (PDF/PNG/JPEG/SVG) will be automatically
-   determined by the output file's extension.
+   The format of output image (PDF/PNG/JPEG/SVG) will be automatically determined by the output file's extension.
    
-   usage examples:
-     $ fuc maf_sumplt in.maf out.png
-     $ fuc maf_sumplt in.maf out.pdf
+   Usage examples:
+     $ fuc maf-sumplt in.maf out.png
+     $ fuc maf-sumplt in.maf out.pdf
    
-   positional arguments:
-     maf                   MAF file
-     out                   output image file
+   Positional arguments:
+     maf                   MAF file.
+     out                   Output image file.
    
-   optional arguments:
+   Optional arguments:
      -h, --help            Show this help message and exit.
      --figsize FLOAT FLOAT
                            width, height in inches (default: [15, 10])
@@ -450,33 +426,32 @@ maf_sumplt
      --legend_fontsize FLOAT
                            font size of legend texts (default: 12)
 
-maf_vcf2maf
+maf-vcf2maf
 ===========
 
 .. code-block:: text
 
-   $ fuc maf_vcf2maf -h
-   usage: fuc maf_vcf2maf [-h] vcf
+   $ fuc maf-vcf2maf -h
+   usage: fuc maf-vcf2maf [-h] vcf
    
-   This command will convert an annotated VCF file to a MAF file. It essentially
-   wraps the 'pymaf.MafFrame.from_vcf' method from the fuc API.
+   This command will convert an annotated VCF file to a MAF file.
    
-   usage examples:
-     $ fuc maf_vcf2maf in.vcf > out.maf
+   Usage examples:
+     $ fuc maf-vcf2maf in.vcf > out.maf
    
-   positional arguments:
-     vcf         VCF file
+   Positional arguments:
+     vcf         VCF file.
    
-   optional arguments:
+   Optional arguments:
      -h, --help  Show this help message and exit.
 
-tbl_merge
+tbl-merge
 =========
 
 .. code-block:: text
 
-   $ fuc tbl_merge -h
-   usage: fuc tbl_merge [-h] [--how TEXT] [--on TEXT [TEXT ...]] [--lsep TEXT]
+   $ fuc tbl-merge -h
+   usage: fuc tbl-merge [-h] [--how TEXT] [--on TEXT [TEXT ...]] [--lsep TEXT]
                         [--rsep TEXT] [--osep TEXT]
                         left right
    
@@ -485,30 +460,30 @@ tbl_merge
    package. For details on the merging algorithms, please visit the method's
    documentation page.
    
-   usage examples:
-     $ fuc tbl_merge left.tsv right.tsv > merged.tsv
-     $ fuc tbl_merge left.csv right.tsv --lsep , > merged.tsv
-     $ fuc tbl_merge left.tsv right.tsv --how outer > merged.tsv
+   Usage examples:
+     $ fuc tbl-merge left.tsv right.tsv > merged.tsv
+     $ fuc tbl-merge left.csv right.tsv --lsep , > merged.tsv
+     $ fuc tbl-merge left.tsv right.tsv --how outer > merged.tsv
    
-   positional arguments:
-     left                  left file
-     right                 right file
+   Positional arguments:
+     left                  Left file.
+     right                 Right file.
    
-   optional arguments:
+   Optional arguments:
      -h, --help            Show this help message and exit.
-     --how TEXT            type of merge to be performed ['left', 'right', 'outer', 'inner', 'cross'] (default: 'inner')
-     --on TEXT [TEXT ...]  column names to join on
-     --lsep TEXT           delimiter to use for the left file (default: '\t')
-     --rsep TEXT           delimiter to use for the right file (default: '\t')
-     --osep TEXT           delimiter to use for the output file (default: '\t')
+     --how TEXT            Type of merge to be performed ['left', 'right', 'outer', 'inner', 'cross'] (default: 'inner').
+     --on TEXT [TEXT ...]  Column names to join on.
+     --lsep TEXT           Delimiter to use for the left file (default: '\t').
+     --rsep TEXT           Delimiter to use for the right file (default: '\t').
+     --osep TEXT           Delimiter to use for the output file (default: '\t').
 
-tbl_sum
+tbl-sum
 =======
 
 .. code-block:: text
 
-   $ fuc tbl_sum -h
-   usage: fuc tbl_sum [-h] [--sep TEXT] [--skiprows TEXT]
+   $ fuc tbl-sum -h
+   usage: fuc tbl-sum [-h] [--sep TEXT] [--skiprows TEXT]
                       [--na_values TEXT [TEXT ...]] [--keep_default_na]
                       [--expr TEXT] [--columns TEXT [TEXT ...]] [--dtypes PATH]
                       table_file
@@ -517,105 +492,99 @@ tbl_sum
    'pandas.Series.describe' and 'pandas.Series.value_counts' methods from the
    pandas pacakge.
    
-   usage examples:
-     $ fuc tbl_sum table.tsv
-     $ fuc tbl_sum table.csv --sep ,
+   Usage examples:
+     $ fuc tbl-sum table.tsv
+     $ fuc tbl-sum table.csv --sep ,
    
-   positional arguments:
-     table_file            table file
+   Positional arguments:
+     table_file            Table file.
    
-   optional arguments:
+   Optional arguments:
      -h, --help            Show this help message and exit.
-     --sep TEXT            delimiter to use (default: '\t')
-     --skiprows TEXT       comma-separated line numbers to skip (0-indexed) or number of lines to skip at the start of the file (e.g. `--skiprows 1,` will skip the second line, `--skiprows 2,4` will skip the third and fifth lines, and `--skiprows 10` will skip the first 10 lines)
+     --sep TEXT            Delimiter to use (default: '\t').
+     --skiprows TEXT       Comma-separated line numbers to skip (0-indexed) or number of lines to skip at the start of the file (e.g. `--skiprows 1,` will skip the second line, `--skiprows 2,4` will skip the third and fifth lines, and `--skiprows 10` will skip the first 10 lines).
      --na_values TEXT [TEXT ...]
-                           additional strings to recognize as NA/NaN (by default, the following values are interpreted as NaN: '', '#N/A', '#N/A N/A', '#NA', '-1.#IND', '-1.#QNAN', '-NaN', '-nan', '1.#IND', '1.#QNAN', '<NA>', 'N/A', 'NA', 'NULL', 'NaN', 'n/a', 'nan', 'null')
-     --keep_default_na     whether or not to include the default NaN values when parsing the data (see 'pandas.read_table' for details)
-     --expr TEXT           query the columns of a pandas.DataFrame with a boolean expression (e.g. `--query "A == 'yes'"`)
+                           Additional strings to recognize as NA/NaN (by default, the following values are interpreted as NaN: '', '#N/A', '#N/A N/A', '#NA', '-1.#IND', '-1.#QNAN', '-NaN', '-nan', '1.#IND', '1.#QNAN', '<NA>', 'N/A', 'NA', 'NULL', 'NaN', 'n/a', 'nan', 'null').
+     --keep_default_na     Wwhether or not to include the default NaN values when parsing the data (see 'pandas.read_table' for details).
+     --expr TEXT           Query the columns of a pandas.DataFrame with a boolean expression (e.g. `--query "A == 'yes'"`).
      --columns TEXT [TEXT ...]
-                           columns to be summarized (by default, all columns will be included)
-     --dtypes PATH         file of column names and their data types (etheir 'categorical' or 'numeric'); one tab-delimited pair of column name and data type per line
+                           Columns to be summarized (by default, all columns will be included).
+     --dtypes PATH         File of column names and their data types (etheir 'categorical' or 'numeric'); one tab-delimited pair of column name and data type per line.
 
-vcf_filter
+vcf-filter
 ==========
 
 .. code-block:: text
 
-   $ fuc vcf_filter -h
-   usage: fuc vcf_filter [-h] [--expr TEXT] [--samples PATH]
+   $ fuc vcf-filter -h
+   usage: fuc vcf-filter [-h] [--expr TEXT] [--samples PATH]
                          [--drop_duplicates [TEXT ...]] [--greedy] [--opposite]
                          [--filter_empty]
                          vcf
    
-   This command will filter a VCF file (both zipped and unzipped). It essentially
-   wraps multiple methods from the fuc API.
+   This command will filter a VCF file (both zipped and unzipped).
    
-   usage examples:
-     $ fuc vcf_filter in.vcf --expr 'GT == "0/0"' > out.vcf
-     $ fuc vcf_filter in.vcf --expr 'GT != "0/0"' > out.vcf
-     $ fuc vcf_filter in.vcf --expr 'DP < 30' > out.vcf
-     $ fuc vcf_filter in.vcf --expr 'DP < 30' --greedy > out.vcf
-     $ fuc vcf_filter in.vcf --expr 'AD[1] < 10' --greedy > out.vcf
-     $ fuc vcf_filter in.vcf --expr 'AD[1] < 10 and DP < 30' --greedy > out.vcf
-     $ fuc vcf_filter in.vcf --expr 'AD[1] < 10 or DP < 30' --greedy > out.vcf
-     $ fuc vcf_filter in.vcf --expr 'AD[1] < 10 or DP < 30' --opposite > out.vcf
-     $ fuc vcf_filter in.vcf --expr 'np.mean(AD) < 10' --greedy --samples sample.list > out.vcf
-     $ fuc vcf_filter in.vcf --drop_duplicates CHROM POS REF ALT > out.vcf
-     $ fuc vcf_filter in.vcf --filter_empty > out.vcf
+   Usage examples:
+     $ fuc vcf-filter in.vcf --expr 'GT == "0/0"' > out.vcf
+     $ fuc vcf-filter in.vcf --expr 'GT != "0/0"' > out.vcf
+     $ fuc vcf-filter in.vcf --expr 'DP < 30' > out.vcf
+     $ fuc vcf-filter in.vcf --expr 'DP < 30' --greedy > out.vcf
+     $ fuc vcf-filter in.vcf --expr 'AD[1] < 10' --greedy > out.vcf
+     $ fuc vcf-filter in.vcf --expr 'AD[1] < 10 and DP < 30' --greedy > out.vcf
+     $ fuc vcf-filter in.vcf --expr 'AD[1] < 10 or DP < 30' --greedy > out.vcf
+     $ fuc vcf-filter in.vcf --expr 'AD[1] < 10 or DP < 30' --opposite > out.vcf
+     $ fuc vcf-filter in.vcf --expr 'np.mean(AD) < 10' --greedy --samples sample.list > out.vcf
+     $ fuc vcf-filter in.vcf --drop_duplicates CHROM POS REF ALT > out.vcf
+     $ fuc vcf-filter in.vcf --filter_empty > out.vcf
    
-   positional arguments:
+   Positional arguments:
      vcf                   VCF file
    
-   optional arguments:
+   Optional arguments:
      -h, --help            Show this help message and exit.
-     --expr TEXT           expression to evaluate
-     --samples PATH        file of sample names to apply the marking (one sample per line)
+     --expr TEXT           Expression to evaluate.
+     --samples PATH        File of sample names to apply the marking (one sample per line).
      --drop_duplicates [TEXT ...]
-                           only consider certain columns for identifying duplicates, by default use all of the columns.
-     --greedy              use this flag to mark even ambiguous genotypes as missing
-     --opposite            use this flag to mark all genotypes that do not satisfy the query expression as missing and leave those that do intact
-     --filter_empty        use this flag to remove rows with no genotype calls at all
+                           Only consider certain columns for identifying duplicates, by default use all of the columns.
+     --greedy              Use this flag to mark even ambiguous genotypes as missing.
+     --opposite            Use this flag to mark all genotypes that do not satisfy the query expression as missing and leave those that do intact.
+     --filter_empty        Use this flag to remove rows with no genotype calls at all.
 
-vcf_merge
+vcf-merge
 =========
 
 .. code-block:: text
 
-   $ fuc vcf_merge -h
-   usage: fuc vcf_merge [-h] [--how TEXT] [--format TEXT] [--sort] [--collapse]
+   $ fuc vcf-merge -h
+   usage: fuc vcf-merge [-h] [--how TEXT] [--format TEXT] [--sort] [--collapse]
                         vcf_files [vcf_files ...]
    
-   This command will merge multiple VCF files (both zipped and unzipped). It
-   essentially wraps the 'pyvcf.merge' method from the fuc API.
+   This command will merge multiple VCF files.
    
-   By default, only the GT subfield of the FORMAT field will be included in the
-   merged VCF. Use '--format' to include additional FORMAT subfields such as AD
-   and DP.
+   Usage examples:
+     $ fuc vcf-merge 1.vcf 2.vcf 3.vcf > merged.vcf
+     $ fuc vcf-merge 1.vcf 2.vcf --format GT:AD:DP > merged.vcf
    
-   usage examples:
-     $ fuc vcf_merge 1.vcf 2.vcf 3.vcf > merged.vcf
+   Positional arguments:
+     vcf_files      VCF files (zipped or unzipped).
    
-   positional arguments:
-     vcf_files      VCF files
-   
-   optional arguments:
+   Optional arguments:
      -h, --help     Show this help message and exit.
-     --how TEXT     type of merge as defined in `pandas.DataFrame.merge` (default: 'inner')
-     --format TEXT  FORMAT subfields to be retained (e.g. 'GT:AD:DP') (default: 'GT')
-     --sort         use this flag to turn off sorting of records (default: True)
-     --collapse     use this flag to collapse duplicate records (default: False)
+     --how TEXT     Type of merge as defined in `pandas.DataFrame.merge` (default: 'inner').
+     --format TEXT  FORMAT subfields to be retained (e.g. 'GT:AD:DP') (default: 'GT').
+     --sort         Use this flag to turn off sorting of records (default: True).
+     --collapse     Use this flag to collapse duplicate records (default: False).
 
-vcf_rename
+vcf-rename
 ==========
 
 .. code-block:: text
 
-   $ fuc vcf_rename -h
-   usage: fuc vcf_rename [-h] [--mode TEXT] [--range INT INT] [--sep TEXT]
+   $ fuc vcf-rename -h
+   usage: fuc vcf-rename [-h] [--mode TEXT] [--range INT INT] [--sep TEXT]
                          vcf names
    
-   This command will rename the samples in a VCF file. It essentially wraps
-   the 'pyvcf.VcfFrame.rename' method from the fuc API.
+   This command will rename the samples in a VCF file.
    
    There are three renaming modes: 'MAP', 'INDICIES', and 'RANGE'. The default
    mode is 'MAP' in which case the 'names' file must contain two columns, one
@@ -626,94 +595,90 @@ vcf_rename
    For more details on the renaming modes, please visit the
    'pyvcf.VcfFrame.rename' method's documentation page.
    
-   usage examples:
-     $ fuc vcf_rename in.vcf old_new.tsv > out.vcf
-     $ fuc vcf_rename in.vcf new_idx.tsv --mode INDICIES > out.vcf
-     $ fuc vcf_rename in.vcf new_only.tsv --mode RANGE --range 2 5 > out.vcf
-     $ fuc vcf_rename in.vcf old_new.csv --sep , > out.vcf
+   Usage examples:
+     $ fuc vcf-rename in.vcf old_new.tsv > out.vcf
+     $ fuc vcf-rename in.vcf new_idx.tsv --mode INDICIES > out.vcf
+     $ fuc vcf-rename in.vcf new_only.tsv --mode RANGE --range 2 5 > out.vcf
+     $ fuc vcf-rename in.vcf old_new.csv --sep , > out.vcf
    
-   positional arguments:
+   Positional arguments:
      vcf              VCF file
      names            delimited text file
    
-   optional arguments:
+   Optional arguments:
      -h, --help       Show this help message and exit.
      --mode TEXT      renaming mode (default: 'MAP') (choices: 'MAP', 'INDICIES', 'RANGE')
      --range INT INT  specify an index range
      --sep TEXT       delimiter to use (default: '\t')
 
-vcf_slice
+vcf-slice
 =========
 
 .. code-block:: text
 
-   $ fuc vcf_slice -h
-   usage: fuc vcf_slice [-h] vcf region
+   $ fuc vcf-slice -h
+   usage: fuc vcf-slice [-h] vcf region
    
-   This command will slice a VCF file (both zipped and unzipped). It essentially
-   wraps the 'pyvcf.VcfFrame.slice' method from the fuc API.
+   This command will slice a VCF file (both zipped and unzipped).
    
-   usage examples:
-     $ fuc vcf_slice in.vcf chr1 > sliced.vcf
-     $ fuc vcf_slice in.vcf chr1:100-300 > sliced.vcf
-     $ fuc vcf_slice in.vcf chr1:100 > sliced.vcf
-     $ fuc vcf_slice in.vcf chr1:100- > sliced.vcf
-     $ fuc vcf_slice in.vcf chr1:-300 > sliced.vcf
+   Usage examples:
+     $ fuc vcf-slice in.vcf chr1 > sliced.vcf
+     $ fuc vcf-slice in.vcf chr1:100-300 > sliced.vcf
+     $ fuc vcf-slice in.vcf chr1:100 > sliced.vcf
+     $ fuc vcf-slice in.vcf chr1:100- > sliced.vcf
+     $ fuc vcf-slice in.vcf chr1:-300 > sliced.vcf
    
-   positional arguments:
-     vcf         VCF file
-     region      region ('chrom:start-end')
+   Positional arguments:
+     vcf         VCF file.
+     region      Region ('chrom:start-end').
    
-   optional arguments:
+   Optional arguments:
      -h, --help  Show this help message and exit.
 
-vcf_vcf2bed
+vcf-vcf2bed
 ===========
 
 .. code-block:: text
 
-   $ fuc vcf_vcf2bed -h
-   usage: fuc vcf_vcf2bed [-h] vcf
+   $ fuc vcf-vcf2bed -h
+   usage: fuc vcf-vcf2bed [-h] vcf
    
-   This command will convert a VCF file to a BED file. It essentially wraps the
-   'pyvcf.VcfFrame.to_bed' method from the fuc API.
+   This command will convert a VCF file to a BED file.
    
-   usage examples:
-     $ fuc vcf_vcf2bed in.vcf > out.bed
+   Usage examples:
+     $ fuc vcf-vcf2bed in.vcf > out.bed
    
-   positional arguments:
-     vcf         VCF file
+   Positional arguments:
+     vcf         VCF file.
    
-   optional arguments:
+   Optional arguments:
      -h, --help  Show this help message and exit.
 
-vcf_vep
+vcf-vep
 =======
 
 .. code-block:: text
 
-   $ fuc vcf_vep -h
-   usage: fuc vcf_vep [-h] [--opposite] [--as_zero] vcf expr
+   $ fuc vcf-vep -h
+   usage: fuc vcf-vep [-h] [--opposite] [--as_zero] vcf expr
    
-   This command will filter a VCF file annotated by Ensemble VEP. It
-   essentially wraps the 'pyvep.filter_query' method from the fuc API. For
-   details on query expression, please visit the method's documentation page.
+   This command will filter a VCF file annotated by Ensemble VEP.
    
-   usage examples:
-     $ fuc vcf_vep in.vcf "SYMBOL == 'TP53'" > out.vcf
-     $ fuc vcf_vep in.vcf "SYMBOL != 'TP53'" > out.vcf
-     $ fuc vcf_vep in.vcf "SYMBOL == 'TP53'" --opposite > out.vcf
-     $ fuc vcf_vep in.vcf "Consequence in ['splice_donor_variant', 'stop_gained']" > out.vcf
-     $ fuc vcf_vep in.vcf "(SYMBOL == 'TP53') and (Consequence.str.contains('stop_gained'))" > out.vcf
-     $ fuc vcf_vep in.vcf "gnomAD_AF < 0.001" > out.vcf
-     $ fuc vcf_vep in.vcf "gnomAD_AF < 0.001" --as_zero > out.vcf
+   Usage examples:
+     $ fuc vcf-vep in.vcf "SYMBOL == 'TP53'" > out.vcf
+     $ fuc vcf-vep in.vcf "SYMBOL != 'TP53'" > out.vcf
+     $ fuc vcf-vep in.vcf "SYMBOL == 'TP53'" --opposite > out.vcf
+     $ fuc vcf-vep in.vcf "Consequence in ['splice_donor_variant', 'stop_gained']" > out.vcf
+     $ fuc vcf-vep in.vcf "(SYMBOL == 'TP53') and (Consequence.str.contains('stop_gained'))" > out.vcf
+     $ fuc vcf-vep in.vcf "gnomAD_AF < 0.001" > out.vcf
+     $ fuc vcf-vep in.vcf "gnomAD_AF < 0.001" --as_zero > out.vcf
    
-   positional arguments:
-     vcf         VCF file annotated with Ensemble VEP
-     expr        query expression to evaluate
+   Positional arguments:
+     vcf         VCF file annotated by Ensemble VEP.
+     expr        Query expression to evaluate.
    
-   optional arguments:
+   Optional arguments:
      -h, --help  Show this help message and exit.
-     --opposite  use this flag to return records that don’t meet the said criteria
-     --as_zero   use this flag to treat missing values as zero instead of NaN
+     --opposite  Use this flag to return only records that don't meet the said criteria.
+     --as_zero   Use this flag to treat missing values as zero instead of NaN.
 

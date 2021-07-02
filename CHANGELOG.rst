@@ -1,6 +1,29 @@
 Changelog
 *********
 
+0.16.0 (2021-07-02)
+-------------------
+
+* Rename the commands (e.g. :command:`vcf_merge` to :command:`vcf-merge`).
+* Add ``flip`` argument to :meth:`pymaf.MafFrame.plot_vaf` method.
+* Update :meth:`pymaf.MafFrame.plot_vaf` method to support creation of a grouped bar plot.
+* Factor out ``count`` mode of :meth:`pymaf.MafFrame.plot_snvcls` method to new method :meth:`pymaf.MafFrame.plot_snvclsc`.
+* Factor out ``proportion`` mode of :meth:`pymaf.MafFrame.plot_snvcls` method to new method :meth:`pymaf.MafFrame.plot_snvclsp`.
+* Factor out ``samples`` mode of :meth:`pymaf.MafFrame.plot_snvcls` method to new method :meth:`pymaf.MafFrame.plot_snvclss`.
+* Factor out ``titv`` mode of :meth:`pymaf.MafFrame.plot_snvcls` method to new method :meth:`pymaf.MafFrame.plot_titv`.
+* Deprecate :meth:`pymaf.MafFrame.plot_snvcls` method.
+* Add ``hue_order`` argument to :meth:`pyvcf.VcfFrame.plot_hist` method.
+* Update aesthetic aspect of :meth:`pymaf.MafFrame.plot_oncoplot` method.
+* Add ``width`` argument to :meth:`pymaf.MafFrame.plot_tmb` method.
+* Add ``palette`` and ``flip`` arguments to :meth:`pymaf.MafFrame.plot_vartype` method.
+* Update :meth:`pymaf.MafFrame.plot_snvclsc` method to support creation of a grouped bar plot.
+* Update :meth:`pymaf.MafFrame.plot_snvclsp` method to support creation of a grouped box plot.
+* Add :meth:`pyvcf.VcfFrame.plot_snvclsc` method (simply wraps :meth:`pymaf.MafFrame.plot_snvclsc` method).
+* Add :meth:`pyvcf.VcfFrame.plot_snvclsp` method (simply wraps :meth:`pymaf.MafFrame.plot_snvclsp` method).
+* Add :meth:`pyvcf.VcfFrame.plot_snvclss` method (simply wraps :meth:`pymaf.MafFrame.plot_snvclss` method).
+* Add :meth:`pyvcf.VcfFrame.plot_titv` method (simply wraps :meth:`pymaf.MafFrame.plot_titv` method).
+* Update :meth:`pymaf.MafFrame.from_vcf` method to handle unannotated VCF data.
+
 0.15.0 (2021-06-24)
 -------------------
 

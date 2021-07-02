@@ -68,47 +68,47 @@ class TestPyfq(unittest.TestCase):
 
 class TestCli(unittest.TestCase):
     def test_bfintxn(self):
-        result = subprocess.run(['fuc', 'bed_intxn', bed_file1, bed_file2], capture_output=True, text=True, check=True)
+        result = subprocess.run(['fuc', 'bed-intxn', bed_file1, bed_file2], capture_output=True, text=True, check=True)
         self.assertEqual(len(result.stdout.split('\n')), 5)
 
     def test_bfsum(self):
-        result = subprocess.run(['fuc', 'bed_sum', bed_file1], capture_output=True, text=True, check=True)
+        result = subprocess.run(['fuc', 'bed-sum', bed_file1], capture_output=True, text=True, check=True)
         self.assertTrue('Total' in result.stdout)
 
     def test_dfmerge(self):
-        result = subprocess.run(['fuc', 'tbl_merge', text_file1, text_file2], capture_output=True, text=True, check=True)
+        result = subprocess.run(['fuc', 'tbl-merge', text_file1, text_file2], capture_output=True, text=True, check=True)
         self.assertTrue('Sarah' in result.stdout)
 
     def test_dfsum(self):
-        result = subprocess.run(['fuc', 'tbl_sum', text_file1], capture_output=True, text=True, check=True)
+        result = subprocess.run(['fuc', 'tbl-sum', text_file1], capture_output=True, text=True, check=True)
         self.assertTrue('max' in result.stdout)
 
     def test_fuccompf(self):
-        result = subprocess.run(['fuc', 'fuc_compf', vcf_file1, vcf_file1], capture_output=True, text=True, check=True)
+        result = subprocess.run(['fuc', 'fuc-compf', vcf_file1, vcf_file1], capture_output=True, text=True, check=True)
         self.assertTrue('True' in result.stdout)
 
     def test_fucexist(self):
-        result = subprocess.run(['fuc', 'fuc_exist', vcf_file1], capture_output=True, text=True, check=True)
+        result = subprocess.run(['fuc', 'fuc-exist', vcf_file1], capture_output=True, text=True, check=True)
         self.assertTrue('True' in result.stdout)
 
     def test_fucfind(self):
-        result = subprocess.run(['fuc', 'fuc_find', 'vcf'], capture_output=True, text=True, check=True)
+        result = subprocess.run(['fuc', 'fuc-find', 'vcf'], capture_output=True, text=True, check=True)
         self.assertTrue('1.vcf' in result.stdout)
 
     def test_qfcount(self):
-        result = subprocess.run(['fuc', 'fq_count', fq_file1], capture_output=True, text=True, check=True)
+        result = subprocess.run(['fuc', 'fq-count', fq_file1], capture_output=True, text=True, check=True)
         self.assertEqual(int(result.stdout.strip()), 5)
 
     def test_qfsum(self):
-        result = subprocess.run(['fuc', 'fq_sum', fq_file1], capture_output=True, text=True, check=True)
+        result = subprocess.run(['fuc', 'fq-sum', fq_file1], capture_output=True, text=True, check=True)
         self.assertTrue('# Total: 5' in result.stdout)
 
     def test_vfmerge(self):
-        result = subprocess.run(['fuc', 'vcf_merge', vcf_file1, vcf_file2, '--how', 'outer'], capture_output=True, text=True, check=True)
+        result = subprocess.run(['fuc', 'vcf-merge', vcf_file1, vcf_file2, '--how', 'outer'], capture_output=True, text=True, check=True)
         self.assertEqual(len(result.stdout.strip().split('\n')), 10)
 
     def test_vfslice(self):
-        result = subprocess.run(['fuc', 'vcf_slice', vcf_file1, 'chr1:-300'], capture_output=True, text=True, check=True)
+        result = subprocess.run(['fuc', 'vcf-slice', vcf_file1, 'chr1:-300'], capture_output=True, text=True, check=True)
         self.assertEqual(len(result.stdout.strip().split('\n')), 5)
 
 if __name__ == '__main__':

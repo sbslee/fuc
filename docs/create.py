@@ -100,13 +100,13 @@ The following packages are required to run fuc:
    scipy
    seaborn
 
-There are various ways you can install fuc. The recommended way is via conda:
+There are various ways you can install fuc. The recommended way is via conda (`Anaconda <https://www.anaconda.com/>`__):
 
 .. code-block:: text
 
    $ conda install -c bioconda fuc
 
-Above will automatically download and install all the dependencies as well. Alternatively, you can use pip to install fuc and all of its dependencies:
+Above will automatically download and install all the dependencies as well. Alternatively, you can use pip (`PyPI <https://pypi.org/>`__) to install fuc and all of its dependencies:
 
 .. code-block:: text
 
@@ -134,11 +134,11 @@ For getting help on the fuc CLI:
    $ fuc -h
 {fuc_help}
 
-For getting help on a specific command (e.g. vcf_merge):
+For getting help on a specific command (e.g. vcf-merge):
 
 .. code-block:: text
 
-   $ fuc vcf_merge -h
+   $ fuc vcf-merge -h
 
 Below is the list of submodules available in the fuc API:
 
@@ -159,25 +159,25 @@ To print the header of a SAM file:
 
 .. code-block:: text
 
-   $ fuc bam_head in.sam
+   $ fuc bam-head in.sam
 
 To index a CRAM file:
 
 .. code-block:: text
 
-   $ fuc bam_index in.cram
+   $ fuc bam-index in.cram
 
 To rename the samples in a SAM file:
 
 .. code-block:: text
 
-   $ fuc bam_rename in.sam NA12878 > out.sam
+   $ fuc bam-rename in.sam NA12878 > out.sam
 
 To slice a BAM file:
 
 .. code-block:: text
 
-   $ fuc bam_slice in.bam chr1:100-200 > out.bam
+   $ fuc bam-slice in.bam chr1:100-200 > out.bam
 
 **BED**
 
@@ -185,7 +185,7 @@ To find intersection between BED files:
 
 .. code-block:: text
 
-   $ fuc bed_intxn 1.bed 2.bed 3.bed > intersect.bed
+   $ fuc bed-intxn 1.bed 2.bed 3.bed > intersect.bed
 
 **FASTQ**
 
@@ -193,7 +193,7 @@ To count sequence reads in a FASTQ file:
 
 .. code-block:: text
 
-   $ fuc fq_count example.fastq
+   $ fuc fq-count example.fastq
 
 **FUC**
 
@@ -201,13 +201,13 @@ To check whether a file exists in the operating system:
 
 .. code-block:: text
 
-   $ fuc fuc_exist example.txt
+   $ fuc fuc-exist example.txt
 
 To find all VCF files within the current directory recursively:
 
 .. code-block:: text
 
-   $ fuc fuc_find .vcf.gz
+   $ fuc fuc-find .vcf.gz
 
 **TABLE**
 
@@ -215,7 +215,7 @@ To merge two tab-delimited files:
 
 .. code-block:: text
 
-   $ fuc tbl_merge left.tsv right.tsv > merged.tsv
+   $ fuc tbl-merge left.tsv right.tsv > merged.tsv
 
 **VCF**
 
@@ -223,13 +223,13 @@ To merge VCF files:
 
 .. code-block:: text
 
-   $ fuc vcf_merge 1.vcf 2.vcf 3.vcf > merged.vcf
+   $ fuc vcf-merge 1.vcf 2.vcf 3.vcf > merged.vcf
 
 To filter a VCF file annotated by Ensemble VEP:
 
 .. code-block:: text
 
-   $ fuc vcf_vep in.vcf 'SYMBOL == "TP53"' > out.vcf
+   $ fuc vcf-vep in.vcf 'SYMBOL == "TP53"' > out.vcf
 
 API Examples
 ============
@@ -316,7 +316,7 @@ To create an oncoplot with a MAF file:
 
 .. image:: https://raw.githubusercontent.com/sbslee/fuc-data/main/images/oncoplot.png
 
-To create a customized oncoplot with a MAF file, see the 'Create customized oncoplot' tutorial:
+To create a customized oncoplot with a MAF file, see the `Create customized oncoplot <https://sbslee-fuc.readthedocs.io/en/latest/tutorials.html#create-customized-oncoplots>`__ tutorial:
 
 .. image:: https://raw.githubusercontent.com/sbslee/fuc-data/main/images/customized_oncoplot.png
 
@@ -330,7 +330,7 @@ To create a summary figure for a MAF file:
     >>> mf = pymaf.MafFrame.from_file(f)
     >>> mf.plot_summary()
 
-.. image:: https://raw.githubusercontent.com/sbslee/fuc-data/main/images/maf_summary.png
+.. image:: https://raw.githubusercontent.com/sbslee/fuc-data/main/images/maf_summary-2.png
 
 """.format(**d)
 
@@ -358,11 +358,11 @@ For getting help on the fuc CLI:
    $ fuc -h
 {fuc_help}
 
-For getting help on a specific command (e.g. vcf_merge):
+For getting help on a specific command (e.g. vcf-merge):
 
 .. code-block:: text
 
-   $ fuc vcf_merge -h
+   $ fuc vcf-merge -h
 
 """.format(**d)
 

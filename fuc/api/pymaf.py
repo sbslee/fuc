@@ -169,6 +169,8 @@ SNV_CLASSES = {
     'T>G': {'class': 'T>G', 'type': 'Tv'},
 }
 
+SNV_CLASS_ORDER = ['C>A', 'C>G', 'C>T', 'T>A', 'T>C', 'T>G']
+
 def legend_handles(name='regular'):
     """Return legend handles for one of the pre-defined legends.
 
@@ -700,13 +702,16 @@ class MafFrame:
 
     @classmethod
     def from_vcf(cls, vcf, keys=None, names=None):
-        """Construct a MafFrame from a VCF file or VcfFrame.
+        """
+        Construct a MafFrame from a VCF file or VcfFrame.
 
-        The input VCF should already contain functional annotation data
-        from a tool such as Ensemble VEP, SnpEff, and ANNOVAR. The
-        recommended method is Ensemble VEP with "RefSeq transcripts" as the
-        transcript database and the filtering option "Show one selected
-        consequence per variant".
+        It is recommended that the input VCF data be functionally annotated
+        by an annotation tool such as Ensemble VEP, SnpEff, and ANNOVAR;
+        however, the method can handle unannotated VCF data as well.
+
+        The preferred tool for functional annotation is Ensemble VEP with
+        "RefSeq transcripts" as the transcript database and the filtering
+        option "Show one selected consequence per variant".
 
         Parameters
         ----------
@@ -719,9 +724,64 @@ class MafFrame:
 
         Examples
         --------
+        Below is a simple example:
+
+        >>> from fuc import pyvcf, pymaf
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr2'],
+        ...     'POS': [100, 101],
+        ...     'ID': ['.', '.'],
+        ...     'REF': ['G', 'T'],
+        ...     'ALT': ['A', 'C'],
+        ...     'QUAL': ['.', '.'],
+        ...     'FILTER': ['.', '.'],
+        ...     'INFO': ['CSQ=T|missense_variant|MODERATE|MTOR|2475|Transcript|NM_001386500.1|protein_coding|47/58||||6792|6644|2215|S/Y|tCt/tAt|rs587777894&COSV63868278&COSV63868313||-1||EntrezGene||||||||G|G||deleterious(0)|possibly_damaging(0.876)||||||||||||||||||likely_pathogenic&pathogenic|0&1&1|1&1&1|26619011&27159400&24631838&26018084&27830187|||||', 'CSQ=C|splice_donor_variant|HIGH|MTOR|2475|Transcript|NM_001386500.1|protein_coding||46/57||||||||||-1||EntrezGene||||||||A|A|||||||||||||||||||||||||||||'],
+        ...     'FORMAT': ['GT', 'GT'],
+        ...     'A': ['0/1', '1/1']
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF ALT QUAL FILTER                                               INFO FORMAT    A
+        0  chr1  100  .   G   T    .      .  CSQ=T|missense_variant|MODERATE|MTOR|2475|Tran...     GT  0/1
+        1  chr2  101  .   T   C    .      .  CSQ=C|splice_donor_variant|HIGH|MTOR|2475|Tran...     GT  1/1
+        >>> mf = pymaf.MafFrame.from_vcf(vf)
+        >>> mf.df
+          Hugo_Symbol Entrez_Gene_Id Center NCBI_Build Chromosome  Start_Position  End_Position Strand Variant_Classification Variant_Type Reference_Allele Tumor_Seq_Allele1 Tumor_Seq_Allele2 Protein_Change Tumor_Sample_Barcode
+        0        MTOR           2475      .          .       chr1             100           100      -      Missense_Mutation          SNP                G                 A                 A       p.S2215Y                    A
+        1        MTOR           2475      .          .       chr2             101           101      -            Splice_Site          SNP                T                 C                 C              .                    A
+
+        The method can accept a VCF file as input instead of VcfFrame:
 
         >>> from fuc import pymaf
         >>> mf = pymaf.MafFrame.from_vcf('annotated.vcf')
+
+        The method can handle unannotated VCF data:
+
+        >>> from fuc import pyvcf, pymaf
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 200, 300],
+        ...     'ID': ['.', '.', '.'],
+        ...     'REF': ['G', 'C', 'TTC'],
+        ...     'ALT': ['A', 'CAG', 'T'],
+        ...     'QUAL': ['.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.'],
+        ...     'INFO': ['.', '.', '.'],
+        ...     'FORMAT': ['GT', 'GT', 'GT'],
+        ...     'Steven': ['0/1', '0/1', '0/1']
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID  REF  ALT QUAL FILTER INFO FORMAT Steven
+        0  chr1  100  .    G    A    .      .    .     GT    0/1
+        1  chr1  200  .    C  CAG    .      .    .     GT    0/1
+        2  chr1  300  .  TTC    T    .      .    .     GT    0/1
+        >>> mf = pymaf.MafFrame.from_vcf(vf)
+        >>> mf.df
+          Hugo_Symbol Entrez_Gene_Id Center NCBI_Build Chromosome  Start_Position  End_Position Strand Variant_Classification Variant_Type Reference_Allele Tumor_Seq_Allele1 Tumor_Seq_Allele2 Protein_Change Tumor_Sample_Barcode
+        0           .              .      .          .       chr1             100           100      .                      .          SNP                G                 A                 A              .               Steven
+        1           .              .      .          .       chr1             200           201      .                      .          INS                -                AG                AG              .               Steven
+        2           .              .      .          .       chr1             301           302      .                      .          DEL               TC                 -                 -              .               Steven
         """
         # Parse the input VCF.
         if isinstance(vcf, str):
@@ -729,14 +789,25 @@ class MafFrame:
         else:
             vf = vcf
 
+        # Set some default values in case the VCF is not annotated.
+        ncbi_build = '.'
+
         # Get the NCBI_Build data.
         for line in vf.meta:
             if line.startswith('##VEP'):
                 ncbi_build = re.search(r'assembly="(.*?)"', line).group(1)
+                break
 
         # Define the conversion algorithm.
         def one_row(r):
-            fields = r.INFO.replace('CSQ=', '').split(',')[0].split('|')
+            has_annot = 'CSQ=' in r.INFO
+
+            # Set some default values in case the VCF is not annotated.
+            strand = '.'
+            variant_classification = '.'
+            protein_change = '.'
+            hugo_symbol = '.'
+            entrez_gene_id = '.'
 
             # Get the sequence data.
             inframe = abs(len(r.REF) - len(r.ALT)) / 3 == 0
@@ -762,48 +833,56 @@ class MafFrame:
                 tumor_seq_allele1 = r.ALT[1:]
                 tumor_seq_allele2 = r.ALT[1:]
 
+            fields = r.INFO.replace('CSQ=', '').split(',')[0].split('|')
+
             # Get the Strand data.
-            strand = '+' if fields[19] == '1' else '-'
+            if has_annot:
+                strand = '+' if fields[19] == '1' else '-'
 
             # Get the Variant_Classification data.
-            consequence = fields[1].split('&')[0]
-            if consequence == 'frameshift_variant':
-                if variant_type == 'DEL':
-                    variant_classification = 'Frame_Shift_Del'
-                else:
-                    variant_classification = 'Frame_Shift_Ins'
-            elif consequence == 'protein_altering_variant':
-                if inframe:
-                    if variant_type == 'DEL':
-                        variant_classification = 'In_Frame_Del'
-                    else:
-                        variant_classification = 'In_Frame_Ins'
-                else:
+            if has_annot:
+                consequence = fields[1].split('&')[0]
+                if consequence == 'frameshift_variant':
                     if variant_type == 'DEL':
                         variant_classification = 'Frame_Shift_Del'
                     else:
                         variant_classification = 'Frame_Shift_Ins'
-            elif consequence in VEP_CONSEQUENCES:
-                variant_classification = VEP_CONSEQUENCES[consequence]
-            else:
-                m = f'Found unknown Ensemble VEP consequence: {consequence}'
-                raise ValueError(m)
+                elif consequence == 'protein_altering_variant':
+                    if inframe:
+                        if variant_type == 'DEL':
+                            variant_classification = 'In_Frame_Del'
+                        else:
+                            variant_classification = 'In_Frame_Ins'
+                    else:
+                        if variant_type == 'DEL':
+                            variant_classification = 'Frame_Shift_Del'
+                        else:
+                            variant_classification = 'Frame_Shift_Ins'
+                elif consequence in VEP_CONSEQUENCES:
+                    variant_classification = VEP_CONSEQUENCES[consequence]
+                else:
+                    m = f'Found unknown Ensemble VEP consequence: {consequence}'
+                    raise ValueError(m)
 
             # Get the Tumor_Sample_Barcode data.
             s = r[9:].apply(pyvcf.gt_hasvar)
             tumor_sample_barcode = ','.join(s[s].index.to_list())
 
             # Get the Protein_Change data.
-            pos = fields[14]
-            aa = fields[15].split('/')
-            if len(aa) > 1:
-                protein_change = f'p.{aa[0]}{pos}{aa[1]}'
-            else:
-                protein_change = '.'
+            if has_annot:
+                pos = fields[14]
+                aa = fields[15].split('/')
+                if len(aa) > 1:
+                    protein_change = f'p.{aa[0]}{pos}{aa[1]}'
+
+            # Get other data.
+            if has_annot:
+                hugo_symbol = fields[3]
+                entrez_gene_id = fields[4]
 
             d = dict(
-                Hugo_Symbol = fields[3],
-                Entrez_Gene_Id = fields[4],
+                Hugo_Symbol = hugo_symbol,
+                Entrez_Gene_Id = entrez_gene_id,
                 Center = '.',
                 NCBI_Build = ncbi_build,
                 Chromosome = r.CHROM,
@@ -817,10 +896,10 @@ class MafFrame:
                 Tumor_Seq_Allele2 = tumor_seq_allele2,
                 Tumor_Sample_Barcode = tumor_sample_barcode,
                 Protein_Change = protein_change,
-                CHROM = r.CHROM,
-                POS = r.POS,
-                REF = r.REF,
-                ALT = r.ALT,
+                CHROM = r.CHROM, # will be dropped
+                POS = r.POS,     # will be dropped
+                REF = r.REF,     # will be dropped
+                ALT = r.ALT,     # will be dropped
             )
 
             return pd.Series(d)
@@ -860,6 +939,7 @@ class MafFrame:
                 on=['CHROM', 'POS', 'REF', 'ALT', 'Tumor_Sample_Barcode'])
             df = df.rename(columns={'value': names[i]})
 
+        # Drop the extra columns.
         df = df.drop(columns=['CHROM', 'POS', 'REF', 'ALT'])
 
         return cls(df)
@@ -1076,8 +1156,8 @@ class MafFrame:
             >>> import matplotlib.pyplot as plt
             >>> from fuc import common, pymaf
             >>> common.load_dataset('tcga-laml')
-            >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
-            >>> mf = pymaf.MafFrame.from_file(f)
+            >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+            >>> mf = pymaf.MafFrame.from_file(maf_file)
             >>> mf.plot_oncoplot()
         """
         g = {'height_ratios': [1, 10, 1], 'width_ratios': [10, 1]}
@@ -1085,12 +1165,14 @@ class MafFrame:
         [[ax1, ax2], [ax3, ax4], [ax5, ax6]] = axes
 
         # Create the TMB plot.
-        samples = list(self.matrix_waterfall(count=count, keep_empty=keep_empty).columns)
-        self.plot_tmb(ax=ax1, samples=samples)
+        samples = list(self.matrix_waterfall(count=count,
+            keep_empty=keep_empty).columns)
+        self.plot_tmb(ax=ax1, samples=samples, width=0.95)
         ax1.set_xlabel('')
         ax1.spines['right'].set_visible(False)
         ax1.spines['top'].set_visible(False)
         ax1.spines['bottom'].set_visible(False)
+        ax1.set_xlim(-0.5, len(samples)-0.5)
         ax1.set_ylabel('TMB', fontsize=label_fontsize)
         ax1.set_yticks([0, self.matrix_tmb().sum(axis=1).max()])
         ax1.tick_params(axis='y', which='major',
@@ -1133,33 +1215,27 @@ class MafFrame:
         plt.tight_layout()
         plt.subplots_adjust(wspace=0.01, hspace=0.01)
 
-    def plot_snvcls(
-        self, mode='count', cmap='Pastel1', flip=False, ax=None,
-        figsize=None, **kwargs
+    def plot_snvclsc(
+        self, af=None, hue=None, hue_order=None, palette=None,
+        flip=False, ax=None, figsize=None, **kwargs
     ):
         """
-        Create various kinds of plot showing the distrubtion of SNV classes.
+        Create a bar plot summarizing the count distrubtions of the six
+        :ref:`glossary:SNV classes` for all samples.
+
+        A grouped bar plot can be created with ``hue`` (requires an AnnFrame).
 
         Parameters
         ----------
-        mode : {'count', 'proportion', 'samples', 'titv'}, default: 'count'
-            Determines the plotting mode.
-
-            - ``count``: Bar plot showing the total counts of SNV classes
-              for all samples. It uses :meth:`seaborn.barplot` as the
-              plotting method.
-            - ``proportion``: Box plot showing the proportions of SNV classes
-              for all samples. It uses :meth:`seaborn.boxplot` as the
-              plotting method.
-            - ``samples``: Stacked bar plot showing the proportions of SNV classes
-              for each sample. It uses :meth:`pandas.DataFrame.plot.bar/barh`
-              as the plotting method.
-            - ``titv``: Box plot showing the proprtions of transition (Ti)
-              and transversion (Tv) events for all samples. It uses
-              :meth:`seaborn.boxplot` as the plotting method.
-
-        cmap : str, default: 'Pastel1'
-            Name of the colormap according to :meth:`matplotlib.cm.get_cmap`.
+        af : AnnFrame, optional
+            AnnFrame containing sample annotation data.
+        hue : str, optional
+            Column in the AnnFrame containing information about sample groups.
+        hue_order : list, optional
+            Order to plot the group levels in.
+        palette : str, optional
+            Name of seaborn palette. See the :ref:`tutorials:Control plot
+            colors` tutorial for details.
         flip : bool, default: False
             If True, flip the x and y axes.
         ax : matplotlib.axes.Axes, optional
@@ -1167,54 +1243,52 @@ class MafFrame:
         figsize : tuple, optional
             Width, height in inches. Format: (float, float).
         kwargs
-            Other keyword arguments will be passed down to the respective
-            plotting method.
+            Other keyword arguments will be passed down to
+            :meth:`seaborn.barplot`.
 
         Returns
         -------
         matplotlib.axes.Axes
             The matplotlib axes containing the plot.
 
+        See Also
+        --------
+        MafFrame.plot_snvclsp
+            Create a box plot summarizing the proportion distrubtions of
+            the six :ref:`glossary:SNV classes` for all sample.
+        MafFrame.plot_snvclss
+            Create a bar plot showing the proportions of the six
+            :ref:`glossary:SNV classes` for individual samples.
+
         Examples
         --------
+        Below is a simple example:
 
         .. plot::
             :context: close-figs
 
             >>> import matplotlib.pyplot as plt
+            >>> import seaborn as sns
             >>> from fuc import common, pymaf
             >>> common.load_dataset('tcga-laml')
-            >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
-            >>> mf = pymaf.MafFrame.from_file(f)
-            >>> mf.plot_snvcls()
+            >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+            >>> mf = pymaf.MafFrame.from_file(maf_file)
+            >>> mf.plot_snvclsc(palette=sns.color_palette('Pastel1'))
             >>> plt.tight_layout()
+
+        We can create a grouped bar plot based on FAB classification:
 
         .. plot::
             :context: close-figs
 
-            >>> mf.plot_snvcls(mode='proportion')
-            >>> plt.tight_layout()
-
-        .. plot::
-            :context: close-figs
-
-            >>> mf.plot_snvcls(mode='samples')
-            >>> plt.tight_layout()
-
-        .. plot::
-            :context: close-figs
-
-            >>> mf.plot_snvcls(mode='titv')
+            >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
+            >>> af = pymaf.AnnFrame.from_file(annot_file)
+            >>> mf.plot_snvclsc(af=af,
+            ...                 hue='FAB_classification',
+            ...                 hue_order=['M0', 'M1', 'M2'])
             >>> plt.tight_layout()
         """
-        modes = {
-            'count': self._plot_snvcls_count,
-            'proportion': self._plot_snvcls_proportion,
-            'samples': self._plot_snvcls_samples,
-            'titv': self._plot_snvcls_titv,
-        }
-        if ax is None:
-            fig, ax = plt.subplots(figsize=figsize)
+        # Add the SNV_Class column.
         df = self.df[self.df.Variant_Type == 'SNP']
         def one_row(r):
             change = r.Reference_Allele + '>' + r.Tumor_Seq_Allele2
@@ -1222,79 +1296,330 @@ class MafFrame:
         s = df.apply(one_row, axis=1)
         s.name = 'SNV_Class'
         df = pd.concat([df, s], axis=1)
-        ax = modes[mode](df, flip, ax, cmap, **kwargs)
-        return ax
 
-    def _plot_snvcls_count(self, df, flip, ax, cmap, **kwargs):
-        s = df.SNV_Class.value_counts()
-        i = sorted(set([v['class'] for k, v in SNV_CLASSES.items()]))
-        s = s.reindex(index=i)
-        df = s.to_frame().reset_index()
-        df.columns = ['SNV_Class', 'Count']
-        kwargs = {'ax': ax,
-                  'data': df,
-                  'palette': cmap,
-                  **kwargs}
-        if flip:
-            sns.barplot(x='SNV_Class', y='Count', **kwargs)
-            ax.set_xlabel('')
+        # Count the occurance of each SNV class.
+        if hue is not None:
+            df = pd.merge(df, af.df[hue], left_on='Tumor_Sample_Barcode',
+                right_index=True)
+            s = df.groupby([hue]).SNV_Class.value_counts()
+            df = s.to_frame().rename(columns={'SNV_Class': 'Count'}
+                ).reset_index()
         else:
-            sns.barplot(x='Count', y='SNV_Class', **kwargs)
-            ax.set_ylabel('')
-        return ax
+            s = df.SNV_Class.value_counts()
+            df = s.to_frame().reset_index()
+            df.columns = ['SNV_Class', 'Count']
 
-    def _plot_snvcls_proportion(self, df, flip, ax, cmap, **kwargs):
-        s = df.groupby('Tumor_Sample_Barcode')['SNV_Class'].value_counts()
-        s.name = 'Count'
-        df = s.to_frame().reset_index()
-        df = df.pivot(index='Tumor_Sample_Barcode', columns='SNV_Class')
-        df = df.fillna(0)
-        df = df.apply(lambda r: r/r.sum(), axis=1)
-        df.columns = df.columns.get_level_values(1)
-        df.columns.name = ''
-        df = pd.melt(df, var_name='SNV_Class', value_name='Proportion')
-        kwargs = {'ax': ax,
-                  'data': df,
-                  'palette': cmap,
-                  **kwargs}
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
         if flip:
-            sns.boxplot(x='Proportion', y='SNV_Class', **kwargs)
-            ax.set_ylabel('')
+            x, y = 'Count', 'SNV_Class'
+            xlabel, ylabel = 'Count', ''
         else:
-            sns.boxplot(x='SNV_Class', y='Proportion', **kwargs)
-            ax.set_xlabel('')
+            x, y = 'SNV_Class', 'Count'
+            xlabel, ylabel = '', 'Count'
+
+        sns.barplot(
+            x=x, y=y, data=df, ax=ax, hue=hue, hue_order=hue_order,
+            palette=palette, order=SNV_CLASS_ORDER, **kwargs
+        )
+
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
+
         return ax
 
-    def _plot_snvcls_samples(self, df, flip, ax, cmap, **kwargs):
-        s = df.groupby('Tumor_Sample_Barcode')['SNV_Class'].value_counts()
-        s.name = 'Count'
-        df = s.to_frame().reset_index()
-        df = df.pivot(index='Tumor_Sample_Barcode', columns='SNV_Class')
-        df = df.fillna(0)
-        df = df.apply(lambda r: r/r.sum(), axis=1)
-        df.columns = df.columns.get_level_values(1)
-        df.columns.name = ''
-        kwargs = {'ax': ax,
-                  'stacked': True,
-                  'legend': False,
-                  'width': 1,
-                  'color': plt.cm.get_cmap(cmap).colors,
-                  **kwargs}
-        if flip:
-            df.plot.barh(**kwargs)
-            ax.set_yticks([])
-            ax.set_xlabel('Proportion')
-            ax.set_ylabel('Samples')
-        else:
-            df.plot.bar(**kwargs)
-            ax.set_xticks([])
-            ax.set_xlabel('Samples')
-            ax.set_ylabel('Proportion')
-        return ax
+    def plot_snvclsp(
+        self, af=None, hue=None, hue_order=None, palette=None, flip=False,
+        ax=None, figsize=None, **kwargs
+    ):
+        """
+        Create a box plot summarizing the proportion distrubtions of the six
+        :ref:`glossary:SNV classes` for all sample.
 
-    def _plot_snvcls_titv(self, df, flip, ax, cmap, **kwargs):
+        A grouped box plot can be created with ``hue`` (requires an AnnFrame).
+
+        Parameters
+        ----------
+        af : AnnFrame, optional
+            AnnFrame containing sample annotation data.
+        hue : str, optional
+            Column in the AnnFrame containing information about sample groups.
+        hue_order : list, optional
+            Order to plot the group levels in.
+        palette : str, optional
+            Name of seaborn palette. See the :ref:`tutorials:Control plot
+            colors` tutorial for details.
+        flip : bool, default: False
+            If True, flip the x and y axes.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+        kwargs
+            Other keyword arguments will be passed down to
+            :meth:`seaborn.boxplot`.
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+
+        See Also
+        --------
+        MafFrame.plot_snvclsc
+            Create a bar plot summarizing the count distrubtions of the six
+            :ref:`glossary:SNV classes` for all samples.
+        MafFrame.plot_snvclss
+            Create a bar plot showing the proportions of the six
+            :ref:`glossary:SNV classes` for individual samples.
+
+        Examples
+        --------
+        Below is a simple example:
+
+        .. plot::
+            :context: close-figs
+
+            >>> import matplotlib.pyplot as plt
+            >>> import seaborn as sns
+            >>> from fuc import common, pymaf
+            >>> common.load_dataset('tcga-laml')
+            >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+            >>> mf = pymaf.MafFrame.from_file(maf_file)
+            >>> mf.plot_snvclsp(palette=sns.color_palette('Pastel1'))
+            >>> plt.tight_layout()
+
+        We can create a grouped bar plot based on FAB classification:
+
+        .. plot::
+            :context: close-figs
+
+            >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
+            >>> af = pymaf.AnnFrame.from_file(annot_file)
+            >>> mf.plot_snvclsp(af=af,
+            ...                 hue='FAB_classification',
+            ...                 hue_order=['M0', 'M1', 'M2'])
+            >>> plt.tight_layout()
+        """
+        # Add the SNV_Class column.
+        df = self.df[self.df.Variant_Type == 'SNP']
         def one_row(r):
-            return SNV_CLASSES[r.SNV_Class]['type']
+            change = r.Reference_Allele + '>' + r.Tumor_Seq_Allele2
+            return SNV_CLASSES[change]['class']
+        s = df.apply(one_row, axis=1)
+        s.name = 'SNV_Class'
+        df = pd.concat([df, s], axis=1)
+
+        # Compute the proportions of SNV classes in each sample.
+        s = df.groupby('Tumor_Sample_Barcode')['SNV_Class'].value_counts()
+        s.name = 'Count'
+        df = s.to_frame().reset_index()
+        df = df.pivot(index='Tumor_Sample_Barcode', columns='SNV_Class')
+        df = df.fillna(0)
+        df = df.apply(lambda r: r/r.sum(), axis=1)
+        df.columns = df.columns.get_level_values(1)
+        df.columns.name = ''
+
+        if hue is None:
+            df = pd.melt(df, var_name='SNV_Class', value_name='Proportion')
+        else:
+            df = pd.merge(df, af.df[hue], left_index=True, right_index=True)
+            df = pd.melt(df, id_vars=[hue], var_name='SNV_Class',
+                value_name='Proportion')
+
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
+        if flip:
+            x, y = 'Proportion', 'SNV_Class'
+            xlabel, ylabel = 'Proportion', ''
+        else:
+            x, y = 'SNV_Class', 'Proportion'
+            xlabel, ylabel = '', 'Proportion'
+
+        sns.boxplot(
+            x=x, y=y, data=df, hue=hue, hue_order=hue_order, palette=palette,
+            ax=ax, **kwargs
+        )
+
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
+
+        return ax
+
+    def plot_snvclss(
+        self, color=None, colormap=None, width=0.8, legend=True, flip=False,
+        ax=None, figsize=None, **kwargs
+    ):
+        """
+        Create a bar plot showing the proportions of the six
+        :ref:`glossary:SNV classes` for individual samples.
+
+        Parameters
+        ----------
+        color : list, optional
+            List of color tuples. See the :ref:`tutorials:Control plot
+            colors` tutorial for details.
+        colormap : str or matplotlib colormap object, optional
+            Colormap to select colors from. See the :ref:`tutorials:Control
+            plot colors` tutorial for details.
+        width : float, default: 0.8
+            The width of the bars.
+        legend : bool, default: True
+            Place legend on axis subplots.
+        flip : bool, default: False
+            If True, flip the x and y axes.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+        kwargs
+            Other keyword arguments will be passed down to
+            :meth:`pandas.DataFrame.plot.bar` or
+            :meth:`pandas.DataFrame.plot.barh`.
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+
+        See Also
+        --------
+        MafFrame.plot_snvclsc
+            Create a bar plot summarizing the count distrubtions of the six
+            :ref:`glossary:SNV classes` for all samples.
+        MafFrame.plot_snvclsp
+            Create a box plot summarizing the proportion distrubtions of
+            the six :ref:`glossary:SNV classes` for all sample.
+
+        Examples
+        --------
+
+        .. plot::
+
+            >>> import matplotlib.pyplot as plt
+            >>> from fuc import common, pymaf
+            >>> common.load_dataset('tcga-laml')
+            >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+            >>> mf = pymaf.MafFrame.from_file(maf_file)
+            >>> ax = mf.plot_snvclss(width=1, color=plt.get_cmap('Pastel1').colors)
+            >>> ax.legend(loc='upper right')
+            >>> plt.tight_layout()
+        """
+        # Add the SNV_Class column.
+        df = self.df[self.df.Variant_Type == 'SNP']
+        def one_row(r):
+            change = r.Reference_Allele + '>' + r.Tumor_Seq_Allele2
+            return SNV_CLASSES[change]['class']
+        s = df.apply(one_row, axis=1)
+        s.name = 'SNV_Class'
+        df = pd.concat([df, s], axis=1)
+
+        # Compute the proportions of SNV classes in each sample.
+        s = df.groupby('Tumor_Sample_Barcode')['SNV_Class'].value_counts()
+        s.name = 'Count'
+        df = s.to_frame().reset_index()
+        df = df.pivot(index='Tumor_Sample_Barcode', columns='SNV_Class')
+        df = df.fillna(0)
+        df = df.apply(lambda r: r/r.sum(), axis=1)
+        df.columns = df.columns.get_level_values(1)
+        df.columns.name = ''
+        df = df[SNV_CLASS_ORDER]
+
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
+        if flip:
+            kind = 'barh'
+            xlabel, ylabel = 'Proportion', 'Samples'
+        else:
+            kind = 'bar'
+            xlabel, ylabel = 'Samples', 'Proportion'
+
+        df.plot(kind=kind, ax=ax, stacked=True, legend=legend, width=width,
+            color=color, colormap=colormap, **kwargs)
+
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
+
+        if flip:
+            ax.set_yticks([])
+        else:
+            ax.set_xticks([])
+
+        return ax
+
+    def plot_titv(
+        self, af=None, hue=None, hue_order=None, flip=False, ax=None,
+        figsize=None, **kwargs
+    ):
+        """
+        Create a box plot showing the :ref:`Ti/Tv <glossary:Transitions (Ti)
+        and transversions (Tv)>` proportions of samples.
+
+        A grouped box plot can be created with ``hue`` (requires an
+        AnnFrame).
+
+        Parameters
+        ----------
+        af : AnnFrame, optional
+            AnnFrame containing sample annotation data.
+        hue : str, optional
+            Column in the AnnFrame containing information about sample groups.
+        hue_order : list, optional
+            Order to plot the group levels in.
+        flip : bool, default: False
+            If True, flip the x and y axes.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+        kwargs
+            Other keyword arguments will be passed down to
+            :meth:`seaborn.boxplot`.
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+
+        See Also
+        --------
+        fuc.api.pyvcf.VcfFrame.plot_titv
+            Similar method for the :class:`fuc.api.pyvcf.VcfFrame` class.
+
+        Examples
+        --------
+        Below is a simple example:
+
+        .. plot::
+            :context: close-figs
+
+            >>> import matplotlib.pyplot as plt
+            >>> from fuc import common, pymaf
+            >>> common.load_dataset('tcga-laml')
+            >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+            >>> mf = pymaf.MafFrame.from_file(maf_file)
+            >>> mf.plot_titv()
+            >>> plt.tight_layout()
+
+        We can create a grouped bar plot based on FAB classification:
+
+        .. plot::
+            :context: close-figs
+
+            >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
+            >>> af = pymaf.AnnFrame.from_file(annot_file)
+            >>> mf.plot_titv(af=af,
+            ...              hue='FAB_classification',
+            ...              hue_order=['M0', 'M1', 'M2'])
+            >>> plt.tight_layout()
+        """
+        df = self.df[self.df.Variant_Type == 'SNP']
+        def one_row(r):
+            change = r.Reference_Allele + '>' + r.Tumor_Seq_Allele2
+            return SNV_CLASSES[change]['type']
         s = df.apply(one_row, axis=1)
         s.name = 'SNV_Type'
         df = pd.concat([df, s], axis=1)
@@ -1302,20 +1627,38 @@ class MafFrame:
         s.name = 'Count'
         df = s.to_frame().reset_index()
         df = df.pivot(index='Tumor_Sample_Barcode', columns='SNV_Type')
+
         df = df.fillna(0)
         df = df.apply(lambda r: r/r.sum(), axis=1)
         df.columns = df.columns.get_level_values(1)
         df.columns.name = ''
-        df = pd.melt(df, var_name='SNV_Type', value_name='Proportion')
-        kwargs = {'ax': ax,
-                  'data': df,
-                  **kwargs}
-        if flip:
-            sns.boxplot(x='Proportion', y='SNV_Type', **kwargs)
-            ax.set_ylabel('')
+
+        if hue is not None:
+            df = pd.merge(df, af.df[hue], left_index=True, right_index=True)
+            df = df.reset_index(drop=True)
+            df = df.set_index(hue)
+            df = pd.melt(df, var_name='SNV_Type', value_name='Proportion',
+                ignore_index=False)
+            df = df.reset_index()
         else:
-            sns.boxplot(x='SNV_Type', y='Proportion', **kwargs)
-            ax.set_xlabel('')
+            df = pd.melt(df, var_name='SNV_Type', value_name='Proportion')
+
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
+        if flip:
+            x, y = 'Proportion', 'SNV_Type'
+            xlabel, ylabel = 'Proportion', ''
+        else:
+            x, y = 'SNV_Type', 'Proportion'
+            xlabel, ylabel = '', 'Proportion'
+
+        sns.boxplot(x=x, y=y, data=df, hue=hue, hue_order=hue_order, ax=ax,
+            **kwargs)
+
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
+
         return ax
 
     def plot_summary(
@@ -1344,8 +1687,8 @@ class MafFrame:
             >>> import matplotlib.pyplot as plt
             >>> from fuc import common, pymaf
             >>> common.load_dataset('tcga-laml')
-            >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
-            >>> mf = pymaf.MafFrame.from_file(f)
+            >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+            >>> mf = pymaf.MafFrame.from_file(maf_file)
             >>> mf.plot_summary()
         """
         g = {'height_ratios': [10, 10, 1]}
@@ -1366,14 +1709,14 @@ class MafFrame:
                         labelsize=ticklabels_fontsize)
 
         # Create the 'Variant type' figure.
-        self.plot_vartype(ax=ax2)
+        self.plot_vartype(ax=ax2, palette='Dark2', flip=True)
         ax2.set_title('Variant type', fontsize=title_fontsize)
         ax2.set_xlabel('')
         ax2.tick_params(axis='both', which='major',
                         labelsize=ticklabels_fontsize)
 
         # Create the 'SNV class' figure.
-        self.plot_snvcls(ax=ax3)
+        self.plot_snvclsc(ax=ax3, flip=True, palette=sns.color_palette('Pastel1'))
         ax3.set_title('SNV class', fontsize=title_fontsize)
         ax3.set_xlabel('')
         ax3.tick_params(axis='both', which='major',
@@ -1381,7 +1724,7 @@ class MafFrame:
 
         # Create the 'Variants per sample' figure.
         median = self.matrix_tmb().sum(axis=1).median()
-        self.plot_tmb(ax=ax4)
+        self.plot_tmb(ax=ax4, width=1)
         ax4.set_title(f'Variants per sample (median={median:.1f})',
                       fontsize=title_fontsize)
         ax4.set_xlabel('')
@@ -1418,17 +1761,21 @@ class MafFrame:
 
         plt.tight_layout()
 
-    def plot_tmb(self, ax=None, figsize=None, samples=None, **kwargs):
-        """Create a bar plot for tumor mutational burden (TMB) per sample.
+    def plot_tmb(self, samples=None, width=0.8, ax=None, figsize=None, **kwargs):
+        """
+        Create a bar plot showing the :ref:`TMB <glossary:Tumor mutational
+        burden (TMB)>` distributions of samples.
 
         Parameters
         ----------
+        samples : list, optional
+            Samples to be drawn (in the exact order).
+        width : float, default: 0.8
+            The width of the bars.
         ax : matplotlib.axes.Axes, optional
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
             Width, height in inches. Format: (float, float).
-        samples : list, optional
-            Samples to be drawn (in the exact order).
         kwargs
             Other keyword arguments will be passed down to
             :meth:`pandas.DataFrame.plot.bar`.
@@ -1440,15 +1787,16 @@ class MafFrame:
 
         Examples
         --------
+        Below is a simple example:
 
         .. plot::
 
             >>> import matplotlib.pyplot as plt
             >>> from fuc import common, pymaf
             >>> common.load_dataset('tcga-laml')
-            >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
-            >>> mf = pymaf.MafFrame.from_file(f)
-            >>> mf.plot_tmb()
+            >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+            >>> mf = pymaf.MafFrame.from_file(maf_file)
+            >>> mf.plot_tmb(width=1)
             >>> plt.tight_layout()
         """
         df = self.matrix_tmb()
@@ -1456,23 +1804,37 @@ class MafFrame:
             df = df.loc[samples]
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
-        df.plot.bar(stacked=True, ax=ax, width=1, legend=False,
+        df.plot.bar(stacked=True, ax=ax, width=width, legend=False,
             color=NONSYN_COLORS, **kwargs)
         ax.set_xlabel('Samples')
         ax.set_ylabel('Count')
         ax.set_xticks([])
         return ax
 
-    def plot_vaf(self, col, count=10, ax=None, figsize=None, **kwargs):
+    def plot_vaf(
+        self, col, count=10, af=None, hue=None, hue_order=None,
+        flip=False, ax=None, figsize=None, **kwargs
+    ):
         """
-        Create a bar plot showing VAF distribution for top mutated genes.
+        Create a box plot showing the VAF distributions of top mutated genes.
+
+        A grouped box plot can be created with ``hue`` (requires an
+        AnnFrame).
 
         Parameters
         ----------
         col : str
-            VAF column.
+            Column in the MafFrame containing VAF data.
         count : int, default: 10
             Number of top mutated genes to display.
+        af : AnnFrame, optional
+            AnnFrame containing sample annotation data.
+        hue : str, optional
+            Column in the AnnFrame containing information about sample groups.
+        hue_order : list, optional
+            Order to plot the group levels in.
+        flip : bool, default: False
+            If True, flip the x and y axes.
         ax : matplotlib.axes.Axes, optional
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
@@ -1489,25 +1851,60 @@ class MafFrame:
         Examples
         --------
 
+        Below is a simple example:
+
         .. plot::
+            :context: close-figs
 
             >>> import matplotlib.pyplot as plt
             >>> from fuc import common, pymaf
             >>> common.load_dataset('tcga-laml')
-            >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
-            >>> mf = pymaf.MafFrame.from_file(f)
+            >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+            >>> mf = pymaf.MafFrame.from_file(maf_file)
             >>> mf.plot_vaf('i_TumorVAF_WU')
             >>> plt.tight_layout()
+
+        We can create a grouped bar plot based on FAB classification:
+
+        .. plot::
+            :context: close-figs
+
+            >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
+            >>> af = pymaf.AnnFrame.from_file(annot_file)
+            >>> mf.plot_vaf('i_TumorVAF_WU',
+            ...             af=af,
+            ...             hue='FAB_classification',
+            ...             hue_order=['M1', 'M2', 'M3'],
+            ...             count=5)
+            >>> plt.tight_layout()
         """
-        genes = self.matrix_genes(count=count).index.to_list()
-        s = self.df.groupby('Hugo_Symbol')[col].median()
-        genes = s[genes].sort_values(ascending=False).index.to_list()
-        df = self.df[self.df.Hugo_Symbol.isin(genes)]
+        medians = self.df.groupby('Hugo_Symbol')[col].median()
+        top_genes = self.matrix_genes(count=count).index.to_list()
+        sorted_genes = medians[top_genes].sort_values(
+            ascending=False).index.to_list()
+
+        df = self.df[self.df.Hugo_Symbol.isin(sorted_genes)]
+
+        if hue is not None:
+            df = pd.merge(df, af.df, left_on='Tumor_Sample_Barcode',
+                right_index=True)
+
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
-        sns.boxplot(x='Hugo_Symbol', y=col, data=df, order=genes, ax=ax, **kwargs)
-        ax.set_xlabel('')
-        ax.set_ylabel('VAF')
+
+        if flip:
+            x, y = col, 'Hugo_Symbol'
+            xlabel, ylabel = 'VAF', ''
+        else:
+            x, y = 'Hugo_Symbol', col
+            xlabel, ylabel = '', 'VAF'
+
+        sns.boxplot(x=x, y=y, data=df, ax=ax, order=sorted_genes,
+            hue=hue, hue_order=hue_order, **kwargs)
+
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
+
         return ax
 
     def plot_varcls(self, ax=None, figsize=None, **kwargs):
@@ -1604,18 +2001,25 @@ class MafFrame:
         ax.set_ylabel(ylabel)
         return ax
 
-    def plot_vartype(self, ax=None, figsize=None, **kwargs):
-        """Create a bar plot for viaration type.
+    def plot_vartype(self, palette=None, flip=False, ax=None, figsize=None, **kwargs):
+        """
+        Create a bar plot summarizing the count distrubtions of viaration
+        types for all samples.
 
         Parameters
         ----------
+        palette : str, optional
+            Name of seaborn palette. See the :ref:`tutorials:Control plot
+            colors` tutorial for details.
+        flip : bool, default: False
+            If True, flip the x and y axes.
         ax : matplotlib.axes.Axes, optional
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
             Width, height in inches. Format: (float, float).
         kwargs
             Other keyword arguments will be passed down to
-            :meth:`matplotlib.axes.Axes.bar` and :meth:`seaborn.barplot`.
+            :meth:`seaborn.barplot`.
 
         Returns
         -------
@@ -1637,12 +2041,22 @@ class MafFrame:
         """
         s = self.df.Variant_Type.value_counts()
         df = s.to_frame().reset_index()
+
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
-        sns.barplot(x='Variant_Type', y='index', data=df, ax=ax,
-            palette='pastel', **kwargs)
-        ax.set_xlabel('Count')
-        ax.set_ylabel('')
+
+        if flip:
+            x, y = 'Variant_Type', 'index'
+            xlabel, ylabel = 'Count', ''
+        else:
+            x, y = 'index', 'Variant_Type'
+            xlabel, ylabel = '', 'Count'
+
+        sns.barplot(x=x, y=y, data=df, ax=ax, palette=palette, **kwargs)
+
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
+
         return ax
 
     def plot_waterfall(

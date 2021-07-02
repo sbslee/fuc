@@ -2,10 +2,11 @@ from .. import api
 import sys
 
 description = f"""
-This command will count sequence reads in FASTQ files (both zipped and
-unzipped). It will look for stdin if there are no arguments.
+This command will count sequence reads in FASTQ files (both zipped and unzipped).
 
-usage examples:
+It will look for stdin if there are no arguments.
+
+Usage examples:
   $ fuc {api.common._script_name()} in.fastq
   $ cat fastq.list | fuc {api.common._script_name()}
 """
@@ -17,8 +18,11 @@ def create_parser(subparsers):
         help='[FASTQ] Count sequence reads in FASTQ files.',
         description=description,
     )
-    parser.add_argument('fastq', nargs='*',
-        help='FASTQ files (default: stdin)')
+    parser.add_argument(
+        'fastq',
+        nargs='*',
+        help='FASTQ files (default: stdin).'
+    )
     return parser
 
 def main(args):

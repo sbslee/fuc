@@ -1,13 +1,14 @@
-from .. import api
-from pathlib import Path
 import sys
+from pathlib import Path
+
+from .. import api
 
 description = f"""
-This command will check whether files exist. It will return
-'True' if they exist and 'False' otherwise. The command will look for stdin
-if there are no arguments.
+This command will check whether or not specified files including directoires exist, returning 'True' if they exist and 'False' otherwise.
 
-usage examples:
+The command will look for stdin if there are no arguments.
+
+Usage examples:
   $ fuc {api.common._script_name()} test.txt
   $ fuc {api.common._script_name()} test_dir
   $ cat test.list | fuc {api.common._script_name()}
@@ -21,7 +22,7 @@ def create_parser(subparsers):
         description=description,
     )
     parser.add_argument('files', nargs='*',
-        help='test files/directories (default: stdin)')
+        help='Files and directories to be tested (default: stdin).')
 
 def main(args):
     if args.files:

@@ -51,18 +51,20 @@ If sample annotation data are available for a given VCF file, use
 the :class:`AnnFrame` class to import the data.
 """
 
-import pandas as pd
-import numpy as np
+import os
+import re
 import gzip
 from copy import deepcopy
+
+from . import pybed, common, pymaf
+
+import pandas as pd
+import numpy as np
 from Bio import bgzf
 import matplotlib.pyplot as plt
 from matplotlib_venn import venn2, venn3
-import os
 import seaborn as sns
 import scipy.stats as stats
-from . import pybed, common
-import re
 
 HEADERS = ['CHROM', 'POS', 'ID', 'REF', 'ALT',
            'QUAL', 'FILTER', 'INFO', 'FORMAT']
@@ -551,10 +553,11 @@ def row_missval(r):
     return m
 
 class AnnFrame:
-    """Class for storing sample annotation data.
+    """
+    Class for storing sample annotation data.
 
-    This class stores sample annotation data as pandas.DataFrame with sample
-    names as index.
+    This class stores sample annotation data as :class:`pandas.DataFrame`
+    with sample names as index.
 
     Note that an AnnFrame can have a different set of samples than its
     accompanying VcfFrame.
@@ -562,7 +565,7 @@ class AnnFrame:
     Parameters
     ----------
     df : pandas.DataFrame
-        DataFrame containing sample annotation data. Index must be
+        DataFrame containing sample annotation data. The index must be
         sample names.
 
     See Also
@@ -1606,7 +1609,8 @@ class VcfFrame:
         f.close()
 
     def to_string(self):
-        """Render the VcfFrame to a console-friendly tabular output.
+        """
+        Render the VcfFrame to a console-friendly tabular output.
 
         Returns
         -------
@@ -1876,15 +1880,19 @@ class VcfFrame:
         """
         Create a histogram showing AD/AF/DP distribution.
 
+        A grouped histogram can be created with ``hue`` (requires an
+        AnnFrame).
+
         Parameters
         ----------
         k : {'AD', 'AF', 'DP'}
             Genotype key.
         af : pyvcf.AnnFrame
-            AnnFrame containing sample annotation data (requires ``hue``).
+            AnnFrame containing sample annotation data.
         hue : list, optional
-            Grouping variable that will produce multiple histograms with
-            different colors (requires ``af``).
+            Column in the AnnFrame containing information about sample groups.
+        hue_order : list, optional
+            Order to plot the group levels in.
         kde : bool, default: True
             Compute a kernel density estimate to smooth the distribution.
         ax : matplotlib.axes.Axes, optional
@@ -3963,3 +3971,327 @@ class VcfFrame:
         """
         df = self.df.drop_duplicates(subset=subset, keep=keep)
         return self.__class__(self.copy_meta(), df)
+
+    def plot_titv(
+        self, af=None, hue=None, hue_order=None, flip=False, ax=None,
+        figsize=None, **kwargs
+    ):
+        """
+        Create a box plot showing the :ref:`Ti/Tv <glossary:Transitions (Ti)
+        and transversions (Tv)>` proportions of samples.
+
+        A grouped box plot can be created with ``hue`` (requires an
+        AnnFrame).
+
+        Under the hood, this method simply converts the VcfFrame to the
+        :class:`pymaf.MafFrame` class and then applies the
+        :meth:`pymaf.MafFrame.plot_titv` method.
+
+        Parameters
+        ----------
+        af : AnnFrame, optional
+            AnnFrame containing sample annotation data.
+        hue : str, optional
+            Column in the AnnFrame containing information about sample groups.
+        hue_order : list, optional
+            Order to plot the group levels in.
+        flip : bool, default: False
+            If True, flip the x and y axes.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+        kwargs
+            Other keyword arguments will be passed down to
+            :meth:`seaborn.boxplot`.
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+
+        See Also
+        --------
+        fuc.api.pymaf.MafFrame.plot_titv
+            Similar method for the :class:`fuc.api.pymaf.MafFrame` class.
+
+        Examples
+        --------
+        Below is a simple example:
+
+        .. plot::
+            :context: close-figs
+
+            >>> import matplotlib.pyplot as plt
+            >>> from fuc import common, pyvcf
+            >>> common.load_dataset('tcga-laml')
+            >>> vcf_file = '~/fuc-data/tcga-laml/tcga_laml.vcf'
+            >>> vf = pyvcf.VcfFrame.from_file(vcf_file)
+            >>> vf.plot_titv()
+            >>> plt.tight_layout()
+
+        We can create a grouped bar plot based on FAB classification:
+
+        .. plot::
+            :context: close-figs
+
+            >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
+            >>> af = pyvcf.AnnFrame.from_file(annot_file, 'Tumor_Sample_Barcode')
+            >>> vf.plot_titv(af=af,
+            ...              hue='FAB_classification',
+            ...              hue_order=['M0', 'M1', 'M2'])
+            >>> plt.tight_layout()
+        """
+        mf = pymaf.MafFrame.from_vcf(self)
+
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
+        mf.plot_titv(
+            af=af, hue=hue, hue_order=hue_order, flip=flip, ax=ax,
+            figsize=figsize, **kwargs
+        )
+
+        return ax
+
+    def plot_snvclsc(
+        self, af=None, hue=None, hue_order=None, palette=None,
+        flip=False, ax=None, figsize=None, **kwargs
+    ):
+        """
+        Create a bar plot summarizing the count distrubtions of the six
+        :ref:`glossary:SNV classes` for all samples.
+
+        A grouped bar plot can be created with ``hue`` (requires an AnnFrame).
+
+        Under the hood, this method simply converts the VcfFrame to the
+        :class:`fuc.api.pymaf.MafFrame` class and then applies the
+        :meth:`fuc.api.pymaf.MafFrame.plot_snvclsc` method.
+
+        Parameters
+        ----------
+        af : AnnFrame, optional
+            AnnFrame containing sample annotation data.
+        hue : str, optional
+            Column in the AnnFrame containing information about sample groups.
+        hue_order : list, optional
+            Order to plot the group levels in.
+        palette : str, optional
+            Name of seaborn palette. See the :ref:`tutorials:Control plot
+            colors` tutorial for details.
+        flip : bool, default: False
+            If True, flip the x and y axes.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+        kwargs
+            Other keyword arguments will be passed down to
+            :meth:`seaborn.barplot`.
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+
+        See Also
+        --------
+        fuc.api.pymaf.MafFrame.plot_snvclsc
+            Similar method for the :meth:`fuc.api.pymaf.MafFrame` class.
+
+        Examples
+        --------
+        Below is a simple example:
+
+        .. plot::
+            :context: close-figs
+
+            >>> import matplotlib.pyplot as plt
+            >>> import seaborn as sns
+            >>> from fuc import common, pyvcf
+            >>> common.load_dataset('tcga-laml')
+            >>> vcf_file = '~/fuc-data/tcga-laml/tcga_laml.vcf'
+            >>> vf = pyvcf.VcfFrame.from_file(vcf_file)
+            >>> vf.plot_snvclsc(palette=sns.color_palette('Pastel1'))
+            >>> plt.tight_layout()
+
+        We can create a grouped bar plot based on FAB classification:
+
+        .. plot::
+            :context: close-figs
+
+            >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
+            >>> af = pymaf.AnnFrame.from_file(annot_file, 'Tumor_Sample_Barcode')
+            >>> vf.plot_snvclsc(af=af,
+            ...                 hue='FAB_classification',
+            ...                 hue_order=['M0', 'M1', 'M2'])
+            >>> plt.tight_layout()
+        """
+        mf = pymaf.MafFrame.from_vcf(self)
+
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
+        mf.plot_snvclsc(
+            af=af, hue=hue, hue_order=hue_order, palette=palette, flip=flip,
+            ax=ax, **kwargs
+        )
+
+        return ax
+
+
+    def plot_snvclsp(
+        self, af=None, hue=None, hue_order=None, palette=None, flip=False,
+        ax=None, figsize=None, **kwargs
+    ):
+        """
+        Create a box plot summarizing the proportion distrubtions of the six
+        :ref:`glossary:SNV classes` for all sample.
+
+        A grouped box plot can be created with ``hue`` (requires an AnnFrame).
+
+        Under the hood, this method simply converts the VcfFrame to the
+        :class:`fuc.api.pymaf.MafFrame` class and then applies the
+        :meth:`fuc.api.pymaf.MafFrame.plot_snvclsp` method.
+
+        Parameters
+        ----------
+        af : AnnFrame, optional
+            AnnFrame containing sample annotation data.
+        hue : str, optional
+            Column in the AnnFrame containing information about sample groups.
+        hue_order : list, optional
+            Order to plot the group levels in.
+        palette : str, optional
+            Name of seaborn palette. See the :ref:`tutorials:Control plot
+            colors` tutorial for details.
+        flip : bool, default: False
+            If True, flip the x and y axes.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+        kwargs
+            Other keyword arguments will be passed down to
+            :meth:`seaborn.boxplot`.
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+
+        See Also
+        --------
+        fuc.api.pymaf.MafFrame.plot_snvclsp
+            Similar method for the :meth:`fuc.api.pymaf.MafFrame` class.
+
+        Examples
+        --------
+        Below is a simple example:
+
+        .. plot::
+            :context: close-figs
+
+            >>> import matplotlib.pyplot as plt
+            >>> import seaborn as sns
+            >>> from fuc import common, pyvcf
+            >>> common.load_dataset('tcga-laml')
+            >>> vcf_file = '~/fuc-data/tcga-laml/tcga_laml.vcf'
+            >>> vf = pyvcf.VcfFrame.from_file(vcf_file)
+            >>> vf.plot_snvclsp(palette=sns.color_palette('Pastel1'))
+            >>> plt.tight_layout()
+
+        We can create a grouped bar plot based on FAB classification:
+
+        .. plot::
+            :context: close-figs
+
+            >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
+            >>> af = pymaf.AnnFrame.from_file(annot_file, 'Tumor_Sample_Barcode')
+            >>> vf.plot_snvclsp(af=af,
+            ...                 hue='FAB_classification',
+            ...                 hue_order=['M0', 'M1', 'M2'])
+            >>> plt.tight_layout()
+        """
+        mf = pymaf.MafFrame.from_vcf(self)
+
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
+        mf.plot_snvclsp(
+            af=af, hue=hue, hue_order=hue_order, palette=palette, flip=flip,
+            ax=ax, **kwargs
+        )
+
+        return ax
+
+    def plot_snvclss(
+        self, color=None, colormap=None, width=0.8, legend=True, flip=False,
+        ax=None, figsize=None, **kwargs
+    ):
+        """
+        Create a bar plot showing the proportions of the six
+        :ref:`glossary:SNV classes` for individual samples.
+
+        Under the hood, this method simply converts the VcfFrame to the
+        :class:`fuc.api.pymaf.MafFrame` class and then applies the
+        :meth:`fuc.api.pymaf.MafFrame.plot_snvclss` method.
+
+        Parameters
+        ----------
+        color : list, optional
+            List of color tuples. See the :ref:`tutorials:Control plot
+            colors` tutorial for details.
+        colormap : str or matplotlib colormap object, optional
+            Colormap to select colors from. See the :ref:`tutorials:Control
+            plot colors` tutorial for details.
+        width : float, default: 0.8
+            The width of the bars.
+        legend : bool, default: True
+            Place legend on axis subplots.
+        flip : bool, default: False
+            If True, flip the x and y axes.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+        kwargs
+            Other keyword arguments will be passed down to
+            :meth:`pandas.DataFrame.plot.bar` or
+            :meth:`pandas.DataFrame.plot.barh`.
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+
+        See Also
+        --------
+        fuc.api.pymaf.MafFrame.plot_snvclss
+            Similar method for the :meth:`fuc.api.pymaf.MafFrame` class.
+
+        Examples
+        --------
+
+        .. plot::
+
+            >>> import matplotlib.pyplot as plt
+            >>> from fuc import common, pymaf
+            >>> common.load_dataset('tcga-laml')
+            >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+            >>> mf = pymaf.MafFrame.from_file(maf_file)
+            >>> ax = mf.plot_snvclss(width=1, color=plt.get_cmap('Pastel1').colors)
+            >>> ax.legend(loc='upper right')
+            >>> plt.tight_layout()
+        """
+        mf = pymaf.MafFrame.from_vcf(self)
+
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
+        mf.plot_snvclss(
+            color=color, colormap=colormap, width=width, legend=legend,
+            flip=flip, af=af, **kwargs
+        )
+
+        return ax

@@ -7,7 +7,7 @@ import pysam
 description = f"""
 This command will slice the input SAM/BAM/CRAM file for the specified region(s).
 
-usage examples:
+Usage examples:
   $ fuc {api.common._script_name()} in.bam chr1:100-200 > out.bam
   $ fuc {api.common._script_name()} in.bam chr1:100-200 chr2:100-200 > out.bam
   $ fuc {api.common._script_name()} in.bam chr1:100-200 --format SAM > out.sam
