@@ -1215,6 +1215,98 @@ class MafFrame:
         plt.tight_layout()
         plt.subplots_adjust(wspace=0.01, hspace=0.01)
 
+    def plot_lollipop(
+        self, gene, by='count', flip=False, ax=None, figsize=None
+    ):
+        """
+        Create a lollipop or stem plot showing amino acid changes of a gene.
+
+        Parameters
+        ----------
+        gene : str
+            Name of the gene.
+        by : {'count', 'position'}, default: 'count'
+            How to sort amino acid changes.
+        flip : bool, default: False
+            If True, flip the x and y axes.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+        kwargs
+            Other keyword arguments will be passed down to
+            :meth:`matplotlib.pyplot.stem`.
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+
+        Examples
+        --------
+
+        .. plot::
+            :context: close-figs
+
+            >>> import matplotlib.pyplot as plt
+            >>> from fuc import common, pymaf
+            >>> common.load_dataset('tcga-laml')
+            >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+            >>> mf = pymaf.MafFrame.from_file(maf_file)
+            >>> mf.plot_lollipop('DNMT3A')
+            >>> plt.tight_layout()
+            
+        .. plot::
+            :context: close-figs
+
+            >>> mf.plot_lollipop('DNMT3A', by='position')
+            >>> plt.tight_layout()
+        """
+        df = self.df[self.df.Hugo_Symbol == gene]
+        s = df.Protein_Change.value_counts()
+        temp_df = s.to_frame().reset_index()
+        temp_df.columns = ['Protein_Change', 'Count']
+        df = pd.merge(temp_df,
+                      df[['Protein_Change', 'Variant_Classification']],
+                      left_on='Protein_Change',
+                      right_on='Protein_Change')
+
+        f = lambda r: int(''.join(
+            [x for x in r.Protein_Change if x.isdigit()]))
+
+        df['Position'] = df.apply(f, axis=1)
+
+        if by == 'count':
+            pass
+        elif by == 'position':
+            df = df.sort_values(['Position'])
+        else:
+            raise ValueError("Incorrect value for the 'by' argument.")
+
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
+        if flip:
+            df = df.iloc[::-1, :]
+            orientation = 'horizontal'
+            xlabel, ylabel = 'Count', gene
+        else:
+            orientation = 'vertical'
+            xlabel, ylabel = gene, 'Count'
+
+        ax.stem(df.Protein_Change, df.Count, orientation=orientation)
+
+        if flip:
+            pass
+        else:
+            for l in ax.get_xticklabels():
+                l.set_rotation(90)
+
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
+
+        return ax
+
     def plot_snvclsc(
         self, af=None, hue=None, hue_order=None, palette=None,
         flip=False, ax=None, figsize=None, **kwargs

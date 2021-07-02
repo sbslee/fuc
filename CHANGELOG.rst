@@ -4,6 +4,8 @@ Changelog
 0.17.0 (in development)
 -----------------------
 
+* Add :meth:`pymaf.MafFrame.plot_lollipop` method.
+
 0.16.0 (2021-07-02)
 -------------------
 
