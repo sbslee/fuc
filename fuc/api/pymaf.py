@@ -742,7 +742,7 @@ class MafFrame:
         >>> vf = pyvcf.VcfFrame.from_dict([], data)
         >>> vf.df
           CHROM  POS ID REF ALT QUAL FILTER                                               INFO FORMAT    A
-        0  chr1  100  .   G   A    .      .  CSQ=T|missense_variant|MODERATE|MTOR|2475|Tran...     GT  0/1
+        0  chr1  100  .   G   T    .      .  CSQ=T|missense_variant|MODERATE|MTOR|2475|Tran...     GT  0/1
         1  chr2  101  .   T   C    .      .  CSQ=C|splice_donor_variant|HIGH|MTOR|2475|Tran...     GT  1/1
         >>> mf = pymaf.MafFrame.from_vcf(vf)
         >>> mf.df
@@ -750,7 +750,7 @@ class MafFrame:
         0        MTOR           2475      .          .       chr1             100           100      -      Missense_Mutation          SNP                G                 A                 A       p.S2215Y                    A
         1        MTOR           2475      .          .       chr2             101           101      -            Splice_Site          SNP                T                 C                 C              .                    A
 
-        The method also accepts a VCF file as input:
+        The method can accept a VCF file as input instead of VcfFrame:
 
         >>> from fuc import pymaf
         >>> mf = pymaf.MafFrame.from_vcf('annotated.vcf')
@@ -759,27 +759,29 @@ class MafFrame:
 
         >>> from fuc import pyvcf, pymaf
         >>> data = {
-        ...     'CHROM': ['chr1', 'chr2'],
-        ...     'POS': [100, 101],
-        ...     'ID': ['.', '.'],
-        ...     'REF': ['G', 'T'],
-        ...     'ALT': ['A', 'C'],
-        ...     'QUAL': ['.', '.'],
-        ...     'FILTER': ['.', '.'],
-        ...     'INFO': ['.', '.'],
-        ...     'FORMAT': ['GT', 'GT'],
-        ...     'A': ['0/1', '1/1']
+        ...     'CHROM': ['chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 200, 300],
+        ...     'ID': ['.', '.', '.'],
+        ...     'REF': ['G', 'C', 'TTC'],
+        ...     'ALT': ['A', 'CAG', 'T'],
+        ...     'QUAL': ['.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.'],
+        ...     'INFO': ['.', '.', '.'],
+        ...     'FORMAT': ['GT', 'GT', 'GT'],
+        ...     'Steven': ['0/1', '0/1', '0/1']
         ... }
         >>> vf = pyvcf.VcfFrame.from_dict([], data)
         >>> vf.df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A
-        0  chr1  100  .   G   A    .      .    .     GT  0/1
-        1  chr2  101  .   T   C    .      .    .     GT  1/1
+          CHROM  POS ID  REF  ALT QUAL FILTER INFO FORMAT Steven
+        0  chr1  100  .    G    A    .      .    .     GT    0/1
+        1  chr1  200  .    C  CAG    .      .    .     GT    0/1
+        2  chr1  300  .  TTC    T    .      .    .     GT    0/1
         >>> mf = pymaf.MafFrame.from_vcf(vf)
         >>> mf.df
           Hugo_Symbol Entrez_Gene_Id Center NCBI_Build Chromosome  Start_Position  End_Position Strand Variant_Classification Variant_Type Reference_Allele Tumor_Seq_Allele1 Tumor_Seq_Allele2 Protein_Change Tumor_Sample_Barcode
-        0           .              .      .          .       chr1             100           100      .                      .          SNP                G                 A                 A              .                    A
-        1           .              .      .          .       chr2             101           101      .                      .          SNP                T                 C                 C              .                    A
+        0           .              .      .          .       chr1             100           100      .                      .          SNP                G                 A                 A              .               Steven
+        1           .              .      .          .       chr1             200           201      .                      .          INS                -                AG                AG              .               Steven
+        2           .              .      .          .       chr1             301           302      .                      .          DEL               TC                 -                 -              .               Steven
         """
         # Parse the input VCF.
         if isinstance(vcf, str):

@@ -1,8 +1,8 @@
 Changelog
 *********
 
-0.16.0 (in development)
------------------------
+0.16.0 (2021-07-02)
+-------------------
 
 * Rename the commands (e.g. :command:`vcf_merge` to :command:`vcf-merge`).
 * Add ``flip`` argument to :meth:`pymaf.MafFrame.plot_vaf` method.
@@ -22,6 +22,7 @@ Changelog
 * Add :meth:`pyvcf.VcfFrame.plot_snvclsp` method (simply wraps :meth:`pymaf.MafFrame.plot_snvclsp` method).
 * Add :meth:`pyvcf.VcfFrame.plot_snvclss` method (simply wraps :meth:`pymaf.MafFrame.plot_snvclss` method).
 * Add :meth:`pyvcf.VcfFrame.plot_titv` method (simply wraps :meth:`pymaf.MafFrame.plot_titv` method).
+* Update :meth:`pymaf.MafFrame.from_vcf` method to handle unannotated VCF data.
 
 0.15.0 (2021-06-24)
 -------------------
