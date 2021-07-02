@@ -1216,7 +1216,7 @@ class MafFrame:
         plt.subplots_adjust(wspace=0.01, hspace=0.01)
 
     def plot_lollipop(
-        self, gene, by='count', flip=False, ax=None, figsize=None
+        self, gene, alpha=0.7, ax=None, figsize=None, legend=True
     ):
         """
         Create a lollipop or stem plot showing amino acid changes of a gene.
@@ -1225,28 +1225,18 @@ class MafFrame:
         ----------
         gene : str
             Name of the gene.
-        by : {'count', 'position'}, default: 'count'
-            How to sort amino acid changes.
-        flip : bool, default: False
-            If True, flip the x and y axes.
+        alpha : float, default: 0.7
+            Set the color transparency. Must be within the 0-1 range,
+            inclusive.
         ax : matplotlib.axes.Axes, optional
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
             Width, height in inches. Format: (float, float).
-        kwargs
-            Other keyword arguments will be passed down to
-            :meth:`matplotlib.pyplot.stem`.
-
-        Returns
-        -------
-        matplotlib.axes.Axes
-            The matplotlib axes containing the plot.
 
         Examples
         --------
 
         .. plot::
-            :context: close-figs
 
             >>> import matplotlib.pyplot as plt
             >>> from fuc import common, pymaf
@@ -1255,55 +1245,40 @@ class MafFrame:
             >>> mf = pymaf.MafFrame.from_file(maf_file)
             >>> mf.plot_lollipop('DNMT3A')
             >>> plt.tight_layout()
-            
-        .. plot::
-            :context: close-figs
 
-            >>> mf.plot_lollipop('DNMT3A', by='position')
-            >>> plt.tight_layout()
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
         """
-        df = self.df[self.df.Hugo_Symbol == gene]
-        s = df.Protein_Change.value_counts()
-        temp_df = s.to_frame().reset_index()
-        temp_df.columns = ['Protein_Change', 'Count']
-        df = pd.merge(temp_df,
-                      df[['Protein_Change', 'Variant_Classification']],
-                      left_on='Protein_Change',
-                      right_on='Protein_Change')
-
+        df1 = self.df[self.df.Hugo_Symbol == gene]
+        df2 = df1.Protein_Change.value_counts().to_frame().reset_index()
+        df2.columns = ['Protein_Change', 'Count']
+        df3 = df1[['Protein_Change', 'Variant_Classification']
+            ].drop_duplicates(subset=['Protein_Change'])
+        df4 = pd.merge(df2, df3, on='Protein_Change')
         f = lambda r: int(''.join(
             [x for x in r.Protein_Change if x.isdigit()]))
-
-        df['Position'] = df.apply(f, axis=1)
-
-        if by == 'count':
-            pass
-        elif by == 'position':
-            df = df.sort_values(['Position'])
-        else:
-            raise ValueError("Incorrect value for the 'by' argument.")
+        df4['Position'] = df4.apply(f, axis=1)
+        df4 = df4.sort_values(['Position'])
 
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
-        if flip:
-            df = df.iloc[::-1, :]
-            orientation = 'horizontal'
-            xlabel, ylabel = 'Count', gene
-        else:
-            orientation = 'vertical'
-            xlabel, ylabel = gene, 'Count'
+        for i, nonsyn_name in enumerate(NONSYN_NAMES):
+            temp = df4[df4.Variant_Classification == nonsyn_name]
+            color = NONSYN_COLORS[i]
+            ax.vlines(temp.Position, ymin=0, ymax=temp.Count,
+                alpha=alpha, color=color)
+            ax.plot(temp.Position, temp.Count, 'o', alpha=alpha,
+                color=color, label=nonsyn_name)
 
-        ax.stem(df.Protein_Change, df.Count, orientation=orientation)
+        ax.set_ylim(bottom=0)
+        ax.set_xlabel('Position')
+        ax.set_ylabel('Count')
 
-        if flip:
-            pass
-        else:
-            for l in ax.get_xticklabels():
-                l.set_rotation(90)
-
-        ax.set_xlabel(xlabel)
-        ax.set_ylabel(ylabel)
+        if legend:
+            ax.legend()
 
         return ax
 
