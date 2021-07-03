@@ -52,15 +52,47 @@ If sample annotation data are available for a given MAF file, use
 the :class:`AnnFrame` class to import the data.
 """
 
+import re
+import copy
+import warnings
+
+from . import pyvcf, common
+
 import pandas as pd
 import seaborn as sns
 import numpy as np
-import re
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import matplotlib.gridspec as gridspec
-from . import pyvcf, common
-import copy
+
+
+CHROM_LENGTHS = {
+    'hg18': [
+        247249719, 242951149, 199501827, 191273063, 180857866, 170899992,
+        158821424, 146274826, 140273252, 135374737, 134452384, 132349534,
+        114142980, 106368585, 100338915, 88827254, 78774742, 76117153,
+        63811651, 62435964, 46944323, 49691432, 154913754, 57772954
+    ],
+    'hg19': [
+        249250621, 243199373, 198022430, 191154276, 180915260, 171115067,
+        159138663, 146364022, 141213431, 135534747, 135006516, 133851895,
+        115169878, 107349540, 102531392, 90354753, 81195210, 78077248,
+        59128983, 63025520, 48129895, 51304566, 155270560, 59373566
+    ],
+    'hg38': [
+        248956422, 242193529, 198295559, 190214555, 181538259, 170805979,
+        159345973, 145138636, 138394717, 133797422, 135086622, 133275309,
+        114364328, 107043718, 101991189, 90338345, 83257441, 80373285,
+        58617616, 64444167, 46709983, 50818468, 156040895, 57227415
+    ],
+}
+
+COMMON_COLUMNS = [
+    'Hugo_Symbol', 'Entrez_Gene_Id', 'Center', 'NCBI_Build', 'Chromosome',
+    'Start_Position', 'End_Position', 'Strand', 'Variant_Classification',
+    'Variant_Type', 'Reference_Allele', 'Tumor_Seq_Allele1',
+    'Tumor_Seq_Allele2', 'Tumor_Sample_Barcode', 'Protein_Change'
+]
 
 # Below is the list of calculated variant consequences from Ensemble VEP:
 # https://m.ensembl.org/info/genome/variation/prediction/predicted_data.html
@@ -68,13 +100,6 @@ import copy
 #
 # Note that both frameshift_variant and protein_altering_variant require
 # additional information to find their correct Variant_Classification.
-
-MAF_HEADERS = [
-    'Hugo_Symbol', 'Entrez_Gene_Id', 'Center', 'NCBI_Build', 'Chromosome',
-    'Start_Position', 'End_Position', 'Strand', 'Variant_Classification',
-    'Variant_Type', 'Reference_Allele', 'Tumor_Seq_Allele1',
-    'Tumor_Seq_Allele2', 'Tumor_Sample_Barcode', 'Protein_Change'
-]
 
 VEP_CONSEQUENCES = {
     'transcript_ablation':                'Splice_Site',
@@ -670,33 +695,30 @@ class MafFrame:
 
         >>> from fuc import common, pymaf
         >>> common.load_dataset('tcga-laml')
-        >>> fn = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
-        >>> mf = pymaf.MafFrame.from_file(fn)
+        >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+        >>> mf = pymaf.MafFrame.from_file(maf_file)
         """
-        # Read the MAF file.
+        # Read the input MAF file.
         df = pd.read_table(fn)
 
-        # Check the required columns. Letter case matters.
-        case_dict = {}
-        for c1 in MAF_HEADERS:
-            found = False
-            for c2 in df.columns:
-                if c1 == c2:
-                    found = True
-                    break
-                if c1.lower() == c2.lower():
-                    found = True
-                    case_dict[c2] = c1
-                    break
-            if not found:
-                raise ValueError(f"Required column '{c1}' is not found.")
+        # Check the letter case of column names. This will help distinguish
+        # missing columns from columns with incorrect letter case (e.g.
+        # 'End_Position' vs. 'End_position').
+        lower_names = [x.lower() for x in COMMON_COLUMNS]
+        for col in df.columns:
+            if col.lower() in lower_names:
+                i = lower_names.index(col.lower())
+                if col != COMMON_COLUMNS[i]:
+                    message = (
+                        f"Input column '{col}' will be renamed "
+                        f"as '{COMMON_COLUMNS[i]}'."
+                    )
+                    warnings.warn(message)
+                    df = df.rename(columns={col: COMMON_COLUMNS[i]})
 
-        # If necessary, match the letter case.
-        if case_dict:
-            df = df.rename(columns=case_dict)
-
-        # Set the data types.
-        df.Chromosome = df.Chromosome.astype(str)
+        # Set the data type of chromosomes as string (e.g. 'chr1' vs. '1').
+        if 'Chromosome' in df.columns:
+            df.Chromosome = df.Chromosome.astype(str)
 
         return cls(df)
 
@@ -1273,12 +1295,125 @@ class MafFrame:
             ax.plot(temp.Position, temp.Count, 'o', alpha=alpha,
                 color=color, label=nonsyn_name)
 
-        ax.set_ylim(bottom=0)
+        ax.axhline(y=0, color='black')
         ax.set_xlabel('Position')
         ax.set_ylabel('Count')
 
         if legend:
             ax.legend()
+
+        return ax
+
+    def plot_rainfall(self, sample, palette=None, ax=None, figsize=None, legend='auto', **kwargs):
+        """
+        Create a rainfall plot visualizing inter variant distance on a linear
+        genomic scale.
+
+        Parameters
+        ----------
+        af : AnnFrame, optional
+            AnnFrame containing sample annotation data.
+        hue : str, optional
+            Column in the AnnFrame containing information about sample groups.
+        hue_order : list, optional
+            Order to plot the group levels in.
+        palette : str, optional
+            Name of seaborn palette. See the :ref:`tutorials:Control plot
+            colors` tutorial for details.
+        flip : bool, default: False
+            If True, flip the x and y axes.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+        kwargs
+            Other keyword arguments will be passed down to
+            :meth:`seaborn.scatterplot`.
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+
+        Examples
+        --------
+
+        .. plot::
+
+            >>> import matplotlib.pyplot as plt
+            >>> import seaborn as sns
+            >>> from fuc import common, pymaf
+            >>> common.load_dataset('brca')
+            >>> maf_file = '~/fuc-data/brca/brca.maf.gz'
+            >>> mf = pymaf.MafFrame.from_file(maf_file)
+            >>> mf.plot_rainfall('TCGA-A8-A08B',
+            ...                  figsize=(14, 7),
+            ...                  palette=sns.color_palette('Set2')[:6])
+            >>> plt.tight_layout()
+        """
+        # Select variants from the sample.
+        df = self.df[self.df.Tumor_Sample_Barcode == sample]
+
+        # Remove indels.
+        df = df[df.Variant_Type == 'SNP']
+
+        # Get SNV class for each variant.
+        def one_row(r):
+            change = r.Reference_Allele + '>' + r.Tumor_Seq_Allele2
+            return SNV_CLASSES[change]['class']
+        df['SNV_Class'] = df.apply(one_row, axis=1)
+
+        # Convert string chromosomes to integers for ordering.
+        def one_row(r):
+            r.Chromosome = int(r.Chromosome.replace(
+                'chr', '').replace('X', '23').replace('Y', '24'))
+            return r
+        df = df.apply(one_row, axis=1)
+        df = df[['Chromosome', 'Start_Position', 'SNV_Class']]
+        df = df.sort_values(['Chromosome', 'Start_Position'])
+
+        # Update positions as if all chromosomes are one long molecule.
+        def one_row(r):
+            if r.Chromosome == 1:
+                return r
+            r.Start_Position += sum(CHROM_LENGTHS['hg19'][:r.Chromosome-1])
+            return r
+        df = df.apply(one_row, axis=1)
+        s = np.diff(df.Start_Position)
+        s = np.insert(s, 0, 0)
+        s = np.log10(s + 1)
+        df['Interevent_Distance'] = s
+        df = df.reset_index(drop=True)
+
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
+        bounds = [0] + df.drop_duplicates(subset=['Chromosome'],
+            keep='last').index.to_list()
+
+        xticks = []
+        for i, bound in enumerate(bounds):
+            if i == 0:
+                continue
+            elif i == 1:
+                xticks.append(bound / 2)
+            else:
+                xticks.append(bounds[i-1] + (bound - bounds[i-1]) / 2)
+
+        for bound in bounds:
+            ax.axvline(x=bound, color='lightgray', zorder=1)
+
+        sns.scatterplot(
+            x=df.index, y='Interevent_Distance', data=df, hue='SNV_Class',
+            hue_order=SNV_CLASS_ORDER, palette=palette, ax=ax, legend=legend,
+            zorder=2, **kwargs
+        )
+
+        ax.set_xlabel('Chromosomes')
+        ax.set_ylabel('Interevent distance')
+        ax.set_xticks(xticks)
+        ax.set_xticklabels(['X' if x == 23 else 'Y' if x == 24 else x
+            for x in df.Chromosome.unique()])
 
         return ax
 
@@ -1340,7 +1475,7 @@ class MafFrame:
             >>> common.load_dataset('tcga-laml')
             >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
             >>> mf = pymaf.MafFrame.from_file(maf_file)
-            >>> mf.plot_snvclsc(palette=sns.color_palette('Pastel1'))
+            >>> mf.plot_snvclsc(palette=sns.color_palette('Dark2'))
             >>> plt.tight_layout()
 
         We can create a grouped bar plot based on FAB classification:
@@ -1454,7 +1589,7 @@ class MafFrame:
             >>> common.load_dataset('tcga-laml')
             >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
             >>> mf = pymaf.MafFrame.from_file(maf_file)
-            >>> mf.plot_snvclsp(palette=sns.color_palette('Pastel1'))
+            >>> mf.plot_snvclsp(palette=sns.color_palette('Set2'))
             >>> plt.tight_layout()
 
         We can create a grouped bar plot based on FAB classification:
@@ -1570,7 +1705,7 @@ class MafFrame:
             >>> common.load_dataset('tcga-laml')
             >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
             >>> mf = pymaf.MafFrame.from_file(maf_file)
-            >>> ax = mf.plot_snvclss(width=1, color=plt.get_cmap('Pastel1').colors)
+            >>> ax = mf.plot_snvclss(width=1, color=plt.get_cmap('Set2').colors)
             >>> ax.legend(loc='upper right')
             >>> plt.tight_layout()
         """
@@ -1776,14 +1911,15 @@ class MafFrame:
                         labelsize=ticklabels_fontsize)
 
         # Create the 'Variant type' figure.
-        self.plot_vartype(ax=ax2, palette='Dark2', flip=True)
+        self.plot_vartype(ax=ax2, palette='Pastel1', flip=True)
         ax2.set_title('Variant type', fontsize=title_fontsize)
         ax2.set_xlabel('')
         ax2.tick_params(axis='both', which='major',
                         labelsize=ticklabels_fontsize)
 
         # Create the 'SNV class' figure.
-        self.plot_snvclsc(ax=ax3, flip=True, palette=sns.color_palette('Pastel1'))
+        self.plot_snvclsc(ax=ax3, flip=True,
+            palette=sns.color_palette('Set2'))
         ax3.set_title('SNV class', fontsize=title_fontsize)
         ax3.set_xlabel('')
         ax3.tick_params(axis='both', which='major',
