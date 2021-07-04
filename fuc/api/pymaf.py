@@ -2327,7 +2327,7 @@ class MafFrame:
         self, fasta=None, ignore_indels=False, cols=None, names=None
     ):
         """
-        Write the MafFrame to a VcfFrame.
+        Write the MafFrame to a sorted VcfFrame.
 
         Converting from MAF to VCF is pretty straightforward for SNVs, but it
         can be challenging for INDELs and complex events involving multiple
@@ -2463,6 +2463,7 @@ class MafFrame:
 
         # Create the VcfFrame.
         vf = pyvcf.VcfFrame(meta, df)
+        vf = vf.sort()
 
         return vf
 
