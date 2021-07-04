@@ -1304,24 +1304,21 @@ class MafFrame:
 
         return ax
 
-    def plot_rainfall(self, sample, palette=None, ax=None, figsize=None, legend='auto', **kwargs):
+    def plot_rainfall(
+        self, sample, palette=None, ax=None, figsize=None, legend='auto',
+        **kwargs
+    ):
         """
-        Create a rainfall plot visualizing inter variant distance on a linear
-        genomic scale.
+        Create a rainfall plot visualizing inter-variant distance on a linear
+        genomic scale for single sample.
 
         Parameters
         ----------
-        af : AnnFrame, optional
-            AnnFrame containing sample annotation data.
-        hue : str, optional
-            Column in the AnnFrame containing information about sample groups.
-        hue_order : list, optional
-            Order to plot the group levels in.
+        sample : str
+            Name of the sample.
         palette : str, optional
-            Name of seaborn palette. See the :ref:`tutorials:Control plot
+            Name of the seaborn palette. See the :ref:`tutorials:Control plot
             colors` tutorial for details.
-        flip : bool, default: False
-            If True, flip the x and y axes.
         ax : matplotlib.axes.Axes, optional
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
@@ -1436,7 +1433,7 @@ class MafFrame:
         hue_order : list, optional
             Order to plot the group levels in.
         palette : str, optional
-            Name of seaborn palette. See the :ref:`tutorials:Control plot
+            Name of the seaborn palette. See the :ref:`tutorials:Control plot
             colors` tutorial for details.
         flip : bool, default: False
             If True, flip the x and y axes.
@@ -1550,7 +1547,7 @@ class MafFrame:
         hue_order : list, optional
             Order to plot the group levels in.
         palette : str, optional
-            Name of seaborn palette. See the :ref:`tutorials:Control plot
+            Name of the seaborn palette. See the :ref:`tutorials:Control plot
             colors` tutorial for details.
         flip : bool, default: False
             If True, flip the x and y axes.
@@ -2212,7 +2209,7 @@ class MafFrame:
         Parameters
         ----------
         palette : str, optional
-            Name of seaborn palette. See the :ref:`tutorials:Control plot
+            Name of the seaborn palette. See the :ref:`tutorials:Control plot
             colors` tutorial for details.
         flip : bool, default: False
             If True, flip the x and y axes.

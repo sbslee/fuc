@@ -4077,7 +4077,7 @@ class VcfFrame:
         hue_order : list, optional
             Order to plot the group levels in.
         palette : str, optional
-            Name of seaborn palette. See the :ref:`tutorials:Control plot
+            Name of the seaborn palette. See the :ref:`tutorials:Control plot
             colors` tutorial for details.
         flip : bool, default: False
             If True, flip the x and y axes.
@@ -4163,7 +4163,7 @@ class VcfFrame:
         hue_order : list, optional
             Order to plot the group levels in.
         palette : str, optional
-            Name of seaborn palette. See the :ref:`tutorials:Control plot
+            Name of the seaborn palette. See the :ref:`tutorials:Control plot
             colors` tutorial for details.
         flip : bool, default: False
             If True, flip the x and y axes.
