@@ -97,6 +97,7 @@ def load_dataset(name, force=False):
         ],
         'brca': [
             'brca.maf.gz',
+            'brca.vcf',
         ],
         'pyvcf': [
             'plot_comparison.vcf',

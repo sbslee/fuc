@@ -4054,6 +4054,70 @@ class VcfFrame:
 
         return ax
 
+    def plot_rainfall(
+        self, sample, palette=None, ax=None, figsize=None, legend='auto',
+        **kwargs
+    ):
+        """
+        Create a rainfall plot visualizing inter-variant distance on a linear
+        genomic scale for single sample.
+
+        Under the hood, this method simply converts the VcfFrame to the
+        :class:`fuc.api.pymaf.MafFrame` class and then applies the
+        :meth:`fuc.api.pymaf.MafFrame.plot_rainfall` method.
+
+        Parameters
+        ----------
+        sample : str
+            Name of the sample.
+        palette : str, optional
+            Name of the seaborn palette. See the :ref:`tutorials:Control plot
+            colors` tutorial for details.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+        kwargs
+            Other keyword arguments will be passed down to
+            :meth:`seaborn.scatterplot`.
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+
+        See Also
+        --------
+        fuc.api.pymaf.MafFrame.plot_rainfall
+            Similar method for the :meth:`fuc.api.pymaf.MafFrame` class.
+
+        Examples
+        --------
+
+        .. plot::
+
+            >>> import matplotlib.pyplot as plt
+            >>> import seaborn as sns
+            >>> from fuc import common, pyvcf
+            >>> common.load_dataset('brca')
+            >>> vcf_file = '~/fuc-data/brca/brca.vcf'
+            >>> vf = pyvcf.VcfFrame.from_file(vcf_file)
+            >>> vf.plot_rainfall('TCGA-A8-A08B',
+            ...                  figsize=(14, 7),
+            ...                  palette=sns.color_palette('Set2')[:6])
+            >>> plt.tight_layout()
+        """
+        mf = pymaf.MafFrame.from_vcf(self)
+
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
+        mf.plot_rainfall(
+            sample, palette=palette, ax=ax, legend=legend, **kwargs
+        )
+
+        return ax
+
     def plot_snvclsc(
         self, af=None, hue=None, hue_order=None, palette=None,
         flip=False, ax=None, figsize=None, **kwargs
@@ -4138,7 +4202,6 @@ class VcfFrame:
         )
 
         return ax
-
 
     def plot_snvclsp(
         self, af=None, hue=None, hue_order=None, palette=None, flip=False,

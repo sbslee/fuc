@@ -331,7 +331,7 @@ maf-maf2vcf
                           [--cols TEXT [TEXT ...]] [--names TEXT [TEXT ...]]
                           maf
    
-   This command will convert a MAF file to a VCF file.
+   This command will convert a MAF file to a sorted VCF file.
    
    In order to handle INDELs the command makes use of a reference assembly (i.e. FASTA file). If SNVs are your only concern, then you do not need a FASTA file and can just use the '--ignore_indels' flag.
    
@@ -347,7 +347,7 @@ maf-maf2vcf
      $ fuc maf-maf2vcf in.maf --fasta hs37d5.fa --cols i_TumorVAF_WU --names AF > out.vcf
    
    Positional arguments:
-     maf                   MAF file.
+     maf                   MAF file (zipped or unzipped).
    
    Optional arguments:
      -h, --help            Show this help message and exit.
