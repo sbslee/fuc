@@ -1315,7 +1315,7 @@ class MafFrame:
         return ax
 
     def plot_rainfall(
-        self, sample, palette=None, ax=None, figsize=None, legend='auto',
+        self, sample, palette=None, legend='auto', ax=None, figsize=None,
         **kwargs
     ):
         """
@@ -1329,6 +1329,9 @@ class MafFrame:
         palette : str, optional
             Name of the seaborn palette. See the :ref:`tutorials:Control plot
             colors` tutorial for details.
+        legend : {'auto', 'brief', 'full', False}, default: 'auto'
+            Display setting of the legend according to
+            :meth:`seaborn.scatterplot`.
         ax : matplotlib.axes.Axes, optional
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
