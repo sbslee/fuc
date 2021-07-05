@@ -1364,6 +1364,14 @@ class MafFrame:
         # Remove indels.
         df = df[df.Variant_Type == 'SNP']
 
+        # Raise an error if there are no SNVs to plot.
+        if df.empty:
+            message = (
+                'There are no SNVs to be drawn '
+                f"for the sample: '{sample}'."
+            )
+            raise ValueError(message)
+
         # Get SNV class for each variant.
         def one_row(r):
             change = r.Reference_Allele + '>' + r.Tumor_Seq_Allele2
