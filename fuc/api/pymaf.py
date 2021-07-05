@@ -1306,7 +1306,6 @@ class MafFrame:
             ax.plot(temp.Protein_Position, temp.Count, 'o', alpha=alpha,
                 color=color, label=nonsyn_name)
 
-        ax.axhline(y=0, color='black')
         ax.set_xlabel('Position')
         ax.set_ylabel('Count')
 
