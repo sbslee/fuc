@@ -1851,8 +1851,11 @@ class VcfFrame:
                 labels = ('A', 'B')
             else:
                 labels = ('A', 'B', 'C')
+
+        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
+
         venn_kws = dict(ax=ax, alpha=0.5, set_labels=labels)
         if c is None:
             out = self._plot_comparison_two(a, b, venn_kws)
@@ -1950,9 +1953,13 @@ class VcfFrame:
         df = pd.melt(df, id_vars=id_vars)
         df = df.dropna()
         df = df.rename(columns={'value': k})
+
+        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
+
         sns.histplot(data=df, x=k, hue=hue, kde=kde, ax=ax, **kwargs)
+
         return ax
 
     def plot_tmb(
@@ -2009,8 +2016,11 @@ class VcfFrame:
             df = s.to_frame()
         else:
             df = pd.concat([af.df, s], axis=1, join='inner')
+
+        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
+
         sns.histplot(data=df, x='TMB', ax=ax, hue=hue, kde=kde, **kwargs)
         return ax
 
@@ -2048,8 +2058,11 @@ class VcfFrame:
             >>> vf.plot_regplot(normal, tumor)
         """
         s = self.df.iloc[:, 9:].applymap(gt_hasvar).sum()
+
+        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
+
         sns.regplot(x=s[a], y=s[b], ax=ax, **kwargs)
         return ax
 
@@ -4044,6 +4057,7 @@ class VcfFrame:
         """
         mf = pymaf.MafFrame.from_vcf(self)
 
+        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -4109,6 +4123,7 @@ class VcfFrame:
         """
         mf = pymaf.MafFrame.from_vcf(self)
 
+        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -4193,6 +4208,7 @@ class VcfFrame:
         """
         mf = pymaf.MafFrame.from_vcf(self)
 
+        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -4278,6 +4294,7 @@ class VcfFrame:
         """
         mf = pymaf.MafFrame.from_vcf(self)
 
+        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -4349,6 +4366,7 @@ class VcfFrame:
         """
         mf = pymaf.MafFrame.from_vcf(self)
 
+        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 

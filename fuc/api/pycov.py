@@ -246,10 +246,15 @@ class CovFrame:
         df = df.set_index('Position')
         if kwargs is None:
             kwargs = {}
+
+        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
+
         sns.lineplot(data=df, ax=ax, **kwargs)
+
         ax.set_ylabel('Depth')
+
         return ax
 
     def slice(self, region):

@@ -9,6 +9,7 @@ Changelog
 * :issue:`30`: Add :meth:`pyvcf.VcfFrame.plot_rainfall` method.
 * Update :meth:`pymaf.MafFrame.to_vcf` method to output sorted VCF.
 * Add :meth:`pymaf.MafFrame.matrix_prevalence` method.
+* Add :meth:`pymaf.MafFrame.plot_regplot` method.
 
 0.16.0 (2021-07-02)
 -------------------

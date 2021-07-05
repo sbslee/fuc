@@ -611,13 +611,18 @@ class AnnFrame:
             samples=samples)
         d = {k: v for v, k in enumerate(l)}
         df = s.to_frame().applymap(lambda x: x if pd.isna(x) else d[x])
+
+        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
+
         sns.heatmap(df.T, ax=ax, cmap=cmap, cbar=False, **kwargs)
+
         ax.set_xlabel('Samples')
         ax.set_ylabel(col)
         ax.set_xticks([])
         ax.set_yticks([])
+
         return ax
 
     def sorted_samples(self, by, mf=None, keep_empty=False, nonsyn=False):
@@ -998,7 +1003,7 @@ class MafFrame:
         Returns
         -------
         pandas.DataFrame
-            Dataframe containing TMB data.
+            The said matrix.
         """
         if mode == 'variants':
             df = self.df[self.df.Variant_Classification.isin(NONSYN_NAMES)]
@@ -1037,7 +1042,7 @@ class MafFrame:
         Returns
         -------
         pandas.DataFrame
-            Dataframe containing TMB data.
+            The said matrix.
         """
         df = self.df[self.df.Variant_Classification.isin(NONSYN_NAMES)]
         df = df.groupby('Tumor_Sample_Barcode')[
@@ -1074,7 +1079,7 @@ class MafFrame:
         Returns
         -------
         pandas.DataFrame
-            Dataframe containing waterfall data.
+            The said matrix.
         """
         df = self.df[self.df.Variant_Classification.isin(NONSYN_NAMES)]
 
@@ -1156,12 +1161,17 @@ class MafFrame:
             raise ValueError(f'Found incorrect mode: {mode}')
         df = self.matrix_genes(count, mode=mode)
         df = df.iloc[::-1]
+
+        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
+
         df.plot.barh(stacked=True, ax=ax, color=colors,
             legend=False, **kwargs)
+
         ax.set_xlabel('Count')
         ax.set_ylabel('')
+
         return ax
 
     def plot_oncoplot(
@@ -1256,6 +1266,68 @@ class MafFrame:
         plt.tight_layout()
         plt.subplots_adjust(wspace=0.01, hspace=0.01)
 
+    def plot_regplot(self, af, col, a, b, count=10, ax=None, figsize=None, **kwargs):
+        """
+        Create a scatter plot with a linear regression model fit visualizing
+        correlation between mutation frequencies in two sample groups A and B.
+
+        Parameters
+        ----------
+        af : AnnFrame, optional
+            AnnFrame containing sample annotation data.
+        col : str
+            Column in the AnnFrame containing information about sample groups.
+        a, b : str
+            Sample group level.
+        count : int, defualt: 10
+            Number of top mutated genes to display.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+        kwargs
+            Other keyword arguments will be passed down to
+            :meth:`seaborn.regplot`.
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+
+        Examples
+        --------
+
+        .. plot::
+
+            >>> import matplotlib.pyplot as plt
+            >>> from fuc import common, pymaf
+            >>> common.load_dataset('tcga-laml')
+            >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+            >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
+            >>> mf = pymaf.MafFrame.from_file(maf_file)
+            >>> af = pymaf.AnnFrame.from_file(annot_file)
+            >>> mf.plot_regplot(af, 'FAB_classification', 'M1', 'M2')
+            >>> plt.tight_layout()
+        """
+        df1 = self.matrix_prevalence()
+        genes = self.matrix_genes(count=count).index.to_list()
+        df2 = af.df[af.df.index.isin(df1.columns)]
+        i_a = df2[df2[col] == a].index
+        i_b = df2[df2[col] == b].index
+        f = lambda x: 0 if x == 0 else 1
+        s_a = df1.T.loc[i_a].applymap(f).sum().loc[genes] / len(i_a)
+        s_b = df1.T.loc[i_b].applymap(f).sum().loc[genes] / len(i_b)
+        df3 = pd.concat([s_a, s_b], axis=1)
+        df3.columns = [a, b]
+
+        # Determine which matplotlib axes to plot on.
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
+        sns.regplot(x=a, y=b, data=df3, ax=ax, **kwargs)
+
+        return ax
+
     def plot_lollipop(
         self, gene, alpha=0.7, ax=None, figsize=None, legend=True
     ):
@@ -1274,6 +1346,11 @@ class MafFrame:
         figsize : tuple, optional
             Width, height in inches. Format: (float, float).
 
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+
         Examples
         --------
 
@@ -1286,11 +1363,6 @@ class MafFrame:
             >>> mf = pymaf.MafFrame.from_file(maf_file)
             >>> mf.plot_lollipop('DNMT3A')
             >>> plt.tight_layout()
-
-        Returns
-        -------
-        matplotlib.axes.Axes
-            The matplotlib axes containing the plot.
         """
         # Only select variants from the gene.
         df1 = self.df[self.df.Hugo_Symbol == gene]
@@ -1314,6 +1386,7 @@ class MafFrame:
         df4 = df4.dropna(subset=['Protein_Position'])
         df4 = df4.sort_values(['Protein_Position'])
 
+        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -1422,6 +1495,7 @@ class MafFrame:
         df['Interevent_Distance'] = s
         df = df.reset_index(drop=True)
 
+        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -1548,6 +1622,7 @@ class MafFrame:
             df = s.to_frame().reset_index()
             df.columns = ['SNV_Class', 'Count']
 
+        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -1667,6 +1742,7 @@ class MafFrame:
             df = pd.melt(df, id_vars=[hue], var_name='SNV_Class',
                 value_name='Proportion')
 
+        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -1766,6 +1842,7 @@ class MafFrame:
         df.columns.name = ''
         df = df[SNV_CLASS_ORDER]
 
+        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -1882,6 +1959,7 @@ class MafFrame:
         else:
             df = pd.melt(df, var_name='SNV_Type', value_name='Proportion')
 
+        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -2042,13 +2120,18 @@ class MafFrame:
         df = self.matrix_tmb()
         if samples is not None:
             df = df.loc[samples]
+
+        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
+
         df.plot.bar(stacked=True, ax=ax, width=width, legend=False,
             color=NONSYN_COLORS, **kwargs)
+
         ax.set_xlabel('Samples')
         ax.set_ylabel('Count')
         ax.set_xticks([])
+
         return ax
 
     def plot_vaf(
@@ -2129,6 +2212,7 @@ class MafFrame:
             df = pd.merge(df, af.df, left_on='Tumor_Sample_Barcode',
                 right_index=True)
 
+        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -2188,11 +2272,16 @@ class MafFrame:
         s = pd.Series(counts).reindex(index=NONSYN_NAMES)
         df = s.to_frame().reset_index()
         df.columns = ['Variant_Classification', 'Count']
+
+        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
+
         sns.barplot(x='Count', y='Variant_Classification', data=df,
                     ax=ax, palette=NONSYN_COLORS, **kwargs)
+
         ax.set_ylabel('')
+
         return ax
 
     def plot_varsum(self, flip=False, ax=None, figsize=None):
@@ -2227,16 +2316,21 @@ class MafFrame:
         """
         df = self.matrix_tmb()
         df = pd.melt(df, value_vars=df.columns)
+
+        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
+
         if flip:
             x, y = 'variable', 'value'
             xlabel, ylabel = '', 'Samples'
         else:
             x, y = 'value', 'variable'
             xlabel, ylabel = 'Samples', ''
+
         sns.boxplot(x=x, y=y, data=df, ax=ax, showfliers=False,
             palette=NONSYN_COLORS)
+
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
         return ax
@@ -2352,12 +2446,15 @@ class MafFrame:
         d = {k: v for v, k in enumerate(l)}
         df = df.applymap(lambda x: d[x])
 
-        # Plot the heatmap.
+        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
+
         colors = list(reversed(NONSYN_COLORS + ['k', 'lightgray']))
+
         sns.heatmap(df, cmap=colors, ax=ax, xticklabels=False,
             cbar=False, **kwargs)
+
         ax.set_xlabel('Samples')
         ax.set_ylabel('')
 
