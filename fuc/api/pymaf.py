@@ -1273,16 +1273,27 @@ class MafFrame:
         matplotlib.axes.Axes
             The matplotlib axes containing the plot.
         """
+        # Only select variants from the gene.
         df1 = self.df[self.df.Hugo_Symbol == gene]
+
+        # Count each amino acid change.
         df2 = df1.Protein_Change.value_counts().to_frame().reset_index()
         df2.columns = ['Protein_Change', 'Count']
+
+        # Identify variant classification for each amino acid change.
         df3 = df1[['Protein_Change', 'Variant_Classification']
             ].drop_duplicates(subset=['Protein_Change'])
         df4 = pd.merge(df2, df3, on='Protein_Change')
-        f = lambda r: int(''.join(
-            [x for x in r.Protein_Change if x.isdigit()]))
-        df4['Position'] = df4.apply(f, axis=1)
-        df4 = df4.sort_values(['Position'])
+
+        # Extract amino acid positions. Sort the counts by position.
+        def one_row(r):
+            digits = [x for x in r.Protein_Change if x.isdigit()]
+            if not digits:
+                return np.nan
+            return int(''.join(digits))
+        df4['Protein_Position'] = df4.apply(one_row, axis=1)
+        df4 = df4.dropna(subset=['Protein_Position'])
+        df4 = df4.sort_values(['Protein_Position'])
 
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
@@ -1290,9 +1301,9 @@ class MafFrame:
         for i, nonsyn_name in enumerate(NONSYN_NAMES):
             temp = df4[df4.Variant_Classification == nonsyn_name]
             color = NONSYN_COLORS[i]
-            ax.vlines(temp.Position, ymin=0, ymax=temp.Count,
+            ax.vlines(temp.Protein_Position, ymin=0, ymax=temp.Count,
                 alpha=alpha, color=color)
-            ax.plot(temp.Position, temp.Count, 'o', alpha=alpha,
+            ax.plot(temp.Protein_Position, temp.Count, 'o', alpha=alpha,
                 color=color, label=nonsyn_name)
 
         ax.axhline(y=0, color='black')
