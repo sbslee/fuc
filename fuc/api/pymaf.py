@@ -966,6 +966,25 @@ class MafFrame:
 
         return cls(df)
 
+    def matrix_prevalence(self):
+        """
+        Compute a matrix of variant counts with a shape of (genes, samples).
+
+        Returns
+        -------
+        pandas.DataFrame
+            The said matrix.
+        """
+        s = self.df.groupby(
+            'Hugo_Symbol')['Tumor_Sample_Barcode'].value_counts()
+        s.name = 'Count'
+        df = s.to_frame().reset_index()
+        df = df.pivot(index='Hugo_Symbol',
+            columns='Tumor_Sample_Barcode', values='Count')
+        df.columns.name = ''
+        df = df.fillna(0)
+        return df
+
     def matrix_genes(self, count=10, mode='variants'):
         """
         Compute a matrix of variant counts with a shape of (genes, variant
