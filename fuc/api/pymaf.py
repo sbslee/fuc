@@ -1803,8 +1803,8 @@ class MafFrame:
         return ax
 
     def plot_snvclss(
-        self, color=None, colormap=None, width=0.8, legend=True, flip=False,
-        ax=None, figsize=None, **kwargs
+        self, samples=None, color=None, colormap=None, width=0.8,
+        legend=True, flip=False, to_csv=None, ax=None, figsize=None, **kwargs
     ):
         """
         Create a bar plot showing the proportions of the six
@@ -1812,6 +1812,10 @@ class MafFrame:
 
         Parameters
         ----------
+        samples : list, optional
+            List of samples to display (in that order too). If samples that
+            are absent in the MafFrame are provided, the method will give a
+            warning but still draw an empty bar for those samples.
         color : list, optional
             List of color tuples. See the :ref:`tutorials:Control plot
             colors` tutorial for details.
@@ -1824,6 +1828,8 @@ class MafFrame:
             Place legend on axis subplots.
         flip : bool, default: False
             If True, flip the x and y axes.
+        to_csv : str, optional
+            Write the plot's data to a CSV file.
         ax : matplotlib.axes.Axes, optional
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
@@ -1881,6 +1887,26 @@ class MafFrame:
         df.columns.name = ''
         df = df[SNV_CLASS_ORDER]
 
+        # Determine which samples should be displayed.
+        if samples is not None:
+            missing_samples = []
+            missing_data = []
+            for sample in samples:
+                if sample not in df.index:
+                    missing_samples.append(sample)
+                    missing_data.append([0] * 6)
+            if missing_samples:
+                message = (
+                    'Although the following samples are absent in the '
+                    'MafFrame, they will still be displayed as empty bar: '
+                    f'{missing_samples}.'
+                )
+                warnings.warn(message)
+                temp = pd.DataFrame(missing_data)
+                temp.index = missing_samples
+                temp.columns = SNV_CLASS_ORDER
+                df = pd.concat([df, temp]).loc[samples]
+
         # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
@@ -1892,8 +1918,10 @@ class MafFrame:
             kind = 'bar'
             xlabel, ylabel = 'Samples', 'Proportion'
 
-        df.plot(kind=kind, ax=ax, stacked=True, legend=legend, width=width,
-            color=color, colormap=colormap, **kwargs)
+        df.plot(
+            kind=kind, ax=ax, stacked=True, legend=legend, width=width,
+            color=color, colormap=colormap, **kwargs
+        )
 
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
@@ -1902,6 +1930,10 @@ class MafFrame:
             ax.set_yticks([])
         else:
             ax.set_xticks([])
+
+        # Write the DataFrame to a CSV file.
+        if to_csv is not None:
+            df.to_csv(to_csv)
 
         return ax
 
