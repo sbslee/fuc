@@ -1304,9 +1304,11 @@ class MafFrame:
         a, b : str
             Sample group levels.
         genes : list, optional
-            Genes to display. When absent, top mutated genes will be used.
+            Genes to display. When absent, top mutated genes (``count``) will
+            be used.
         count : int, defualt: 10
-            Number of top mutated genes to display.
+            Number of top mutated genes to display. Ignored if ``genes`` is
+            specified.
         to_csv : str, optional
             Write the plot's data to a CSV file.
         ax : matplotlib.axes.Axes, optional
