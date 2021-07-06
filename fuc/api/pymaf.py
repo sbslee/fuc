@@ -1286,6 +1286,74 @@ class MafFrame:
         plt.tight_layout()
         plt.subplots_adjust(wspace=0.01, hspace=0.01)
 
+    def plot_evolution(
+        self, samples, col, anchor=None, normalize=True, count=5, ax=None,
+        figsize=None, **kwargs
+    ):
+        """
+        Create a line plot visualizing changes in VAF between specified
+        samples.
+
+        Parameters
+        ----------
+        samples : list
+            List of samples to display.
+        col : str
+            Column in the MafFrame containing VAF data.
+        anchor : str, optional
+            Sample to use as the anchor. If absent, use the first sample in
+            the list.
+        normalize : bool, default: True
+            If False, do not normalize VAF by the maximum value.
+        count : int, default: 5
+            Number of top variants to display.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+        kwargs
+            Other keyword arguments will be passed down to
+            :meth:`seaborn.lineplot`.
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+        """
+        df = self.df[self.df.Tumor_Sample_Barcode.isin(samples)]
+        df = df[df.Variant_Classification.isin(NONSYN_NAMES)]
+
+        def one_row(r):
+            if r.Protein_Change == '.':
+                variant_name = f'{r.Hugo_Symbol} ({r.Variant_Classification})'
+            else:
+                variant_name = f'{r.Hugo_Symbol} ({r.Protein_Change})'
+            return variant_name
+
+        df['Variant_Name'] = df.apply(one_row, axis=1)
+        df = df.pivot(index=['Variant_Name'],
+            columns=['Tumor_Sample_Barcode'], values=[col])
+        df.columns = df.columns.get_level_values(1)
+        df.columns.name = ''
+        df = df.fillna(0)
+
+        if anchor is None:
+            anchor = samples[0]
+
+        df = df.sort_values(by=anchor, ascending=False)
+        if normalize:
+            df = df / df.max()
+        df = df.iloc[:count, :].T
+        df = df.loc[samples]
+
+        # Determine which matplotlib axes to plot on.
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
+        sns.lineplot(data=df, ax=ax, **kwargs)
+
+        return ax
+
     def plot_regplot(
         self, af, col, a, b, genes=None, count=10, to_csv=None, ax=None,
         figsize=None, **kwargs
