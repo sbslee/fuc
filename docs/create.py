@@ -310,8 +310,8 @@ To create an oncoplot with a MAF file:
 
     >>> from fuc import common, pymaf
     >>> common.load_dataset('tcga-laml')
-    >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
-    >>> mf = pymaf.MafFrame.from_file(f)
+    >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+    >>> mf = pymaf.MafFrame.from_file(maf_file)
     >>> mf.plot_oncoplot()
 
 .. image:: https://raw.githubusercontent.com/sbslee/fuc-data/main/images/oncoplot.png
@@ -326,8 +326,8 @@ To create a summary figure for a MAF file:
 
     >>> from fuc import common, pymaf
     >>> common.load_dataset('tcga-laml')
-    >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
-    >>> mf = pymaf.MafFrame.from_file(f)
+    >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+    >>> mf = pymaf.MafFrame.from_file(maf_file)
     >>> mf.plot_summary()
 
 .. image:: https://raw.githubusercontent.com/sbslee/fuc-data/main/images/maf_summary-2.png

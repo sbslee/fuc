@@ -7,49 +7,46 @@ contains many useful plotting methods such as ``MafFrame.plot_oncoplot`` and
 standard `MAF specification
 <https://docs.gdc.cancer.gov/Data/File_Formats/MAF_Format/>`_.
 
-A typical MAF file contains many fields ranging from gene symbol to
+A typical MAF file contains many columns ranging from gene symbol to
 protein change. However, most of the analysis in pymaf uses the
-following fields:
+following columns:
 
 +-----+------------------------+----------------------+-------------------------------+
 | No. | Name                   | Description          | Examples                      |
 +=====+========================+======================+===============================+
 | 1   | Hugo_Symbol            | HUGO gene symbol     | 'TP53', 'Unknown'             |
 +-----+------------------------+----------------------+-------------------------------+
-| 2   | Entrez_Gene_Id         | Entrez or Ensembl ID | 0, 8714                       |
+| 2   | Chromosome             | Chromosome name      | 'chr1', '1', 'X'              |
 +-----+------------------------+----------------------+-------------------------------+
-| 3   | Center                 | Sequencing center    | '.', 'genome.wustl.edu'       |
+| 3   | Start_Position         | Start coordinate     | 119031351                     |
 +-----+------------------------+----------------------+-------------------------------+
-| 4   | NCBI_Build             | Genome assembly      | '37', 'GRCh38'                |
+| 4   | End_Position           | End coordinate       | 44079555                      |
 +-----+------------------------+----------------------+-------------------------------+
-| 5   | Chromosome             | Chromosome name      | 'chr1'                        |
+| 5   | Variant_Classification | Translational effect | 'Missense_Mutation', 'Silent' |
 +-----+------------------------+----------------------+-------------------------------+
-| 6   | Start_Position         | Start coordinate     | 119031351                     |
+| 6   | Variant_Type           | Mutation type        | 'SNP', 'INS', 'DEL'           |
 +-----+------------------------+----------------------+-------------------------------+
-| 7   | End_Position           | End coordinate       | 44079555                      |
+| 7   | Reference_Allele       | Reference allele     | 'T', '-', 'ACAA'              |
 +-----+------------------------+----------------------+-------------------------------+
-| 8   | Strand                 | Genomic strand       | '+', '-'                      |
+| 8   | Tumor_Seq_Allele1      | First tumor allele   | 'A', '-', 'TCA'               |
 +-----+------------------------+----------------------+-------------------------------+
-| 9   | Variant_Classification | Translational effect | 'Missense_Mutation', 'Silent' |
+| 9   | Tumor_Seq_Allele2      | Second tumor allele  | 'A', '-', 'TCA'               |
 +-----+------------------------+----------------------+-------------------------------+
-| 10  | Variant_Type           | Mutation type        | 'SNP', 'INS', 'DEL'           |
+| 10  | Tumor_Sample_Barcode   | Sample ID            | 'TCGA-AB-3002'                |
 +-----+------------------------+----------------------+-------------------------------+
-| 11  | Reference_Allele       | Reference allele     | 'T', '-', 'ACAA'              |
-+-----+------------------------+----------------------+-------------------------------+
-| 12  | Tumor_Seq_Allele1      | First tumor allele   | 'A', '-', 'TCA'               |
-+-----+------------------------+----------------------+-------------------------------+
-| 13  | Tumor_Seq_Allele2      | Second tumor allele  | 'A', '-', 'TCA'               |
-+-----+------------------------+----------------------+-------------------------------+
-| 14  | Tumor_Sample_Barcode   | Sample ID            | 'TCGA-AB-3002'                |
-+-----+------------------------+----------------------+-------------------------------+
-| 15  | Protein_Change         | Protein change       | 'p.L558Q'                     |
+| 11  | Protein_Change         | Protein change       | 'p.L558Q'                     |
 +-----+------------------------+----------------------+-------------------------------+
 
-It is recommended to include additional custom fields such as variant
+It is also recommended to include additional custom columns such as variant
 allele frequecy (VAF) and transcript name.
 
 If sample annotation data are available for a given MAF file, use
 the :class:`AnnFrame` class to import the data.
+
+There are nine nonsynonymous variant classifcations that pymaf primarily
+uses: Missense_Mutation, Frame_Shift_Del, Frame_Shift_Ins, In_Frame_Del,
+In_Frame_Ins, Nonsense_Mutation, Nonstop_Mutation, Splice_Site, and
+Translation_Start_Site.
 """
 
 import re
@@ -990,15 +987,26 @@ class MafFrame:
         df = df.fillna(0)
         return df
 
-    def matrix_genes(self, count=10, mode='variants'):
+    def matrix_genes(self, mode='variants', count=10):
         """
-        Compute a matrix of variant counts with a shape of (genes, variant
+        Compute a matrix of counts with a shape of (genes, variant
         classifications).
+
+        This method only considers the nine nonsynonymous variant
+        classifications.
 
         Parameters
         ----------
+        mode : {'variants', 'samples'}, default: 'variants'
+            Determines how to identify top mutated genes:
+
+            * 'variants': Count the number of observed variants.
+            * 'samples': Count the number of affected samples. Using this
+              option will create an additional variant classification called
+              'Multi_Hit'.
+
         count : int, default: 10
-            Number of top mutated genes to display.
+            Number of top mutated genes to include.
 
         Returns
         -------
@@ -1111,13 +1119,20 @@ class MafFrame:
         return df
 
     def plot_genes(
-        self, count=10, mode='variants', ax=None, figsize=None, **kwargs
+        self, mode='variants', count=10, ax=None, figsize=None, **kwargs
     ):
         """
         Create a bar plot showing variant distirbution for top mutated genes.
 
         Parameters
         ----------
+        mode : {'variants', 'samples'}, default: 'variants'
+            Determines how to identify top mutated genes:
+
+            * 'variants': Count the number of observed variants.
+            * 'samples': Count the number of affected samples. Using this
+              option will create an additional variant classification called
+              'Multi_Hit'.
         count : int, default: 10
             Number of top mutated genes to display.
         ax : matplotlib.axes.Axes, optional
@@ -1135,6 +1150,8 @@ class MafFrame:
 
         Examples
         --------
+        By default (``mode='variants'``), the method identifies top mutated
+        genes by counting the number of observed variants:
 
         .. plot::
             :context: close-figs
@@ -1142,10 +1159,13 @@ class MafFrame:
             >>> import matplotlib.pyplot as plt
             >>> from fuc import common, pymaf
             >>> common.load_dataset('tcga-laml')
-            >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
-            >>> mf = pymaf.MafFrame.from_file(f)
-            >>> mf.plot_genes(mode='variants')
+            >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+            >>> mf = pymaf.MafFrame.from_file(maf_file)
+            >>> mf.plot_genes()
             >>> plt.tight_layout()
+
+        We can also identify top mutated genes by counting the number of
+        affected samples:
 
         .. plot::
             :context: close-figs
@@ -1159,7 +1179,7 @@ class MafFrame:
             colors = NONSYN_COLORS + ['k']
         else:
             raise ValueError(f'Found incorrect mode: {mode}')
-        df = self.matrix_genes(count, mode=mode)
+        df = self.matrix_genes(count=count, mode=mode)
         df = df.iloc[::-1]
 
         # Determine which matplotlib axes to plot on.
@@ -1246,7 +1266,7 @@ class MafFrame:
         ax4.set_yticks([])
         ax4.set_xlabel('Samples', fontsize=label_fontsize)
         ax4.set_xticks([0, self.matrix_genes(
-            10, mode='samples').sum(axis=1).max()])
+            count=10, mode='samples').sum(axis=1).max()])
         ax4.set_ylim(-0.5, count-0.5)
         ax4.tick_params(axis='x', which='major',
                         labelsize=ticklabels_fontsize)
@@ -1267,23 +1287,28 @@ class MafFrame:
         plt.subplots_adjust(wspace=0.01, hspace=0.01)
 
     def plot_regplot(
-        self, af, col, a, b, count=10, to_csv=None, ax=None, figsize=None,
-        **kwargs
+        self, af, col, a, b, genes=None, count=10, to_csv=None, ax=None,
+        figsize=None, **kwargs
     ):
         """
         Create a scatter plot with a linear regression model fit visualizing
-        correlation between mutation frequencies in two sample groups A and B.
+        correlation between gene mutation frequencies in two sample groups
+        A and B.
 
         Parameters
         ----------
-        af : AnnFrame, optional
+        af : AnnFrame
             AnnFrame containing sample annotation data.
         col : str
             Column in the AnnFrame containing information about sample groups.
         a, b : str
-            Sample group level.
+            Sample group levels.
+        genes : list, optional
+            Genes to display. When absent, top mutated genes will be used.
         count : int, defualt: 10
             Number of top mutated genes to display.
+        to_csv : str, optional
+            Write the plot's data to a CSV file.
         ax : matplotlib.axes.Axes, optional
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
@@ -1313,7 +1338,11 @@ class MafFrame:
             >>> plt.tight_layout()
         """
         df1 = self.matrix_prevalence()
-        genes = self.matrix_genes(count=count).index.to_list()
+
+        # Determine which genes to display.
+        if genes is None:
+            genes = self.matrix_genes(count=count).index.to_list()
+
         df2 = af.df[af.df.index.isin(df1.columns)]
         i_a = df2[df2[col] == a].index
         i_b = df2[df2[col] == b].index
@@ -2265,8 +2294,8 @@ class MafFrame:
             >>> import matplotlib.pyplot as plt
             >>> from fuc import common, pymaf
             >>> common.load_dataset('tcga-laml')
-            >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
-            >>> mf = pymaf.MafFrame.from_file(f)
+            >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+            >>> mf = pymaf.MafFrame.from_file(maf_file)
             >>> mf.plot_varcls()
             >>> plt.tight_layout()
         """
@@ -2317,8 +2346,8 @@ class MafFrame:
             >>> import matplotlib.pyplot as plt
             >>> from fuc import common, pymaf
             >>> common.load_dataset('tcga-laml')
-            >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
-            >>> mf = pymaf.MafFrame.from_file(f)
+            >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+            >>> mf = pymaf.MafFrame.from_file(maf_file)
             >>> mf.plot_varsum()
             >>> plt.tight_layout()
         """
@@ -2376,8 +2405,8 @@ class MafFrame:
             >>> import matplotlib.pyplot as plt
             >>> from fuc import common, pymaf
             >>> common.load_dataset('tcga-laml')
-            >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
-            >>> mf = pymaf.MafFrame.from_file(f)
+            >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+            >>> mf = pymaf.MafFrame.from_file(maf_file)
             >>> mf.plot_vartype()
             >>> plt.tight_layout()
         """
@@ -2439,8 +2468,8 @@ class MafFrame:
             >>> import matplotlib.pyplot as plt
             >>> from fuc import common, pymaf
             >>> common.load_dataset('tcga-laml')
-            >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
-            >>> mf = pymaf.MafFrame.from_file(f)
+            >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+            >>> mf = pymaf.MafFrame.from_file(maf_file)
             >>> mf.plot_waterfall(linewidths=0.5)
             >>> plt.tight_layout()
         """
