@@ -1266,7 +1266,10 @@ class MafFrame:
         plt.tight_layout()
         plt.subplots_adjust(wspace=0.01, hspace=0.01)
 
-    def plot_regplot(self, af, col, a, b, count=10, ax=None, figsize=None, **kwargs):
+    def plot_regplot(
+        self, af, col, a, b, count=10, to_csv=None, ax=None, figsize=None,
+        **kwargs
+    ):
         """
         Create a scatter plot with a linear regression model fit visualizing
         correlation between mutation frequencies in two sample groups A and B.
@@ -1324,7 +1327,12 @@ class MafFrame:
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
+        # Draw the main plot.
         sns.regplot(x=a, y=b, data=df3, ax=ax, **kwargs)
+
+        # Write the DataFrame to a CSV file.
+        if to_csv is not None:
+            df3.to_csv(to_csv)
 
         return ax
 
