@@ -68,6 +68,8 @@ Currently, fuc can be used to analyze, summarize, visualize, and manipulate the 
 - Browser Extensible Data (BED)
 - FASTQ
 - FASTA
+- General Feature Format (GFF)
+- Gene Transfer Format (GTF)
 - delimiter-separated values format (e.g. comma-separated values or CSV format)
 
 Additionally, fuc can be used to parse output data from the following programs:

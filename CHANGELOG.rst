@@ -12,6 +12,7 @@ Changelog
 * Add :meth:`pymaf.MafFrame.plot_regplot` method.
 * Add ``samples`` argument to :meth:`pymaf.MafFrame.plot_snvclss` method.
 * Add :meth:`pymaf.MafFrame.plot_evolution` method.
+* Add new submodule ``pygff``.
 
 0.16.0 (2021-07-02)
 -------------------
