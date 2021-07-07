@@ -1474,6 +1474,10 @@ class MafFrame:
         # Only select variants from the gene.
         df1 = self.df[self.df.Hugo_Symbol == gene]
 
+        # Raise an error if there are no SNVs to plot.
+        if df1.empty:
+            raise ValueError(f"No variants to plot for the gene: '{gene}'.")
+
         # Count each amino acid change.
         df2 = df1.Protein_Change.value_counts().to_frame().reset_index()
         df2.columns = ['Protein_Change', 'Count']
