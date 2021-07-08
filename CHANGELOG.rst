@@ -1,8 +1,8 @@
 Changelog
 *********
 
-0.17.0 (in development)
------------------------
+0.17.0 (2021-07-08)
+-------------------
 
 * Add :meth:`pymaf.MafFrame.plot_lollipop` method.
 * :issue:`30`: Add :meth:`pymaf.MafFrame.plot_rainfall` method.
