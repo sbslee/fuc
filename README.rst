@@ -40,6 +40,8 @@ Currently, fuc can be used to analyze, summarize, visualize, and manipulate the 
 - Browser Extensible Data (BED)
 - FASTQ
 - FASTA
+- General Feature Format (GFF)
+- Gene Transfer Format (GTF)
 - delimiter-separated values format (e.g. comma-separated values or CSV format)
 
 Additionally, fuc can be used to parse output data from the following programs:
@@ -150,6 +152,7 @@ Below is the list of submodules available in the fuc API:
 - **pybed** : The pybed submodule is designed for working with BED files. It implements ``pybed.BedFrame`` which stores BED data as ``pandas.DataFrame`` via the `pyranges <https://github.com/biocore-ntnu/pyranges>`_ package to allow fast computation and easy manipulation. The submodule strictly adheres to the standard `BED specification <https://genome.ucsc.edu/FAQ/FAQformat.html>`_.
 - **pycov** : The pycov submodule is designed for working with depth of coverage data from sequence alingment files (SAM/BAM/CRAM). It implements ``pycov.CovFrame`` which stores read depth data as ``pandas.DataFrame`` via the `pysam <https://pysam.readthedocs.io/en/latest/api.html>`_ package to allow fast computation and easy manipulation.
 - **pyfq** : The pyfq submodule is designed for working with FASTQ files. It implements ``pyfq.FqFrame`` which stores FASTQ data as ``pandas.DataFrame`` to allow fast computation and easy manipulation.
+- **pygff** : The pygff submodule is designed for working with GFF/GTF files. It implements ``pygff.GffFrame`` which stores GFF/GTF data as ``pandas.DataFrame`` to allow fast computation and easy manipulation. The submodule strictly adheres to the standard `GFF specification <https://github.com/The-Sequence-Ontology/Specifications/blob/master/gff3.md>`_.
 - **pymaf** : The pymaf submodule is designed for working with MAF files. It implements ``pymaf.MafFrame`` which stores MAF data as ``pandas.DataFrame`` to allow fast computation and easy manipulation. The ``pymaf.MafFrame`` class also contains many useful plotting methods such as ``MafFrame.plot_oncoplot`` and ``MafFrame.plot_summary``. The submodule strictly adheres to the standard `MAF specification <https://docs.gdc.cancer.gov/Data/File_Formats/MAF_Format/>`_.
 - **pysnpeff** : The pysnpeff submodule is designed for parsing VCF annotation data from the `SnpEff <https://pcingola.github.io/SnpEff/>`_ program. It should be used with ``pyvcf.VcfFrame``.
 - **pyvcf** : The pyvcf submodule is designed for working with VCF files. It implements ``pyvcf.VcfFrame`` which stores VCF data as ``pandas.DataFrame`` to allow fast computation and easy manipulation. The ``pyvcf.VcfFrame`` class also contains many useful plotting methods such as ``VcfFrame.plot_comparison`` and ``VcfFrame.plot_tmb``. The submodule strictly adheres to the standard `VCF specification <https://samtools.github.io/hts-specs/VCFv4.3.pdf>`_.
@@ -322,8 +325,8 @@ To create an oncoplot with a MAF file:
 
     >>> from fuc import common, pymaf
     >>> common.load_dataset('tcga-laml')
-    >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
-    >>> mf = pymaf.MafFrame.from_file(f)
+    >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+    >>> mf = pymaf.MafFrame.from_file(maf_file)
     >>> mf.plot_oncoplot()
 
 .. image:: https://raw.githubusercontent.com/sbslee/fuc-data/main/images/oncoplot.png
@@ -338,8 +341,8 @@ To create a summary figure for a MAF file:
 
     >>> from fuc import common, pymaf
     >>> common.load_dataset('tcga-laml')
-    >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
-    >>> mf = pymaf.MafFrame.from_file(f)
+    >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+    >>> mf = pymaf.MafFrame.from_file(maf_file)
     >>> mf.plot_summary()
 
 .. image:: https://raw.githubusercontent.com/sbslee/fuc-data/main/images/maf_summary-2.png

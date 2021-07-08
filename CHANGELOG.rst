@@ -1,6 +1,19 @@
 Changelog
 *********
 
+0.17.0 (2021-07-08)
+-------------------
+
+* Add :meth:`pymaf.MafFrame.plot_lollipop` method.
+* :issue:`30`: Add :meth:`pymaf.MafFrame.plot_rainfall` method.
+* :issue:`30`: Add :meth:`pyvcf.VcfFrame.plot_rainfall` method.
+* Update :meth:`pymaf.MafFrame.to_vcf` method to output sorted VCF.
+* Add :meth:`pymaf.MafFrame.matrix_prevalence` method.
+* Add :meth:`pymaf.MafFrame.plot_regplot` method.
+* Add ``samples`` argument to :meth:`pymaf.MafFrame.plot_snvclss` method.
+* Add :meth:`pymaf.MafFrame.plot_evolution` method.
+* Add new submodule ``pygff``.
+
 0.16.0 (2021-07-02)
 -------------------
 
@@ -22,7 +35,7 @@ Changelog
 * Add :meth:`pyvcf.VcfFrame.plot_snvclsp` method (simply wraps :meth:`pymaf.MafFrame.plot_snvclsp` method).
 * Add :meth:`pyvcf.VcfFrame.plot_snvclss` method (simply wraps :meth:`pymaf.MafFrame.plot_snvclss` method).
 * Add :meth:`pyvcf.VcfFrame.plot_titv` method (simply wraps :meth:`pymaf.MafFrame.plot_titv` method).
-* Update :meth:`pymaf.MafFrame.from_vcf` method to handle unannotated VCF data.
+* :issue:`28`: Update :meth:`pymaf.MafFrame.from_vcf` method to handle unannotated VCF data.
 
 0.15.0 (2021-06-24)
 -------------------

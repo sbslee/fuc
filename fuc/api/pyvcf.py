@@ -758,7 +758,8 @@ def simulate_sample(
     return l
 
 class VcfFrame:
-    """Class for storing VCF data.
+    """
+    Class for storing VCF data.
 
     Parameters
     ----------
@@ -1851,8 +1852,11 @@ class VcfFrame:
                 labels = ('A', 'B')
             else:
                 labels = ('A', 'B', 'C')
+
+        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
+
         venn_kws = dict(ax=ax, alpha=0.5, set_labels=labels)
         if c is None:
             out = self._plot_comparison_two(a, b, venn_kws)
@@ -1950,9 +1954,13 @@ class VcfFrame:
         df = pd.melt(df, id_vars=id_vars)
         df = df.dropna()
         df = df.rename(columns={'value': k})
+
+        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
+
         sns.histplot(data=df, x=k, hue=hue, kde=kde, ax=ax, **kwargs)
+
         return ax
 
     def plot_tmb(
@@ -2009,8 +2017,11 @@ class VcfFrame:
             df = s.to_frame()
         else:
             df = pd.concat([af.df, s], axis=1, join='inner')
+
+        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
+
         sns.histplot(data=df, x='TMB', ax=ax, hue=hue, kde=kde, **kwargs)
         return ax
 
@@ -2048,8 +2059,11 @@ class VcfFrame:
             >>> vf.plot_regplot(normal, tumor)
         """
         s = self.df.iloc[:, 9:].applymap(gt_hasvar).sum()
+
+        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
+
         sns.regplot(x=s[a], y=s[b], ax=ax, **kwargs)
         return ax
 
@@ -4044,12 +4058,78 @@ class VcfFrame:
         """
         mf = pymaf.MafFrame.from_vcf(self)
 
+        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
         mf.plot_titv(
             af=af, hue=hue, hue_order=hue_order, flip=flip, ax=ax,
             figsize=figsize, **kwargs
+        )
+
+        return ax
+
+    def plot_rainfall(
+        self, sample, palette=None, ax=None, figsize=None, legend='auto',
+        **kwargs
+    ):
+        """
+        Create a rainfall plot visualizing inter-variant distance on a linear
+        genomic scale for single sample.
+
+        Under the hood, this method simply converts the VcfFrame to the
+        :class:`fuc.api.pymaf.MafFrame` class and then applies the
+        :meth:`fuc.api.pymaf.MafFrame.plot_rainfall` method.
+
+        Parameters
+        ----------
+        sample : str
+            Name of the sample.
+        palette : str, optional
+            Name of the seaborn palette. See the :ref:`tutorials:Control plot
+            colors` tutorial for details.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+        kwargs
+            Other keyword arguments will be passed down to
+            :meth:`seaborn.scatterplot`.
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+
+        See Also
+        --------
+        fuc.api.pymaf.MafFrame.plot_rainfall
+            Similar method for the :meth:`fuc.api.pymaf.MafFrame` class.
+
+        Examples
+        --------
+
+        .. plot::
+
+            >>> import matplotlib.pyplot as plt
+            >>> import seaborn as sns
+            >>> from fuc import common, pyvcf
+            >>> common.load_dataset('brca')
+            >>> vcf_file = '~/fuc-data/brca/brca.vcf'
+            >>> vf = pyvcf.VcfFrame.from_file(vcf_file)
+            >>> vf.plot_rainfall('TCGA-A8-A08B',
+            ...                  figsize=(14, 7),
+            ...                  palette=sns.color_palette('Set2')[:6])
+            >>> plt.tight_layout()
+        """
+        mf = pymaf.MafFrame.from_vcf(self)
+
+        # Determine which matplotlib axes to plot on.
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
+        mf.plot_rainfall(
+            sample, palette=palette, ax=ax, legend=legend, **kwargs
         )
 
         return ax
@@ -4077,7 +4157,7 @@ class VcfFrame:
         hue_order : list, optional
             Order to plot the group levels in.
         palette : str, optional
-            Name of seaborn palette. See the :ref:`tutorials:Control plot
+            Name of the seaborn palette. See the :ref:`tutorials:Control plot
             colors` tutorial for details.
         flip : bool, default: False
             If True, flip the x and y axes.
@@ -4129,6 +4209,7 @@ class VcfFrame:
         """
         mf = pymaf.MafFrame.from_vcf(self)
 
+        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -4138,7 +4219,6 @@ class VcfFrame:
         )
 
         return ax
-
 
     def plot_snvclsp(
         self, af=None, hue=None, hue_order=None, palette=None, flip=False,
@@ -4163,7 +4243,7 @@ class VcfFrame:
         hue_order : list, optional
             Order to plot the group levels in.
         palette : str, optional
-            Name of seaborn palette. See the :ref:`tutorials:Control plot
+            Name of the seaborn palette. See the :ref:`tutorials:Control plot
             colors` tutorial for details.
         flip : bool, default: False
             If True, flip the x and y axes.
@@ -4215,6 +4295,7 @@ class VcfFrame:
         """
         mf = pymaf.MafFrame.from_vcf(self)
 
+        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -4286,6 +4367,7 @@ class VcfFrame:
         """
         mf = pymaf.MafFrame.from_vcf(self)
 
+        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 

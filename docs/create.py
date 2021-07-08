@@ -68,6 +68,8 @@ Currently, fuc can be used to analyze, summarize, visualize, and manipulate the 
 - Browser Extensible Data (BED)
 - FASTQ
 - FASTA
+- General Feature Format (GFF)
+- Gene Transfer Format (GTF)
 - delimiter-separated values format (e.g. comma-separated values or CSV format)
 
 Additionally, fuc can be used to parse output data from the following programs:
@@ -310,8 +312,8 @@ To create an oncoplot with a MAF file:
 
     >>> from fuc import common, pymaf
     >>> common.load_dataset('tcga-laml')
-    >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
-    >>> mf = pymaf.MafFrame.from_file(f)
+    >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+    >>> mf = pymaf.MafFrame.from_file(maf_file)
     >>> mf.plot_oncoplot()
 
 .. image:: https://raw.githubusercontent.com/sbslee/fuc-data/main/images/oncoplot.png
@@ -326,8 +328,8 @@ To create a summary figure for a MAF file:
 
     >>> from fuc import common, pymaf
     >>> common.load_dataset('tcga-laml')
-    >>> f = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
-    >>> mf = pymaf.MafFrame.from_file(f)
+    >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+    >>> mf = pymaf.MafFrame.from_file(maf_file)
     >>> mf.plot_summary()
 
 .. image:: https://raw.githubusercontent.com/sbslee/fuc-data/main/images/maf_summary-2.png

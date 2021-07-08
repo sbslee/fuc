@@ -95,6 +95,10 @@ def load_dataset(name, force=False):
             'tcga_laml.vcf',
             'tcga_laml_vep.vcf',
         ],
+        'brca': [
+            'brca.maf.gz',
+            'brca.vcf',
+        ],
         'pyvcf': [
             'plot_comparison.vcf',
             'normal-tumor.vcf',

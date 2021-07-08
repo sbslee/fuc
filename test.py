@@ -3,7 +3,7 @@ import unittest
 import subprocess
 
 from fuc.api.common import FUC_PATH
-from fuc import pyvcf, pybed, pyfq
+from fuc import pyvcf, pybed, pyfq, pygff
 
 vcf_file1 = f'{FUC_PATH}/data/vcf/1.vcf'
 vcf_file2 = f'{FUC_PATH}/data/vcf/2.vcf'
@@ -65,6 +65,13 @@ class TestPyfq(unittest.TestCase):
     def test_shape(self):
         qf = pyfq.FqFrame.from_file(f'{FUC_PATH}/data/fq/1.fastq')
         self.assertEqual(qf.shape, (5, 4))
+
+class TestPygff(unittest.TestCase):
+
+    def test_from_file(self):
+        gf = pygff.GffFrame.from_file(f'{FUC_PATH}/data/gff/fasta.gff')
+        self.assertEqual(gf.df.shape, (12, 9))
+        self.assertEqual(len(gf.fasta), 2)
 
 class TestCli(unittest.TestCase):
     def test_bfintxn(self):

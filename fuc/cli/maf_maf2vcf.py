@@ -1,7 +1,9 @@
+import sys
+
 from .. import api
 
 description = f"""
-This command will convert a MAF file to a VCF file.
+This command will convert a MAF file to a sorted VCF file.
 
 In order to handle INDELs the command makes use of a reference assembly (i.e. FASTA file). If SNVs are your only concern, then you do not need a FASTA file and can just use the '--ignore_indels' flag.
 
@@ -26,7 +28,7 @@ def create_parser(subparsers):
     )
     parser.add_argument(
         'maf',
-        help='MAF file.'
+        help='MAF file (zipped or unzipped).'
     )
     parser.add_argument(
         '--fasta',
@@ -57,4 +59,4 @@ def main(args):
         fasta=args.fasta, ignore_indels=args.ignore_indels,
         cols=args.cols, names=args.names
     )
-    print(vf.to_string(), end='')
+    sys.stdout.write(vf.to_string())
