@@ -79,12 +79,12 @@ class GffFrame:
             fn = os.path.expanduser(fn)
 
         if fn.endswith('.gz'):
-            f = gzip.open(fn)
+            f = gzip.open(fn, 'rt')
         else:
             f = open(fn)
 
         for line in f:
-            if line.startswith(b'#'):
+            if line.startswith('#'):
                 meta.append(line.strip())
                 skip_rows += 1
             else:
