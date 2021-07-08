@@ -1,33 +1,33 @@
 """
-The pygff submodule is designed for working with GFF (and GTF) files. It
-implements ``pygff.GffFrame`` which stores GFF data as ``pandas.DataFrame``
-to allow fast computation and easy manipulation. The submodule strictly
-adheres to the standard `GFF specification
+The pygff submodule is designed for working with GFF/GTF files. It implements
+``pygff.GffFrame`` which stores GFF/GTF data as ``pandas.DataFrame`` to allow
+fast computation and easy manipulation. The submodule strictly adheres to the
+standard `GFF specification
 <https://github.com/The-Sequence-Ontology/Specifications/blob/master/gff3.md>`_.
 
-A GFF file contains nine columns as follows:
+A GFF/GTF file contains nine columns as follows:
 
-+-----+------------+------------------------------------+------------------------+
-| No. | Name       | Description                        | Examples               |
-+=====+============+====================================+========================+
-| 1   | Seqid      | Chromosome or contig identifier    | 'NC_000001.10'         |
-+-----+------------+------------------------------------+------------------------+
-| 2   | Source     | 1-based reference position         | 10041, 23042           |
-+-----+------------+------------------------------------+------------------------+
-| 3   | Type       | ';'-separated variant identifiers  | '.', 'rs35', 'rs9;rs53'|
-+-----+------------+------------------------------------+------------------------+
-| 4   | Start      | Reference allele                   | 'A', 'GT'              |
-+-----+------------+------------------------------------+------------------------+
-| 5   | End        | ','-separated alternate alleles    | 'T', 'ACT', 'C,T'      |
-+-----+------------+------------------------------------+------------------------+
-| 6   | Score      | Phred-scaled quality score for ALT | '.', 67, 12            |
-+-----+------------+------------------------------------+------------------------+
-| 7   | Strand     | ';'-separated filters that failed  | '.', 'PASS', 'q10;s50' |
-+-----+------------+------------------------------------+------------------------+
-| 8   | Phase      | ';'-separated information fields   | '.', 'DP=14;AF=0.5;DB' |
-+-----+------------+------------------------------------+------------------------+
-| 9   | Attributes | ':'-separated genotype fields      | 'GT', 'GT:AD:DP'       |
-+-----+------------+------------------------------------+------------------------+
++-----+------------+--------------------------+-----------------------------------------------------------------------------------------------------------------------+
+| No. | Name       | Description              | Examples                                                                                                              |
++=====+============+==========================+=======================================================================================================================+
+| 1   | Seqid      | Landmark ID              | 'NC_000001.10', 'NC_012920.1'                                                                                         |
++-----+------------+--------------------------+-----------------------------------------------------------------------------------------------------------------------+
+| 2   | Source     | Feature source           | 'RefSeq', 'BestRefSeq', 'Genescan', 'Genebank'                                                                        |
++-----+------------+--------------------------+-----------------------------------------------------------------------------------------------------------------------+
+| 3   | Type       | Feature type             | 'transcript', 'exon', 'gene'                                                                                          |
++-----+------------+--------------------------+-----------------------------------------------------------------------------------------------------------------------+
+| 4   | Start      | Start coordinate         | 11874, 14409                                                                                                          |
++-----+------------+--------------------------+-----------------------------------------------------------------------------------------------------------------------+
+| 5   | End        | End coordinate           | 11874, 14409                                                                                                          |
++-----+------------+--------------------------+-----------------------------------------------------------------------------------------------------------------------+
+| 6   | Score      | Feature score            | '.', '1730.55', '1070'                                                                                                |
++-----+------------+--------------------------+-----------------------------------------------------------------------------------------------------------------------+
+| 7   | Strand     | Feature strand           | '.', '-', '+', '?'                                                                                                    |
++-----+------------+--------------------------+-----------------------------------------------------------------------------------------------------------------------+
+| 8   | Phase      | CDS phase                | '.', '0', '1', '2'                                                                                                    |
++-----+------------+--------------------------+-----------------------------------------------------------------------------------------------------------------------+
+| 9   | Attributes | ';'-separated attributes | 'ID=NC_000001.10:1..249250621;Dbxref=taxon:9606;Name=1;chromosome=1;gbkey=Src;genome=chromosome;mol_type=genomic DNA' |
++-----+------------+--------------------------+-----------------------------------------------------------------------------------------------------------------------+
 """
 
 import gzip
@@ -35,9 +35,22 @@ import gzip
 import pandas as pd
 
 class GffFrame:
-    def __init__(self, meta, df):
+    """
+    Class for storing GFF/GTF data.
+
+    Parameters
+    ----------
+    meta : list
+        List of metadata lines.
+    df : pandas.DataFrame
+        DataFrame containing GFF/GTF data.
+    fasta : str
+        FASTA sequence lines.
+    """
+    def __init__(self, meta, df, fasta):
         self._meta = meta
         self._df = df.reset_index(drop=True)
+        self._fasta = fasta
 
     @property
     def meta(self):
@@ -50,31 +63,37 @@ class GffFrame:
 
     @property
     def df(self):
-        """pandas.DataFrame : DataFrame containing GFF data."""
+        """pandas.DataFrame : DataFrame containing GFF/GTF data."""
         return self._df
 
     @df.setter
     def df(self, value):
         self._df = value.reset_index(drop=True)
 
+    @property
+    def fasta(self):
+        """dict : FASTA sequence lines."""
+        return self._fasta
+
+    @fasta.setter
+    def fasta(self, value):
+        self._fasta = value
+
     @classmethod
     def from_file(cls, fn):
         """
-        Construct a GffFrame from a GFF file.
+        Construct a GffFrame from a GFF/GTF file.
 
         Parameters
         ----------
         fn : str
-            GFF file path (zipped or unzipped).
+            GFF/GTF file (zipped or unzipped).
 
         Returns
         -------
         GffFrame
             GffFrame object.
         """
-        meta = []
-        skip_rows = 0
-
         if fn.startswith('~'):
             fn = os.path.expanduser(fn)
 
@@ -83,37 +102,71 @@ class GffFrame:
         else:
             f = open(fn)
 
+        meta = []
+        data = []
+        fasta = {}
+
+        fasta_mode = False
+        current_fasta = None
+
         for line in f:
-            if line.startswith('#'):
+            if '##FASTA' in line:
+                fasta_mode = True
+            elif fasta_mode and line.startswith('>'):
+                name = line.strip().replace('>', '')
+                fasta[name] = []
+                current_fasta = name
+            elif fasta_mode:
+                fasta[current_fasta].append(line.strip())
+            elif line.startswith('#'):
                 meta.append(line.strip())
-                skip_rows += 1
             else:
-                break
+                fields = line.strip().split('\t')
+                data.append(fields)
 
         f.close()
 
-        names = [
+        columns = [
             'Seqid', 'Source', 'Type', 'Start', 'End',
             'Score', 'Strand', 'Phase', 'Attributes'
         ]
 
-        df = pd.read_table(fn, skiprows=skip_rows, names=names, header=None)
+        df = pd.DataFrame(data, columns=columns)
+        df.Start = df.Start.astype(int)
+        df.End = df.End.astype(int)
 
-        return cls(meta, df)
+        return cls(meta, df, fasta)
 
     def protein_length(self, gene, name=None):
-        temp = self.df[self.df.Type == 'CDS'].query(f"Attributes.str.contains('{gene}')")
+        """
+        Return the protein length of a gene.
+
+        Parameters
+        ----------
+        gene : str
+            Name of the gene.
+        name : str, optional
+            Protein sequence ID (e.g. 'NP_005219.2'). Required when the gene
+            has multiple protein sequences available.
+
+        Returns
+        -------
+        int
+            Protein length.
+        """
+        df = self.df[self.df.Type == 'CDS'].query(
+            f"Attributes.str.contains('{gene}')")
         def one_row(r):
             l = r.Attributes.split(';')
             l = [x for x in l if x.startswith('Name=')]
             name = l[0].replace('Name=', '')
             return name
-        temp['Protein_ID'] = temp.apply(one_row, axis=1)
-        ids = temp.Protein_ID.unique()
+        df['Protein_ID'] = df.apply(one_row, axis=1)
+        ids = df.Protein_ID.unique()
         if name is None and len(ids) != 1:
             raise ValueError(f'Multiple protein sequences available: {ids}')
         elif name is None and len(ids) == 1:
             name = ids[0]
-        temp = temp[temp.Protein_ID == name]
-        length = (temp.End - temp.Start).sum() + temp.shape[0] - 3
+        df = df[df.Protein_ID == name]
+        length = (df.End - df.Start).sum() + df.shape[0] - 3
         return int(length / 3)

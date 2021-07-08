@@ -758,7 +758,8 @@ def simulate_sample(
     return l
 
 class VcfFrame:
-    """Class for storing VCF data.
+    """
+    Class for storing VCF data.
 
     Parameters
     ----------
