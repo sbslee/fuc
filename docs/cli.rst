@@ -195,7 +195,7 @@ fq-count
    $ fuc fq-count -h
    usage: fuc fq-count [-h] [fastq ...]
    
-   This command will count sequence reads in FASTQ files (both zipped and unzipped).
+   This command will count sequence reads in FASTQ files.
    
    It will look for stdin if there are no arguments.
    
@@ -204,7 +204,7 @@ fq-count
      $ cat fastq.list | fuc fq-count
    
    Positional arguments:
-     fastq       FASTQ files (default: stdin).
+     fastq       FASTQ files (zipped or unzipped) (default: stdin).
    
    Optional arguments:
      -h, --help  Show this help message and exit.

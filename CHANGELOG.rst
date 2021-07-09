@@ -4,6 +4,8 @@ Changelog
 0.18.0 (in development)
 -----------------------
 
+* Update :command:`fq-count` command to run significantly faster.
+
 0.17.0 (2021-07-08)
 -------------------
 
