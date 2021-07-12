@@ -41,7 +41,7 @@ For getting help on the fuc CLI:
        vcf-rename   [VCF] Rename the samples in a VCF file.
        vcf-slice    [VCF] Slice a VCF file.
        vcf-vcf2bed  [VCF] Convert a VCF file to a BED file.
-       vcf-vep      [VCF] Filter a VCF file annotated by Ensemble VEP.
+       vcf-vep      [VCF] Filter a VCF file annotated by Ensembl VEP.
    
    optional arguments:
      -h, --help     Show this help message and exit.
@@ -662,7 +662,7 @@ vcf-vep
    $ fuc vcf-vep -h
    usage: fuc vcf-vep [-h] [--opposite] [--as_zero] vcf expr
    
-   This command will filter a VCF file annotated by Ensemble VEP.
+   This command will filter a VCF file annotated by Ensembl VEP.
    
    Usage examples:
      $ fuc vcf-vep in.vcf "SYMBOL == 'TP53'" > out.vcf
@@ -674,7 +674,7 @@ vcf-vep
      $ fuc vcf-vep in.vcf "gnomAD_AF < 0.001" --as_zero > out.vcf
    
    Positional arguments:
-     vcf         VCF file annotated by Ensemble VEP.
+     vcf         VCF file annotated by Ensembl VEP.
      expr        Query expression to evaluate.
    
    Optional arguments:

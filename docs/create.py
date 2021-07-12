@@ -227,7 +227,7 @@ To merge VCF files:
 
    $ fuc vcf-merge 1.vcf 2.vcf 3.vcf > merged.vcf
 
-To filter a VCF file annotated by Ensemble VEP:
+To filter a VCF file annotated by Ensembl VEP:
 
 .. code-block:: text
 

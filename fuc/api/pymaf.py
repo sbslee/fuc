@@ -91,7 +91,7 @@ COMMON_COLUMNS = [
     'Tumor_Seq_Allele2', 'Tumor_Sample_Barcode', 'Protein_Change'
 ]
 
-# Below is the list of calculated variant consequences from Ensemble VEP:
+# Below is the list of calculated variant consequences from Ensembl VEP:
 # https://m.ensembl.org/info/genome/variation/prediction/predicted_data.html
 # (accessed on 2021-05-31)
 #
@@ -730,10 +730,10 @@ class MafFrame:
         Construct a MafFrame from a VCF file or VcfFrame.
 
         It is recommended that the input VCF data be functionally annotated
-        by an annotation tool such as Ensemble VEP, SnpEff, and ANNOVAR;
+        by an annotation tool such as Ensembl VEP, SnpEff, and ANNOVAR;
         however, the method can handle unannotated VCF data as well.
 
-        The preferred tool for functional annotation is Ensemble VEP with
+        The preferred tool for functional annotation is Ensembl VEP with
         "RefSeq transcripts" as the transcript database and the filtering
         option "Show one selected consequence per variant".
 
@@ -885,7 +885,7 @@ class MafFrame:
                 elif consequence in VEP_CONSEQUENCES:
                     variant_classification = VEP_CONSEQUENCES[consequence]
                 else:
-                    m = f'Found unknown Ensemble VEP consequence: {consequence}'
+                    m = f'Found unknown Ensembl VEP consequence: {consequence}'
                     raise ValueError(m)
 
             # Get the Tumor_Sample_Barcode data.

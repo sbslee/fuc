@@ -133,7 +133,7 @@ For getting help on the fuc CLI:
        vcf-rename   [VCF] Rename the samples in a VCF file.
        vcf-slice    [VCF] Slice a VCF file.
        vcf-vcf2bed  [VCF] Convert a VCF file to a BED file.
-       vcf-vep      [VCF] Filter a VCF file annotated by Ensemble VEP.
+       vcf-vep      [VCF] Filter a VCF file annotated by Ensembl VEP.
    
    optional arguments:
      -h, --help     Show this help message and exit.
@@ -240,7 +240,7 @@ To merge VCF files:
 
    $ fuc vcf-merge 1.vcf 2.vcf 3.vcf > merged.vcf
 
-To filter a VCF file annotated by Ensemble VEP:
+To filter a VCF file annotated by Ensembl VEP:
 
 .. code-block:: text
 
