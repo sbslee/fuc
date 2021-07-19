@@ -55,9 +55,10 @@ import warnings
 
 from . import pyvcf, common
 
-import pandas as pd
-import seaborn as sns
 import numpy as np
+import pandas as pd
+import statsmodels.formula.api as smf
+import seaborn as sns
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import matplotlib.gridspec as gridspec
@@ -1363,6 +1364,9 @@ class MafFrame:
         correlation between gene mutation frequencies in two sample groups
         A and B.
 
+        The method will automatically calculate and print summary statistics
+        including R-squared and p-value.
+
         Parameters
         ----------
         af : AnnFrame
@@ -1432,6 +1436,12 @@ class MafFrame:
         # Write the DataFrame to a CSV file.
         if to_csv is not None:
             df3.to_csv(to_csv)
+
+        # Print summary statistics including R-squared and p-value.
+        results = smf.ols(f'{b} ~ {a}', data=df3).fit()
+        print(f'Results for {b} ~ {a}:')
+        print(f'R^2 = {results.rsquared:.2f}')
+        print(f'  P = {results.f_pvalue:.2e}')
 
         return ax
 
