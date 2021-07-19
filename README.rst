@@ -121,7 +121,7 @@ For getting help on the fuc CLI:
        fuc-compf    [FUC] Compare the contents of two files.
        fuc-demux    [FUC] Parse the Reports directory from bcl2fastq.
        fuc-exist    [FUC] Check whether certain files exist.
-       fuc-find     [FUC] Find all files with a certain extension recursively.
+       fuc-find     [FUC] Find all filenames matching a specified pattern recursively.
        maf-maf2vcf  [MAF] Convert a MAF file to a VCF file.
        maf-oncoplt  [MAF] Create an oncoplot with a MAF file.
        maf-sumplt   [MAF] Create a summary plot with a MAF file.
