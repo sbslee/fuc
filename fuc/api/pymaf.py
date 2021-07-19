@@ -1957,6 +1957,9 @@ class MafFrame:
         df = df.apply(lambda r: r/r.sum(), axis=1)
         df.columns = df.columns.get_level_values(1)
         df.columns.name = ''
+        for x in SNV_CLASS_ORDER:
+            if x not in df.columns:
+                df[x] = 0
         df = df[SNV_CLASS_ORDER]
 
         # Determine which samples should be displayed.
