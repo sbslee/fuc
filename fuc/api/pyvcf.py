@@ -3503,14 +3503,15 @@ class VcfFrame:
         return vf
 
     def subset(self, samples, exclude=False):
-        """Subset the VcfFrame for the selected samples.
+        """
+        Subset the VcfFrame for specified samples.
 
-        The order of the samples matters.
+        The order of input samples matters.
 
         Parameters
         ----------
-        samples : list
-            List of samples.
+        samples : str or list
+            Name or list of sample names.
         exclude : bool, default: False
             If True, exclude the selected samples.
 
@@ -3558,6 +3559,8 @@ class VcfFrame:
         0  chr1  100  .   G   A    .      .    .  GT:DP  0/1:24
         1  chr1  101  .   T   C    .      .    .  GT:DP  0/1:30
         """
+        if isinstance(samples, str):
+            samples = [samples]
         if exclude:
             samples = [x for x in self.samples if x not in samples]
         cols = self.df.columns[:9].to_list() + samples
