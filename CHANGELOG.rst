@@ -7,7 +7,7 @@ Changelog
 * Update :command:`fq-count` command to run significantly faster.
 * Update :command:`fuc-find` command to support pattern matching that is more robust than just file extension.
 * Update :meth:`pyvcf.VcfFrame.subset` method to take string as input in addition to list.
-* Fix a minor bug in `pymaf.MafFrame.plot_snvclss` method when certain SNV classes are entirely missing.
+* Fix a minor bug in :meth:`pymaf.MafFrame.plot_snvclss` method when certain SNV classes are entirely missing.
 
 0.17.0 (2021-07-08)
 -------------------
