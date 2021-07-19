@@ -5,6 +5,7 @@ Changelog
 -----------------------
 
 * Update :command:`fq-count` command to run significantly faster.
+* Update :command:`fuc-find` command to support pattern matching that is more robust than just file extension.
 
 0.17.0 (2021-07-08)
 -------------------
