@@ -101,6 +101,7 @@ The following packages are required to run fuc:
    pysam
    scipy
    seaborn
+   statsmodels
 
 There are various ways you can install fuc. The recommended way is via conda (`Anaconda <https://www.anaconda.com/>`__):
 

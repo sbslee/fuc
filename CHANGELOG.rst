@@ -8,6 +8,8 @@ Changelog
 * Update :command:`fuc-find` command to support pattern matching that is more robust than just file extension.
 * Update :meth:`pyvcf.VcfFrame.subset` method to take string as input in addition to list.
 * Fix a minor bug in :meth:`pymaf.MafFrame.plot_snvclss` method when certain SNV classes are entirely missing.
+* Add ``statsmodels`` package as dependency for performing statistical analysis.
+* Update :meth:`pymaf.MafFrame.plot_regplot` to calculate and print summary statistics as well.
 
 0.17.0 (2021-07-08)
 -------------------
