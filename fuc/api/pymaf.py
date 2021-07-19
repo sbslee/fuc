@@ -1409,6 +1409,9 @@ class MafFrame:
             >>> mf = pymaf.MafFrame.from_file(maf_file)
             >>> af = pymaf.AnnFrame.from_file(annot_file)
             >>> mf.plot_regplot(af, 'FAB_classification', 'M1', 'M2')
+            Results for M2 ~ M1:
+            R^2 = 0.43
+              P = 3.96e-02
             >>> plt.tight_layout()
         """
         df1 = self.matrix_prevalence()

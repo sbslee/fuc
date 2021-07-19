@@ -106,7 +106,8 @@ CUSTOM_GENOTYPE_KEYS = {
 }
 
 def gt_miss(g):
-    """Return True if sample genotype is missing.
+    """
+    Return True if sample genotype is missing.
 
     Parameters
     ----------
@@ -135,6 +136,8 @@ def gt_miss(g):
     >>> pyvcf.gt_miss('.:.')
     True
     >>> pyvcf.gt_miss('.')
+    True
+    >>> pyvcf.gt_miss('./.:13,3:16:41:41,0,402')
     True
     """
     return '.' in g.split(':')[0]
@@ -2063,6 +2066,10 @@ class VcfFrame:
             >>> normal = af.df[af.df.Tissue == 'Normal'].index
             >>> tumor = af.df[af.df.Tissue == 'Tumor'].index
             >>> vf.plot_regplot(normal, tumor)
+            Results for B ~ A:
+            R^2 = 0.01
+            P = 7.17e-01
+            >>> plt.tight_layout()
         """
         s = self.df.iloc[:, 9:].applymap(gt_hasvar).sum()
 
@@ -2366,7 +2373,8 @@ class VcfFrame:
         return self.__class__(self.copy_meta(), pd.concat(data, axis=1).T)
 
     def filter_bed(self, bed, opposite=False, as_index=False):
-        """Select rows that overlap with the given BED data.
+        """
+        Select rows that overlap with the given BED data.
 
         Parameters
         ----------
@@ -4396,3 +4404,47 @@ class VcfFrame:
         )
 
         return ax
+
+    def miss2ref(self):
+        """
+        Convert missing genotype (./.) to REF homozygous (0/0).
+
+        Returns
+        -------
+        VcfFrame
+            VcfFrame object.
+
+        Examples
+        --------
+        
+        >>> from fuc import pyvcf
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr2'],
+        ...     'POS': [100, 101],
+        ...     'ID': ['.', '.'],
+        ...     'REF': ['G', 'T'],
+        ...     'ALT': ['A', 'C'],
+        ...     'QUAL': ['.', '.'],
+        ...     'FILTER': ['.', '.'],
+        ...     'INFO': ['.', '.'],
+        ...     'FORMAT': ['GT', 'GT'],
+        ...     'A': ['./.', '1/1'],
+        ...     'B': ['./.', './.']
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    B
+        0  chr1  100  .   G   A    .      .    .     GT  ./.  ./.
+        1  chr2  101  .   T   C    .      .    .     GT  1/1  ./.
+        >>> new_vf = vf.miss2ref()
+        >>> new_vf.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    B
+        0  chr1  100  .   G   A    .      .    .     GT  0/0  0/0
+        1  chr2  101  .   T   C    .      .    .     GT  1/1  0/0
+        """
+        df = self.copy_df()
+        def one_gt(g):
+            l = [g.split(':')[0].replace('.', '0')] + g.split(':')[1:]
+            return ':'.join(l)
+        df.iloc[:, 9:] = df.iloc[:, 9:].applymap(one_gt)
+        return self.__class__(self.copy_meta(), df)
