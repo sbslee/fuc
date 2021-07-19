@@ -58,13 +58,14 @@ from copy import deepcopy
 
 from . import pybed, common, pymaf
 
-import pandas as pd
 import numpy as np
+import pandas as pd
+import scipy.stats as stats
+import statsmodels.formula.api as smf
 from Bio import bgzf
 import matplotlib.pyplot as plt
 from matplotlib_venn import venn2, venn3
 import seaborn as sns
-import scipy.stats as stats
 
 HEADERS = ['CHROM', 'POS', 'ID', 'REF', 'ALT',
            'QUAL', 'FILTER', 'INFO', 'FORMAT']
@@ -2026,7 +2027,12 @@ class VcfFrame:
         return ax
 
     def plot_regplot(self, a, b, ax=None, figsize=None, **kwargs):
-        """Create a scatter plot showing TMB between paired samples.
+        """
+        Create a scatter plot with a linear regression model fit visualizing
+        correlation between TMB in two sample groups.
+
+        The method will automatically calculate and print summary statistics
+        including R-squared and p-value.
 
         Parameters
         ----------
@@ -2064,7 +2070,17 @@ class VcfFrame:
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
-        sns.regplot(x=s[a], y=s[b], ax=ax, **kwargs)
+        df = pd.concat([s[a].reset_index(), s[b].reset_index()], axis=1)
+        df.columns = ['A_Label', 'A_TMB', 'B_Label', 'B_TMB']
+
+        sns.regplot(x='A_TMB', y='B_TMB', data=df, ax=ax, **kwargs)
+
+        # Print summary statistics including R-squared and p-value.
+        results = smf.ols(f'B_TMB ~ A_TMB', data=df).fit()
+        print(f'Results for B ~ A:')
+        print(f'R^2 = {results.rsquared:.2f}')
+        print(f'  P = {results.f_pvalue:.2e}')
+
         return ax
 
     def markmiss(
