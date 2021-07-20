@@ -2238,7 +2238,9 @@ class MafFrame:
 
         plt.tight_layout()
 
-    def plot_tmb(self, samples=None, width=0.8, ax=None, figsize=None, **kwargs):
+    def plot_tmb(
+        self, samples=None, width=0.8, ax=None, figsize=None, **kwargs
+    ):
         """
         Create a bar plot showing the :ref:`TMB <glossary:Tumor mutational
         burden (TMB)>` distributions of samples.
@@ -2246,7 +2248,9 @@ class MafFrame:
         Parameters
         ----------
         samples : list, optional
-            Samples to be drawn (in the exact order).
+            List of samples to display (in that order too). If samples that
+            are absent in the MafFrame are provided, the method will give a
+            warning but still draw an empty bar for those samples.
         width : float, default: 0.8
             The width of the bars.
         ax : matplotlib.axes.Axes, optional
@@ -2277,8 +2281,24 @@ class MafFrame:
             >>> plt.tight_layout()
         """
         df = self.matrix_tmb()
+
         if samples is not None:
-            df = df.loc[samples]
+            df = df.T
+            missing_samples = []
+            for sample in samples:
+                if sample not in df.columns:
+                    missing_samples.append(sample)
+            if missing_samples:
+                message = (
+                    'Although the following samples are absent in the '
+                    'MafFrame, they will still be displayed as empty bar: '
+                    f'{missing_samples}.'
+                )
+                warnings.warn(message)
+                for missing_sample in missing_samples:
+                    df[missing_sample] = 0
+            df = df[samples]
+            df = df.T
 
         # Determine which matplotlib axes to plot on.
         if ax is None:
