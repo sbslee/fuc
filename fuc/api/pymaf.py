@@ -1622,8 +1622,8 @@ class MafFrame:
             df = df.T
             df = pd.merge(df, af.df[hue], left_index=True, right_index=True)
             df = df.groupby([hue]).mean().reset_index()
-            df = df.melt(id_vars=['FAB_classification'])
-            df.columns = ['FAB_classification', 'Hugo_Symbol', 'Frequency']
+            df = df.melt(id_vars=[hue])
+            df.columns = [hue, 'Hugo_Symbol', 'Frequency']
 
         # Determine which matplotlib axes to plot on.
         if ax is None:

@@ -4,6 +4,8 @@ Changelog
 0.19.0 (in development)
 -----------------------
 
+* Fix a bug in :meth:`pymaf.MafFrame.plot_mutated` when using the ``hue`` option.
+
 0.18.0 (2021-07-20)
 -------------------
 
