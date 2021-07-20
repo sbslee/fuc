@@ -58,13 +58,14 @@ from copy import deepcopy
 
 from . import pybed, common, pymaf
 
-import pandas as pd
 import numpy as np
+import pandas as pd
+import scipy.stats as stats
+import statsmodels.formula.api as smf
 from Bio import bgzf
 import matplotlib.pyplot as plt
 from matplotlib_venn import venn2, venn3
 import seaborn as sns
-import scipy.stats as stats
 
 HEADERS = ['CHROM', 'POS', 'ID', 'REF', 'ALT',
            'QUAL', 'FILTER', 'INFO', 'FORMAT']
@@ -105,7 +106,8 @@ CUSTOM_GENOTYPE_KEYS = {
 }
 
 def gt_miss(g):
-    """Return True if sample genotype is missing.
+    """
+    Return True if sample genotype is missing.
 
     Parameters
     ----------
@@ -134,6 +136,8 @@ def gt_miss(g):
     >>> pyvcf.gt_miss('.:.')
     True
     >>> pyvcf.gt_miss('.')
+    True
+    >>> pyvcf.gt_miss('./.:13,3:16:41:41,0,402')
     True
     """
     return '.' in g.split(':')[0]
@@ -1795,6 +1799,50 @@ class VcfFrame:
             if '=<ID=' in line:
                 print(line)
 
+    def miss2ref(self):
+        """
+        Convert missing genotype (./.) to homozygous REF (0/0).
+
+        Returns
+        -------
+        VcfFrame
+            VcfFrame object.
+
+        Examples
+        --------
+
+        >>> from fuc import pyvcf
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr2'],
+        ...     'POS': [100, 101],
+        ...     'ID': ['.', '.'],
+        ...     'REF': ['G', 'T'],
+        ...     'ALT': ['A', 'C'],
+        ...     'QUAL': ['.', '.'],
+        ...     'FILTER': ['.', '.'],
+        ...     'INFO': ['.', '.'],
+        ...     'FORMAT': ['GT', 'GT'],
+        ...     'A': ['./.', '1/1'],
+        ...     'B': ['./.', './.']
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    B
+        0  chr1  100  .   G   A    .      .    .     GT  ./.  ./.
+        1  chr2  101  .   T   C    .      .    .     GT  1/1  ./.
+        >>> new_vf = vf.miss2ref()
+        >>> new_vf.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    B
+        0  chr1  100  .   G   A    .      .    .     GT  0/0  0/0
+        1  chr2  101  .   T   C    .      .    .     GT  1/1  0/0
+        """
+        df = self.copy_df()
+        def one_gt(g):
+            l = [g.split(':')[0].replace('.', '0')] + g.split(':')[1:]
+            return ':'.join(l)
+        df.iloc[:, 9:] = df.iloc[:, 9:].applymap(one_gt)
+        return self.__class__(self.copy_meta(), df)
+
     def plot_comparison(
         self, a, b, c=None, labels=None, ax=None, figsize=None
     ):
@@ -2026,7 +2074,12 @@ class VcfFrame:
         return ax
 
     def plot_regplot(self, a, b, ax=None, figsize=None, **kwargs):
-        """Create a scatter plot showing TMB between paired samples.
+        """
+        Create a scatter plot with a linear regression model fit visualizing
+        correlation between TMB in two sample groups.
+
+        The method will automatically calculate and print summary statistics
+        including R-squared and p-value.
 
         Parameters
         ----------
@@ -2057,6 +2110,10 @@ class VcfFrame:
             >>> normal = af.df[af.df.Tissue == 'Normal'].index
             >>> tumor = af.df[af.df.Tissue == 'Tumor'].index
             >>> vf.plot_regplot(normal, tumor)
+            Results for B ~ A:
+            R^2 = 0.01
+            P = 7.17e-01
+            >>> plt.tight_layout()
         """
         s = self.df.iloc[:, 9:].applymap(gt_hasvar).sum()
 
@@ -2064,7 +2121,17 @@ class VcfFrame:
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
-        sns.regplot(x=s[a], y=s[b], ax=ax, **kwargs)
+        df = pd.concat([s[a].reset_index(), s[b].reset_index()], axis=1)
+        df.columns = ['A_Label', 'A_TMB', 'B_Label', 'B_TMB']
+
+        sns.regplot(x='A_TMB', y='B_TMB', data=df, ax=ax, **kwargs)
+
+        # Print summary statistics including R-squared and p-value.
+        results = smf.ols(f'B_TMB ~ A_TMB', data=df).fit()
+        print(f'Results for B ~ A:')
+        print(f'R^2 = {results.rsquared:.2f}')
+        print(f'  P = {results.f_pvalue:.2e}')
+
         return ax
 
     def markmiss(
@@ -2350,7 +2417,8 @@ class VcfFrame:
         return self.__class__(self.copy_meta(), pd.concat(data, axis=1).T)
 
     def filter_bed(self, bed, opposite=False, as_index=False):
-        """Select rows that overlap with the given BED data.
+        """
+        Select rows that overlap with the given BED data.
 
         Parameters
         ----------
@@ -3503,14 +3571,15 @@ class VcfFrame:
         return vf
 
     def subset(self, samples, exclude=False):
-        """Subset the VcfFrame for the selected samples.
+        """
+        Subset the VcfFrame for specified samples.
 
-        The order of the samples matters.
+        The order of input samples matters.
 
         Parameters
         ----------
-        samples : list
-            List of samples.
+        samples : str or list
+            Name or list of sample names.
         exclude : bool, default: False
             If True, exclude the selected samples.
 
@@ -3558,6 +3627,8 @@ class VcfFrame:
         0  chr1  100  .   G   A    .      .    .  GT:DP  0/1:24
         1  chr1  101  .   T   C    .      .    .  GT:DP  0/1:30
         """
+        if isinstance(samples, str):
+            samples = [samples]
         if exclude:
             samples = [x for x in self.samples if x not in samples]
         cols = self.df.columns[:9].to_list() + samples

@@ -29,7 +29,7 @@ For getting help on the fuc CLI:
        fuc-compf    [FUC] Compare the contents of two files.
        fuc-demux    [FUC] Parse the Reports directory from bcl2fastq.
        fuc-exist    [FUC] Check whether certain files exist.
-       fuc-find     [FUC] Find all files with a certain extension recursively.
+       fuc-find     [FUC] Find all filenames matching a specified pattern recursively.
        maf-maf2vcf  [MAF] Convert a MAF file to a VCF file.
        maf-oncoplt  [MAF] Create an oncoplot with a MAF file.
        maf-sumplt   [MAF] Create a summary plot with a MAF file.
@@ -41,7 +41,7 @@ For getting help on the fuc CLI:
        vcf-rename   [VCF] Rename the samples in a VCF file.
        vcf-slice    [VCF] Slice a VCF file.
        vcf-vcf2bed  [VCF] Convert a VCF file to a BED file.
-       vcf-vep      [VCF] Filter a VCF file annotated by Ensemble VEP.
+       vcf-vep      [VCF] Filter a VCF file annotated by Ensembl VEP.
    
    optional arguments:
      -h, --help     Show this help message and exit.
@@ -195,7 +195,7 @@ fq-count
    $ fuc fq-count -h
    usage: fuc fq-count [-h] [fastq ...]
    
-   This command will count sequence reads in FASTQ files (both zipped and unzipped).
+   This command will count sequence reads in FASTQ files.
    
    It will look for stdin if there are no arguments.
    
@@ -204,7 +204,7 @@ fq-count
      $ cat fastq.list | fuc fq-count
    
    Positional arguments:
-     fastq       FASTQ files (default: stdin).
+     fastq       FASTQ files (zipped or unzipped) (default: stdin).
    
    Optional arguments:
      -h, --help  Show this help message and exit.
@@ -305,17 +305,17 @@ fuc-find
 .. code-block:: text
 
    $ fuc fuc-find -h
-   usage: fuc fuc-find [-h] [--dir PATH] ext
+   usage: fuc fuc-find [-h] [--dir PATH] pattern
    
-   This command will recursively find all files with a certain extension and then return their absolute paths.
+   This command will recursively find all the filenames matching a specified pattern and then return their absolute paths.
    
    Usage examples:
-     $ fuc fuc-find .vcf
-     $ fuc fuc-find .vcf.gz
-     $ fuc fuc-find .vcf.gz --dir ~/test_dir
+     $ fuc fuc-find "*.vcf"
+     $ fuc fuc-find "*.vcf.*"
+     $ fuc fuc-find "*.vcf.gz" --dir ~/test_dir
    
    Positional arguments:
-     ext         File extension.
+     pattern     Filename pattern.
    
    Optional arguments:
      -h, --help  Show this help message and exit.
@@ -662,7 +662,7 @@ vcf-vep
    $ fuc vcf-vep -h
    usage: fuc vcf-vep [-h] [--opposite] [--as_zero] vcf expr
    
-   This command will filter a VCF file annotated by Ensemble VEP.
+   This command will filter a VCF file annotated by Ensembl VEP.
    
    Usage examples:
      $ fuc vcf-vep in.vcf "SYMBOL == 'TP53'" > out.vcf
@@ -674,7 +674,7 @@ vcf-vep
      $ fuc vcf-vep in.vcf "gnomAD_AF < 0.001" --as_zero > out.vcf
    
    Positional arguments:
-     vcf         VCF file annotated by Ensemble VEP.
+     vcf         VCF file annotated by Ensembl VEP.
      expr        Query expression to evaluate.
    
    Optional arguments:

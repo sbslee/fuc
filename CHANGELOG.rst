@@ -1,6 +1,22 @@
 Changelog
 *********
 
+0.18.0 (2021-07-20)
+-------------------
+
+* Update :command:`fq-count` command to run significantly faster.
+* Update :command:`fuc-find` command to support pattern matching that is more robust than just file extension.
+* Update :meth:`pyvcf.VcfFrame.subset` method to take string as input in addition to list.
+* Fix a minor bug in :meth:`pymaf.MafFrame.plot_snvclss` method when certain SNV classes are entirely missing.
+* Add ``statsmodels`` package as dependency for performing statistical analysis.
+* Update :meth:`pymaf.MafFrame.plot_regplot` method to calculate and print summary statistics as well.
+* Update :meth:`pyvcf.VcfFrame.plot_regplot` method to calculate and print summary statistics as well.
+* :issue:`32`: Add :meth:`pyvcf.VcfFrame.miss2ref` method.
+* Update :meth:`pymaf.MafFrame.plot_tmb` method to draw empty bars with warning when specified samples do not exist.
+* Update :meth:`pymaf.MafFrame.plot_waterfall` method to draw empty bars with warning when specified samples do not exist.
+* Add ``flip`` argument to :meth:`pymaf.MafFrame.plot_genes` method.
+* Add new method :meth:`pymaf.MafFrame.plot_mutated`.
+
 0.17.0 (2021-07-08)
 -------------------
 

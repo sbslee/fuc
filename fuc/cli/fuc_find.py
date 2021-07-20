@@ -4,24 +4,24 @@ from pathlib import Path
 from .. import api
 
 description = f"""
-This command will recursively find all files with a certain extension and then return their absolute paths.
+This command will recursively find all the filenames matching a specified pattern and then return their absolute paths.
 
 Usage examples:
-  $ fuc {api.common._script_name()} .vcf
-  $ fuc {api.common._script_name()} .vcf.gz
-  $ fuc {api.common._script_name()} .vcf.gz --dir ~/test_dir
+  $ fuc {api.common._script_name()} "*.vcf"
+  $ fuc {api.common._script_name()} "*.vcf.*"
+  $ fuc {api.common._script_name()} "*.vcf.gz" --dir ~/test_dir
 """
 
 def create_parser(subparsers):
     parser = api.common._add_parser(
         subparsers,
         api.common._script_name(),
-        help='[FUC] Find all files with a certain extension recursively.',
+        help='[FUC] Find all filenames matching a specified pattern recursively.',
         description=description,
     )
     parser.add_argument(
-        'ext',
-        help='File extension.'
+        'pattern',
+        help='Filename pattern.'
     )
     parser.add_argument(
         '--dir',
@@ -31,5 +31,5 @@ def create_parser(subparsers):
     )
 
 def main(args):
-    for path in Path(args.dir).rglob(f'*{args.ext}'):
+    for path in Path(args.dir).rglob(args.pattern):
         print(path.absolute())

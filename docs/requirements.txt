@@ -8,3 +8,4 @@ pandas
 pysam
 scipy
 seaborn
+statsmodels

@@ -73,6 +73,7 @@ The following packages are required to run fuc:
    pysam
    scipy
    seaborn
+   statsmodels
 
 There are various ways you can install fuc. The recommended way is via conda (`Anaconda <https://www.anaconda.com/>`__):
 
@@ -121,7 +122,7 @@ For getting help on the fuc CLI:
        fuc-compf    [FUC] Compare the contents of two files.
        fuc-demux    [FUC] Parse the Reports directory from bcl2fastq.
        fuc-exist    [FUC] Check whether certain files exist.
-       fuc-find     [FUC] Find all files with a certain extension recursively.
+       fuc-find     [FUC] Find all filenames matching a specified pattern recursively.
        maf-maf2vcf  [MAF] Convert a MAF file to a VCF file.
        maf-oncoplt  [MAF] Create an oncoplot with a MAF file.
        maf-sumplt   [MAF] Create a summary plot with a MAF file.
@@ -133,7 +134,7 @@ For getting help on the fuc CLI:
        vcf-rename   [VCF] Rename the samples in a VCF file.
        vcf-slice    [VCF] Slice a VCF file.
        vcf-vcf2bed  [VCF] Convert a VCF file to a BED file.
-       vcf-vep      [VCF] Filter a VCF file annotated by Ensemble VEP.
+       vcf-vep      [VCF] Filter a VCF file annotated by Ensembl VEP.
    
    optional arguments:
      -h, --help     Show this help message and exit.
@@ -240,7 +241,7 @@ To merge VCF files:
 
    $ fuc vcf-merge 1.vcf 2.vcf 3.vcf > merged.vcf
 
-To filter a VCF file annotated by Ensemble VEP:
+To filter a VCF file annotated by Ensembl VEP:
 
 .. code-block:: text
 

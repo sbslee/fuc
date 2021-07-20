@@ -55,9 +55,10 @@ import warnings
 
 from . import pyvcf, common
 
-import pandas as pd
-import seaborn as sns
 import numpy as np
+import pandas as pd
+import statsmodels.formula.api as smf
+import seaborn as sns
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import matplotlib.gridspec as gridspec
@@ -91,7 +92,7 @@ COMMON_COLUMNS = [
     'Tumor_Seq_Allele2', 'Tumor_Sample_Barcode', 'Protein_Change'
 ]
 
-# Below is the list of calculated variant consequences from Ensemble VEP:
+# Below is the list of calculated variant consequences from Ensembl VEP:
 # https://m.ensembl.org/info/genome/variation/prediction/predicted_data.html
 # (accessed on 2021-05-31)
 #
@@ -730,10 +731,10 @@ class MafFrame:
         Construct a MafFrame from a VCF file or VcfFrame.
 
         It is recommended that the input VCF data be functionally annotated
-        by an annotation tool such as Ensemble VEP, SnpEff, and ANNOVAR;
+        by an annotation tool such as Ensembl VEP, SnpEff, and ANNOVAR;
         however, the method can handle unannotated VCF data as well.
 
-        The preferred tool for functional annotation is Ensemble VEP with
+        The preferred tool for functional annotation is Ensembl VEP with
         "RefSeq transcripts" as the transcript database and the filtering
         option "Show one selected consequence per variant".
 
@@ -885,7 +886,7 @@ class MafFrame:
                 elif consequence in VEP_CONSEQUENCES:
                     variant_classification = VEP_CONSEQUENCES[consequence]
                 else:
-                    m = f'Found unknown Ensemble VEP consequence: {consequence}'
+                    m = f'Found unknown Ensembl VEP consequence: {consequence}'
                     raise ValueError(m)
 
             # Get the Tumor_Sample_Barcode data.
@@ -1119,7 +1120,8 @@ class MafFrame:
         return df
 
     def plot_genes(
-        self, mode='variants', count=10, ax=None, figsize=None, **kwargs
+        self, mode='variants', count=10, flip=False, ax=None, figsize=None,
+        **kwargs
     ):
         """
         Create a bar plot showing variant distirbution for top mutated genes.
@@ -1135,12 +1137,15 @@ class MafFrame:
               'Multi_Hit'.
         count : int, default: 10
             Number of top mutated genes to display.
+        flip : bool, default: False
+            If True, flip the x and y axes.
         ax : matplotlib.axes.Axes, optional
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
             Width, height in inches. Format: (float, float).
         kwargs
             Other keyword arguments will be passed down to
+            :meth:`pandas.DataFrame.plot.bar` or
             :meth:`pandas.DataFrame.plot.barh`.
 
         Returns
@@ -1186,11 +1191,21 @@ class MafFrame:
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
-        df.plot.barh(stacked=True, ax=ax, color=colors,
-            legend=False, **kwargs)
+        if flip:
+            df = df.iloc[::-1]
+            kind = 'bar'
+            xlabel, ylabel = '', 'Count'
+        else:
+            kind = 'barh'
+            xlabel, ylabel = 'Count', ''
 
-        ax.set_xlabel('Count')
-        ax.set_ylabel('')
+        df.plot(
+            kind=kind, ax=ax, stacked=True, legend=False,
+            color=colors, **kwargs
+        )
+
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
 
         return ax
 
@@ -1363,6 +1378,9 @@ class MafFrame:
         correlation between gene mutation frequencies in two sample groups
         A and B.
 
+        The method will automatically calculate and print summary statistics
+        including R-squared and p-value.
+
         Parameters
         ----------
         af : AnnFrame
@@ -1405,6 +1423,9 @@ class MafFrame:
             >>> mf = pymaf.MafFrame.from_file(maf_file)
             >>> af = pymaf.AnnFrame.from_file(annot_file)
             >>> mf.plot_regplot(af, 'FAB_classification', 'M1', 'M2')
+            Results for M2 ~ M1:
+            R^2 = 0.43
+              P = 3.96e-02
             >>> plt.tight_layout()
         """
         df1 = self.matrix_prevalence()
@@ -1432,6 +1453,12 @@ class MafFrame:
         # Write the DataFrame to a CSV file.
         if to_csv is not None:
             df3.to_csv(to_csv)
+
+        # Print summary statistics including R-squared and p-value.
+        results = smf.ols(f'{b} ~ {a}', data=df3).fit()
+        print(f'Results for {b} ~ {a}:')
+        print(f'R^2 = {results.rsquared:.2f}')
+        print(f'  P = {results.f_pvalue:.2e}')
 
         return ax
 
@@ -1514,6 +1541,100 @@ class MafFrame:
 
         if legend:
             ax.legend()
+
+        return ax
+
+    def plot_mutated(
+        self, af=None, hue=None, hue_order=None, genes=None, count=10,
+        ax=None, figsize=None
+    ):
+        """
+        Create a bar plot visualizing the mutation prevalence of top
+        mutated genes.
+
+        Parameters
+        ----------
+        af : AnnFrame, optional
+            AnnFrame containing sample annotation data.
+        hue : str, optional
+            Column in the AnnFrame containing information about sample groups.
+        hue_order : list, optional
+            Order to plot the group levels in.
+        genes : list, optional
+            Genes to display. When absent, top mutated genes (``count``) will
+            be used.
+        count : int, defualt: 10
+            Number of top mutated genes to display. Ignored if ``genes`` is
+            specified.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+        kwargs
+            Other keyword arguments will be passed down to
+            :meth:`seaborn.barplot`.
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+
+        Examples
+        --------
+        Below is a simple example:
+
+        .. plot::
+            :context: close-figs
+
+            >>> import matplotlib.pyplot as plt
+            >>> import seaborn as sns
+            >>> from fuc import common, pymaf
+            >>> common.load_dataset('tcga-laml')
+            >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+            >>> mf = pymaf.MafFrame.from_file(maf_file)
+            >>> mf.plot_mutated()
+            >>> plt.tight_layout()
+
+        We can create a grouped bar plot based on FAB classification:
+
+        .. plot::
+            :context: close-figs
+
+            >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
+            >>> af = pymaf.AnnFrame.from_file(annot_file)
+            >>> mf.plot_mutated(af=af,
+            ...                 hue='FAB_classification',
+            ...                 hue_order=['M0', 'M1', 'M2'])
+            >>> plt.tight_layout()
+        """
+        df = self.matrix_prevalence()
+
+        # Determine which genes to display.
+        if genes is None:
+            genes = self.matrix_genes(count=count).index.to_list()
+
+        df = df.loc[genes]
+        df = df.applymap(lambda x: True if x else False)
+        if hue is None:
+            df = (df.sum(axis=1) / df.shape[1]).to_frame().reset_index()
+            df.columns.values[1] = 'Frequency'
+        else:
+            df = df.T
+            df = pd.merge(df, af.df[hue], left_index=True, right_index=True)
+            df = df.groupby([hue]).mean().reset_index()
+            df = df.melt(id_vars=['FAB_classification'])
+            df.columns = ['FAB_classification', 'Hugo_Symbol', 'Frequency']
+
+        # Determine which matplotlib axes to plot on.
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
+        sns.barplot(
+            x='Hugo_Symbol', y='Frequency', data=df, hue=hue,
+            hue_order=hue_order, ax=ax
+        )
+
+        ax.set_xlabel('')
 
         return ax
 
@@ -1957,6 +2078,9 @@ class MafFrame:
         df = df.apply(lambda r: r/r.sum(), axis=1)
         df.columns = df.columns.get_level_values(1)
         df.columns.name = ''
+        for x in SNV_CLASS_ORDER:
+            if x not in df.columns:
+                df[x] = 0
         df = df[SNV_CLASS_ORDER]
 
         # Determine which samples should be displayed.
@@ -2222,7 +2346,9 @@ class MafFrame:
 
         plt.tight_layout()
 
-    def plot_tmb(self, samples=None, width=0.8, ax=None, figsize=None, **kwargs):
+    def plot_tmb(
+        self, samples=None, width=0.8, ax=None, figsize=None, **kwargs
+    ):
         """
         Create a bar plot showing the :ref:`TMB <glossary:Tumor mutational
         burden (TMB)>` distributions of samples.
@@ -2230,7 +2356,9 @@ class MafFrame:
         Parameters
         ----------
         samples : list, optional
-            Samples to be drawn (in the exact order).
+            List of samples to display (in that order too). If samples that
+            are absent in the MafFrame are provided, the method will give a
+            warning but still draw an empty bar for those samples.
         width : float, default: 0.8
             The width of the bars.
         ax : matplotlib.axes.Axes, optional
@@ -2261,8 +2389,24 @@ class MafFrame:
             >>> plt.tight_layout()
         """
         df = self.matrix_tmb()
+
         if samples is not None:
-            df = df.loc[samples]
+            df = df.T
+            missing_samples = []
+            for sample in samples:
+                if sample not in df.columns:
+                    missing_samples.append(sample)
+            if missing_samples:
+                message = (
+                    'Although the following samples are absent in the '
+                    'MafFrame, they will still be displayed as empty bar: '
+                    f'{missing_samples}.'
+                )
+                warnings.warn(message)
+                for missing_sample in missing_samples:
+                    df[missing_sample] = 0
+            df = df[samples]
+            df = df.T
 
         # Determine which matplotlib axes to plot on.
         if ax is None:
@@ -2537,7 +2681,8 @@ class MafFrame:
         return ax
 
     def plot_waterfall(
-        self, count=10, keep_empty=False, samples=None, ax=None, figsize=None, **kwargs
+        self, count=10, keep_empty=False, samples=None, ax=None,
+        figsize=None, **kwargs
     ):
         """
         Create a waterfall plot.
@@ -2552,7 +2697,9 @@ class MafFrame:
         keep_empty : bool, default: False
             If True, display samples that do not have any mutations.
         samples : list, optional
-            List of samples to display.
+            List of samples to display (in that order too). If samples that
+            are absent in the MafFrame are provided, the method will give a
+            warning but still draw an empty bar for those samples.
         ax : matplotlib.axes.Axes, optional
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
@@ -2582,6 +2729,19 @@ class MafFrame:
         df = self.matrix_waterfall(count=count, keep_empty=keep_empty)
 
         if samples is not None:
+            missing_samples = []
+            for sample in samples:
+                if sample not in df.columns:
+                    missing_samples.append(sample)
+            if missing_samples:
+                message = (
+                    'Although the following samples are absent in the '
+                    'MafFrame, they will still be displayed as empty bar: '
+                    f'{missing_samples}.'
+                )
+                warnings.warn(message)
+                for missing_sample in missing_samples:
+                    df[missing_sample] = 'None'
             df = df[samples]
 
         # Apply the mapping between items and integers.
@@ -2779,7 +2939,7 @@ class MafFrame:
         Parameters
         ----------
         af : AnnFrame
-            AnnFrame with sample annotaton data.
+            AnnFrame containing sample annotation data.
         expr : str
             Query expression to evaluate.
 

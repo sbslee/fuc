@@ -1,8 +1,10 @@
-from .. import api
 import sys
+import subprocess
+
+from .. import api
 
 description = f"""
-This command will count sequence reads in FASTQ files (both zipped and unzipped).
+This command will count sequence reads in FASTQ files.
 
 It will look for stdin if there are no arguments.
 
@@ -21,17 +23,22 @@ def create_parser(subparsers):
     parser.add_argument(
         'fastq',
         nargs='*',
-        help='FASTQ files (default: stdin).'
+        help='FASTQ files (zipped or unzipped) (default: stdin).'
     )
     return parser
 
 def main(args):
     if args.fastq:
-        paths = args.fastq
+        fastqs = args.fastq
     elif not sys.stdin.isatty():
-        paths = sys.stdin.read().rstrip('\n').split('\n')
+        fastqs = sys.stdin.read().rstrip('\n').split('\n')
     else:
-        raise ValueError('no input files detected')
-    for path in paths:
-        qf = api.pyfq.FqFrame.from_file(path)
-        print(qf.df.shape[0])
+        raise ValueError('No input files detected.')
+
+    for fastq in fastqs:
+        if fastq.endswith('.gz'):
+            cat = 'zcat'
+        else:
+            cat = 'cat'
+        command = f'echo $({cat} < {fastq} | wc -l) / 4 | bc'
+        subprocess.run(command, shell=True)

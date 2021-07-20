@@ -3,7 +3,7 @@ import sys
 from .. import api
 
 description = f"""
-This command will filter a VCF file annotated by Ensemble VEP.
+This command will filter a VCF file annotated by Ensembl VEP.
 
 Usage examples:
   $ fuc {api.common._script_name()} in.vcf "SYMBOL == 'TP53'" > out.vcf
@@ -19,12 +19,12 @@ def create_parser(subparsers):
     parser = api.common._add_parser(
         subparsers,
         api.common._script_name(),
-        help='[VCF] Filter a VCF file annotated by Ensemble VEP.',
+        help='[VCF] Filter a VCF file annotated by Ensembl VEP.',
         description=description,
     )
     parser.add_argument(
         'vcf',
-        help='VCF file annotated by Ensemble VEP.'
+        help='VCF file annotated by Ensembl VEP.'
     )
     parser.add_argument(
         'expr',
