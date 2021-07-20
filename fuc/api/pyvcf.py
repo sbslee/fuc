@@ -1799,6 +1799,50 @@ class VcfFrame:
             if '=<ID=' in line:
                 print(line)
 
+    def miss2ref(self):
+        """
+        Convert missing genotype (./.) to homozygous REF (0/0).
+
+        Returns
+        -------
+        VcfFrame
+            VcfFrame object.
+
+        Examples
+        --------
+
+        >>> from fuc import pyvcf
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr2'],
+        ...     'POS': [100, 101],
+        ...     'ID': ['.', '.'],
+        ...     'REF': ['G', 'T'],
+        ...     'ALT': ['A', 'C'],
+        ...     'QUAL': ['.', '.'],
+        ...     'FILTER': ['.', '.'],
+        ...     'INFO': ['.', '.'],
+        ...     'FORMAT': ['GT', 'GT'],
+        ...     'A': ['./.', '1/1'],
+        ...     'B': ['./.', './.']
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    B
+        0  chr1  100  .   G   A    .      .    .     GT  ./.  ./.
+        1  chr2  101  .   T   C    .      .    .     GT  1/1  ./.
+        >>> new_vf = vf.miss2ref()
+        >>> new_vf.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    B
+        0  chr1  100  .   G   A    .      .    .     GT  0/0  0/0
+        1  chr2  101  .   T   C    .      .    .     GT  1/1  0/0
+        """
+        df = self.copy_df()
+        def one_gt(g):
+            l = [g.split(':')[0].replace('.', '0')] + g.split(':')[1:]
+            return ':'.join(l)
+        df.iloc[:, 9:] = df.iloc[:, 9:].applymap(one_gt)
+        return self.__class__(self.copy_meta(), df)
+
     def plot_comparison(
         self, a, b, c=None, labels=None, ax=None, figsize=None
     ):
@@ -4404,47 +4448,3 @@ class VcfFrame:
         )
 
         return ax
-
-    def miss2ref(self):
-        """
-        Convert missing genotype (./.) to REF homozygous (0/0).
-
-        Returns
-        -------
-        VcfFrame
-            VcfFrame object.
-
-        Examples
-        --------
-        
-        >>> from fuc import pyvcf
-        >>> data = {
-        ...     'CHROM': ['chr1', 'chr2'],
-        ...     'POS': [100, 101],
-        ...     'ID': ['.', '.'],
-        ...     'REF': ['G', 'T'],
-        ...     'ALT': ['A', 'C'],
-        ...     'QUAL': ['.', '.'],
-        ...     'FILTER': ['.', '.'],
-        ...     'INFO': ['.', '.'],
-        ...     'FORMAT': ['GT', 'GT'],
-        ...     'A': ['./.', '1/1'],
-        ...     'B': ['./.', './.']
-        ... }
-        >>> vf = pyvcf.VcfFrame.from_dict([], data)
-        >>> vf.df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    B
-        0  chr1  100  .   G   A    .      .    .     GT  ./.  ./.
-        1  chr2  101  .   T   C    .      .    .     GT  1/1  ./.
-        >>> new_vf = vf.miss2ref()
-        >>> new_vf.df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    B
-        0  chr1  100  .   G   A    .      .    .     GT  0/0  0/0
-        1  chr2  101  .   T   C    .      .    .     GT  1/1  0/0
-        """
-        df = self.copy_df()
-        def one_gt(g):
-            l = [g.split(':')[0].replace('.', '0')] + g.split(':')[1:]
-            return ':'.join(l)
-        df.iloc[:, 9:] = df.iloc[:, 9:].applymap(one_gt)
-        return self.__class__(self.copy_meta(), df)
