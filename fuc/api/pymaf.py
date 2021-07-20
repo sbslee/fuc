@@ -1120,7 +1120,8 @@ class MafFrame:
         return df
 
     def plot_genes(
-        self, mode='variants', count=10, ax=None, figsize=None, **kwargs
+        self, mode='variants', count=10, flip=False, ax=None, figsize=None,
+        **kwargs
     ):
         """
         Create a bar plot showing variant distirbution for top mutated genes.
@@ -1136,6 +1137,8 @@ class MafFrame:
               'Multi_Hit'.
         count : int, default: 10
             Number of top mutated genes to display.
+        flip : bool, default: False
+            If True, flip the x and y axes.
         ax : matplotlib.axes.Axes, optional
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
@@ -1187,11 +1190,21 @@ class MafFrame:
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
-        df.plot.barh(stacked=True, ax=ax, color=colors,
-            legend=False, **kwargs)
+        if flip:
+            df = df.iloc[::-1]
+            kind = 'bar'
+            xlabel, ylabel = '', 'Count'
+        else:
+            kind = 'barh'
+            xlabel, ylabel = 'Count', ''
 
-        ax.set_xlabel('Count')
-        ax.set_ylabel('')
+        df.plot(
+            kind=kind, ax=ax, stacked=True, legend=False,
+            color=colors, **kwargs
+        )
+
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
 
         return ax
 

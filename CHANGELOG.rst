@@ -14,6 +14,7 @@ Changelog
 * Add :meth:`pyvcf.VcfFrame.miss2ref` method.
 * Update :meth:`pymaf.MafFrame.plot_tmb` method to draw empty bars with warning when specified samples do not exist.
 * Update :meth:`pymaf.MafFrame.plot_waterfall` method to draw empty bars with warning when specified samples do not exist.
+* Add ``flip`` argument to :meth:`pymaf.MafFrame.plot_genes` method.
 
 0.17.0 (2021-07-08)
 -------------------
