@@ -1544,6 +1544,85 @@ class MafFrame:
 
         return ax
 
+    def plot_mutated(
+        self, af=None, hue=None, hue_order=None, genes=None, count=10,
+        ax=None, figsize=None
+    ):
+        """
+        Create a bar plot visualizing the mutation prevalence of top
+        mutated genes.
+
+        Parameters
+        ----------
+        af : AnnFrame
+            AnnFrame with sample annotaton data.
+        expr : str
+            Query expression to evaluate.
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+
+        Examples
+        --------
+        Below is a simple example:
+
+        .. plot::
+            :context: close-figs
+
+            >>> import matplotlib.pyplot as plt
+            >>> import seaborn as sns
+            >>> from fuc import common, pymaf
+            >>> common.load_dataset('tcga-laml')
+            >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+            >>> mf = pymaf.MafFrame.from_file(maf_file)
+            >>> mf.plot_mutated()
+            >>> plt.tight_layout()
+
+        We can create a grouped bar plot based on FAB classification:
+
+        .. plot::
+            :context: close-figs
+
+            >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
+            >>> af = pymaf.AnnFrame.from_file(annot_file)
+            >>> mf.plot_mutated(af=af,
+            ...                 hue='FAB_classification',
+            ...                 hue_order=['M0', 'M1', 'M2'])
+            >>> plt.tight_layout()
+        """
+        df = self.matrix_prevalence()
+
+        # Determine which genes to display.
+        if genes is None:
+            genes = self.matrix_genes(count=count).index.to_list()
+
+        df = df.loc[genes]
+        df = df.applymap(lambda x: True if x else False)
+        if hue is None:
+            df = (df.sum(axis=1) / df.shape[1]).to_frame().reset_index()
+            df.columns.values[1] = 'Frequency'
+        else:
+            df = df.T
+            df = pd.merge(df, af.df[hue], left_index=True, right_index=True)
+            df = df.groupby([hue]).mean().reset_index()
+            df = df.melt(id_vars=['FAB_classification'])
+            df.columns = ['FAB_classification', 'Hugo_Symbol', 'Frequency']
+
+        # Determine which matplotlib axes to plot on.
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
+        sns.barplot(
+            x='Hugo_Symbol', y='Frequency', data=df, hue=hue,
+            hue_order=hue_order, ax=ax
+        )
+
+        ax.set_xlabel('')
+
+        return ax
+
     def plot_rainfall(
         self, sample, palette=None, legend='auto', ax=None, figsize=None,
         **kwargs

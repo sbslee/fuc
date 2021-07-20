@@ -15,6 +15,7 @@ Changelog
 * Update :meth:`pymaf.MafFrame.plot_tmb` method to draw empty bars with warning when specified samples do not exist.
 * Update :meth:`pymaf.MafFrame.plot_waterfall` method to draw empty bars with warning when specified samples do not exist.
 * Add ``flip`` argument to :meth:`pymaf.MafFrame.plot_genes` method.
+* Add new method :meth:`pymaf.MafFrame.plot_mutated`.
 
 0.17.0 (2021-07-08)
 -------------------
