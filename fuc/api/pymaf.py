@@ -1145,6 +1145,7 @@ class MafFrame:
             Width, height in inches. Format: (float, float).
         kwargs
             Other keyword arguments will be passed down to
+            :meth:`pandas.DataFrame.plot.bar` or
             :meth:`pandas.DataFrame.plot.barh`.
 
         Returns
