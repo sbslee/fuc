@@ -1554,10 +1554,25 @@ class MafFrame:
 
         Parameters
         ----------
-        af : AnnFrame
-            AnnFrame with sample annotaton data.
-        expr : str
-            Query expression to evaluate.
+        af : AnnFrame, optional
+            AnnFrame containing sample annotation data.
+        hue : str, optional
+            Column in the AnnFrame containing information about sample groups.
+        hue_order : list, optional
+            Order to plot the group levels in.
+        genes : list, optional
+            Genes to display. When absent, top mutated genes (``count``) will
+            be used.
+        count : int, defualt: 10
+            Number of top mutated genes to display. Ignored if ``genes`` is
+            specified.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+        kwargs
+            Other keyword arguments will be passed down to
+            :meth:`seaborn.barplot`.
 
         Returns
         -------
@@ -2924,7 +2939,7 @@ class MafFrame:
         Parameters
         ----------
         af : AnnFrame
-            AnnFrame with sample annotaton data.
+            AnnFrame containing sample annotation data.
         expr : str
             Query expression to evaluate.
 
