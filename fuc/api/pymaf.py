@@ -2573,7 +2573,8 @@ class MafFrame:
         return ax
 
     def plot_waterfall(
-        self, count=10, keep_empty=False, samples=None, ax=None, figsize=None, **kwargs
+        self, count=10, keep_empty=False, samples=None, ax=None,
+        figsize=None, **kwargs
     ):
         """
         Create a waterfall plot.
@@ -2588,7 +2589,9 @@ class MafFrame:
         keep_empty : bool, default: False
             If True, display samples that do not have any mutations.
         samples : list, optional
-            List of samples to display.
+            List of samples to display (in that order too). If samples that
+            are absent in the MafFrame are provided, the method will give a
+            warning but still draw an empty bar for those samples.
         ax : matplotlib.axes.Axes, optional
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
@@ -2618,6 +2621,19 @@ class MafFrame:
         df = self.matrix_waterfall(count=count, keep_empty=keep_empty)
 
         if samples is not None:
+            missing_samples = []
+            for sample in samples:
+                if sample not in df.columns:
+                    missing_samples.append(sample)
+            if missing_samples:
+                message = (
+                    'Although the following samples are absent in the '
+                    'MafFrame, they will still be displayed as empty bar: '
+                    f'{missing_samples}.'
+                )
+                warnings.warn(message)
+                for missing_sample in missing_samples:
+                    df[missing_sample] = 'None'
             df = df[samples]
 
         # Apply the mapping between items and integers.
