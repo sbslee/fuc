@@ -11,7 +11,7 @@ Changelog
 * Add ``statsmodels`` package as dependency for performing statistical analysis.
 * Update :meth:`pymaf.MafFrame.plot_regplot` method to calculate and print summary statistics as well.
 * Update :meth:`pyvcf.VcfFrame.plot_regplot` method to calculate and print summary statistics as well.
-* Add :meth:`pyvcf.VcfFrame.miss2ref` method.
+* :issue:`32`: Add :meth:`pyvcf.VcfFrame.miss2ref` method.
 * Update :meth:`pymaf.MafFrame.plot_tmb` method to draw empty bars with warning when specified samples do not exist.
 * Update :meth:`pymaf.MafFrame.plot_waterfall` method to draw empty bars with warning when specified samples do not exist.
 * Add ``flip`` argument to :meth:`pymaf.MafFrame.plot_genes` method.
