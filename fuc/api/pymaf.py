@@ -2719,7 +2719,16 @@ class MafFrame:
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
-        sns.heatmap(df, cmap=['lightgray', 'yellow', 'green', 'blue'], linewidth=0.5, ax=ax, **kwargs)
+        sns.heatmap(
+            df, cmap=['lightgray', 'yellow', 'green', 'blue'], linewidth=0.5,
+            ax=ax, **kwargs
+        )
+
+        colorbar = ax.collections[0].colorbar
+        n=4
+        r = colorbar.vmax - colorbar.vmin
+        colorbar.set_ticks([colorbar.vmin + r / n * (0.5 + i) for i in range(n)])
+        colorbar.set_ticklabels(['0', '1', '2', '3'])
 
         ax.set_xlabel('')
         ax.set_ylabel('')
