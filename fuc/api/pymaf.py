@@ -2678,6 +2678,54 @@ class MafFrame:
 
         return ax
 
+    def plot_repmatrix(self, gene, af, col, ax=None, figsize=None, **kwargs):
+        """
+        Create a heatmap of count matrix with a shape of (sample groups,
+        protein changes).
+
+        Parameters
+        ----------
+        gene : str
+            Name of the gene.
+        af : AnnFrame
+            AnnFrame containing sample annotation data.
+        col : str
+            Column in the AnnFrame containing information about sample groups.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+        kwargs
+            Other keyword arguments will be passed down to
+            :meth:`seaborn.heatmap`.
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+        """
+        df = self.df[self.df.Hugo_Symbol == gene]
+        df = df[['Tumor_Sample_Barcode', 'Protein_Change']]
+        df = df.merge(af.df.StudyID, left_on='Tumor_Sample_Barcode', right_index=True)
+        s = df.groupby(col)['Protein_Change'].value_counts()
+        s.name = 'Count'
+        df = s.to_frame().reset_index()
+        df = df.pivot(index=col,
+                      columns='Protein_Change',
+                      values='Count')
+        df = df.fillna(0)
+
+        # Determine which matplotlib axes to plot on.
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
+        sns.heatmap(df, cmap=['lightgray', 'yellow', 'green', 'blue'], linewidth=0.5, ax=ax, **kwargs)
+
+        ax.set_xlabel('')
+        ax.set_ylabel('')
+
+        return ax
+
     def plot_varsum(self, flip=False, ax=None, figsize=None):
         """
         Create a summary box plot for variant classifications.
