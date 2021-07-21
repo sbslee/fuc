@@ -1617,20 +1617,20 @@ class MafFrame:
         df = df.applymap(lambda x: True if x else False)
         if hue is None:
             df = (df.sum(axis=1) / df.shape[1]).to_frame().reset_index()
-            df.columns.values[1] = 'Frequency'
+            df.columns.values[1] = 'Prevalence'
         else:
             df = df.T
             df = pd.merge(df, af.df[hue], left_index=True, right_index=True)
             df = df.groupby([hue]).mean().reset_index()
             df = df.melt(id_vars=[hue])
-            df.columns = [hue, 'Hugo_Symbol', 'Frequency']
+            df.columns = [hue, 'Hugo_Symbol', 'Prevalence']
 
         # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
         sns.barplot(
-            x='Hugo_Symbol', y='Frequency', data=df, hue=hue,
+            x='Hugo_Symbol', y='Prevalence', data=df, hue=hue,
             hue_order=hue_order, ax=ax
         )
 
