@@ -2423,7 +2423,7 @@ class MafFrame:
 
     def plot_vaf(
         self, col, count=10, af=None, hue=None, hue_order=None,
-        flip=False, ax=None, figsize=None, **kwargs
+        flip=False, sort=True, ax=None, figsize=None, **kwargs
     ):
         """
         Create a box plot showing the VAF distributions of top mutated genes.
@@ -2445,6 +2445,8 @@ class MafFrame:
             Order to plot the group levels in.
         flip : bool, default: False
             If True, flip the x and y axes.
+        sort : bool, default: True
+            If False, do not sort the genes by median value.
         ax : matplotlib.axes.Axes, optional
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
@@ -2488,12 +2490,14 @@ class MafFrame:
             ...             count=5)
             >>> plt.tight_layout()
         """
-        medians = self.df.groupby('Hugo_Symbol')[col].median()
-        top_genes = self.matrix_genes(count=count).index.to_list()
-        sorted_genes = medians[top_genes].sort_values(
-            ascending=False).index.to_list()
+        genes = self.matrix_genes(count=count).index.to_list()
 
-        df = self.df[self.df.Hugo_Symbol.isin(sorted_genes)]
+        if sort:
+            medians = self.df.groupby('Hugo_Symbol')[col].median()
+            genes = medians[genes].sort_values(
+                ascending=False).index.to_list()
+
+        df = self.df[self.df.Hugo_Symbol.isin(genes)]
 
         if hue is not None:
             df = pd.merge(df, af.df, left_on='Tumor_Sample_Barcode',
@@ -2510,8 +2514,10 @@ class MafFrame:
             x, y = 'Hugo_Symbol', col
             xlabel, ylabel = '', 'VAF'
 
-        sns.boxplot(x=x, y=y, data=df, ax=ax, order=sorted_genes,
-            hue=hue, hue_order=hue_order, **kwargs)
+        sns.boxplot(
+            x=x, y=y, data=df, ax=ax, order=genes, hue=hue,
+            hue_order=hue_order, **kwargs
+        )
 
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
