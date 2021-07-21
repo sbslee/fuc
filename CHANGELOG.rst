@@ -6,6 +6,7 @@ Changelog
 
 * Fix a bug in :meth:`pymaf.MafFrame.plot_mutated` when using the ``hue`` option.
 * Add ``sort`` argument to :meth:`pymaf.MafFrame.plot_vaf` method.
+* Add new method :meth:`pymaf.MafFrame.plot_varmatrix`.
 
 0.18.0 (2021-07-20)
 -------------------

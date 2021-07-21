@@ -2577,8 +2577,110 @@ class MafFrame:
 
         return ax
 
+    def plot_varmatrix(
+        self, gene, samples=None, c0='lightgray', c1='red', ax=None,
+        figsize=None, **kwargs
+    ):
+        """
+        Create a heatmap of presence/absence matrix with a shape of (samples,
+        protein changes).
+
+        Parameters
+        ----------
+        gene : str
+            Name of the gene.
+        samples : list, optional
+            List of samples to display (in that order too). If samples that
+            are absent in the MafFrame are provided, the method will give a
+            warning but still draw an empty bar for those samples.
+        c0 : str, default: 'lightgray'
+            Color for absence.
+        c1 : str, default: 'red'
+            Color for presence.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+        kwargs
+            Other keyword arguments will be passed down to
+            :meth:`seaborn.heatmap`.
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+
+        Examples
+        --------
+
+        .. plot::
+
+            >>> import matplotlib.pyplot as plt
+            >>> from fuc import common, pymaf
+            >>> common.load_dataset('tcga-laml')
+            >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+            >>> mf = pymaf.MafFrame.from_file(maf_file)
+            >>> mf.plot_varmatrix('KRAS', linewidth=0.5)
+            >>> plt.tight_layout()
+        """
+        df = self.df[self.df.Hugo_Symbol == gene]
+
+        if df.empty:
+            raise ValueError(f'No protein changes were found: {gene}')
+
+        df = df[['Tumor_Sample_Barcode', 'Protein_Change']]
+        df = df[df.Protein_Change != '.']
+        df['Presence'] = 1
+        df = df.pivot(index='Tumor_Sample_Barcode',
+                      columns='Protein_Change',
+                      values='Presence')
+        df = df.fillna(0)
+
+        if samples is not None:
+            missing_samples = []
+            for sample in samples:
+                if sample not in df.index:
+                    missing_samples.append(sample)
+            if missing_samples:
+                message = (
+                    'Although the following samples are absent in the '
+                    'MafFrame, they will still be displayed as empty bar: '
+                    f'{missing_samples}.'
+                )
+                warnings.warn(message)
+                df = df.T
+                for missing_sample in missing_samples:
+                    df[missing_sample] = 0
+                df = df[samples]
+                df = df.T
+
+        # Sort protein changes by position.
+        f = lambda s: int(''.join([x for x in list(s) if x.isdigit()]))
+        l = df.columns
+        s = pd.Series([f(x) for x in l], index=l).sort_values()
+        df = df[s.index]
+
+        # Determine which matplotlib axes to plot on.
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
+        if len(np.unique(df.values)) == 1:
+            cmap = [c1]
+        else:
+            cmap = [c0, c1]
+
+        sns.heatmap(
+            df, cbar=False, cmap=cmap, ax=ax, **kwargs
+        )
+
+        ax.set_xlabel('')
+        ax.set_ylabel('')
+
+        return ax
+
     def plot_varsum(self, flip=False, ax=None, figsize=None):
-        """Create a summary box plot for variant classifications.
+        """
+        Create a summary box plot for variant classifications.
 
         Parameters
         ----------
