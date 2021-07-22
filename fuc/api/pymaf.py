@@ -2578,7 +2578,8 @@ class MafFrame:
         return ax
 
     def plot_matrixg(
-        self, gene, af, col, cbar=True, ax=None, figsize=None, **kwargs
+        self, gene, af, col, groups=None, cbar=True, ax=None, figsize=None,
+        **kwargs
     ):
         """
         Create a heatmap of count matrix with a shape of (sample groups,
@@ -2623,6 +2624,10 @@ class MafFrame:
             >>> plt.tight_layout()
         """
         df = self.df[self.df.Hugo_Symbol == gene]
+
+        if df.empty:
+            raise ValueError(f'No protein changes were found: {gene}')
+
         df = df[['Tumor_Sample_Barcode', 'Protein_Change']]
         df = df.merge(af.df[col], left_on='Tumor_Sample_Barcode', right_index=True)
         s = df.groupby(col)['Protein_Change'].value_counts()
@@ -2633,12 +2638,36 @@ class MafFrame:
                       values='Count')
         df = df.fillna(0)
 
+        if groups is not None:
+            missing_groups = []
+            for group in groups:
+                if group not in df.index:
+                    missing_groups.append(group)
+            if missing_groups:
+                message = (
+                    'Although the following sample groups are absent in the '
+                    'MafFrame, they will still be displayed as empty bar: '
+                    f'{missing_groups}.'
+                )
+                warnings.warn(message)
+                df = df.T
+                for missing_group in missing_groups:
+                    df[missing_group] = 0
+                df = df[groups]
+                df = df.T
+
+        # Sort protein changes by position.
+        f = lambda s: int(''.join([x for x in list(s) if x.isdigit()]))
+        l = df.columns
+        s = pd.Series([f(x) for x in l], index=l).sort_values()
+        df = df[s.index]
+
         # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
         sns.heatmap(
-            df, ax=ax, **kwargs
+            df, ax=ax, cbar=cbar, **kwargs
         )
 
         ax.set_xlabel('')
