@@ -1302,11 +1302,16 @@ class MafFrame:
         plt.subplots_adjust(wspace=0.01, hspace=0.01)
 
     def plot_clonality(
-        self, col, af=None, hue=None, hue_order=None, ax=None, figsize=None
+        self, col, af=None, hue=None, hue_order=None, threshold=0.25,
+        ax=None, figsize=None
     ):
         """
         Create a bar plot summarizing the clonality of variants in top
         mutated genes.
+
+        A mutation will be defined as "Subclonal" if the VAF is less than the
+        threshold percentage (e.g. 25%) of the highest VAF in the sample and
+        is defined as "Clonal" if it is equal to or above this threshold.
 
         Parameters
         ----------
@@ -1318,6 +1323,8 @@ class MafFrame:
             Column in the AnnFrame containing information about sample groups.
         hue_order : list, optional
             Order to plot the group levels in.
+        threshold : float, default: 0.25
+            VAF threshold percentage.
         ax : matplotlib.axes.Axes, optional
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
@@ -1364,7 +1371,7 @@ class MafFrame:
 
         def one_row(r):
             m = d[r.Tumor_Sample_Barcode]
-            if r[col] < m * 0.25:
+            if r[col] < m * threshold:
                 result = 'Subclonal'
             else:
                 result = 'Clonal'
