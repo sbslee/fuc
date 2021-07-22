@@ -1301,6 +1301,109 @@ class MafFrame:
         plt.tight_layout()
         plt.subplots_adjust(wspace=0.01, hspace=0.01)
 
+    def plot_clonality(
+        self, col, af=None, hue=None, hue_order=None, ax=None, figsize=None
+    ):
+        """
+        Create a bar plot summarizing the clonality of variants in top
+        mutated genes.
+
+        Parameters
+        ----------
+        col : str
+            Column in the MafFrame containing VAF data.
+        af : AnnFrame, optional
+            AnnFrame containing sample annotation data.
+        hue : str, optional
+            Column in the AnnFrame containing information about sample groups.
+        hue_order : list, optional
+            Order to plot the group levels in.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+        kwargs
+            Other keyword arguments will be passed down to
+            :meth:`seaborn.barplot`.
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+
+        Examples
+        --------
+
+        Below is a simple example:
+
+        .. plot::
+            :context: close-figs
+
+            >>> import matplotlib.pyplot as plt
+            >>> from fuc import common, pymaf
+            >>> common.load_dataset('tcga-laml')
+            >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+            >>> mf = pymaf.MafFrame.from_file(maf_file)
+            >>> mf.plot_clonality('i_TumorVAF_WU')
+            >>> plt.tight_layout()
+
+        We can create a grouped bar plot based on FAB classification:
+
+        .. plot::
+            :context: close-figs
+
+            >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
+            >>> af = pymaf.AnnFrame.from_file(annot_file)
+            >>> mf.plot_clonality('i_TumorVAF_WU',
+            ...                   af=af,
+            ...                   hue='FAB_classification',
+            ...                   hue_order=['M0', 'M1', 'M2'])
+            >>> plt.tight_layout()
+        """
+        d = self.df.groupby('Tumor_Sample_Barcode')[col].max().to_dict()
+
+        def one_row(r):
+            m = d[r.Tumor_Sample_Barcode]
+            if r[col] < m * 0.25:
+                result = 'Subclonal'
+            else:
+                result = 'Clonal'
+            return result
+
+        df = self.df.copy()
+        df['Clonality'] = df.apply(one_row, axis=1)
+
+        if hue is None:
+            s = df.groupby('Hugo_Symbol')['Clonality'].value_counts()
+            s.name = 'Count'
+            df = s.to_frame().reset_index()
+            df = df.pivot(index='Hugo_Symbol', columns='Clonality', values='Count')
+        else:
+            df = df.merge(af.df[hue], left_on='Tumor_Sample_Barcode', right_index=True)
+            s = df.groupby(['Hugo_Symbol', hue])['Clonality'].value_counts()
+            s.name = 'Count'
+            df = s.to_frame().reset_index()
+            df = df.pivot(index=['Hugo_Symbol', hue], columns='Clonality', values='Count')
+
+        df = df.reset_index()
+        df = df.fillna(0)
+        l = ['Clonal', 'Subclonal']
+        df[l] = df[l].div(df[l].sum(axis=1), axis=0)
+        genes = self.matrix_genes().index
+
+        # Determine which matplotlib axes to plot on.
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
+        sns.barplot(
+            x='Hugo_Symbol', y='Clonal', data=df, order=genes, hue=hue,
+            hue_order=hue_order, ax=ax
+        )
+
+        ax.set_xlabel('')
+
+        return ax
+
     def plot_evolution(
         self, samples, col, anchor=None, normalize=True, count=5, ax=None,
         figsize=None, **kwargs

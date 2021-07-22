@@ -8,6 +8,7 @@ Changelog
 * Add ``sort`` argument to :meth:`pymaf.MafFrame.plot_vaf` method.
 * Add new method :meth:`pymaf.MafFrame.plot_matrixs`.
 * Add new method :meth:`pymaf.MafFrame.plot_matrixg`.
+* Add new method :meth:`pymaf.MafFrame.plot_clonality`.
 
 0.18.0 (2021-07-20)
 -------------------
