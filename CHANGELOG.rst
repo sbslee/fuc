@@ -9,6 +9,7 @@ Changelog
 * Add new method :meth:`pymaf.MafFrame.plot_matrixs`.
 * Add new method :meth:`pymaf.MafFrame.plot_matrixg`.
 * Add new method :meth:`pymaf.MafFrame.plot_clonality`.
+* Fix a bug in :meth:`pymaf.MafFrame.plot_evolution` when there are no variants to display for the specified samples.
 
 0.18.0 (2021-07-20)
 -------------------

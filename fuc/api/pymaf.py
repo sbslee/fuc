@@ -1446,6 +1446,11 @@ class MafFrame:
             The matplotlib axes containing the plot.
         """
         df = self.df[self.df.Tumor_Sample_Barcode.isin(samples)]
+
+        if df.empty:
+            message = f'No variants to display for the samples: {samples}.'
+            raise ValueError(message)
+
         df = df[df.Variant_Classification.isin(NONSYN_NAMES)]
 
         def one_row(r):
@@ -1462,12 +1467,19 @@ class MafFrame:
         df.columns.name = ''
         df = df.fillna(0)
 
+        for sample in samples:
+            if sample not in df.columns:
+                df[sample] = 0
+
+        df = df[samples]
+
         if anchor is None:
             anchor = samples[0]
 
         df = df.sort_values(by=anchor, ascending=False)
         if normalize:
             df = df / df.max()
+        df = df.fillna(0)
         df = df.iloc[:count, :].T
         df = df.loc[samples]
 
