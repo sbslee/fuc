@@ -1302,8 +1302,8 @@ class MafFrame:
         plt.subplots_adjust(wspace=0.01, hspace=0.01)
 
     def plot_clonality(
-        self, col, af=None, hue=None, hue_order=None, threshold=0.25,
-        ax=None, figsize=None
+        self, col, af=None, hue=None, hue_order=None, count=10,
+        threshold=0.25, subclonal=False, ax=None, figsize=None
     ):
         """
         Create a bar plot summarizing the clonality of variants in top
@@ -1323,8 +1323,12 @@ class MafFrame:
             Column in the AnnFrame containing information about sample groups.
         hue_order : list, optional
             Order to plot the group levels in.
+        count : int, defualt: 10
+            Number of top mutated genes to display.
         threshold : float, default: 0.25
             VAF threshold percentage.
+        subclonal : bool, default: False
+            If True, display subclonality (1 - clonality).
         ax : matplotlib.axes.Axes, optional
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
@@ -1396,14 +1400,19 @@ class MafFrame:
         df = df.fillna(0)
         l = ['Clonal', 'Subclonal']
         df[l] = df[l].div(df[l].sum(axis=1), axis=0)
-        genes = self.matrix_genes().index
+        genes = self.matrix_genes(count=count).index
 
         # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
+        if subclonal:
+            y = 'Subclonal'
+        else:
+            y = 'Clonal'
+
         sns.barplot(
-            x='Hugo_Symbol', y='Clonal', data=df, order=genes, hue=hue,
+            x='Hugo_Symbol', y=y, data=df, order=genes, hue=hue,
             hue_order=hue_order, ax=ax
         )
 
