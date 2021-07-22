@@ -2577,9 +2577,78 @@ class MafFrame:
 
         return ax
 
-    def plot_varmatrix(
-        self, gene, samples=None, c0='lightgray', c1='red', ax=None,
-        figsize=None, **kwargs
+    def plot_matrixg(
+        self, gene, af, col, cbar=True, ax=None, figsize=None, **kwargs
+    ):
+        """
+        Create a heatmap of count matrix with a shape of (sample groups,
+        protein changes).
+
+        Parameters
+        ----------
+        gene : str
+            Name of the gene.
+        af : AnnFrame
+            AnnFrame containing sample annotation data.
+        col : str
+            Column in the AnnFrame containing information about sample groups.
+        cbar : bool, default: True
+            Whether to draw a colorbar.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+        kwargs
+            Other keyword arguments will be passed down to
+            :meth:`seaborn.heatmap`.
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+
+        Examples
+        --------
+
+        .. plot::
+
+            >>> import matplotlib.pyplot as plt
+            >>> from fuc import common, pymaf
+            >>> common.load_dataset('tcga-laml')
+            >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+            >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
+            >>> mf = pymaf.MafFrame.from_file(maf_file)
+            >>> af = pymaf.AnnFrame.from_file(annot_file)
+            >>> mf.plot_matrixg('IDH1', af, 'FAB_classification', linewidth=0.5, square=True, annot=True)
+            >>> plt.tight_layout()
+        """
+        df = self.df[self.df.Hugo_Symbol == gene]
+        df = df[['Tumor_Sample_Barcode', 'Protein_Change']]
+        df = df.merge(af.df[col], left_on='Tumor_Sample_Barcode', right_index=True)
+        s = df.groupby(col)['Protein_Change'].value_counts()
+        s.name = 'Count'
+        df = s.to_frame().reset_index()
+        df = df.pivot(index=col,
+                      columns='Protein_Change',
+                      values='Count')
+        df = df.fillna(0)
+
+        # Determine which matplotlib axes to plot on.
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
+        sns.heatmap(
+            df, ax=ax, **kwargs
+        )
+
+        ax.set_xlabel('')
+        ax.set_ylabel('')
+
+        return ax
+
+    def plot_matrixs(
+        self, gene, samples=None, c0='lightgray', c1='red', l0='0', l1='1',
+        cbar=True, square=False, ax=None, figsize=None, **kwargs
     ):
         """
         Create a heatmap of presence/absence matrix with a shape of (samples,
@@ -2597,6 +2666,15 @@ class MafFrame:
             Color for absence.
         c1 : str, default: 'red'
             Color for presence.
+        l0 : str, default: '0'
+            Label for absence.
+        l1 : str, default: '1'
+            Label for presence.
+        cbar : bool, default: True
+            Whether to draw a colorbar.
+        square : bool, default: False
+            If True, set the Axes aspect to "equal" so each cell will be
+            square-shaped.
         ax : matplotlib.axes.Axes, optional
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
@@ -2620,7 +2698,7 @@ class MafFrame:
             >>> common.load_dataset('tcga-laml')
             >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
             >>> mf = pymaf.MafFrame.from_file(maf_file)
-            >>> mf.plot_varmatrix('KRAS', linewidth=0.5)
+            >>> mf.plot_matrixs('KRAS', linewidth=0.5, square=True)
             >>> plt.tight_layout()
         """
         df = self.df[self.df.Hugo_Symbol == gene]
@@ -2666,69 +2744,21 @@ class MafFrame:
 
         if len(np.unique(df.values)) == 1:
             cmap = [c1]
+            cbar_ticklabels = [l1]
         else:
             cmap = [c0, c1]
+            cbar_ticklabels = [l0, l1]
 
         sns.heatmap(
-            df, cbar=False, cmap=cmap, ax=ax, **kwargs
+            df, cbar=cbar, cmap=cmap, square=square, ax=ax, **kwargs
         )
 
-        ax.set_xlabel('')
-        ax.set_ylabel('')
-
-        return ax
-
-    def plot_repmatrix(self, gene, af, col, ax=None, figsize=None, **kwargs):
-        """
-        Create a heatmap of count matrix with a shape of (sample groups,
-        protein changes).
-
-        Parameters
-        ----------
-        gene : str
-            Name of the gene.
-        af : AnnFrame
-            AnnFrame containing sample annotation data.
-        col : str
-            Column in the AnnFrame containing information about sample groups.
-        ax : matplotlib.axes.Axes, optional
-            Pre-existing axes for the plot. Otherwise, crete a new one.
-        figsize : tuple, optional
-            Width, height in inches. Format: (float, float).
-        kwargs
-            Other keyword arguments will be passed down to
-            :meth:`seaborn.heatmap`.
-
-        Returns
-        -------
-        matplotlib.axes.Axes
-            The matplotlib axes containing the plot.
-        """
-        df = self.df[self.df.Hugo_Symbol == gene]
-        df = df[['Tumor_Sample_Barcode', 'Protein_Change']]
-        df = df.merge(af.df.StudyID, left_on='Tumor_Sample_Barcode', right_index=True)
-        s = df.groupby(col)['Protein_Change'].value_counts()
-        s.name = 'Count'
-        df = s.to_frame().reset_index()
-        df = df.pivot(index=col,
-                      columns='Protein_Change',
-                      values='Count')
-        df = df.fillna(0)
-
-        # Determine which matplotlib axes to plot on.
-        if ax is None:
-            fig, ax = plt.subplots(figsize=figsize)
-
-        sns.heatmap(
-            df, cmap=['lightgray', 'yellow', 'green', 'blue'], linewidth=0.5,
-            ax=ax, **kwargs
-        )
-
-        colorbar = ax.collections[0].colorbar
-        n=4
-        r = colorbar.vmax - colorbar.vmin
-        colorbar.set_ticks([colorbar.vmin + r / n * (0.5 + i) for i in range(n)])
-        colorbar.set_ticklabels(['0', '1', '2', '3'])
+        if cbar:
+            colorbar = ax.collections[0].colorbar
+            n=len(cmap)
+            r = colorbar.vmax - colorbar.vmin
+            colorbar.set_ticks([colorbar.vmin + r/n * (0.5+i) for i in range(n)])
+            colorbar.set_ticklabels(cbar_ticklabels)
 
         ax.set_xlabel('')
         ax.set_ylabel('')

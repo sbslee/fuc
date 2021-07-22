@@ -18,12 +18,12 @@ from argparse import RawTextHelpFormatter, SUPPRESS
 FUC_PATH = pathlib.Path(__file__).parent.parent.parent.absolute()
 
 def _script_name():
-    """Return the current script's file name."""
+    """Return the current script's filename."""
     fn = inspect.stack()[1].filename
     return pathlib.Path(fn).stem.replace('_', '-')
 
 def _add_parser(subparsers, name, **kwargs):
-    """Return a formatted parser."""
+    """Return the pre-formatted parser."""
     parser = subparsers.add_parser(
         name,
         add_help=False,
