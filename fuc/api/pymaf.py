@@ -3333,3 +3333,65 @@ class MafFrame:
             return result
         s = self.df.copy().apply(one_row, axis=1)
         return s
+
+    def plot_genepair(
+        self, x, y, col, af=None, hue=None, hue_order=None, ax=None,
+        figsize=None, **kwargs
+    ):
+        """
+        Create a scatter plot of VAF between Gene X and Gene Y.
+
+        Examples
+        --------
+        Below is a simple example:
+
+        .. plot::
+            :context: close-figs
+
+            >>> import matplotlib.pyplot as plt
+            >>> import seaborn as sns
+            >>> from fuc import common, pymaf
+            >>> common.load_dataset('tcga-laml')
+            >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+            >>> mf = pymaf.MafFrame.from_file(maf_file)
+            >>> mf.plot_genepair('DNMT3A', 'FLT3', 'i_TumorVAF_WU')
+            >>> plt.tight_layout()
+
+        We can create a grouped bar plot based on FAB classification:
+
+        .. plot::
+            :context: close-figs
+
+            >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
+            >>> af = pymaf.AnnFrame.from_file(annot_file)
+            >>> mf.plot_genepair('DNMT3A', 'FLT3', 'i_TumorVAF_WU',
+            ...                  af=af,
+            ...                  hue='FAB_classification')
+            >>> plt.tight_layout()
+        """
+        df = self.df[self.df.Hugo_Symbol.isin([x, y])]
+        df = df[['Tumor_Sample_Barcode', 'Hugo_Symbol', col]]
+        df = df.sort_values(col, ascending=False)
+        df = df.drop_duplicates(subset=['Tumor_Sample_Barcode', 'Hugo_Symbol'])
+        df = df.pivot(index='Tumor_Sample_Barcode',
+            columns='Hugo_Symbol', values=col)
+        df = df.fillna(0)
+
+        if hue is not None:
+            df = df.merge(af.df[hue], left_index=True, right_index=True)
+
+        # Determine which matplotlib axes to plot on.
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
+        sns.scatterplot(
+            x=x, y=y, data=df, ax=ax, hue=hue, hue_order=hue_order, **kwargs
+        )
+
+        # Print summary statistics including R-squared and p-value.
+        results = smf.ols(f'{y} ~ {x}', data=df).fit()
+        print(f'Results for {y} ~ {x}:')
+        print(f'R^2 = {results.rsquared:.2f}')
+        print(f'  P = {results.f_pvalue:.2e}')
+
+        return ax

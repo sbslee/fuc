@@ -11,6 +11,7 @@ Changelog
 * Add new method :meth:`pymaf.MafFrame.compute_clonality`.
 * Add new method :meth:`pymaf.MafFrame.plot_clonality`.
 * Fix a bug in :meth:`pymaf.MafFrame.plot_evolution` when there are no variants to display for the specified samples.
+* Add new method :meth:`pymaf.MafFrame.plot_genepair`.
 
 0.18.0 (2021-07-20)
 -------------------
