@@ -1309,9 +1309,8 @@ class MafFrame:
         Create a bar plot summarizing the clonality of variants in top
         mutated genes.
 
-        A mutation will be defined as "Subclonal" if the VAF is less than the
-        threshold percentage (e.g. 25%) of the highest VAF in the sample and
-        is defined as "Clonal" if it is equal to or above this threshold.
+        Clonality will be calculated based on VAF using
+        :meth:`MafFrame.compute_clonality`.
 
         Parameters
         ----------
@@ -1342,6 +1341,11 @@ class MafFrame:
         matplotlib.axes.Axes
             The matplotlib axes containing the plot.
 
+        See Also
+        --------
+        MafFrame.compute_clonality
+            Compute the clonality of variants based on VAF.
+
         Examples
         --------
 
@@ -1371,18 +1375,8 @@ class MafFrame:
             ...                   hue_order=['M0', 'M1', 'M2'])
             >>> plt.tight_layout()
         """
-        d = self.df.groupby('Tumor_Sample_Barcode')[col].max().to_dict()
-
-        def one_row(r):
-            m = d[r.Tumor_Sample_Barcode]
-            if r[col] < m * threshold:
-                result = 'Subclonal'
-            else:
-                result = 'Clonal'
-            return result
-
         df = self.df.copy()
-        df['Clonality'] = df.apply(one_row, axis=1)
+        df['Clonality'] = self.compute_clonality(col, threshold=threshold)
 
         if hue is None:
             s = df.groupby('Hugo_Symbol')['Clonality'].value_counts()
@@ -1497,6 +1491,8 @@ class MafFrame:
             fig, ax = plt.subplots(figsize=figsize)
 
         sns.lineplot(data=df, ax=ax, **kwargs)
+
+        ax.set_ylabel('Fraction')
 
         return ax
 
@@ -3317,3 +3313,23 @@ class MafFrame:
         df = self.df[i]
         mf = self.__class__(df)
         return mf
+
+    def compute_clonality(self, col, threshold=0.25):
+        """
+        Compute the clonality of variants based on VAF.
+
+        A mutation will be defined as "Subclonal" if the VAF is less than the
+        threshold percentage (e.g. 25%) of the highest VAF in the sample and
+        is defined as "Clonal" if it is equal to or above this threshold.
+        """
+        d = self.df.groupby('Tumor_Sample_Barcode')[col].max().to_dict()
+        threshold = 0.25
+        def one_row(r):
+            m = d[r.Tumor_Sample_Barcode]
+            if r[col] < m * threshold:
+                result = 'Subclonal'
+            else:
+                result = 'Clonal'
+            return result
+        s = self.df.copy().apply(one_row, axis=1)
+        return s

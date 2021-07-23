@@ -8,6 +8,7 @@ Changelog
 * Add ``sort`` argument to :meth:`pymaf.MafFrame.plot_vaf` method.
 * Add new method :meth:`pymaf.MafFrame.plot_matrixs`.
 * Add new method :meth:`pymaf.MafFrame.plot_matrixg`.
+* Add new method :meth:`compute_clonality`.
 * Add new method :meth:`pymaf.MafFrame.plot_clonality`.
 * Fix a bug in :meth:`pymaf.MafFrame.plot_evolution` when there are no variants to display for the specified samples.
 
