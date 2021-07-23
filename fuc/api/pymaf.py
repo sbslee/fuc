@@ -2756,6 +2756,7 @@ class MafFrame:
             raise ValueError(f'No protein changes were found: {gene}')
 
         df = df[['Tumor_Sample_Barcode', 'Protein_Change']]
+        df = df[df.Protein_Change != '.']
         df = df.merge(af.df[col], left_on='Tumor_Sample_Barcode', right_index=True)
         s = df.groupby(col)['Protein_Change'].value_counts()
         s.name = 'Count'
