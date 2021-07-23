@@ -3323,7 +3323,6 @@ class MafFrame:
         is defined as "Clonal" if it is equal to or above this threshold.
         """
         d = self.df.groupby('Tumor_Sample_Barcode')[col].max().to_dict()
-        threshold = 0.25
         def one_row(r):
             m = d[r.Tumor_Sample_Barcode]
             if r[col] < m * threshold:
