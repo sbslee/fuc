@@ -52,12 +52,14 @@ Translation_Start_Site.
 import re
 import copy
 import warnings
+import itertools
 
 from . import pyvcf, common
 
 import numpy as np
 import pandas as pd
 import statsmodels.formula.api as smf
+from scipy.stats import fisher_exact
 import seaborn as sns
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
@@ -1674,6 +1676,144 @@ class MafFrame:
         print(f'Results for {b} ~ {a}:')
         print(f'R^2 = {results.rsquared:.2f}')
         print(f'  P = {results.f_pvalue:.2e}')
+
+        return ax
+
+    def plot_interactions(self, ax=None, figsize=None, **kwargs):
+        """
+        Create a heatmap representing mutually exclusive or co-occurring set
+        of genes.
+
+        This method performs pair-wise Fisher’s Exact test to detect such
+        significant pair of genes.
+
+        Parameters
+        ----------
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+
+        Examples
+        --------
+
+        .. plot::
+
+            >>> import matplotlib.pyplot as plt
+            >>> from fuc import common, pymaf
+            >>> common.load_dataset('tcga-laml')
+            >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+            >>> mf = pymaf.MafFrame.from_file(maf_file)
+            >>> mf.plot_interactions()
+            >>> plt.tight_layout()
+        """
+        df = self.matrix_prevalence()
+        genes = self.matrix_genes(count=25, mode='samples').index.to_list()
+        df = df.loc[genes]
+        df = df.applymap(lambda x: True if x else False)
+        df = df.T
+        pairs = list(itertools.combinations(genes, 2))
+        data = []
+
+        def one_pair(a, b):
+            s_a = df[a].to_list()
+            s_b = df[b].to_list()
+            ab = 0
+            AB = 0
+            aB = 0
+            Ab = 0
+            for i in range(len(s_a)):
+                if s_a[i] and s_b[i]:
+                    AB += 1
+                elif s_a[i] and not s_b[i]:
+                    Ab += 1
+                elif not s_a[i] and s_b[i]:
+                    aB += 1
+                else:
+                    ab += 1
+            return (ab, AB, aB, Ab)
+
+        for pair in pairs:
+            a = pair[0]
+            b = pair[1]
+            ab, AB, aB, Ab = one_pair(a, b)
+            event = 'Co_Occurence' if AB else 'Mutually_Exclusive'
+            data.append([a, b, ab, AB, aB, Ab, event])
+
+        df = pd.DataFrame(data, columns=['A', 'B', 'ab', 'AB', 'aB', 'Ab', 'Event'])
+
+        def one_row(r):
+            oddsr, p = fisher_exact([[r.AB, r.aB], [r.Ab, r.ab]], alternative='two-sided')
+            return pd.Series([oddsr, p], index=['Odds_Ratio', 'P_Value'])
+
+        df = pd.concat([df.apply(one_row, axis=1), df], axis=1)
+        df = df.sort_values('P_Value')
+
+        def one_row(r):
+            r['Log_P_Value'] = -np.log10(r.P_Value)
+            if r.P_Value < 0.05:
+                r['Label'] = '*'
+            elif r.P_Value < 0.1:
+                r['Label'] = '.'
+            else:
+                r['Label'] = ''
+            if r.Event == 'Mutually_Exclusive':
+                r.Log_P_Value *= -1
+            return r
+
+        df = df.apply(one_row, axis=1)
+
+        annot = df.pivot(index='A', columns='B', values='Label')
+        annot = annot.fillna('')
+
+        df = df.pivot(index='A', columns='B', values='Log_P_Value')
+        df = df.fillna(0)
+
+        for gene in genes:
+            if gene not in df.columns:
+                df[gene] = 0
+            if gene not in annot.columns:
+                annot[gene] = ''
+
+        df = df.T
+        annot = annot.T
+
+        for gene in genes:
+            if gene not in df.columns:
+                df[gene] = 0
+            if gene not in annot.columns:
+                annot[gene] = ''
+
+
+
+        annot = annot[genes]
+        annot = annot.loc[genes]
+
+        df = df[genes]
+        df = df.loc[genes]
+
+
+
+        # Determine which matplotlib axes to plot on.
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
+        # Create a mask for the heatmap.
+        corr = np.corrcoef(np.random.randn(25, 200))
+        mask = np.zeros_like(corr)
+        mask[np.triu_indices_from(mask)] = True
+
+        sns.heatmap(
+            df, annot=annot, fmt='', mask=mask, vmax=3, vmin=-3, center=0, ax=ax, **kwargs
+        )
+
+        ax.set_xlabel('')
+        ax.set_ylabel('')
 
         return ax
 
