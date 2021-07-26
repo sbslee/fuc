@@ -2812,7 +2812,8 @@ class VcfFrame:
         return self.__class__(self.copy_meta(), self.df[i])
 
     def filter_multialt(self, opposite=False, as_index=False):
-        """Remove rows with multiple ALT alleles.
+        """
+        Remove rows with multiple ALT alleles.
 
         Parameters
         ----------
@@ -2833,8 +2834,8 @@ class VcfFrame:
 
         >>> from fuc import pyvcf
         >>> data = {
-        ...     'CHROM': ['chr1', 'chr1', 'chr2', 'chr2'],
-        ...     'POS': [100, 100, 200, 200],
+        ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102, 103],
         ...     'ID': ['.', '.', '.', '.'],
         ...     'REF': ['A', 'A', 'C', 'C'],
         ...     'ALT': ['C,T', 'T', 'G', 'G,A'],
@@ -2842,30 +2843,30 @@ class VcfFrame:
         ...     'FILTER': ['.', '.', '.', '.'],
         ...     'INFO': ['.', '.', '.', '.'],
         ...     'FORMAT': ['GT', 'GT', 'GT', 'GT'],
-        ...     'Steven': ['0/2', '0/0', '0/1', './.'],
-        ...     'Sara': ['0/1', '0/1', './.', '1/2'],
+        ...     'A': ['0/2', '0/0', '0/1', './.'],
+        ...     'B': ['0/1', '0/1', './.', '1/2'],
         ... }
         >>> vf = pyvcf.VcfFrame.from_dict([], data)
         >>> vf.df
-          CHROM  POS ID REF  ALT QUAL FILTER INFO FORMAT Steven Sara
-        0  chr1  100  .   A  C,T    .      .    .     GT    0/2  0/1
-        1  chr1  100  .   A    T    .      .    .     GT    0/0  0/1
-        2  chr2  200  .   C    G    .      .    .     GT    0/1  ./.
-        3  chr2  200  .   C  G,A    .      .    .     GT    ./.  1/2
+          CHROM  POS ID REF  ALT QUAL FILTER INFO FORMAT    A    B
+        0  chr1  100  .   A  C,T    .      .    .     GT  0/2  0/1
+        1  chr1  101  .   A    T    .      .    .     GT  0/0  0/1
+        2  chr1  102  .   C    G    .      .    .     GT  0/1  ./.
+        3  chr1  103  .   C  G,A    .      .    .     GT  ./.  1/2
 
         We can remove rows with multiple ALT alleles:
 
         >>> vf.filter_multialt().df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven Sara
-        0  chr1  100  .   A   T    .      .    .     GT    0/0  0/1
-        1  chr2  200  .   C   G    .      .    .     GT    0/1  ./.
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    B
+        0  chr1  101  .   A   T    .      .    .     GT  0/0  0/1
+        1  chr1  102  .   C   G    .      .    .     GT  0/1  ./.
 
         We can also select those rows:
 
         >>> vf.filter_multialt(opposite=True).df
-          CHROM  POS ID REF  ALT QUAL FILTER INFO FORMAT Steven Sara
-        0  chr1  100  .   A  C,T    .      .    .     GT    0/2  0/1
-        1  chr2  200  .   C  G,A    .      .    .     GT    ./.  1/2
+          CHROM  POS ID REF  ALT QUAL FILTER INFO FORMAT    A    B
+        0  chr1  100  .   A  C,T    .      .    .     GT  0/2  0/1
+        1  chr1  103  .   C  G,A    .      .    .     GT  ./.  1/2
 
         Finally, we can return boolean index array from the filtering:
 
