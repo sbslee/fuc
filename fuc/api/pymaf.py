@@ -1679,7 +1679,9 @@ class MafFrame:
 
         return ax
 
-    def plot_interactions(self, ax=None, figsize=None, **kwargs):
+    def plot_interactions(
+        self, count=10, cmap=None, ax=None, figsize=None, **kwargs
+    ):
         """
         Create a heatmap representing mutually exclusive or co-occurring set
         of genes.
@@ -1689,10 +1691,17 @@ class MafFrame:
 
         Parameters
         ----------
+        count : int, defualt: 10
+            Number of top mutated genes to display.
+        cmap : str, optional
+            Color map.
         ax : matplotlib.axes.Axes, optional
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
             Width, height in inches. Format: (float, float).
+        kwargs
+            Other keyword arguments will be passed down to
+            :meth:`seaborn.heatmap`.
 
         Returns
         -------
@@ -1709,11 +1718,11 @@ class MafFrame:
             >>> common.load_dataset('tcga-laml')
             >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
             >>> mf = pymaf.MafFrame.from_file(maf_file)
-            >>> mf.plot_interactions()
+            >>> mf.plot_interactions(count=25, cmap='BrBG')
             >>> plt.tight_layout()
         """
         df = self.matrix_prevalence()
-        genes = self.matrix_genes(count=25, mode='samples').index.to_list()
+        genes = self.matrix_genes(count=count, mode='samples').index.to_list()
         df = df.loc[genes]
         df = df.applymap(lambda x: True if x else False)
         df = df.T
@@ -1745,10 +1754,12 @@ class MafFrame:
             event = 'Co_Occurence' if AB else 'Mutually_Exclusive'
             data.append([a, b, ab, AB, aB, Ab, event])
 
-        df = pd.DataFrame(data, columns=['A', 'B', 'ab', 'AB', 'aB', 'Ab', 'Event'])
+        df = pd.DataFrame(data,
+            columns=['A', 'B', 'ab', 'AB', 'aB', 'Ab', 'Event'])
 
         def one_row(r):
-            oddsr, p = fisher_exact([[r.AB, r.aB], [r.Ab, r.ab]], alternative='two-sided')
+            oddsr, p = fisher_exact([[r.AB, r.aB], [r.Ab, r.ab]],
+                alternative='two-sided')
             return pd.Series([oddsr, p], index=['Odds_Ratio', 'P_Value'])
 
         df = pd.concat([df.apply(one_row, axis=1), df], axis=1)
@@ -1789,27 +1800,24 @@ class MafFrame:
             if gene not in annot.columns:
                 annot[gene] = ''
 
-
-
         annot = annot[genes]
         annot = annot.loc[genes]
 
         df = df[genes]
         df = df.loc[genes]
 
-
-
         # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
         # Create a mask for the heatmap.
-        corr = np.corrcoef(np.random.randn(25, 200))
+        corr = np.corrcoef(np.random.randn(count, 200))
         mask = np.zeros_like(corr)
         mask[np.triu_indices_from(mask)] = True
 
         sns.heatmap(
-            df, annot=annot, fmt='', mask=mask, vmax=3, vmin=-3, center=0, ax=ax, **kwargs
+            df, annot=annot, fmt='', cmap=cmap, mask=mask, vmax=3, vmin=-3,
+            center=0, ax=ax, **kwargs
         )
 
         ax.set_xlabel('')
