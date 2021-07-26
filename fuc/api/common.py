@@ -203,12 +203,20 @@ def extract_sequence(fasta, region):
         sequence = ''
     return sequence
 
-def plot_cytobands(ideogram, bed, ax=None, figsize=None):
+def plot_cytobands(cytoband, bed, ax=None, figsize=None):
     """
     Create chromosome ideograms along with BED data.
 
+    The method's source code is derived from a Python script (ideograms.py)
+    written by Ryan Dale. The original script can be found at:
+    https://gist.github.com/daler/c98fc410282d7570efc3#file-ideograms-py
+
     Parameters
     ----------
+    cytoband : str
+        Text file containing cytoband ideogram information.
+    bed : str
+        BED file to be displayed.
     ax : matplotlib.axes.Axes, optional
         Pre-existing axes for the plot. Otherwise, crete a new one.
     figsize : tuple, optional
@@ -228,22 +236,6 @@ def plot_cytobands(ideogram, bed, ax=None, figsize=None):
         >>> common.plot_cytobands(cytoband_file, bed_file, figsize=(10, 8))
     """
     def chromosome_collections(df, y_positions, height, **kwargs):
-        """
-        Yields BrokenBarHCollection of features that can be added to an Axes
-        object.
-
-        Parameters
-        ----------
-        df : pandas.DataFrame
-            Must at least have columns ['chrom', 'start', 'end', 'color']. If no
-            column 'width', it will be calculated from start/end.
-        y_positions : dict
-            Keys are chromosomes, values are y-value at which to anchor the
-            BrokenBarHCollection
-        height : float
-            Height of each BrokenBarHCollection
-        Additional kwargs are passed to BrokenBarHCollection
-        """
         del_width = False
         if 'width' not in df.columns:
             del_width = True
@@ -289,7 +281,7 @@ def plot_cytobands(ideogram, bed, ax=None, figsize=None):
 
     # Read in ideogram.txt, downloaded from UCSC Table Browser
     ideo = pd.read_table(
-        ideogram,
+        cytoband,
         names=['chrom', 'start', 'end', 'name', 'gieStain']
     )
 
