@@ -14,7 +14,7 @@ Changelog
 * Add new method :meth:`pymaf.MafFrame.plot_genepair`.
 * Add new method :meth:`pymaf.MafFrame.plot_interactions`.
 * Update the :command:`fuc-demux` command to output a better figure.
-* Add new method :meth`common.plot_cytobands`.
+* Add new method :meth:`common.plot_cytobands`.
 
 0.18.0 (2021-07-20)
 -------------------
