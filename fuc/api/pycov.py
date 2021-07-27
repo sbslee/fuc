@@ -28,7 +28,7 @@ class CovFrame:
     --------
     CovFrame.from_dict
         Construct CovFrame from dict of array-like or dicts.
-    CovFrame.from_file
+    CovFrame.from_bam
         Construct CovFrame from one or more SAM/BAM/CRAM files.
 
     Examples
@@ -93,8 +93,8 @@ class CovFrame:
         See Also
         --------
         CovFrame
-            BedFrame object creation using constructor.
-        CovFrame.from_file
+            CovFrame object creation using constructor.
+        CovFrame.from_bam
             Construct CovFrame from one or more SAM/BAM/CRAM files.
 
         Examples
@@ -120,27 +120,28 @@ class CovFrame:
         return cls(pd.DataFrame(data))
 
     @classmethod
-    def from_file(
-        cls, fn, bed=None, zero=False, region=None, map_qual=None, names=None
+    def from_bam(
+        cls, bam, bed=None, zero=False, region=None, map_qual=None, names=None
     ):
         """
         Construct a CovFrame from one or more SAM/BAM/CRAM files.
 
         Under the hood, this method computes read depth from the input files
-        using the ``depth`` command from the SAMtools program.
+        using the :command:`depth` command from the SAMtools program.
+
+        Some parameters such as 'bed' and 'region' require that the input
+        files be indexed.
 
         Parameters
         ----------
-        fn : str or list
-            SAM/BAM/CRAM file(s).
+        bam : str or list
+            One or more SAM/BAM/CRAM files.
         bed : str, optional
             BED file.
         zero : bool, default: False
             If True, output all positions (including those with zero depth).
         region : str, optional
             Only report depth in the specified region ('chrom:start-end').
-            Requires the input file(s) to be indexed. Will increase the speed
-            significantly.
         map_qual: int, optional
             Only count reads with mapping quality greater than orequal to
             this number.
@@ -155,7 +156,7 @@ class CovFrame:
         See Also
         --------
         CovFrame
-            CovFrame.
+            CovFrame object creation using constructor.
         CovFrame.from_dict
             Construct CovFrame from dict of array-like or dicts.
 
@@ -163,15 +164,16 @@ class CovFrame:
         --------
 
         >>> from fuc import pycov
-        >>> cf = pycov.CovFrame.from_file(bam)
-        >>> cf = pycov.CovFrame.from_file([bam1, bam2])
-        >>> cf = pycov.CovFrame.from_file(bam, region='19:41497204-41524301')
+        >>> cf = pycov.CovFrame.from_bam(bam)
+        >>> cf = pycov.CovFrame.from_bam([bam1, bam2])
+        >>> cf = pycov.CovFrame.from_bam(bam, region='19:41497204-41524301')
         """
         bam_files = []
-        if isinstance(fn, str):
-            bam_files.append(fn)
+
+        if isinstance(bam, str):
+            bam_files.append(bam)
         else:
-            bam_files += fn
+            bam_files += bam
 
         args = []
 
@@ -323,6 +325,17 @@ class CovFrame:
         if end:
             df = df[df.Position <= end]
         return self.__class__(df)
+
+    def to_string(self):
+        """
+        Render the CovFrame to a console-friendly tabular output.
+
+        Returns
+        -------
+        str
+            String representation of the CovFrame.
+        """
+        return self.df.to_csv(index=False, sep='\t')
 
     def plot_uniformity(
         self, mode='aggregated', ax=None, figsize=None, **kwargs
