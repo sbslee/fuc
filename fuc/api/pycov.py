@@ -5,12 +5,13 @@ from sequence alingment files (SAM/BAM/CRAM). It implements
 the `pysam <https://pysam.readthedocs.io/en/latest/api.html>`_ package to
 allow fast computation and easy manipulation.
 """
+from io import StringIO
 
 from . import common, pybam
+
 import pysam
 import numpy as np
 import pandas as pd
-from io import StringIO
 import seaborn as sns
 import matplotlib.pyplot as plt
 
@@ -75,7 +76,8 @@ class CovFrame:
 
     @classmethod
     def from_dict(cls, data):
-        """Construct CovFrame from dict of array-like or dicts.
+        """
+        Construct CovFrame from dict of array-like or dicts.
 
         Parameters
         ----------
@@ -118,9 +120,10 @@ class CovFrame:
 
     @classmethod
     def from_file(
-        cls, fn, zero=False, region=None, map_qual=None, names=None
+        cls, fn, bed=None, zero=False, region=None, map_qual=None, names=None
     ):
-        """Construct a CovFrame from one or more SAM/BAM/CRAM files.
+        """
+        Construct a CovFrame from one or more SAM/BAM/CRAM files.
 
         Under the hood, this method computes read depth from the input files
         using the ``depth`` command from the SAMtools program.
@@ -129,6 +132,8 @@ class CovFrame:
         ----------
         fn : str or list
             SAM/BAM/CRAM file(s).
+        bed : str, optional
+            BED file.
         zero : bool, default: False
             If True, output all positions (including those with zero depth).
         region : str, optional
@@ -166,13 +171,18 @@ class CovFrame:
             bam_files.append(fn)
         else:
             bam_files += fn
+
         args = []
+
         if zero:
             args += ['-a']
         if region is not None:
             args += ['-r', region]
         if map_qual is not None:
             args += ['-Q', str(map_qual)]
+        if bed is not None:
+            args += ['-b', bed]
+
         args += bam_files
         s = pysam.depth(*args)
         headers = ['Chromosome', 'Position']
@@ -312,3 +322,58 @@ class CovFrame:
         if end:
             df = df[df.Position <= end]
         return self.__class__(df)
+
+    def plot_uniformity(
+        self, bed, mode='aggregated', ax=None, figsize=None, **kwargs
+    ):
+        """
+        Create a plot visualizing the uniformity.
+
+        Parameters
+        ----------
+        bed : str
+            BED file.
+        mode : {'aggregated', 'individual'}
+            Display mode.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+        kwargs
+            Other keyword arguments will be passed down to
+            :meth:`seaborn.lineplot`.
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+        """
+        coverages = [1, 10, 20, 30, 40, 50, 100, 200, 300, 400, 500, 1000]
+        data = {'Coverage': coverages}
+        for sample in self.samples:
+            percs = []
+            for coverage in coverages:
+                count = sum(self.df[sample] >= coverage)
+                perc = count / self.df.shape[0] * 100
+                percs.append(perc)
+            data[sample] = percs
+        df = pd.DataFrame(data)
+        df = df.melt(id_vars=['Coverage'], var_name='Sample',
+            value_name='Percentage')
+
+        if mode == 'aggregated':
+            hue = None
+        else:
+            hue = 'Sample'
+
+        # Determine which matplotlib axes to plot on.
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
+        sns.lineplot(
+            x='Coverage', y='Percentage', data=df, hue=hue, ax=ax, **kwargs
+        )
+
+        ax.set_xscale('log')
+
+        return ax

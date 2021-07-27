@@ -574,6 +574,10 @@ class AnnFrame:
             number of decimals.
         cmap : str, default: 'Pastel1'
             Color map.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
 
         Returns
         -------
