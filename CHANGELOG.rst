@@ -17,6 +17,7 @@ Changelog
 * Add new method :meth:`common.plot_cytobands`.
 * Add new method :meth:`pycov.CovFrame.plot_uniformity`.
 * Rename :meth:`pycov.CovFrame.from_file` method to :meth:`pycov.CovFrame.from_bam`.
+* Add new method :meth:`pycov.CovFrame.from_file`.
 * Add new command :command:`fuc-depth`.
 * Add new method :meth:`common.file2list`.
 
