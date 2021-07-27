@@ -384,7 +384,7 @@ class CovFrame:
         return self.df.to_csv(index=False, sep='\t')
 
     def plot_uniformity(
-        self, mode='aggregated', ax=None, figsize=None, **kwargs
+        self, mode='aggregated', marker=None, ax=None, figsize=None, **kwargs
     ):
         """
         Create a line plot visualizing the uniformity in read depth.
@@ -393,6 +393,8 @@ class CovFrame:
         ----------
         mode : {'aggregated', 'individual'}
             Display mode.
+        marker : str, optional
+            Marker style string (e.g. 'o').
         ax : matplotlib.axes.Axes, optional
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
@@ -429,7 +431,11 @@ class CovFrame:
             fig, ax = plt.subplots(figsize=figsize)
 
         sns.lineplot(
-            x='Coverage', y='Percentage', data=df, hue=hue, ax=ax, **kwargs
+            x='Coverage', y='Percentage', data=df, hue=hue, marker=marker,
+            ax=ax, **kwargs
         )
+
+        ax.set_xlabel('Sequencing coverage')
+        ax.set_ylabel('Target base pairs (%)')
 
         return ax
