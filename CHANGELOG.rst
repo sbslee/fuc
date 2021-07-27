@@ -5,7 +5,7 @@ Changelog
 -----------------------
 
 * Fix a bug in :meth:`pymaf.MafFrame.plot_mutated` when using the ``hue`` option.
-* Add ``sort`` argument to :meth:`pymaf.MafFrame.plot_vaf` method.
+* Add new argument ``sort`` to :meth:`pymaf.MafFrame.plot_vaf` method.
 * Add new method :meth:`pymaf.MafFrame.plot_matrixs`.
 * Add new method :meth:`pymaf.MafFrame.plot_matrixg`.
 * Add new method :meth:`pymaf.MafFrame.compute_clonality`.
@@ -24,7 +24,7 @@ Changelog
 * Update :command:`fuc-find` command to support pattern matching that is more robust than just file extension.
 * Update :meth:`pyvcf.VcfFrame.subset` method to take string as input in addition to list.
 * Fix a minor bug in :meth:`pymaf.MafFrame.plot_snvclss` method when certain SNV classes are entirely missing.
-* Add ``statsmodels`` package as dependency for performing statistical analysis.
+* Add new package ``statsmodels`` as dependency for performing statistical analysis.
 * Update :meth:`pymaf.MafFrame.plot_regplot` method to calculate and print summary statistics as well.
 * Update :meth:`pyvcf.VcfFrame.plot_regplot` method to calculate and print summary statistics as well.
 * :issue:`32`: Add :meth:`pyvcf.VcfFrame.miss2ref` method.
@@ -36,37 +36,37 @@ Changelog
 0.17.0 (2021-07-08)
 -------------------
 
-* Add :meth:`pymaf.MafFrame.plot_lollipop` method.
+* Add new method :meth:`pymaf.MafFrame.plot_lollipop`.
 * :issue:`30`: Add :meth:`pymaf.MafFrame.plot_rainfall` method.
 * :issue:`30`: Add :meth:`pyvcf.VcfFrame.plot_rainfall` method.
 * Update :meth:`pymaf.MafFrame.to_vcf` method to output sorted VCF.
-* Add :meth:`pymaf.MafFrame.matrix_prevalence` method.
-* Add :meth:`pymaf.MafFrame.plot_regplot` method.
-* Add ``samples`` argument to :meth:`pymaf.MafFrame.plot_snvclss` method.
-* Add :meth:`pymaf.MafFrame.plot_evolution` method.
+* Add new method :meth:`pymaf.MafFrame.matrix_prevalence`.
+* Add new method :meth:`pymaf.MafFrame.plot_regplot`.
+* Add new argument ``samples`` to :meth:`pymaf.MafFrame.plot_snvclss` method.
+* Add new method :meth:`pymaf.MafFrame.plot_evolution`.
 * Add new submodule ``pygff``.
 
 0.16.0 (2021-07-02)
 -------------------
 
 * Rename the commands (e.g. :command:`vcf_merge` to :command:`vcf-merge`).
-* Add ``flip`` argument to :meth:`pymaf.MafFrame.plot_vaf` method.
+* Add new argument ``flip`` to :meth:`pymaf.MafFrame.plot_vaf` method.
 * Update :meth:`pymaf.MafFrame.plot_vaf` method to support creation of a grouped bar plot.
 * Factor out ``count`` mode of :meth:`pymaf.MafFrame.plot_snvcls` method to new method :meth:`pymaf.MafFrame.plot_snvclsc`.
 * Factor out ``proportion`` mode of :meth:`pymaf.MafFrame.plot_snvcls` method to new method :meth:`pymaf.MafFrame.plot_snvclsp`.
 * Factor out ``samples`` mode of :meth:`pymaf.MafFrame.plot_snvcls` method to new method :meth:`pymaf.MafFrame.plot_snvclss`.
 * Factor out ``titv`` mode of :meth:`pymaf.MafFrame.plot_snvcls` method to new method :meth:`pymaf.MafFrame.plot_titv`.
 * Deprecate :meth:`pymaf.MafFrame.plot_snvcls` method.
-* Add ``hue_order`` argument to :meth:`pyvcf.VcfFrame.plot_hist` method.
+* Add new argument ``hue_order`` to :meth:`pyvcf.VcfFrame.plot_hist` method.
 * Update aesthetic aspect of :meth:`pymaf.MafFrame.plot_oncoplot` method.
-* Add ``width`` argument to :meth:`pymaf.MafFrame.plot_tmb` method.
-* Add ``palette`` and ``flip`` arguments to :meth:`pymaf.MafFrame.plot_vartype` method.
+* Add new argument ``width`` to :meth:`pymaf.MafFrame.plot_tmb` method.
+* Add new arguments ``palette`` and ``flip`` to :meth:`pymaf.MafFrame.plot_vartype` method.
 * Update :meth:`pymaf.MafFrame.plot_snvclsc` method to support creation of a grouped bar plot.
 * Update :meth:`pymaf.MafFrame.plot_snvclsp` method to support creation of a grouped box plot.
-* Add :meth:`pyvcf.VcfFrame.plot_snvclsc` method (simply wraps :meth:`pymaf.MafFrame.plot_snvclsc` method).
-* Add :meth:`pyvcf.VcfFrame.plot_snvclsp` method (simply wraps :meth:`pymaf.MafFrame.plot_snvclsp` method).
-* Add :meth:`pyvcf.VcfFrame.plot_snvclss` method (simply wraps :meth:`pymaf.MafFrame.plot_snvclss` method).
-* Add :meth:`pyvcf.VcfFrame.plot_titv` method (simply wraps :meth:`pymaf.MafFrame.plot_titv` method).
+* Add new method :meth:`pyvcf.VcfFrame.plot_snvclsc` (simply wraps :meth:`pymaf.MafFrame.plot_snvclsc` method).
+* Add new method :meth:`pyvcf.VcfFrame.plot_snvclsp` (simply wraps :meth:`pymaf.MafFrame.plot_snvclsp` method).
+* Add new method :meth:`pyvcf.VcfFrame.plot_snvclss` (simply wraps :meth:`pymaf.MafFrame.plot_snvclss` method).
+* Add new method :meth:`pyvcf.VcfFrame.plot_titv` (simply wraps :meth:`pymaf.MafFrame.plot_titv` method).
 * :issue:`28`: Update :meth:`pymaf.MafFrame.from_vcf` method to handle unannotated VCF data.
 
 0.15.0 (2021-06-24)

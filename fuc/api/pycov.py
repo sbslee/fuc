@@ -16,7 +16,8 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 class CovFrame:
-    """Class for storing read depth data from one or more SAM/BAM/CRAM files.
+    """
+    Class for storing read depth data from one or more SAM/BAM/CRAM files.
 
     Parameters
     ----------
@@ -324,15 +325,13 @@ class CovFrame:
         return self.__class__(df)
 
     def plot_uniformity(
-        self, bed, mode='aggregated', ax=None, figsize=None, **kwargs
+        self, mode='aggregated', ax=None, figsize=None, **kwargs
     ):
         """
-        Create a plot visualizing the uniformity.
+        Create a line plot visualizing the uniformity.
 
         Parameters
         ----------
-        bed : str
-            BED file.
         mode : {'aggregated', 'individual'}
             Display mode.
         ax : matplotlib.axes.Axes, optional
