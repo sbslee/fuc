@@ -7,9 +7,11 @@ import pysam
 description = f"""
 This command will compute read depth from the input SAM/BAM/CRAM files.
 
+Either the '--bam' or '--fn' arguments must be provided, but not both.
+
 Usage examples:
-  $ fuc {api.common._script_name()} 1.bam 2.bam --bed in.bed > out.tsv
-  $ fuc {api.common._script_name()} in.bam --region chr1:100-200 > out.tsv
+  $ fuc {api.common._script_name()} --bam 1.bam 2.bam --bed in.bed > out.tsv
+  $ fuc {api.common._script_name()} --fn bam.list --region chr1:100-200 > out.tsv
 """
 
 def create_parser(subparsers):
@@ -20,9 +22,14 @@ def create_parser(subparsers):
         description=description,
     )
     parser.add_argument(
-        'bam',
+        '--bam',
         nargs='+',
-        help='One or more input SAM/BAM/CRAM files.'
+        help='One or more input files.'
+    )
+    parser.add_argument(
+        '--fn',
+        metavar='PATH',
+        help='File containing one input filename per line.'
     )
     parser.add_argument(
         '--bed',
@@ -36,5 +43,7 @@ def create_parser(subparsers):
     )
 
 def main(args):
-    cf = api.pycov.CovFrame.from_bam(args.bam, bed=args.bed, region=args.region)
+    cf = api.pycov.CovFrame.from_bam(
+        bam=args.bam, fn=args.fn, bed=args.bed, region=args.region
+    )
     sys.stdout.write(cf.to_string())

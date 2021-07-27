@@ -335,3 +335,30 @@ def plot_cytobands(cytoband, bed, ax=None, figsize=None):
     ax.axis('tight')
 
     return ax
+
+def file2list(fn):
+    """
+    Return a list of filenames from the input file.
+
+    Parameters
+    ----------
+    fn : str
+        File containing one filename per line.
+
+    Returns
+    -------
+    list
+        List of filenames.
+
+    Examples
+    --------
+
+    >>> from fuc import common
+    >>> common.file2list('bam.list')
+    ['1.bam', '2.bam', '3.bam']
+    """
+    l = []
+    with open(fn) as f:
+        for line in f:
+            l.append(line.strip())
+    return l

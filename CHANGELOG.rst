@@ -18,6 +18,7 @@ Changelog
 * Add new method :meth:`pycov.CovFrame.plot_uniformity`.
 * Rename :meth:`pycov.CovFrame.from_file` method to :meth:`pycov.CovFrame.from_bam`.
 * Add new command :command:`fuc-depth`.
+* Add new method :meth:`common.file2list`.
 
 0.18.0 (2021-07-20)
 -------------------

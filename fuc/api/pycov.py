@@ -121,21 +121,26 @@ class CovFrame:
 
     @classmethod
     def from_bam(
-        cls, bam, bed=None, zero=False, region=None, map_qual=None, names=None
+        cls, bam=None, fn=None, bed=None, zero=False, region=None,
+        map_qual=None, names=None
     ):
         """
         Construct a CovFrame from one or more SAM/BAM/CRAM files.
 
+        Either the 'bam' or 'fn' parameter must be provided, but not both.
+
         Under the hood, this method computes read depth from the input files
-        using the :command:`depth` command from the SAMtools program.
+        using the :command:`samtools depth` command.
 
         Some parameters such as 'bed' and 'region' require that the input
         files be indexed.
 
         Parameters
         ----------
-        bam : str or list
-            One or more SAM/BAM/CRAM files.
+        bam : str or list, optional
+            One or more input files.
+        fn : str, optional
+            File containing one input filename per line.
         bed : str, optional
             BED file.
         zero : bool, default: False
@@ -170,10 +175,19 @@ class CovFrame:
         """
         bam_files = []
 
-        if isinstance(bam, str):
-            bam_files.append(bam)
+        if bam is None and fn is None:
+            raise ValueError(
+                "Either the 'bam' or 'fn' parameter must be provided.")
+        elif bam is not None and fn is not None:
+            raise ValueError(
+                "The 'bam' and 'fn' parameters cannot be used together.")
+        elif bam is not None and fn is None:
+            if isinstance(bam, str):
+                bam_files.append(bam)
+            else:
+                bam_files += bam
         else:
-            bam_files += bam
+            bam_files += common.file2list(fn)
 
         args = []
 
