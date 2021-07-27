@@ -384,7 +384,8 @@ class CovFrame:
         return self.df.to_csv(index=False, sep='\t')
 
     def plot_uniformity(
-        self, mode='aggregated', marker=None, ax=None, figsize=None, **kwargs
+        self, mode='aggregated', frac=0.1, n=20, m=None, marker=None,
+        ax=None, figsize=None, **kwargs
     ):
         """
         Create a line plot visualizing the uniformity in read depth.
@@ -408,18 +409,26 @@ class CovFrame:
         matplotlib.axes.Axes
             The matplotlib axes containing the plot.
         """
-        coverages = [1, 10, 20, 30, 40, 50, 100, 200, 300, 400, 500, 1000]
+        # Randomly sample the positions to speed up the process.
+        df = self.df.sample(frac=frac)
+
+        # Determine the x-axis ticks.
+        if m is None:
+            m = df.iloc[:, 2:].max().max()
+        coverages = np.linspace(1, m, n)
+
         data = {'Coverage': coverages}
+
         for sample in self.samples:
             percs = []
             for coverage in coverages:
-                count = sum(self.df[sample] >= coverage)
-                perc = count / self.df.shape[0] * 100
+                count = sum(df[sample] >= coverage)
+                perc = count / df.shape[0]
                 percs.append(perc)
             data[sample] = percs
         df = pd.DataFrame(data)
         df = df.melt(id_vars=['Coverage'], var_name='Sample',
-            value_name='Percentage')
+            value_name='Fraction')
 
         if mode == 'aggregated':
             hue = None
@@ -431,11 +440,11 @@ class CovFrame:
             fig, ax = plt.subplots(figsize=figsize)
 
         sns.lineplot(
-            x='Coverage', y='Percentage', data=df, hue=hue, marker=marker,
+            x='Coverage', y='Fraction', data=df, hue=hue, marker=marker,
             ax=ax, **kwargs
         )
 
         ax.set_xlabel('Sequencing coverage')
-        ax.set_ylabel('Target base pairs (%)')
+        ax.set_ylabel('Fraction of sampled bases')
 
         return ax
