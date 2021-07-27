@@ -82,7 +82,7 @@ class GffFrame:
     @classmethod
     def from_file(cls, fn):
         """
-        Construct a GffFrame from a GFF/GTF file.
+        Construct GffFrame from a GFF/GTF file.
 
         Parameters
         ----------

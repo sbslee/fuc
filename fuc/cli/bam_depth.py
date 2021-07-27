@@ -7,7 +7,7 @@ import pysam
 description = f"""
 This command will compute read depth from the input SAM/BAM/CRAM files.
 
-Either the '--bam' or '--fn' arguments must be provided, but not both.
+Either the '--bam' or '--fn' argument must be provided, but not both.
 
 Usage examples:
   $ fuc {api.common._script_name()} --bam 1.bam 2.bam --bed in.bed > out.tsv

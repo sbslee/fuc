@@ -409,7 +409,7 @@ class AnnFrame:
     @classmethod
     def from_file(cls, fn, sample_col='Tumor_Sample_Barcode', sep='\t'):
         """
-        Construct an AnnFrame from a delimited text file.
+        Construct AnnFrame from a delimited text file.
 
         The text file must have at least one column that represents
         sample names which are used as index for pandas.DataFrame.
@@ -682,7 +682,7 @@ class MafFrame:
     @classmethod
     def from_file(cls, fn):
         """
-        Construct a MafFrame from a MAF file.
+        Construct MafFrame from a MAF file.
 
         Parameters
         ----------
@@ -734,7 +734,7 @@ class MafFrame:
     @classmethod
     def from_vcf(cls, vcf, keys=None, names=None):
         """
-        Construct a MafFrame from a VCF file or VcfFrame.
+        Construct MafFrame from a VCF file or VcfFrame.
 
         It is recommended that the input VCF data be functionally annotated
         by an annotation tool such as Ensembl VEP, SnpEff, and ANNOVAR;

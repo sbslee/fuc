@@ -26,10 +26,12 @@ class CovFrame:
 
     See Also
     --------
-    CovFrame.from_dict
-        Construct CovFrame from dict of array-like or dicts.
     CovFrame.from_bam
         Construct CovFrame from one or more SAM/BAM/CRAM files.
+    CovFrame.from_dict
+        Construct CovFrame from dict of array-like or dicts.
+    CovFrame.from_file
+        Construct CovFrame from a text file containing read depth data.
 
     Examples
     --------
@@ -76,56 +78,12 @@ class CovFrame:
         return self.df.shape
 
     @classmethod
-    def from_dict(cls, data):
-        """
-        Construct CovFrame from dict of array-like or dicts.
-
-        Parameters
-        ----------
-        data : dict
-            Of the form {field : array-like} or {field : dict}.
-
-        Returns
-        -------
-        CovFrame
-            CovFrame object.
-
-        See Also
-        --------
-        CovFrame
-            CovFrame object creation using constructor.
-        CovFrame.from_bam
-            Construct CovFrame from one or more SAM/BAM/CRAM files.
-
-        Examples
-        --------
-
-        >>> import numpy as np
-        >>> from fuc import pycov
-        >>> data = {
-        ...     'Chromosome': ['chr1'] * 1000,
-        ...     'Position': np.arange(1000, 2000),
-        ...     'Steven': np.random.normal(35, 5, 1000),
-        ...     'Jane': np.random.normal(25, 7, 1000)
-        ... }
-        >>> cf = pycov.CovFrame.from_dict(data)
-        >>> cf.df.head()
-          Chromosome  Position     Steven       Jane
-        0       chr1      1000  42.357973  29.578929
-        1       chr1      1001  33.598807  32.370608
-        2       chr1      1002  44.424704  20.425198
-        3       chr1      1003  29.228379  22.406113
-        4       chr1      1004  34.395085  29.066962
-        """
-        return cls(pd.DataFrame(data))
-
-    @classmethod
     def from_bam(
         cls, bam=None, fn=None, bed=None, zero=False, region=None,
         map_qual=None, names=None
     ):
         """
-        Construct a CovFrame from one or more SAM/BAM/CRAM files.
+        Construct CovFrame from one or more SAM/BAM/CRAM files.
 
         Either the 'bam' or 'fn' parameter must be provided, but not both.
 
@@ -164,6 +122,8 @@ class CovFrame:
             CovFrame object creation using constructor.
         CovFrame.from_dict
             Construct CovFrame from dict of array-like or dicts.
+        CovFrame.from_file
+            Construct CovFrame from a text file containing read depth data.
 
         Examples
         --------
@@ -218,6 +178,78 @@ class CovFrame:
         df = pd.read_csv(StringIO(s), sep='\t', header=None,
                          names=headers, dtype=dtype)
         return cls(df)
+
+    @classmethod
+    def from_dict(cls, data):
+        """
+        Construct CovFrame from dict of array-like or dicts.
+
+        Parameters
+        ----------
+        data : dict
+            Of the form {field : array-like} or {field : dict}.
+
+        Returns
+        -------
+        CovFrame
+            CovFrame object.
+
+        See Also
+        --------
+        CovFrame
+            CovFrame object creation using constructor.
+        CovFrame.from_bam
+            Construct CovFrame from one or more SAM/BAM/CRAM files.
+        CovFrame.from_file
+            Construct CovFrame from a text file containing read depth data.
+
+        Examples
+        --------
+
+        >>> import numpy as np
+        >>> from fuc import pycov
+        >>> data = {
+        ...     'Chromosome': ['chr1'] * 1000,
+        ...     'Position': np.arange(1000, 2000),
+        ...     'Steven': np.random.normal(35, 5, 1000),
+        ...     'Jane': np.random.normal(25, 7, 1000)
+        ... }
+        >>> cf = pycov.CovFrame.from_dict(data)
+        >>> cf.df.head()
+          Chromosome  Position     Steven       Jane
+        0       chr1      1000  42.357973  29.578929
+        1       chr1      1001  33.598807  32.370608
+        2       chr1      1002  44.424704  20.425198
+        3       chr1      1003  29.228379  22.406113
+        4       chr1      1004  34.395085  29.066962
+        """
+        return cls(pd.DataFrame(data))
+
+    @classmethod
+    def from_file(cls, fn):
+        """
+        Construct CovFrame from a text file containing read depth data.
+
+        Parameters
+        ----------
+        fn : str
+            Text file containing read depth data.
+
+        Returns
+        -------
+        CovFrame
+            CovFrame object.
+
+        See Also
+        --------
+        CovFrame
+            CovFrame object creation using constructor.
+        CovFrame.from_bam
+            Construct CovFrame from one or more SAM/BAM/CRAM files.
+        CovFrame.from_dict
+            Construct CovFrame from dict of array-like or dicts.
+        """
+        return cls(pd.read_table(fn))
 
     def plot_region(
         self, region, names=None, ax=None, figsize=None, **kwargs
@@ -355,7 +387,7 @@ class CovFrame:
         self, mode='aggregated', ax=None, figsize=None, **kwargs
     ):
         """
-        Create a line plot visualizing the uniformity.
+        Create a line plot visualizing the uniformity in read depth.
 
         Parameters
         ----------
@@ -399,7 +431,5 @@ class CovFrame:
         sns.lineplot(
             x='Coverage', y='Percentage', data=df, hue=hue, ax=ax, **kwargs
         )
-
-        ax.set_xscale('log')
 
         return ax
