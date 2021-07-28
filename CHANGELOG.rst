@@ -16,6 +16,7 @@ Changelog
 * Update the :command:`fuc-demux` command to output a better figure.
 * Add new method :meth:`common.plot_cytobands`.
 * Add new method :meth:`pycov.CovFrame.plot_uniformity`.
+* Add new method :meth:`pycov.CovFrame.plot_distribution`.
 * Rename :meth:`pycov.CovFrame.from_file` method to :meth:`pycov.CovFrame.from_bam`.
 * Add new method :meth:`pycov.CovFrame.from_file`.
 * Add new command :command:`fuc-depth`.

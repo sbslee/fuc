@@ -15,6 +15,46 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
+def simulate(mode='wgs', loc=30, scale=5, size=1000):
+    """
+    Simulate read depth data for single sample.
+
+    Generated read depth will be integer and non-negative.
+
+    Parameters
+    ----------
+    mode : {'wgs'}, default: 'wgs'
+        Additional modes will be made available in future releases.
+    loc : float, default: 30
+        Mean ("centre") of the distribution.
+    scale : float, default: 5
+        Standard deviation (spread or "width") of the distribution. Must be
+        non-negative.
+    size : int, default: 1000
+        Number of base pairs to return.
+
+    Returns
+    -------
+    numpy.ndarray
+        Numpy array object.
+
+    Examples
+    --------
+
+    >>> from fuc import pycov
+    >>> pycov.simulate(size=10)
+    array([25, 32, 30, 31, 26, 25, 33, 29, 28, 35])
+    """
+    a = np.random.normal(loc=loc, scale=scale, size=size)
+
+    # Read depth must be integer.
+    a = a.astype(int)
+
+    # Read dpeth must be non-negative.
+    a = np.absolute(a)
+
+    return a
+
 class CovFrame:
     """
     Class for storing read depth data from one or more SAM/BAM/CRAM files.
@@ -42,18 +82,18 @@ class CovFrame:
     >>> data = {
     ...     'Chromosome': ['chr1'] * 1000,
     ...     'Position': np.arange(1000, 2000),
-    ...     'Steven': np.random.normal(35, 5, 1000),
-    ...     'Jane': np.random.normal(25, 7, 1000)
+    ...     'A': pycov.simulate(loc=35, scale=5),
+    ...     'B': pycov.simulate(loc=25, scale=7),
     ... }
     >>> df = pd.DataFrame(data)
     >>> cf = pycov.CovFrame(df)
     >>> cf.df.head()
-      Chromosome  Position     Steven       Jane
-    0       chr1      1000  26.476796  30.974197
-    1       chr1      1001  30.869688  20.510165
-    2       chr1      1002  36.039488  25.444763
-    3       chr1      1003  39.002843  19.379962
-    4       chr1      1004  35.641304  20.359149
+      Chromosome  Position   A   B
+    0       chr1      1000  22  23
+    1       chr1      1001  34  30
+    2       chr1      1002  33  27
+    3       chr1      1003  32  21
+    4       chr1      1004  32  15
     """
     def __init__(self, df):
         self._df = df.reset_index(drop=True)
@@ -74,8 +114,8 @@ class CovFrame:
 
     @property
     def shape(self):
-        """Return the size of CovFrame."""
-        return self.df.shape
+        """tuple : Dimensionality of CovFrame (positions, samples)."""
+        return (self.df.shape[0], len(self.samples))
 
     @classmethod
     def from_bam(
@@ -211,17 +251,17 @@ class CovFrame:
         >>> data = {
         ...     'Chromosome': ['chr1'] * 1000,
         ...     'Position': np.arange(1000, 2000),
-        ...     'Steven': np.random.normal(35, 5, 1000),
-        ...     'Jane': np.random.normal(25, 7, 1000)
+        ...     'A': pycov.simulate(loc=35, scale=5),
+        ...     'B': pycov.simulate(loc=25, scale=7),
         ... }
         >>> cf = pycov.CovFrame.from_dict(data)
         >>> cf.df.head()
-          Chromosome  Position     Steven       Jane
-        0       chr1      1000  42.357973  29.578929
-        1       chr1      1001  33.598807  32.370608
-        2       chr1      1002  44.424704  20.425198
-        3       chr1      1003  29.228379  22.406113
-        4       chr1      1004  34.395085  29.066962
+          Chromosome  Position   A   B
+        0       chr1      1000  36  22
+        1       chr1      1001  39  35
+        2       chr1      1002  33  19
+        3       chr1      1003  36  20
+        4       chr1      1004  31  24
         """
         return cls(pd.DataFrame(data))
 
@@ -281,18 +321,18 @@ class CovFrame:
 
         .. plot::
 
-            import matplotlib.pyplot as plt
-            import numpy as np
-            from fuc import pycov
-            data = {
-               'Chromosome': ['chr1'] * 1000,
-               'Position': np.arange(1000, 2000),
-               'A': np.random.normal(35, 5, 1000),
-               'B': np.random.normal(25, 7, 1000)
-            }
-            cf = pycov.CovFrame.from_dict(data)
-            cf.plot_region('chr1:1500-1800')
-            plt.tight_layout()
+            >>> import matplotlib.pyplot as plt
+            >>> import numpy as np
+            >>> from fuc import pycov
+            >>> data = {
+            ...    'Chromosome': ['chr1'] * 1000,
+            ...    'Position': np.arange(1000, 2000),
+            ...     'A': pycov.simulate(loc=35, scale=5),
+            ...     'B': pycov.simulate(loc=25, scale=7),
+            ... }
+            >>> cf = pycov.CovFrame.from_dict(data)
+            >>> cf.plot_region('chr1:1500-1800')
+            >>> plt.tight_layout()
         """
         chrom, start, end = common.parse_region(region)
         cf = self.slice(region)
@@ -338,31 +378,31 @@ class CovFrame:
         >>> data = {
         ...     'Chromosome': ['chr1']*500 + ['chr2']*500,
         ...     'Position': np.arange(1000, 2000),
-        ...     'A': np.random.normal(35, 5, 1000).astype(int),
-        ...     'B': np.random.normal(25, 7, 1000).astype(int)
+        ...     'A': pycov.simulate(loc=35, scale=5),
+        ...     'B': pycov.simulate(loc=25, scale=7),
         ... }
         >>> cf = pycov.CovFrame.from_dict(data)
         >>> cf.slice('chr2').df.head()
           Chromosome  Position   A   B
-        0       chr2      1500  39  22
-        1       chr2      1501  28  31
+        0       chr2      1500  37  34
+        1       chr2      1501  28  12
         2       chr2      1502  35  29
-        3       chr2      1503  38  22
-        4       chr2      1504  30  20
+        3       chr2      1503  34  34
+        4       chr2      1504  32  21
         >>> cf.slice('chr2:1500-1504').df
           Chromosome  Position   A   B
-        0       chr2      1500  39  22
-        1       chr2      1501  28  31
+        0       chr2      1500  37  34
+        1       chr2      1501  28  12
         2       chr2      1502  35  29
-        3       chr2      1503  38  22
-        4       chr2      1504  30  20
+        3       chr2      1503  34  34
+        4       chr2      1504  32  21
         >>> cf.slice('chr2:-1504').df
           Chromosome  Position   A   B
-        0       chr2      1500  39  22
-        1       chr2      1501  28  31
+        0       chr2      1500  37  34
+        1       chr2      1501  28  12
         2       chr2      1502  35  29
-        3       chr2      1503  38  22
-        4       chr2      1504  30  20
+        3       chr2      1503  34  34
+        4       chr2      1504  32  21
         """
         chrom, start, end = common.parse_region(region)
         df = self.df[self.df.Chromosome == chrom]
@@ -392,8 +432,20 @@ class CovFrame:
 
         Parameters
         ----------
-        mode : {'aggregated', 'individual'}
-            Display mode.
+        mode : {'aggregated', 'individual'}, default: 'aggregated'
+            Determines how to display the lines:
+
+            - 'aggregated': Aggregate over repeated values to show the mean
+              and 95% confidence interval.
+            - 'individual': Show data for individual samples.
+
+        frac : float, default: 0.1
+            Fraction of data to be sampled (to speed up the process).
+        n : int, default: 20
+            Number of points to generate for the x-axis.
+        m : float, optional
+            Maximum point in the x-axis. By default, it will be the maximum
+            depth in the entire dataset.
         marker : str, optional
             Marker style string (e.g. 'o').
         ax : matplotlib.axes.Axes, optional
@@ -408,28 +460,57 @@ class CovFrame:
         -------
         matplotlib.axes.Axes
             The matplotlib axes containing the plot.
+
+        Examples
+        --------
+        By default (``mode='aggregated'``), the method will aggregate over
+        repeated values:
+
+        .. plot::
+            :context: close-figs
+
+            >>> import matplotlib.pyplot as plt
+            >>> import numpy as np
+            >>> from fuc import pycov
+            >>> data = {
+            ...     'Chromosome': ['chr1'] * 1000,
+            ...     'Position': np.arange(1000, 2000),
+            ...     'A': pycov.simulate(loc=35, scale=5),
+            ...     'B': pycov.simulate(loc=25, scale=7),
+            ... }
+            >>> cf = pycov.CovFrame.from_dict(data)
+            >>> cf.plot_uniformity(mode='aggregated')
+            >>> plt.tight_layout()
+
+        We can display data for individual samples:
+
+        .. plot::
+            :context: close-figs
+
+            >>> cf.plot_uniformity(mode='individual')
+            >>> plt.tight_layout()
         """
-        # Randomly sample the positions to speed up the process.
+        # Sample positions to speed up the process.
         df = self.df.sample(frac=frac)
 
-        # Determine the x-axis ticks.
+        # Determine x-axis points.
         if m is None:
             m = df.iloc[:, 2:].max().max()
-        coverages = np.linspace(1, m, n)
+        coverages = np.linspace(1, m, n, endpoint=True)
 
         data = {'Coverage': coverages}
 
         for sample in self.samples:
-            percs = []
+            fractions = []
             for coverage in coverages:
                 count = sum(df[sample] >= coverage)
-                perc = count / df.shape[0]
-                percs.append(perc)
-            data[sample] = percs
+                fractions.append(count / df.shape[0])
+            data[sample] = fractions
         df = pd.DataFrame(data)
         df = df.melt(id_vars=['Coverage'], var_name='Sample',
             value_name='Fraction')
 
+        # Determines how to display the lines.
         if mode == 'aggregated':
             hue = None
         else:
@@ -442,6 +523,98 @@ class CovFrame:
         sns.lineplot(
             x='Coverage', y='Fraction', data=df, hue=hue, marker=marker,
             ax=ax, **kwargs
+        )
+
+        ax.set_xlabel('Sequencing coverage')
+        ax.set_ylabel('Fraction of sampled bases')
+
+        return ax
+
+    def plot_distribution(
+        self, mode='aggregated', frac=0.1, ax=None, figsize=None, **kwargs
+    ):
+        """
+        Create a line plot visualizaing the distribution of per-base read depth.
+
+        Parameters
+        ----------
+        mode : {'aggregated', 'individual'}, default: 'aggregated'
+            Determines how to display the lines:
+
+            - 'aggregated': Aggregate over repeated values to show the mean
+              and 95% confidence interval.
+            - 'individual': Show data for individual samples.
+
+        frac : float, default: 0.1
+            Fraction of data to be sampled (to speed up the process).
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+        kwargs
+            Other keyword arguments will be passed down to
+            :meth:`seaborn.lineplot`.
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+
+        Examples
+        --------
+        By default (``mode='aggregated'``), the method will aggregate over
+        repeated values:
+
+        .. plot::
+            :context: close-figs
+
+            >>> import matplotlib.pyplot as plt
+            >>> import numpy as np
+            >>> from fuc import pycov
+            >>> data = {
+            ...     'Chromosome': ['chr1'] * 1000,
+            ...     'Position': np.arange(1000, 2000),
+            ...     'A': pycov.simulate(loc=35, scale=5),
+            ...     'B': pycov.simulate(loc=25, scale=7),
+            ... }
+            >>> cf = pycov.CovFrame.from_dict(data)
+            >>> cf.plot_distribution(mode='aggregated', frac=0.9)
+            >>> plt.tight_layout()
+
+        We can display data for individual samples:
+
+        .. plot::
+            :context: close-figs
+
+            >>> cf.plot_distribution(mode='individual', frac=0.9)
+            >>> plt.tight_layout()
+        """
+        # Sample positions to speed up the process.
+        df = self.df.sample(frac=frac)
+
+        def one_col(c):
+            s = c.value_counts()
+            s = s / s.sum()
+            return s
+
+        df = df.iloc[:, 2:].apply(one_col)
+        df = df.fillna(0)
+        df = df.reset_index().rename(columns=dict(index='Coverage'))
+        df = df.melt(id_vars='Coverage', var_name='Sample',
+            value_name='Fraction')
+
+        # Determines how to display the lines.
+        if mode == 'aggregated':
+            hue = None
+        else:
+            hue = 'Sample'
+
+        # Determine which matplotlib axes to plot on.
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
+        sns.lineplot(
+            x='Coverage', y='Fraction', data=df, hue=hue, ax=ax, **kwargs
         )
 
         ax.set_xlabel('Sequencing coverage')
