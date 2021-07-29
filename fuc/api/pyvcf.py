@@ -177,7 +177,8 @@ def gt_polyp(g):
         return gt.count('|') > 1
 
 def gt_hasvar(g):
-    """Return True if sample genotype has a variant call.
+    """
+    Return True if sample genotype has at least one variant call.
 
     Parameters
     ----------
@@ -1370,12 +1371,17 @@ class VcfFrame:
         return cls(meta, df)
 
     def compare(self, a, b, c=None):
-        """Compare genotype data between Samples A & B or Samples A, B, & C.
+        """
+        Compare genotype data between two (A, B) or three (A, B, C) samples.
 
-        This method will return (Ab, aB, AB, ab) for two samples and
-        (Abc, aBc, ABc, abC, AbC, aBC, ABC, abc) for three samples. Note that
-        the former is equivalent to (FP, FN, TP, TN) if we assume A is
-        the test sample and B is the truth sample.
+        This method will return (Ab, aB, AB, ab) for comparison between two
+        samples and (Abc, aBc, ABc, abC, AbC, aBC, ABC, abc) for three
+        samples. Note that the former is equivalent to (FP, FN, TP, TN) if
+        we assume A is the test sample and B is the truth sample.
+
+        Only biallelic sites will be used for comparison. Additionally, the
+        method will only consider presence or absence of variant calls (i.e.
+        zygosity is ignored).
 
         Parameters
         ----------
@@ -1397,35 +1403,36 @@ class VcfFrame:
 
         >>> from fuc import pyvcf
         >>> data = {
-        ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1'],
-        ...     'POS': [100, 101, 102, 103],
-        ...     'ID': ['.', '.', '.', '.'],
-        ...     'REF': ['G', 'T', 'T', 'C'],
-        ...     'ALT': ['A', 'C', 'A', 'T'],
-        ...     'QUAL': ['.', '.', '.', '.'],
-        ...     'FILTER': ['.', '.', '.', '.'],
-        ...     'INFO': ['.', '.', '.', '.'],
-        ...     'FORMAT': ['GT', 'GT', 'GT', 'GT'],
-        ...     'Steven': ['0/1', '0/0', '0/0', '0/1'],
-        ...     'Sara': ['0/1', '0/1', './.', '0/1'],
-        ...     'James': ['0/1', '0/1', '1/1', './.'],
+        ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102, 103, 104],
+        ...     'ID': ['.', '.', '.', '.', '.'],
+        ...     'REF': ['G', 'CT', 'T', 'C', 'A'],
+        ...     'ALT': ['A', 'C', 'A', 'T', 'G,C'],
+        ...     'QUAL': ['.', '.', '.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.', '.', '.'],
+        ...     'INFO': ['.', '.', '.', '.', '.'],
+        ...     'FORMAT': ['GT', 'GT', 'GT', 'GT', 'GT'],
+        ...     'A': ['0/1', '0/0', '0/0', '0/1', '0/0'],
+        ...     'B': ['1/1', '0/1', './.', '0/1', '0/0'],
+        ...     'C': ['0/1', '0/1', '1/1', './.', '1/2'],
         ... }
         >>> vf = pyvcf.VcfFrame.from_dict([], data)
         >>> vf.df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven Sara James
-        0  chr1  100  .   G   A    .      .    .     GT    0/1  0/1   0/1
-        1  chr1  101  .   T   C    .      .    .     GT    0/0  0/1   0/1
-        2  chr1  102  .   T   A    .      .    .     GT    0/0  ./.   1/1
-        3  chr1  103  .   C   T    .      .    .     GT    0/1  0/1   ./.
+          CHROM  POS ID REF  ALT QUAL FILTER INFO FORMAT    A    B    C
+        0  chr1  100  .   G    A    .      .    .     GT  0/1  1/1  0/1
+        1  chr1  101  .  CT    C    .      .    .     GT  0/0  0/1  0/1
+        2  chr1  102  .   T    A    .      .    .     GT  0/0  ./.  1/1
+        3  chr1  103  .   C    T    .      .    .     GT  0/1  0/1  ./.
+        4  chr1  104  .   A  G,C    .      .    .     GT  0/0  0/0  1/2
 
-        We compare Steven and Sara:
+        We compare the Samples A and B:
 
-        >>> vf.compare('Steven', 'Sara')
+        >>> vf.compare('A', 'B')
         (0, 1, 2, 1)
 
-        Next, we compare all three:
+        Next, we compare all three at once:
 
-        >>> vf.compare('Steven', 'Sara', 'James')
+        >>> vf.compare('A', 'B', 'C')
         (0, 0, 1, 1, 0, 1, 1, 0)
         """
         if c is None:
@@ -1448,7 +1455,7 @@ class VcfFrame:
                 return 'AB'
             else:
                 return 'ab'
-        d = self.df.apply(func, axis=1).value_counts().to_dict()
+        d = self.filter_multialt().df.apply(func, axis=1).value_counts().to_dict()
         Ab = d['Ab'] if 'Ab' in d else 0
         aB = d['aB'] if 'aB' in d else 0
         AB = d['AB'] if 'AB' in d else 0
@@ -1479,7 +1486,7 @@ class VcfFrame:
                 return 'ABC'
             else:
                 return 'abc'
-        d = self.df.apply(func, axis=1).value_counts().to_dict()
+        d = self.filter_multialt().df.apply(func, axis=1).value_counts().to_dict()
         Abc = d['Abc'] if 'Abc' in d else 0
         aBc = d['aBc'] if 'aBc' in d else 0
         ABc = d['ABc'] if 'ABc' in d else 0
@@ -1679,7 +1686,8 @@ class VcfFrame:
 
     def merge(self, other, how='inner', format='GT', sort=True,
               collapse=False):
-        """Merge with the other VcfFrame.
+        """
+        Merge with the other VcfFrame.
 
         Parameters
         ----------
@@ -1714,8 +1722,8 @@ class VcfFrame:
         ...     'FILTER': ['.', '.'],
         ...     'INFO': ['.', '.'],
         ...     'FORMAT': ['GT:DP', 'GT:DP'],
-        ...     'Steven': ['0/0:32', '0/1:29'],
-        ...     'Sara': ['0/1:24', '1/1:30'],
+        ...     'A': ['0/0:32', '0/1:29'],
+        ...     'B': ['0/1:24', '1/1:30'],
         ... }
         >>> data2 = {
         ...     'CHROM': ['chr1', 'chr1', 'chr2'],
@@ -1727,17 +1735,17 @@ class VcfFrame:
         ...     'FILTER': ['.', '.', '.'],
         ...     'INFO': ['.', '.', '.'],
         ...     'FORMAT': ['GT:DP', 'GT:DP', 'GT:DP'],
-        ...     'Dona': ['./.:.', '0/0:24', '0/0:26'],
-        ...     'Michel': ['0/1:24', '0/1:31', '0/1:26'],
+        ...     'C': ['./.:.', '0/0:24', '0/0:26'],
+        ...     'D': ['0/1:24', '0/1:31', '0/1:26'],
         ... }
         >>> vf1 = pyvcf.VcfFrame.from_dict([], data1)
         >>> vf2 = pyvcf.VcfFrame.from_dict([], data2)
         >>> vf1.df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT  Steven    Sara
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT       A       B
         0  chr1  100  .   G   A    .      .    .  GT:DP  0/0:32  0/1:24
         1  chr1  101  .   T   C    .      .    .  GT:DP  0/1:29  1/1:30
         >>> vf2.df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    Dona  Michel
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT       C       D
         0  chr1  100  .   G   A    .      .    .  GT:DP   ./.:.  0/1:24
         1  chr1  101  .   T   C    .      .    .  GT:DP  0/0:24  0/1:31
         2  chr2  200  .   A   T    .      .    .  GT:DP  0/0:26  0/1:26
@@ -1745,22 +1753,22 @@ class VcfFrame:
         We can merge the two VcfFrames with ``how='inner'`` (default):
 
         >>> vf1.merge(vf2).df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven Sara Dona Michel
-        0  chr1  100  .   G   A    .      .    .     GT    0/0  0/1  ./.    0/1
-        1  chr1  101  .   T   C    .      .    .     GT    0/1  1/1  0/0    0/1
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    B    C    D
+        0  chr1  100  .   G   A    .      .    .     GT  0/0  0/1  ./.  0/1
+        1  chr1  101  .   T   C    .      .    .     GT  0/1  1/1  0/0  0/1
 
         We can also merge with ``how='outer'``:
 
         >>> vf1.merge(vf2, how='outer').df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven Sara Dona Michel
-        0  chr1  100  .   G   A    .      .    .     GT    0/0  0/1  ./.    0/1
-        1  chr1  101  .   T   C    .      .    .     GT    0/1  1/1  0/0    0/1
-        2  chr2  200  .   A   T    .      .    .     GT    ./.  ./.  0/0    0/1
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    B    C    D
+        0  chr1  100  .   G   A    .      .    .     GT  0/0  0/1  ./.  0/1
+        1  chr1  101  .   T   C    .      .    .     GT  0/1  1/1  0/0  0/1
+        2  chr2  200  .   A   T    .      .    .     GT  ./.  ./.  0/0  0/1
 
         Since both VcfFrames have the DP subfield, we can use ``format='GT:DP'``:
 
         >>> vf1.merge(vf2, how='outer', format='GT:DP').df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT  Steven    Sara    Dona  Michel
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT       A       B       C       D
         0  chr1  100  .   G   A    .      .    .  GT:DP  0/0:32  0/1:24   ./.:.  0/1:24
         1  chr1  101  .   T   C    .      .    .  GT:DP  0/1:29  1/1:30  0/0:24  0/1:31
         2  chr2  200  .   A   T    .      .    .  GT:DP   ./.:.   ./.:.  0/0:26  0/1:26
