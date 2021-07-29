@@ -21,6 +21,7 @@ Changelog
 * Add new method :meth:`pycov.CovFrame.from_file`.
 * Add new command :command:`fuc-depth`.
 * Add new method :meth:`common.file2list`.
+* Add new method :meth:`pyvcf.VcfFrame.chr_prefix`.
 
 0.18.0 (2021-07-20)
 -------------------

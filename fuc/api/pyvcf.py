@@ -4457,3 +4457,30 @@ class VcfFrame:
         )
 
         return ax
+
+    def chr_prefix(self, mode='remove'):
+        """
+        Add or remove the 'chr' string from the CHROM column.
+
+        Parameters
+        ----------
+        mode : {'add', 'remove'}, default: 'remove'
+            Whether to add or remove the 'chr' string.
+
+        Returns
+        -------
+        VcfFrame
+            Updated VcfFrame.
+        """
+        if mode == 'remove':
+            def one_row(r):
+                r.CHROM = r.CHROM.replace('chr', '')
+                return r
+        elif mode == 'add':
+            def one_row(r):
+                r.CHROM = 'chr' + r.CHROM
+                return r
+        else:
+            raise ValueError(f'Incorrect mode: {mode}')
+        df = self.df.apply(one_row, axis=1)
+        return self.__class__(self.copy_meta(), df)
