@@ -218,7 +218,8 @@ def gt_hasvar(g):
         return False
 
 def gt_unphase(g):
-    """Return unphased sample genotype.
+    """
+    Return unphased sample genotype.
 
     Parameters
     ----------
@@ -622,7 +623,8 @@ class AnnFrame:
 
     @classmethod
     def from_dict(cls, data, sample_col):
-        """Construct AnnFrame from dict of array-like or dicts.
+        """
+        Construct AnnFrame from dict of array-like or dicts.
 
         The dictionary must have at least one column that represents sample
         names which are used as index for pandas.DataFrame.
@@ -1271,7 +1273,8 @@ class VcfFrame:
 
     @classmethod
     def from_dict(cls, meta, data):
-        """Construct VcfFrame from dict of array-like or dicts.
+        """
+        Construct VcfFrame from dict of array-like or dicts.
 
         Parameters
         ----------
@@ -1307,13 +1310,13 @@ class VcfFrame:
         ...     'FILTER': ['.', '.'],
         ...     'INFO': ['.', '.'],
         ...     'FORMAT': ['GT', 'GT'],
-        ...     'Steven': ['0/1', '1/1']
+        ...     'A': ['0/1', '1/1']
         ... }
         >>> vf = pyvcf.VcfFrame.from_dict([], data)
         >>> vf.df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
-        0  chr1  100  .   G   A    .      .    .     GT    0/1
-        1  chr2  101  .   T   C    .      .    .     GT    1/1
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A
+        0  chr1  100  .   G   A    .      .    .     GT  0/1
+        1  chr2  101  .   T   C    .      .    .     GT  1/1
         """
         return cls(meta, pd.DataFrame(data))
 
@@ -3646,7 +3649,8 @@ class VcfFrame:
         return vf
 
     def unphase(self):
-        """Unphase all the sample genotypes.
+        """
+        Unphase all the sample genotypes.
 
         Returns
         -------
@@ -4471,6 +4475,32 @@ class VcfFrame:
         -------
         VcfFrame
             Updated VcfFrame.
+
+        Examples
+        --------
+
+        >>> from fuc import pyvcf
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr2'],
+        ...     'POS': [100, 101],
+        ...     'ID': ['.', '.'],
+        ...     'REF': ['G', 'T'],
+        ...     'ALT': ['A', 'C'],
+        ...     'QUAL': ['.', '.'],
+        ...     'FILTER': ['.', '.'],
+        ...     'INFO': ['.', '.'],
+        ...     'FORMAT': ['GT', 'GT'],
+        ...     'A': ['0/1', '1/1']
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A
+        0  chr1  100  .   G   A    .      .    .     GT  0/1
+        1  chr2  101  .   T   C    .      .    .     GT  1/1
+        >>> vf.chr_prefix().df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A
+        0     1  100  .   G   A    .      .    .     GT  0/1
+        1     2  101  .   T   C    .      .    .     GT  1/1
         """
         if mode == 'remove':
             def one_row(r):
