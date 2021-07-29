@@ -4460,7 +4460,7 @@ class VcfFrame:
 
     def chr_prefix(self, mode='remove'):
         """
-        Add or remove the 'chr' string from the CHROM column.
+        Add or remove the (annoying) 'chr' string from the CHROM column.
 
         Parameters
         ----------
