@@ -30,7 +30,7 @@ Changelog
 * Update :command:`fq-count` command to run significantly faster.
 * Update :command:`fuc-find` command to support pattern matching that is more robust than just file extension.
 * Update :meth:`pyvcf.VcfFrame.subset` method to take string as input in addition to list.
-* Fix a minor bug in :meth:`pymaf.MafFrame.plot_snvclss` method when certain SNV classes are entirely missing.
+* Fix bug in :meth:`pymaf.MafFrame.plot_snvclss` method when certain SNV classes are entirely missing.
 * Add new package ``statsmodels`` as dependency for performing statistical analysis.
 * Update :meth:`pymaf.MafFrame.plot_regplot` method to calculate and print summary statistics as well.
 * Update :meth:`pyvcf.VcfFrame.plot_regplot` method to calculate and print summary statistics as well.
@@ -86,7 +86,7 @@ Changelog
 * Add ``keep_empty`` argument to :meth:`pymaf.MafFrame.matrix_waterfall/plot_oncoplot/plot_waterfall` methods.
 * Add :meth:`pymaf.MafFrame.filter_annot` method.
 * Add :meth:`pymaf.AnnFrame.sorted_samples` method.
-* Fix minor bug in :meth:`pymaf.MafFrame.to_frame` method.
+* Fix bug in :meth:`pymaf.MafFrame.to_frame` method.
 * Deprecate :meth:`pyvep.filter_lof/clinsig` methods.
 * Update :meth:`pymaf.MafFrame.from_vcf` method to extract genotype keys (e.g. DP, AD, AF).
 * Update :command:`bam_slice` and :command:`bam_rename` commands.
