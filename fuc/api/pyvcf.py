@@ -1396,10 +1396,8 @@ class VcfFrame:
 
         Parameters
         ----------
-        a : str or int
-            Name or index of Sample A (or test).
-        b : str or int
-            Name or index of Sample B (or truth).
+        a, b : str or int
+            Name or index of Sample A or B (test or truth).
         c : str or int, optional
             Name or index of Sample C.
 
