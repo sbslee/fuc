@@ -24,6 +24,7 @@ Changelog
 * Add new method :meth:`pyvcf.VcfFrame.chr_prefix`.
 * Fix bug in :meth:`pyvcf.gt_unphase` when '.|.' is provided.
 * Update :meth:`pyvcf.VcfFrame.compare` method to support comparison of SNVs only and INDELs only.
+* Update :meth:`pymaf.MafFrame.from_vcf` method so that ``names`` argument is no longer required when ``keys`` argument is used.
 
 0.18.0 (2021-07-20)
 -------------------

@@ -749,9 +749,12 @@ class MafFrame:
         vcf : str or VcfFrame
             VCF file or VcfFrame.
         keys : str or list
-            Genotype key or list of genotype keys.
+            Genotype key (e.g. 'AD', 'AF') or list of genotype keys to be
+            added to the MafFrame.
         names : str or list
-            Column name or list of column names to use in the MafFrame.
+            Column name or list of column names for ``keys`` (must be the
+            same length). By default, the genotype keys will be used as
+            column names.
 
         Examples
         --------
@@ -767,28 +770,34 @@ class MafFrame:
         ...     'QUAL': ['.', '.'],
         ...     'FILTER': ['.', '.'],
         ...     'INFO': ['CSQ=T|missense_variant|MODERATE|MTOR|2475|Transcript|NM_001386500.1|protein_coding|47/58||||6792|6644|2215|S/Y|tCt/tAt|rs587777894&COSV63868278&COSV63868313||-1||EntrezGene||||||||G|G||deleterious(0)|possibly_damaging(0.876)||||||||||||||||||likely_pathogenic&pathogenic|0&1&1|1&1&1|26619011&27159400&24631838&26018084&27830187|||||', 'CSQ=C|splice_donor_variant|HIGH|MTOR|2475|Transcript|NM_001386500.1|protein_coding||46/57||||||||||-1||EntrezGene||||||||A|A|||||||||||||||||||||||||||||'],
-        ...     'FORMAT': ['GT', 'GT'],
-        ...     'A': ['0/1', '1/1']
+        ...     'FORMAT': ['GT:AD:DP:AF', 'GT:AD:DP:AF'],
+        ...     'A': ['0/1:176,37:213:0.174', '0/1:966,98:1064:0.092']
         ... }
         >>> vf = pyvcf.VcfFrame.from_dict([], data)
         >>> vf.df
-          CHROM  POS ID REF ALT QUAL FILTER                                               INFO FORMAT    A
-        0  chr1  100  .   G   T    .      .  CSQ=T|missense_variant|MODERATE|MTOR|2475|Tran...     GT  0/1
-        1  chr2  101  .   T   C    .      .  CSQ=C|splice_donor_variant|HIGH|MTOR|2475|Tran...     GT  1/1
+          CHROM  POS ID REF ALT QUAL FILTER                                               INFO       FORMAT                      A
+        0  chr1  100  .   G   A    .      .  CSQ=T|missense_variant|MODERATE|MTOR|2475|Tran...  GT:AD:DP:AF   0/1:176,37:213:0.174
+        1  chr2  101  .   T   C    .      .  CSQ=C|splice_donor_variant|HIGH|MTOR|2475|Tran...  GT:AD:DP:AF  0/1:966,98:1064:0.092
         >>> mf = pymaf.MafFrame.from_vcf(vf)
         >>> mf.df
           Hugo_Symbol Entrez_Gene_Id Center NCBI_Build Chromosome  Start_Position  End_Position Strand Variant_Classification Variant_Type Reference_Allele Tumor_Seq_Allele1 Tumor_Seq_Allele2 Protein_Change Tumor_Sample_Barcode
         0        MTOR           2475      .          .       chr1             100           100      -      Missense_Mutation          SNP                G                 A                 A       p.S2215Y                    A
         1        MTOR           2475      .          .       chr2             101           101      -            Splice_Site          SNP                T                 C                 C              .                    A
 
+        We can add genotype keys such as AD and AF:
+
+        >>> mf = pymaf.MafFrame.from_vcf(vf, keys=['AD', 'AF'])
+        >>> mf.df
+          Hugo_Symbol Entrez_Gene_Id Center NCBI_Build Chromosome  Start_Position  End_Position Strand Variant_Classification Variant_Type Reference_Allele Tumor_Seq_Allele1 Tumor_Seq_Allele2 Protein_Change Tumor_Sample_Barcode      AD     AF
+        0        MTOR           2475      .          .       chr1             100           100      -      Missense_Mutation          SNP                G                 A                 A       p.S2215Y                    A  176,37  0.174
+        1        MTOR           2475      .          .       chr2             101           101      -            Splice_Site          SNP                T                 C                 C              .                    A  966,98  0.092
+
         The method can accept a VCF file as input instead of VcfFrame:
 
-        >>> from fuc import pymaf
         >>> mf = pymaf.MafFrame.from_vcf('annotated.vcf')
 
-        The method can handle unannotated VCF data:
+        The method can also handle unannotated VCF data:
 
-        >>> from fuc import pyvcf, pymaf
         >>> data = {
         ...     'CHROM': ['chr1', 'chr1', 'chr1'],
         ...     'POS': [100, 200, 300],
@@ -799,20 +808,20 @@ class MafFrame:
         ...     'FILTER': ['.', '.', '.'],
         ...     'INFO': ['.', '.', '.'],
         ...     'FORMAT': ['GT', 'GT', 'GT'],
-        ...     'Steven': ['0/1', '0/1', '0/1']
+        ...     'A': ['0/1', '0/1', '0/1']
         ... }
         >>> vf = pyvcf.VcfFrame.from_dict([], data)
         >>> vf.df
-          CHROM  POS ID  REF  ALT QUAL FILTER INFO FORMAT Steven
-        0  chr1  100  .    G    A    .      .    .     GT    0/1
-        1  chr1  200  .    C  CAG    .      .    .     GT    0/1
-        2  chr1  300  .  TTC    T    .      .    .     GT    0/1
+          CHROM  POS ID  REF  ALT QUAL FILTER INFO FORMAT    A
+        0  chr1  100  .    G    A    .      .    .     GT  0/1
+        1  chr1  200  .    C  CAG    .      .    .     GT  0/1
+        2  chr1  300  .  TTC    T    .      .    .     GT  0/1
         >>> mf = pymaf.MafFrame.from_vcf(vf)
         >>> mf.df
           Hugo_Symbol Entrez_Gene_Id Center NCBI_Build Chromosome  Start_Position  End_Position Strand Variant_Classification Variant_Type Reference_Allele Tumor_Seq_Allele1 Tumor_Seq_Allele2 Protein_Change Tumor_Sample_Barcode
-        0           .              .      .          .       chr1             100           100      .                      .          SNP                G                 A                 A              .               Steven
-        1           .              .      .          .       chr1             200           201      .                      .          INS                -                AG                AG              .               Steven
-        2           .              .      .          .       chr1             301           302      .                      .          DEL               TC                 -                 -              .               Steven
+        0           .              .      .          .       chr1             100           100      .                      .          SNP                G                 A                 A              .                    A
+        1           .              .      .          .       chr1             200           201      .                      .          INS                -                AG                AG              .                    A
+        2           .              .      .          .       chr1             301           302      .                      .          DEL               TC                 -                 -              .                    A
         """
         # Parse the input VCF.
         if isinstance(vcf, str):
@@ -946,29 +955,28 @@ class MafFrame:
         del df['Tumor_Sample_Barcode']
         df = df.join(s)
 
-        # Append the genotype keys.
-        if keys is None:
-            keys = []
-        if names is None:
-            names = []
-        if isinstance(keys, str):
-            keys = [keys]
-        if isinstance(names, str):
-            names = [names]
-        for i, key in enumerate(keys):
-            temp_df = vf.extract(key)
-            temp_df = pd.concat([vf.df.iloc[:, :9], temp_df], axis=1)
-            temp_df = temp_df.drop(
-                columns=['ID', 'QUAL', 'FILTER', 'INFO', 'FORMAT'])
-            temp_df = pd.melt(
-                temp_df,
-                id_vars=['CHROM', 'POS', 'REF', 'ALT'],
-                var_name='Tumor_Sample_Barcode',
-            )
-            temp_df = temp_df[temp_df.value != '.']
-            df = df.merge(temp_df,
-                on=['CHROM', 'POS', 'REF', 'ALT', 'Tumor_Sample_Barcode'])
-            df = df.rename(columns={'value': names[i]})
+        # Append extra genotype keys, if necessary.
+        if keys is not None:
+            if names is None:
+                names = keys
+            if isinstance(keys, str):
+                keys = [keys]
+            if isinstance(names, str):
+                names = [names]
+            for i, key in enumerate(keys):
+                temp_df = vf.extract(key)
+                temp_df = pd.concat([vf.df.iloc[:, :9], temp_df], axis=1)
+                temp_df = temp_df.drop(
+                    columns=['ID', 'QUAL', 'FILTER', 'INFO', 'FORMAT'])
+                temp_df = pd.melt(
+                    temp_df,
+                    id_vars=['CHROM', 'POS', 'REF', 'ALT'],
+                    var_name='Tumor_Sample_Barcode',
+                )
+                temp_df = temp_df[temp_df.value != '.']
+                df = df.merge(temp_df,
+                    on=['CHROM', 'POS', 'REF', 'ALT', 'Tumor_Sample_Barcode'])
+                df = df.rename(columns={'value': names[i]})
 
         # Drop the extra columns.
         df = df.drop(columns=['CHROM', 'POS', 'REF', 'ALT'])
