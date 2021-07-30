@@ -4,13 +4,13 @@ Changelog
 0.19.0 (in development)
 -----------------------
 
-* Fix a bug in :meth:`pymaf.MafFrame.plot_mutated` when using the ``hue`` option.
+* Fix bug in :meth:`pymaf.MafFrame.plot_mutated` when using the ``hue`` option.
 * Add new argument ``sort`` to :meth:`pymaf.MafFrame.plot_vaf` method.
 * Add new method :meth:`pymaf.MafFrame.plot_matrixs`.
 * Add new method :meth:`pymaf.MafFrame.plot_matrixg`.
 * Add new method :meth:`pymaf.MafFrame.compute_clonality`.
 * Add new method :meth:`pymaf.MafFrame.plot_clonality`.
-* Fix a bug in :meth:`pymaf.MafFrame.plot_evolution` when there are no variants to display for the specified samples.
+* Fix bug in :meth:`pymaf.MafFrame.plot_evolution` when there are no variants to display for the specified samples.
 * Add new method :meth:`pymaf.MafFrame.plot_genepair`.
 * Add new method :meth:`pymaf.MafFrame.plot_interactions`.
 * Update the :command:`fuc-demux` command to output a better figure.
@@ -22,6 +22,7 @@ Changelog
 * Add new command :command:`fuc-depth`.
 * Add new method :meth:`common.file2list`.
 * Add new method :meth:`pyvcf.VcfFrame.chr_prefix`.
+* Fix bug in :meth:`pyvcf.gt_unphase` when '.|.' is provided.
 
 0.18.0 (2021-07-20)
 -------------------

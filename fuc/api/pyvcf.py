@@ -229,7 +229,7 @@ def gt_unphase(g):
     Returns
     -------
     str
-        Unphased sample genotype.
+        Unphased genotype.
 
     Examples
     --------
@@ -249,11 +249,19 @@ def gt_unphase(g):
     '0/1'
     >>> pyvcf.gt_unphase('2|1:2:0:18,2')
     '1/2:2:0:18,2'
+    >>> pyvcf.gt_unphase('.')
+    '.'
+    >>> pyvcf.gt_unphase('./.')
+    './.'
+    >>> pyvcf.gt_unphase('.|.')
+    './.'
     """
     l = g.split(':')
     gt = l[0]
     if '|' not in gt:
         return g
+    if '.' in gt:
+        return g.replace('|', '/')
     l[0] = '/'.join([str(b) for b in sorted([int(a) for a in gt.split('|')])])
     return ':'.join(l)
 
