@@ -1408,6 +1408,11 @@ class VcfFrame:
         tuple
             Four- or eight-element tuple depending on the number of samples.
 
+        See Also
+        --------
+        fuc.api.common.sumstat
+            Return various summary statistics from (FP, FN, TP, TN).
+
         Examples
         --------
         Assume we have the following data:
