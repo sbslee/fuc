@@ -1381,7 +1381,7 @@ class VcfFrame:
         f.close()
         return cls(meta, df)
 
-    def compare(self, a, b, c=None):
+    def compare(self, a, b, c=None, mode='all'):
         """
         Compare genotype data between two (A, B) or three (A, B, C) samples.
 
@@ -1400,6 +1400,12 @@ class VcfFrame:
             Name or index of Sample A or B (test or truth).
         c : str or int, optional
             Name or index of Sample C.
+        mode : {'all', 'snv', 'indel'}, default: 'all'
+            Determines which variant types should be analyzed:
+
+            - 'all': Include both SNVs and INDELs.
+            - 'snv': Include SNVs only.
+            - 'indel': Include INDELs only.
 
         Returns
         -------
@@ -1439,25 +1445,41 @@ class VcfFrame:
         3  chr1  103  .   C    T    .      .    .     GT  0/1  0/1  ./.
         4  chr1  104  .   A  G,C    .      .    .     GT  0/0  0/0  1/2
 
-        We compare the Samples A and B:
+        We can first compare the samples A and B:
 
-        >>> vf.compare('A', 'B')
+        >>> vf.compare('A', 'B', mode='all')
         (0, 1, 2, 1)
+        >>> vf.compare('A', 'B', mode='snv')
+        (0, 0, 2, 1)
+        >>> vf.compare('A', 'B', mode='indel')
+        (0, 1, 0, 0)
 
-        Next, we compare all three at once:
+        We can also compare all three samples at once:
 
         >>> vf.compare('A', 'B', 'C')
         (0, 0, 1, 1, 0, 1, 1, 0)
         """
-        if c is None:
-            result = self._compare_two(a, b)
+        vf = self.filter_multialt()
+
+        if mode == 'all':
+            pass
+        elif mode == 'snv':
+            vf = vf.filter_indel()
+        elif mode == 'indel':
+            vf = vf.filter_indel(opposite=True)
         else:
-            result = self._compare_three(a, b, c)
+            raise ValueError(f'Incorrect mode: {mode}.')
+
+        if c is None:
+            result = self._compare_two(vf, a, b)
+        else:
+            result = self._compare_three(vf, a, b, c)
+
         return result
 
-    def _compare_two(self, a, b):
-        a = a if isinstance(a, str) else self.samples[a]
-        b = b if isinstance(b, str) else self.samples[b]
+    def _compare_two(self, vf, a, b):
+        a = a if isinstance(a, str) else vf.samples[a]
+        b = b if isinstance(b, str) else vf.samples[b]
         def func(r):
             a_has = gt_hasvar(r[a])
             b_has = gt_hasvar(r[b])
@@ -1469,17 +1491,17 @@ class VcfFrame:
                 return 'AB'
             else:
                 return 'ab'
-        d = self.filter_multialt().df.apply(func, axis=1).value_counts().to_dict()
+        d = vf.df.apply(func, axis=1).value_counts().to_dict()
         Ab = d['Ab'] if 'Ab' in d else 0
         aB = d['aB'] if 'aB' in d else 0
         AB = d['AB'] if 'AB' in d else 0
         ab = d['ab'] if 'ab' in d else 0
         return (Ab, aB, AB, ab)
 
-    def _compare_three(self, a, b, c):
-        a = a if isinstance(a, str) else self.samples[a]
-        b = b if isinstance(b, str) else self.samples[b]
-        c = c if isinstance(c, str) else self.samples[c]
+    def _compare_three(self, vf, a, b, c):
+        a = a if isinstance(a, str) else vf.samples[a]
+        b = b if isinstance(b, str) else vf.samples[b]
+        c = c if isinstance(c, str) else vf.samples[c]
         def func(r):
             a_has = gt_hasvar(r[a])
             b_has = gt_hasvar(r[b])
@@ -1500,7 +1522,7 @@ class VcfFrame:
                 return 'ABC'
             else:
                 return 'abc'
-        d = self.filter_multialt().df.apply(func, axis=1).value_counts().to_dict()
+        d = vf.df.apply(func, axis=1).value_counts().to_dict()
         Abc = d['Abc'] if 'Abc' in d else 0
         aBc = d['aBc'] if 'aBc' in d else 0
         ABc = d['ABc'] if 'ABc' in d else 0

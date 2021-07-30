@@ -23,6 +23,7 @@ Changelog
 * Add new method :meth:`common.file2list`.
 * Add new method :meth:`pyvcf.VcfFrame.chr_prefix`.
 * Fix bug in :meth:`pyvcf.gt_unphase` when '.|.' is provided.
+* Update :meth:`pyvcf.VcfFrame.compare` method to support comparison of SNVs only and INDELs only.
 
 0.18.0 (2021-07-20)
 -------------------
