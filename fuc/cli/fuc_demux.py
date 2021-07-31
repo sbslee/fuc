@@ -62,6 +62,7 @@ def main(args):
 
     os.mkdir(args.output_dir)
 
+    plt.tight_layout()
     plt.savefig(f'{args.output_dir}/reports.pdf')
 
     df1_string = df1.to_csv(index=False)

@@ -12,7 +12,8 @@ def header(fn):
     return pysam.view('-H', fn).strip()
 
 def tag_sm(fn):
-    """Extract the SM tags (sample names) from a BAM file.
+    """
+    Extract the SM tags (sample names) from a BAM file.
 
     Parameters
     ----------
@@ -22,7 +23,14 @@ def tag_sm(fn):
     Returns
     -------
     list
-        SM tags.
+        List of SM tags.
+
+    Examples
+    --------
+
+    >>> from fuc import pybam
+    >>> pybam.tag_sm('NA19920.bam')
+    ['NA19920']
     """
     lines = pysam.view('-H', fn).strip().split('\n')
     tags = []
@@ -35,7 +43,8 @@ def tag_sm(fn):
     return list(set(tags))
 
 def tag_sn(fn):
-    """Extract the SN tags (contig names) from a BAM file.
+    """
+    Extract the SN tags (contig names) from a BAM file.
 
     Parameters
     ----------
@@ -45,7 +54,14 @@ def tag_sn(fn):
     Returns
     -------
     list
-        SN tags.
+        List of SN tags.
+
+    Examples
+    --------
+
+    >>> from fuc import pybam
+    >>> pybam.tag_sn('NA19920.bam')
+    ['chr3', 'chr15', 'chrY', 'chr19', 'chr22', 'chr5', 'chr18', 'chr14', 'chr11', 'chr20', 'chr21', 'chr16', 'chr10', 'chr13', 'chr9', 'chr2', 'chr17', 'chr12', 'chr6', 'chrM', 'chrX', 'chr4', 'chr8', 'chr1', 'chr7']
     """
     lines = pysam.view('-H', fn).strip().split('\n')
     tags = []

@@ -52,12 +52,14 @@ Translation_Start_Site.
 import re
 import copy
 import warnings
+import itertools
 
 from . import pyvcf, common
 
 import numpy as np
 import pandas as pd
 import statsmodels.formula.api as smf
+from scipy.stats import fisher_exact
 import seaborn as sns
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
@@ -407,7 +409,7 @@ class AnnFrame:
     @classmethod
     def from_file(cls, fn, sample_col='Tumor_Sample_Barcode', sep='\t'):
         """
-        Construct an AnnFrame from a delimited text file.
+        Construct AnnFrame from a delimited text file.
 
         The text file must have at least one column that represents
         sample names which are used as index for pandas.DataFrame.
@@ -572,6 +574,10 @@ class AnnFrame:
             number of decimals.
         cmap : str, default: 'Pastel1'
             Color map.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
 
         Returns
         -------
@@ -676,7 +682,7 @@ class MafFrame:
     @classmethod
     def from_file(cls, fn):
         """
-        Construct a MafFrame from a MAF file.
+        Construct MafFrame from a MAF file.
 
         Parameters
         ----------
@@ -728,7 +734,7 @@ class MafFrame:
     @classmethod
     def from_vcf(cls, vcf, keys=None, names=None):
         """
-        Construct a MafFrame from a VCF file or VcfFrame.
+        Construct MafFrame from a VCF file or VcfFrame.
 
         It is recommended that the input VCF data be functionally annotated
         by an annotation tool such as Ensembl VEP, SnpEff, and ANNOVAR;
@@ -743,9 +749,12 @@ class MafFrame:
         vcf : str or VcfFrame
             VCF file or VcfFrame.
         keys : str or list
-            Genotype key or list of genotype keys.
+            Genotype key (e.g. 'AD', 'AF') or list of genotype keys to be
+            added to the MafFrame.
         names : str or list
-            Column name or list of column names to use in the MafFrame.
+            Column name or list of column names for ``keys`` (must be the
+            same length). By default, the genotype keys will be used as
+            column names.
 
         Examples
         --------
@@ -761,28 +770,34 @@ class MafFrame:
         ...     'QUAL': ['.', '.'],
         ...     'FILTER': ['.', '.'],
         ...     'INFO': ['CSQ=T|missense_variant|MODERATE|MTOR|2475|Transcript|NM_001386500.1|protein_coding|47/58||||6792|6644|2215|S/Y|tCt/tAt|rs587777894&COSV63868278&COSV63868313||-1||EntrezGene||||||||G|G||deleterious(0)|possibly_damaging(0.876)||||||||||||||||||likely_pathogenic&pathogenic|0&1&1|1&1&1|26619011&27159400&24631838&26018084&27830187|||||', 'CSQ=C|splice_donor_variant|HIGH|MTOR|2475|Transcript|NM_001386500.1|protein_coding||46/57||||||||||-1||EntrezGene||||||||A|A|||||||||||||||||||||||||||||'],
-        ...     'FORMAT': ['GT', 'GT'],
-        ...     'A': ['0/1', '1/1']
+        ...     'FORMAT': ['GT:AD:DP:AF', 'GT:AD:DP:AF'],
+        ...     'A': ['0/1:176,37:213:0.174', '0/1:966,98:1064:0.092']
         ... }
         >>> vf = pyvcf.VcfFrame.from_dict([], data)
         >>> vf.df
-          CHROM  POS ID REF ALT QUAL FILTER                                               INFO FORMAT    A
-        0  chr1  100  .   G   T    .      .  CSQ=T|missense_variant|MODERATE|MTOR|2475|Tran...     GT  0/1
-        1  chr2  101  .   T   C    .      .  CSQ=C|splice_donor_variant|HIGH|MTOR|2475|Tran...     GT  1/1
+          CHROM  POS ID REF ALT QUAL FILTER                                               INFO       FORMAT                      A
+        0  chr1  100  .   G   A    .      .  CSQ=T|missense_variant|MODERATE|MTOR|2475|Tran...  GT:AD:DP:AF   0/1:176,37:213:0.174
+        1  chr2  101  .   T   C    .      .  CSQ=C|splice_donor_variant|HIGH|MTOR|2475|Tran...  GT:AD:DP:AF  0/1:966,98:1064:0.092
         >>> mf = pymaf.MafFrame.from_vcf(vf)
         >>> mf.df
           Hugo_Symbol Entrez_Gene_Id Center NCBI_Build Chromosome  Start_Position  End_Position Strand Variant_Classification Variant_Type Reference_Allele Tumor_Seq_Allele1 Tumor_Seq_Allele2 Protein_Change Tumor_Sample_Barcode
         0        MTOR           2475      .          .       chr1             100           100      -      Missense_Mutation          SNP                G                 A                 A       p.S2215Y                    A
         1        MTOR           2475      .          .       chr2             101           101      -            Splice_Site          SNP                T                 C                 C              .                    A
 
+        We can add genotype keys such as AD and AF:
+
+        >>> mf = pymaf.MafFrame.from_vcf(vf, keys=['AD', 'AF'])
+        >>> mf.df
+          Hugo_Symbol Entrez_Gene_Id Center NCBI_Build Chromosome  Start_Position  End_Position Strand Variant_Classification Variant_Type Reference_Allele Tumor_Seq_Allele1 Tumor_Seq_Allele2 Protein_Change Tumor_Sample_Barcode      AD     AF
+        0        MTOR           2475      .          .       chr1             100           100      -      Missense_Mutation          SNP                G                 A                 A       p.S2215Y                    A  176,37  0.174
+        1        MTOR           2475      .          .       chr2             101           101      -            Splice_Site          SNP                T                 C                 C              .                    A  966,98  0.092
+
         The method can accept a VCF file as input instead of VcfFrame:
 
-        >>> from fuc import pymaf
         >>> mf = pymaf.MafFrame.from_vcf('annotated.vcf')
 
-        The method can handle unannotated VCF data:
+        The method can also handle unannotated VCF data:
 
-        >>> from fuc import pyvcf, pymaf
         >>> data = {
         ...     'CHROM': ['chr1', 'chr1', 'chr1'],
         ...     'POS': [100, 200, 300],
@@ -793,20 +808,20 @@ class MafFrame:
         ...     'FILTER': ['.', '.', '.'],
         ...     'INFO': ['.', '.', '.'],
         ...     'FORMAT': ['GT', 'GT', 'GT'],
-        ...     'Steven': ['0/1', '0/1', '0/1']
+        ...     'A': ['0/1', '0/1', '0/1']
         ... }
         >>> vf = pyvcf.VcfFrame.from_dict([], data)
         >>> vf.df
-          CHROM  POS ID  REF  ALT QUAL FILTER INFO FORMAT Steven
-        0  chr1  100  .    G    A    .      .    .     GT    0/1
-        1  chr1  200  .    C  CAG    .      .    .     GT    0/1
-        2  chr1  300  .  TTC    T    .      .    .     GT    0/1
+          CHROM  POS ID  REF  ALT QUAL FILTER INFO FORMAT    A
+        0  chr1  100  .    G    A    .      .    .     GT  0/1
+        1  chr1  200  .    C  CAG    .      .    .     GT  0/1
+        2  chr1  300  .  TTC    T    .      .    .     GT  0/1
         >>> mf = pymaf.MafFrame.from_vcf(vf)
         >>> mf.df
           Hugo_Symbol Entrez_Gene_Id Center NCBI_Build Chromosome  Start_Position  End_Position Strand Variant_Classification Variant_Type Reference_Allele Tumor_Seq_Allele1 Tumor_Seq_Allele2 Protein_Change Tumor_Sample_Barcode
-        0           .              .      .          .       chr1             100           100      .                      .          SNP                G                 A                 A              .               Steven
-        1           .              .      .          .       chr1             200           201      .                      .          INS                -                AG                AG              .               Steven
-        2           .              .      .          .       chr1             301           302      .                      .          DEL               TC                 -                 -              .               Steven
+        0           .              .      .          .       chr1             100           100      .                      .          SNP                G                 A                 A              .                    A
+        1           .              .      .          .       chr1             200           201      .                      .          INS                -                AG                AG              .                    A
+        2           .              .      .          .       chr1             301           302      .                      .          DEL               TC                 -                 -              .                    A
         """
         # Parse the input VCF.
         if isinstance(vcf, str):
@@ -940,29 +955,28 @@ class MafFrame:
         del df['Tumor_Sample_Barcode']
         df = df.join(s)
 
-        # Append the genotype keys.
-        if keys is None:
-            keys = []
-        if names is None:
-            names = []
-        if isinstance(keys, str):
-            keys = [keys]
-        if isinstance(names, str):
-            names = [names]
-        for i, key in enumerate(keys):
-            temp_df = vf.extract(key)
-            temp_df = pd.concat([vf.df.iloc[:, :9], temp_df], axis=1)
-            temp_df = temp_df.drop(
-                columns=['ID', 'QUAL', 'FILTER', 'INFO', 'FORMAT'])
-            temp_df = pd.melt(
-                temp_df,
-                id_vars=['CHROM', 'POS', 'REF', 'ALT'],
-                var_name='Tumor_Sample_Barcode',
-            )
-            temp_df = temp_df[temp_df.value != '.']
-            df = df.merge(temp_df,
-                on=['CHROM', 'POS', 'REF', 'ALT', 'Tumor_Sample_Barcode'])
-            df = df.rename(columns={'value': names[i]})
+        # Append extra genotype keys, if necessary.
+        if keys is not None:
+            if names is None:
+                names = keys
+            if isinstance(keys, str):
+                keys = [keys]
+            if isinstance(names, str):
+                names = [names]
+            for i, key in enumerate(keys):
+                temp_df = vf.extract(key)
+                temp_df = pd.concat([vf.df.iloc[:, :9], temp_df], axis=1)
+                temp_df = temp_df.drop(
+                    columns=['ID', 'QUAL', 'FILTER', 'INFO', 'FORMAT'])
+                temp_df = pd.melt(
+                    temp_df,
+                    id_vars=['CHROM', 'POS', 'REF', 'ALT'],
+                    var_name='Tumor_Sample_Barcode',
+                )
+                temp_df = temp_df[temp_df.value != '.']
+                df = df.merge(temp_df,
+                    on=['CHROM', 'POS', 'REF', 'ALT', 'Tumor_Sample_Barcode'])
+                df = df.rename(columns={'value': names[i]})
 
         # Drop the extra columns.
         df = df.drop(columns=['CHROM', 'POS', 'REF', 'ALT'])
@@ -1301,6 +1315,119 @@ class MafFrame:
         plt.tight_layout()
         plt.subplots_adjust(wspace=0.01, hspace=0.01)
 
+    def plot_clonality(
+        self, col, af=None, hue=None, hue_order=None, count=10,
+        threshold=0.25, subclonal=False, ax=None, figsize=None
+    ):
+        """
+        Create a bar plot summarizing the clonality of variants in top
+        mutated genes.
+
+        Clonality will be calculated based on VAF using
+        :meth:`MafFrame.compute_clonality`.
+
+        Parameters
+        ----------
+        col : str
+            Column in the MafFrame containing VAF data.
+        af : AnnFrame, optional
+            AnnFrame containing sample annotation data.
+        hue : str, optional
+            Column in the AnnFrame containing information about sample groups.
+        hue_order : list, optional
+            Order to plot the group levels in.
+        count : int, defualt: 10
+            Number of top mutated genes to display.
+        threshold : float, default: 0.25
+            VAF threshold percentage.
+        subclonal : bool, default: False
+            If True, display subclonality (1 - clonality).
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+        kwargs
+            Other keyword arguments will be passed down to
+            :meth:`seaborn.barplot`.
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+
+        See Also
+        --------
+        MafFrame.compute_clonality
+            Compute the clonality of variants based on VAF.
+
+        Examples
+        --------
+
+        Below is a simple example:
+
+        .. plot::
+            :context: close-figs
+
+            >>> import matplotlib.pyplot as plt
+            >>> from fuc import common, pymaf
+            >>> common.load_dataset('tcga-laml')
+            >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+            >>> mf = pymaf.MafFrame.from_file(maf_file)
+            >>> mf.plot_clonality('i_TumorVAF_WU')
+            >>> plt.tight_layout()
+
+        We can create a grouped bar plot based on FAB classification:
+
+        .. plot::
+            :context: close-figs
+
+            >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
+            >>> af = pymaf.AnnFrame.from_file(annot_file)
+            >>> mf.plot_clonality('i_TumorVAF_WU',
+            ...                   af=af,
+            ...                   hue='FAB_classification',
+            ...                   hue_order=['M0', 'M1', 'M2'])
+            >>> plt.tight_layout()
+        """
+        df = self.df.copy()
+        df['Clonality'] = self.compute_clonality(col, threshold=threshold)
+
+        if hue is None:
+            s = df.groupby('Hugo_Symbol')['Clonality'].value_counts()
+            s.name = 'Count'
+            df = s.to_frame().reset_index()
+            df = df.pivot(index='Hugo_Symbol', columns='Clonality', values='Count')
+        else:
+            df = df.merge(af.df[hue], left_on='Tumor_Sample_Barcode', right_index=True)
+            s = df.groupby(['Hugo_Symbol', hue])['Clonality'].value_counts()
+            s.name = 'Count'
+            df = s.to_frame().reset_index()
+            df = df.pivot(index=['Hugo_Symbol', hue], columns='Clonality', values='Count')
+
+        df = df.reset_index()
+        df = df.fillna(0)
+        l = ['Clonal', 'Subclonal']
+        df[l] = df[l].div(df[l].sum(axis=1), axis=0)
+        genes = self.matrix_genes(count=count).index
+
+        # Determine which matplotlib axes to plot on.
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
+        if subclonal:
+            y = 'Subclonal'
+        else:
+            y = 'Clonal'
+
+        sns.barplot(
+            x='Hugo_Symbol', y=y, data=df, order=genes, hue=hue,
+            hue_order=hue_order, ax=ax
+        )
+
+        ax.set_xlabel('')
+
+        return ax
+
     def plot_evolution(
         self, samples, col, anchor=None, normalize=True, count=5, ax=None,
         figsize=None, **kwargs
@@ -1336,6 +1463,11 @@ class MafFrame:
             The matplotlib axes containing the plot.
         """
         df = self.df[self.df.Tumor_Sample_Barcode.isin(samples)]
+
+        if df.empty:
+            message = f'No variants to display for the samples: {samples}.'
+            raise ValueError(message)
+
         df = df[df.Variant_Classification.isin(NONSYN_NAMES)]
 
         def one_row(r):
@@ -1352,12 +1484,19 @@ class MafFrame:
         df.columns.name = ''
         df = df.fillna(0)
 
+        for sample in samples:
+            if sample not in df.columns:
+                df[sample] = 0
+
+        df = df[samples]
+
         if anchor is None:
             anchor = samples[0]
 
         df = df.sort_values(by=anchor, ascending=False)
         if normalize:
             df = df / df.max()
+        df = df.fillna(0)
         df = df.iloc[:count, :].T
         df = df.loc[samples]
 
@@ -1367,7 +1506,97 @@ class MafFrame:
 
         sns.lineplot(data=df, ax=ax, **kwargs)
 
+        ax.set_ylabel('Fraction')
+
         return ax
+
+    def plot_genepair(
+        self, x, y, col, af=None, hue=None, hue_order=None, ax=None,
+        figsize=None, **kwargs
+    ):
+        """
+        Create a scatter plot of VAF between Gene X and Gene Y.
+
+        Parameters
+        ----------
+        x, y : str
+            Gene names.
+        col : str
+            Column in the MafFrame containing VAF data.
+        af : AnnFrame, optional
+            AnnFrame containing sample annotation data.
+        hue : str, optional
+            Column in the AnnFrame containing information about sample groups.
+        hue_order : list, optional
+            Order to plot the group levels in.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+        kwargs
+            Other keyword arguments will be passed down to
+            :meth:`seaborn.scatterplot`.
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+
+        Examples
+        --------
+        Below is a simple example:
+
+        .. plot::
+            :context: close-figs
+
+            >>> import matplotlib.pyplot as plt
+            >>> import seaborn as sns
+            >>> from fuc import common, pymaf
+            >>> common.load_dataset('tcga-laml')
+            >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+            >>> mf = pymaf.MafFrame.from_file(maf_file)
+            >>> mf.plot_genepair('DNMT3A', 'FLT3', 'i_TumorVAF_WU')
+            >>> plt.tight_layout()
+
+        We can create a grouped bar plot based on FAB classification:
+
+        .. plot::
+            :context: close-figs
+
+            >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
+            >>> af = pymaf.AnnFrame.from_file(annot_file)
+            >>> mf.plot_genepair('DNMT3A', 'FLT3', 'i_TumorVAF_WU',
+            ...                  af=af,
+            ...                  hue='FAB_classification')
+            >>> plt.tight_layout()
+        """
+        df = self.df[self.df.Hugo_Symbol.isin([x, y])]
+        df = df[['Tumor_Sample_Barcode', 'Hugo_Symbol', col]]
+        df = df.sort_values(col, ascending=False)
+        df = df.drop_duplicates(subset=['Tumor_Sample_Barcode', 'Hugo_Symbol'])
+        df = df.pivot(index='Tumor_Sample_Barcode',
+            columns='Hugo_Symbol', values=col)
+        df = df.fillna(0)
+
+        if hue is not None:
+            df = df.merge(af.df[hue], left_index=True, right_index=True)
+
+        # Determine which matplotlib axes to plot on.
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
+        sns.scatterplot(
+            x=x, y=y, data=df, ax=ax, hue=hue, hue_order=hue_order, **kwargs
+        )
+
+        # Print summary statistics including R-squared and p-value.
+        results = smf.ols(f'{y} ~ {x}', data=df).fit()
+        print(f'Results for {y} ~ {x}:')
+        print(f'R^2 = {results.rsquared:.2f}')
+        print(f'  P = {results.f_pvalue:.2e}')
+
+        return ax
+
 
     def plot_regplot(
         self, af, col, a, b, genes=None, count=10, to_csv=None, ax=None,
@@ -1459,6 +1688,152 @@ class MafFrame:
         print(f'Results for {b} ~ {a}:')
         print(f'R^2 = {results.rsquared:.2f}')
         print(f'  P = {results.f_pvalue:.2e}')
+
+        return ax
+
+    def plot_interactions(
+        self, count=10, cmap=None, ax=None, figsize=None, **kwargs
+    ):
+        """
+        Create a heatmap representing mutually exclusive or co-occurring set
+        of genes.
+
+        This method performs pair-wise Fisher’s Exact test to detect such
+        significant pair of genes.
+
+        Parameters
+        ----------
+        count : int, defualt: 10
+            Number of top mutated genes to display.
+        cmap : str, optional
+            Color map.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+        kwargs
+            Other keyword arguments will be passed down to
+            :meth:`seaborn.heatmap`.
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+
+        Examples
+        --------
+
+        .. plot::
+
+            >>> import matplotlib.pyplot as plt
+            >>> from fuc import common, pymaf
+            >>> common.load_dataset('tcga-laml')
+            >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+            >>> mf = pymaf.MafFrame.from_file(maf_file)
+            >>> mf.plot_interactions(count=25, cmap='BrBG')
+            >>> plt.tight_layout()
+        """
+        df = self.matrix_prevalence()
+        genes = self.matrix_genes(count=count, mode='samples').index.to_list()
+        df = df.loc[genes]
+        df = df.applymap(lambda x: True if x else False)
+        df = df.T
+        pairs = list(itertools.combinations(genes, 2))
+        data = []
+
+        def one_pair(a, b):
+            s_a = df[a].to_list()
+            s_b = df[b].to_list()
+            ab = 0
+            AB = 0
+            aB = 0
+            Ab = 0
+            for i in range(len(s_a)):
+                if s_a[i] and s_b[i]:
+                    AB += 1
+                elif s_a[i] and not s_b[i]:
+                    Ab += 1
+                elif not s_a[i] and s_b[i]:
+                    aB += 1
+                else:
+                    ab += 1
+            return (ab, AB, aB, Ab)
+
+        for pair in pairs:
+            a = pair[0]
+            b = pair[1]
+            ab, AB, aB, Ab = one_pair(a, b)
+            event = 'Co_Occurence' if AB else 'Mutually_Exclusive'
+            data.append([a, b, ab, AB, aB, Ab, event])
+
+        df = pd.DataFrame(data,
+            columns=['A', 'B', 'ab', 'AB', 'aB', 'Ab', 'Event'])
+
+        def one_row(r):
+            oddsr, p = fisher_exact([[r.AB, r.aB], [r.Ab, r.ab]],
+                alternative='two-sided')
+            return pd.Series([oddsr, p], index=['Odds_Ratio', 'P_Value'])
+
+        df = pd.concat([df.apply(one_row, axis=1), df], axis=1)
+        df = df.sort_values('P_Value')
+
+        def one_row(r):
+            r['Log_P_Value'] = -np.log10(r.P_Value)
+            if r.P_Value < 0.05:
+                r['Label'] = '*'
+            elif r.P_Value < 0.1:
+                r['Label'] = '.'
+            else:
+                r['Label'] = ''
+            if r.Event == 'Mutually_Exclusive':
+                r.Log_P_Value *= -1
+            return r
+
+        df = df.apply(one_row, axis=1)
+
+        annot = df.pivot(index='A', columns='B', values='Label')
+        annot = annot.fillna('')
+
+        df = df.pivot(index='A', columns='B', values='Log_P_Value')
+        df = df.fillna(0)
+
+        for gene in genes:
+            if gene not in df.columns:
+                df[gene] = 0
+            if gene not in annot.columns:
+                annot[gene] = ''
+
+        df = df.T
+        annot = annot.T
+
+        for gene in genes:
+            if gene not in df.columns:
+                df[gene] = 0
+            if gene not in annot.columns:
+                annot[gene] = ''
+
+        annot = annot[genes]
+        annot = annot.loc[genes]
+
+        df = df[genes]
+        df = df.loc[genes]
+
+        # Determine which matplotlib axes to plot on.
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
+        # Create a mask for the heatmap.
+        corr = np.corrcoef(np.random.randn(count, 200))
+        mask = np.zeros_like(corr)
+        mask[np.triu_indices_from(mask)] = True
+
+        sns.heatmap(
+            df, annot=annot, fmt='', cmap=cmap, mask=mask, vmax=3, vmin=-3,
+            center=0, ax=ax, **kwargs
+        )
+
+        ax.set_xlabel('')
+        ax.set_ylabel('')
 
         return ax
 
@@ -1617,20 +1992,20 @@ class MafFrame:
         df = df.applymap(lambda x: True if x else False)
         if hue is None:
             df = (df.sum(axis=1) / df.shape[1]).to_frame().reset_index()
-            df.columns.values[1] = 'Frequency'
+            df.columns.values[1] = 'Prevalence'
         else:
             df = df.T
             df = pd.merge(df, af.df[hue], left_index=True, right_index=True)
             df = df.groupby([hue]).mean().reset_index()
-            df = df.melt(id_vars=['FAB_classification'])
-            df.columns = ['FAB_classification', 'Hugo_Symbol', 'Frequency']
+            df = df.melt(id_vars=[hue])
+            df.columns = [hue, 'Hugo_Symbol', 'Prevalence']
 
         # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
         sns.barplot(
-            x='Hugo_Symbol', y='Frequency', data=df, hue=hue,
+            x='Hugo_Symbol', y='Prevalence', data=df, hue=hue,
             hue_order=hue_order, ax=ax
         )
 
@@ -2423,7 +2798,7 @@ class MafFrame:
 
     def plot_vaf(
         self, col, count=10, af=None, hue=None, hue_order=None,
-        flip=False, ax=None, figsize=None, **kwargs
+        flip=False, sort=True, ax=None, figsize=None, **kwargs
     ):
         """
         Create a box plot showing the VAF distributions of top mutated genes.
@@ -2445,6 +2820,8 @@ class MafFrame:
             Order to plot the group levels in.
         flip : bool, default: False
             If True, flip the x and y axes.
+        sort : bool, default: True
+            If False, do not sort the genes by median value.
         ax : matplotlib.axes.Axes, optional
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
@@ -2488,12 +2865,14 @@ class MafFrame:
             ...             count=5)
             >>> plt.tight_layout()
         """
-        medians = self.df.groupby('Hugo_Symbol')[col].median()
-        top_genes = self.matrix_genes(count=count).index.to_list()
-        sorted_genes = medians[top_genes].sort_values(
-            ascending=False).index.to_list()
+        genes = self.matrix_genes(count=count).index.to_list()
 
-        df = self.df[self.df.Hugo_Symbol.isin(sorted_genes)]
+        if sort:
+            medians = self.df.groupby('Hugo_Symbol')[col].median()
+            genes = medians[genes].sort_values(
+                ascending=False).index.to_list()
+
+        df = self.df[self.df.Hugo_Symbol.isin(genes)]
 
         if hue is not None:
             df = pd.merge(df, af.df, left_on='Tumor_Sample_Barcode',
@@ -2510,8 +2889,10 @@ class MafFrame:
             x, y = 'Hugo_Symbol', col
             xlabel, ylabel = '', 'VAF'
 
-        sns.boxplot(x=x, y=y, data=df, ax=ax, order=sorted_genes,
-            hue=hue, hue_order=hue_order, **kwargs)
+        sns.boxplot(
+            x=x, y=y, data=df, ax=ax, order=genes, hue=hue,
+            hue_order=hue_order, **kwargs
+        )
 
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
@@ -2571,8 +2952,227 @@ class MafFrame:
 
         return ax
 
+    def plot_matrixg(
+        self, gene, af, col, groups=None, cbar=True, ax=None, figsize=None,
+        **kwargs
+    ):
+        """
+        Create a heatmap of count matrix with a shape of (sample groups,
+        protein changes).
+
+        Parameters
+        ----------
+        gene : str
+            Name of the gene.
+        af : AnnFrame
+            AnnFrame containing sample annotation data.
+        col : str
+            Column in the AnnFrame containing information about sample groups.
+        cbar : bool, default: True
+            Whether to draw a colorbar.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+        kwargs
+            Other keyword arguments will be passed down to
+            :meth:`seaborn.heatmap`.
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+
+        Examples
+        --------
+
+        .. plot::
+
+            >>> import matplotlib.pyplot as plt
+            >>> from fuc import common, pymaf
+            >>> common.load_dataset('tcga-laml')
+            >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+            >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
+            >>> mf = pymaf.MafFrame.from_file(maf_file)
+            >>> af = pymaf.AnnFrame.from_file(annot_file)
+            >>> mf.plot_matrixg('IDH1', af, 'FAB_classification', linewidth=0.5, square=True, annot=True)
+            >>> plt.tight_layout()
+        """
+        df = self.df[self.df.Hugo_Symbol == gene]
+
+        if df.empty:
+            raise ValueError(f'No protein changes were found: {gene}')
+
+        df = df[['Tumor_Sample_Barcode', 'Protein_Change']]
+        df = df[df.Protein_Change != '.']
+        df = df.merge(af.df[col], left_on='Tumor_Sample_Barcode', right_index=True)
+        s = df.groupby(col)['Protein_Change'].value_counts()
+        s.name = 'Count'
+        df = s.to_frame().reset_index()
+        df = df.pivot(index=col,
+                      columns='Protein_Change',
+                      values='Count')
+        df = df.fillna(0)
+
+        if groups is not None:
+            missing_groups = []
+            for group in groups:
+                if group not in df.index:
+                    missing_groups.append(group)
+            if missing_groups:
+                message = (
+                    'Although the following sample groups are absent in the '
+                    'MafFrame, they will still be displayed as empty bar: '
+                    f'{missing_groups}.'
+                )
+                warnings.warn(message)
+                df = df.T
+                for missing_group in missing_groups:
+                    df[missing_group] = 0
+                df = df[groups]
+                df = df.T
+
+        # Sort protein changes by position.
+        f = lambda s: int(''.join([x for x in list(s) if x.isdigit()]))
+        l = df.columns
+        s = pd.Series([f(x) for x in l], index=l).sort_values()
+        df = df[s.index]
+
+        # Determine which matplotlib axes to plot on.
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
+        sns.heatmap(
+            df, ax=ax, cbar=cbar, **kwargs
+        )
+
+        ax.set_xlabel('')
+        ax.set_ylabel('')
+
+        return ax
+
+    def plot_matrixs(
+        self, gene, samples=None, c0='lightgray', c1='red', l0='0', l1='1',
+        cbar=True, square=False, ax=None, figsize=None, **kwargs
+    ):
+        """
+        Create a heatmap of presence/absence matrix with a shape of (samples,
+        protein changes).
+
+        Parameters
+        ----------
+        gene : str
+            Name of the gene.
+        samples : list, optional
+            List of samples to display (in that order too). If samples that
+            are absent in the MafFrame are provided, the method will give a
+            warning but still draw an empty bar for those samples.
+        c0 : str, default: 'lightgray'
+            Color for absence.
+        c1 : str, default: 'red'
+            Color for presence.
+        l0 : str, default: '0'
+            Label for absence.
+        l1 : str, default: '1'
+            Label for presence.
+        cbar : bool, default: True
+            Whether to draw a colorbar.
+        square : bool, default: False
+            If True, set the Axes aspect to "equal" so each cell will be
+            square-shaped.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+        kwargs
+            Other keyword arguments will be passed down to
+            :meth:`seaborn.heatmap`.
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+
+        Examples
+        --------
+
+        .. plot::
+
+            >>> import matplotlib.pyplot as plt
+            >>> from fuc import common, pymaf
+            >>> common.load_dataset('tcga-laml')
+            >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+            >>> mf = pymaf.MafFrame.from_file(maf_file)
+            >>> mf.plot_matrixs('KRAS', linewidth=0.5, square=True)
+            >>> plt.tight_layout()
+        """
+        df = self.df[self.df.Hugo_Symbol == gene]
+
+        if df.empty:
+            raise ValueError(f'No protein changes were found: {gene}')
+
+        df = df[['Tumor_Sample_Barcode', 'Protein_Change']]
+        df = df[df.Protein_Change != '.']
+        df['Presence'] = 1
+        df = df.pivot(index='Tumor_Sample_Barcode',
+                      columns='Protein_Change',
+                      values='Presence')
+        df = df.fillna(0)
+
+        if samples is not None:
+            missing_samples = []
+            for sample in samples:
+                if sample not in df.index:
+                    missing_samples.append(sample)
+            if missing_samples:
+                message = (
+                    'Although the following samples are absent in the '
+                    'MafFrame, they will still be displayed as empty bar: '
+                    f'{missing_samples}.'
+                )
+                warnings.warn(message)
+                df = df.T
+                for missing_sample in missing_samples:
+                    df[missing_sample] = 0
+                df = df[samples]
+                df = df.T
+
+        # Sort protein changes by position.
+        f = lambda s: int(''.join([x for x in list(s) if x.isdigit()]))
+        l = df.columns
+        s = pd.Series([f(x) for x in l], index=l).sort_values()
+        df = df[s.index]
+
+        # Determine which matplotlib axes to plot on.
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
+        if len(np.unique(df.values)) == 1:
+            cmap = [c1]
+            cbar_ticklabels = [l1]
+        else:
+            cmap = [c0, c1]
+            cbar_ticklabels = [l0, l1]
+
+        sns.heatmap(
+            df, cbar=cbar, cmap=cmap, square=square, ax=ax, **kwargs
+        )
+
+        if cbar:
+            colorbar = ax.collections[0].colorbar
+            n=len(cmap)
+            r = colorbar.vmax - colorbar.vmin
+            colorbar.set_ticks([colorbar.vmin + r/n * (0.5+i) for i in range(n)])
+            colorbar.set_ticklabels(cbar_ticklabels)
+
+        ax.set_xlabel('')
+        ax.set_ylabel('')
+
+        return ax
+
     def plot_varsum(self, flip=False, ax=None, figsize=None):
-        """Create a summary box plot for variant classifications.
+        """
+        Create a summary box plot for variant classifications.
 
         Parameters
         ----------
@@ -2962,3 +3562,22 @@ class MafFrame:
         df = self.df[i]
         mf = self.__class__(df)
         return mf
+
+    def compute_clonality(self, col, threshold=0.25):
+        """
+        Compute the clonality of variants based on VAF.
+
+        A mutation will be defined as "Subclonal" if the VAF is less than the
+        threshold percentage (e.g. 25%) of the highest VAF in the sample and
+        is defined as "Clonal" if it is equal to or above this threshold.
+        """
+        d = self.df.groupby('Tumor_Sample_Barcode')[col].max().to_dict()
+        def one_row(r):
+            m = d[r.Tumor_Sample_Barcode]
+            if r[col] < m * threshold:
+                result = 'Subclonal'
+            else:
+                result = 'Clonal'
+            return result
+        s = self.df.copy().apply(one_row, axis=1)
+        return s
