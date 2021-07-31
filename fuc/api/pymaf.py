@@ -3285,7 +3285,7 @@ class MafFrame:
         figsize=None, **kwargs
     ):
         """
-        Create a waterfall plot.
+        Create a waterfall plot (oncoplot).
 
         See the :ref:`tutorials:Create customized oncoplots` tutorial to
         learn how to create customized oncoplots.
