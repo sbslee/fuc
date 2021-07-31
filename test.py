@@ -39,7 +39,7 @@ class TestPyvcf(unittest.TestCase):
 
     def test_compare(self):
         vf = pyvcf.VcfFrame.from_file(vcf_file1)
-        self.assertEqual(vf.compare('Steven', 'Sarah'), (1, 1, 0, 3))
+        self.assertEqual(vf.compare('Steven', 'Sarah'), (1, 0, 0, 3))
 
     def test_filter_multialt(self):
         vf = pyvcf.VcfFrame.from_file(vcf_file1)

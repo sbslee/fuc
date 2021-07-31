@@ -1,8 +1,8 @@
 Changelog
 *********
 
-0.19.0 (in development)
------------------------
+0.19.0 (2021-07-31)
+-------------------
 
 * Fix bug in :meth:`pymaf.MafFrame.plot_mutated` when using the ``hue`` option.
 * Add new argument ``sort`` to :meth:`pymaf.MafFrame.plot_vaf` method.
@@ -11,8 +11,8 @@ Changelog
 * Add new method :meth:`pymaf.MafFrame.compute_clonality`.
 * Add new method :meth:`pymaf.MafFrame.plot_clonality`.
 * Fix bug in :meth:`pymaf.MafFrame.plot_evolution` when there are no variants to display for the specified samples.
-* Add new method :meth:`pymaf.MafFrame.plot_genepair`.
-* Add new method :meth:`pymaf.MafFrame.plot_interactions`.
+* :issue:`34`: Add new method :meth:`pymaf.MafFrame.plot_genepair`.
+* :issue:`34`: Add new method :meth:`pymaf.MafFrame.plot_interactions`.
 * Update the :command:`fuc-demux` command to output a better figure.
 * Add new method :meth:`common.plot_cytobands`.
 * Add new method :meth:`pycov.CovFrame.plot_uniformity`.
@@ -23,6 +23,7 @@ Changelog
 * Add new method :meth:`common.file2list`.
 * Add new method :meth:`pyvcf.VcfFrame.chr_prefix`.
 * Fix bug in :meth:`pyvcf.gt_unphase` when '.|.' is provided.
+* Update :meth:`pyvcf.VcfFrame.compare` method to only consider biallelic sites.
 * Update :meth:`pyvcf.VcfFrame.compare` method to support comparison of SNVs only and INDELs only.
 * Update :meth:`pymaf.MafFrame.from_vcf` method so that ``names`` argument is no longer required when ``keys`` argument is used.
 
