@@ -22,7 +22,7 @@ def create_parser(subparsers):
     parser = api.common._add_parser(
         subparsers,
         api.common._script_name(),
-        help='[TABLE] Merge two table files.',
+        help='Merge two table files.',
         description=description,
     )
     parser.add_argument(

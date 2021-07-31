@@ -15,7 +15,7 @@ def create_parser(subparsers):
     parser = api.common._add_parser(
         subparsers,
         api.common._script_name(),
-        help='[BED] Summarize a BED file.',
+        help='Summarize a BED file.',
         description=description,
     )
     parser.add_argument(

@@ -18,7 +18,7 @@ def create_parser(subparsers):
     parser = api.common._add_parser(
         subparsers,
         api.common._script_name(),
-        help='[BAM] Slice a SAM/BAM/CRAM file.',
+        help='Slice a SAM/BAM/CRAM file.',
         description=description,
     )
     parser.add_argument(

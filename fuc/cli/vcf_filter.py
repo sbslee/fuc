@@ -25,7 +25,7 @@ def create_parser(subparsers):
     parser = api.common._add_parser(
         subparsers,
         api.common._script_name(),
-        help='[VCF] Filter a VCF file.',
+        help='Filter a VCF file.',
         description=description,
     )
     parser.add_argument('vcf', help='VCF file')

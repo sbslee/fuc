@@ -14,7 +14,7 @@ def create_parser(subparsers):
     parser = api.common._add_parser(
         subparsers,
         api.common._script_name(),
-        help='[VCF] Merge two or more VCF files.',
+        help='Merge two or more VCF files.',
         description=description,
     )
     parser.add_argument(

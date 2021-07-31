@@ -19,7 +19,7 @@ def create_parser(subparsers):
     parser = api.common._add_parser(
         subparsers,
         api.common._script_name(),
-        help='[VCF] Filter a VCF file annotated by Ensembl VEP.',
+        help='Filter a VCF file annotated by Ensembl VEP.',
         description=description,
     )
     parser.add_argument(

@@ -18,7 +18,7 @@ def create_parser(subparsers):
     parser = api.common._add_parser(
         subparsers,
         api.common._script_name(),
-        help='[BAM] Compute read depth from SAM/BAM/CRAM files.',
+        help='Compute read depth from SAM/BAM/CRAM files.',
         description=description,
     )
     parser.add_argument(
