@@ -4,6 +4,8 @@ Changelog
 0.20.0 (in development)
 -----------------------
 
+* Add new method :meth:`pymaf.MafFrame.plot_waterfallp`.
+
 0.19.0 (2021-07-31)
 -------------------
 

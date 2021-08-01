@@ -3363,6 +3363,104 @@ class MafFrame:
 
         return ax
 
+    def plot_waterfallp(
+        self, af, patient_col, group_col, groups, count=10, ax=None,
+        figsize=None
+    ):
+        """
+        Create a waterfall plot (oncoplot) using matched samples from each
+        patient.
+
+        Parameters
+        ----------
+        af : AnnFrame
+            AnnFrame containing sample annotation data.
+        patient_col : str
+            Column in the AnnFrame which contains patient information.
+        group_col : str
+            Column in the AnnFrame which contains group level information.
+        groups : list
+            List of group levels.
+        count : int, default: 10
+            Number of top mutated genes to include.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+        """
+        df = self.matrix_waterfall(count=count)
+        genes = df.index
+
+        for sample in af.samples:
+            if sample not in df.columns:
+                df[sample] = 'None'
+
+        l = reversed(NONSYN_NAMES + ['Multi_Hit', 'None'])
+        d = {k: v for v, k in enumerate(l)}
+        df = df.applymap(lambda x: d[x])
+
+        df = df[af.samples].T
+        df = df.merge(af.df[[patient_col, group_col]],
+            left_index=True, right_index=True)
+        df = df.reset_index()
+
+        l = []
+
+        for group in groups:
+            temp = df[df[group_col] == group].set_index(patient_col)[genes]
+            temp.columns = [x + '_' + group for x in temp.columns]
+            l.append(temp)
+
+        df = pd.concat(l, axis=1)
+
+        gene_order = []
+
+        for gene in genes:
+            for group in groups:
+                gene_order.append(gene + '_' + group)
+
+        df = df[gene_order]
+        df = df.T
+
+        c = df.applymap(lambda x: 1 if x else 0).sort_values(
+            df.index.to_list(), axis=1, ascending=False).columns
+        df = df[c]
+
+        colors = list(reversed(NONSYN_COLORS + ['k', 'lightgray']))
+
+        # Determine which matplotlib axes to plot on.
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
+        sns.heatmap(df, cmap=colors, xticklabels=True, cbar=False, ax=ax)
+
+        ax.set_xlabel('')
+
+        n = len(groups)
+        i = n / 2
+        yticks = []
+        for gene in genes:
+            yticks.append(i)
+            i += n
+
+        ax.set_yticks(yticks)
+        ax.set_yticklabels(genes)
+
+        # Add horizontal lines.
+        for i, gene in enumerate(genes, start=1):
+            ax.axhline(i*n, color='white')
+
+        # Add vertical lines.
+        for i, sample in enumerate(af.samples, start=1):
+            ax.axvline(i, color='white')
+
+        return ax
+
     def to_vcf(
         self, fasta=None, ignore_indels=False, cols=None, names=None
     ):
