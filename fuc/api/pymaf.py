@@ -3679,3 +3679,62 @@ class MafFrame:
             return result
         s = self.df.copy().apply(one_row, axis=1)
         return s
+
+    def plot_patient_tmb(
+        self, af, patient_col, group_col, group_order=None, ax=None,
+        figsize=None
+    ):
+        """
+        Create a bar plot showing the TMB distributions of samples for each
+        patient.
+
+        Parameters
+        ----------
+        af : AnnFrame
+            AnnFrame containing sample annotation data.
+        patient_col : str
+            Column in the AnnFrame which contains patient information.
+        group_col : str
+            Column in the AnnFrame which contains group level information.
+        group_order : list
+            List of group levels.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+        """
+        df = self.matrix_tmb().T
+
+        for sample in af.samples:
+            if sample not in df.columns:
+                df[sample] = 0
+
+        s = df.sum()
+        s.name = 'TMB'
+        df = pd.concat([s, af.df[[patient_col, group_col]]], axis=1)
+
+        print(df)
+
+        df = df.pivot(index=patient_col, columns=group_col, values='TMB')
+
+        if group_order is not None:
+            df = df[group_order]
+
+        # Determine which matplotlib axes to plot on.
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
+        i = df.sum(axis=1).sort_values(ascending=False).index
+        df = df.loc[i]
+
+        df.plot(ax=ax, kind='bar', stacked=True)
+
+        ax.set_xlabel('')
+        ax.set_ylabel('TMB')
+
+        return ax
