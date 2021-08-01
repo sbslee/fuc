@@ -3718,8 +3718,6 @@ class MafFrame:
         s.name = 'TMB'
         df = pd.concat([s, af.df[[patient_col, group_col]]], axis=1)
 
-        print(df)
-
         df = df.pivot(index=patient_col, columns=group_col, values='TMB')
 
         if group_order is not None:
