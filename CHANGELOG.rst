@@ -4,11 +4,12 @@ Changelog
 0.20.0 (in development)
 -----------------------
 
-* Add new method :meth:`pymaf.MafFrame.plot_waterfall_patient`.
-* Add new method :meth:`pymaf.MafFrame.plot_tmb_patient`.
-* Add new method :meth:`pymaf.MafFrame.plot_mutated_patient`.
+* Add new method :meth:`pymaf.MafFrame.plot_waterfall_matched`.
+* Add new method :meth:`pymaf.MafFrame.plot_tmb_matched`.
+* Add new method :meth:`pymaf.MafFrame.plot_mutated_matched`.
+* Add new method :meth:`pymaf.MafFrame.plot_oncoplot_matched`.
+* Deprecate method :meth:`pymaf.MafFrame.legend_handles`.
 * Add new method :meth:`common.legend_handles`.
-* Add new method :meth:`pymaf.MafFrame.plot_oncoplot_patient`.
 
 0.19.0 (2021-07-31)
 -------------------
@@ -75,7 +76,7 @@ Changelog
 * Factor out ``proportion`` mode of :meth:`pymaf.MafFrame.plot_snvcls` method to new method :meth:`pymaf.MafFrame.plot_snvclsp`.
 * Factor out ``samples`` mode of :meth:`pymaf.MafFrame.plot_snvcls` method to new method :meth:`pymaf.MafFrame.plot_snvclss`.
 * Factor out ``titv`` mode of :meth:`pymaf.MafFrame.plot_snvcls` method to new method :meth:`pymaf.MafFrame.plot_titv`.
-* Deprecate :meth:`pymaf.MafFrame.plot_snvcls` method.
+* Deprecate method :meth:`pymaf.MafFrame.plot_snvcls`.
 * Add new argument ``hue_order`` to :meth:`pyvcf.VcfFrame.plot_hist` method.
 * Update aesthetic aspect of :meth:`pymaf.MafFrame.plot_oncoplot` method.
 * Add new argument ``width`` to :meth:`pymaf.MafFrame.plot_tmb` method.
@@ -99,10 +100,10 @@ Changelog
 * Add :meth:`pymaf.MafFrame.filter_annot` method.
 * Add :meth:`pymaf.AnnFrame.sorted_samples` method.
 * Fix bug in :meth:`pymaf.MafFrame.to_frame` method.
-* Deprecate :meth:`pyvep.filter_lof/clinsig` methods.
+* Deprecate methods :meth:`pyvep.filter_lof/clinsig`.
 * Update :meth:`pymaf.MafFrame.from_vcf` method to extract genotype keys (e.g. DP, AD, AF).
 * Update :command:`bam_slice` and :command:`bam_rename` commands.
-* Deprecate :meth:`pybam.rename` method.
+* Deprecate method :meth:`pybam.rename`.
 
 0.14.0 (2021-06-20)
 -------------------
@@ -155,7 +156,7 @@ Changelog
 * Add new method :meth:`pymaf.MafFrame.to_string`.
 * Update :command:`maf_oncoplt` command.
 * Add new method :meth:`pyvcf.VcfFrame.filter_qual`.
-* Deprecate :meth:`pymaf.plot_legend` method and add :meth:`pymaf.legend_handles` method.
+* Deprecate method :meth:`pymaf.plot_legend` and add :meth:`pymaf.legend_handles` method.
 * Add new methods :meth:`pymaf.AnnFrame.legend_handles/plot_annot`.
 * Add new method :meth:`pyvcf.VcfFrame.expand`.
 * Rename methods :meth:`pyvcf.gt_missing/haspolyp` to :meth:`pyvcf.gt_miss/polyp`.
@@ -166,10 +167,10 @@ Changelog
 ------------------
 
 * Add new submodule ``pymaf``.
-* Deprecate :meth:`pyvcf.read_file` method and add :meth:`pyvcf.VcfFrame.from_file` method.
-* Deprecate :meth:`pybed.read_file` method and add :meth:`pybed.BedFrame.from_file` method.
-* Deprecate :meth:`pyfq.read_file` method and add :meth:`pyfq.FqFrame.from_file` method.
-* Deprecate :meth:`pycov.read_file` method and add :meth:`pycov.CovFrame.from_file` method.
+* Deprecate method :meth:`pyvcf.read_file` and add :meth:`pyvcf.VcfFrame.from_file` method.
+* Deprecate method :meth:`pybed.read_file` and add :meth:`pybed.BedFrame.from_file` method.
+* Deprecate method :meth:`pyfq.read_file` and add :meth:`pyfq.FqFrame.from_file` method.
+* Deprecate method :meth:`pycov.read_file` and add :meth:`pycov.CovFrame.from_file` method.
 * Add new method :meth:`common.parse_region`.
 * Add new commands :command:`maf_oncoplt/vcf2maf`.
 
@@ -193,7 +194,7 @@ Changelog
 * Update :meth:`pyvep.filter_clinsig` method.
 * Update :meth:`pyvep.filter_impact` method.
 * Add ``as_nan`` argument to :meth:`pyvcf.VcfFrame.markmiss_ad/af/dp` methods.
-* Deprecate :meth:`pyvcf.update` method.
+* Deprecate method :meth:`pyvcf.update`.
 * Add new methods :meth:`pyvcf.row_updateinfo/parseinfo`.
 * The ``fuc`` package is now available on `Bioconda <https://anaconda.org/bioconda/fuc>`__.
 

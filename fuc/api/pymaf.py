@@ -196,76 +196,6 @@ SNV_CLASSES = {
 
 SNV_CLASS_ORDER = ['C>A', 'C>G', 'C>T', 'T>A', 'T>C', 'T>G']
 
-def legend_handles(name='regular'):
-    """Return legend handles for one of the pre-defined legends.
-
-    Parameters
-    ----------
-    name : {'regaulr', 'waterfall'}, default: 'regular'
-        Type of legend to be drawn. See the examples below for details.
-
-    Returns
-    -------
-    list
-        Legend handles.
-
-    Examples
-    --------
-    There are currently two types of legends:
-
-    .. plot::
-        :context: close-figs
-
-        >>> import matplotlib.pyplot as plt
-        >>> from fuc import pymaf
-        >>> fig, ax = plt.subplots()
-        >>> handles1 = pymaf.legend_handles(name='regular')
-        >>> handles2 = pymaf.legend_handles(name='waterfall')
-        >>> leg1 = ax.legend(handles=handles1, title="name='regular'", loc='center left')
-        >>> leg2 = ax.legend(handles=handles2, title="name='waterfall'", loc='center right')
-        >>> ax.add_artist(leg1)
-        >>> ax.add_artist(leg2)
-        >>> plt.tight_layout()
-
-    A common way of adding a legend is as follows:
-
-    .. plot::
-        :context: close-figs
-
-        >>> from fuc import common
-        >>> common.load_dataset('tcga-laml')
-        >>> mf = pymaf.MafFrame.from_file('~/fuc-data/tcga-laml/tcga_laml.maf.gz')
-        >>> fig, [ax1, ax2] = plt.subplots(2, 1, figsize=(10, 6), gridspec_kw={'height_ratios': [10, 1]})
-        >>> mf.plot_waterfall(ax=ax1, linewidths=0.5)
-        >>> handles = pymaf.legend_handles(name='waterfall')
-        >>> ax2.legend(handles=handles, ncol=4, loc='upper center', title='Variant_Classification')
-        >>> ax2.axis('off')
-        >>> plt.tight_layout()
-
-    Alternatively, you can insert a legend directly to an existing plot:
-
-    .. plot::
-        :context: close-figs
-
-        >>> ax = mf.plot_genes()
-        >>> handles = pymaf.legend_handles(name='regular')
-        >>> ax.legend(handles=handles, title='Variant_Classification')
-        >>> plt.tight_layout()
-    """
-    handles = []
-    labels = copy.deepcopy(NONSYN_NAMES)
-    colors = copy.deepcopy(NONSYN_COLORS)
-    if name == 'regular':
-        pass
-    elif name == 'waterfall':
-        labels += ['Multi_Hit']
-        colors += ['k']
-    else:
-        raise ValueError(f'Found incorrect name: {name}')
-    for i, label in enumerate(labels):
-        handles.append(mpatches.Patch(color=colors[i], label=label))
-    return handles
-
 class AnnFrame:
     """
     Class for storing sample annotation data.
@@ -1301,12 +1231,16 @@ class MafFrame:
                         labelsize=ticklabels_fontsize)
 
         # Create the legend.
-        ax5.legend(handles=legend_handles('waterfall'),
-                   title='Variant_Classification',
-                   loc='upper center',
-                   ncol=4,
-                   fontsize=legend_fontsize,
-                   title_fontsize=legend_fontsize)
+        handles = common.legend_handles(NONSYN_NAMES+['Multi_Hit'],
+            colors=NONSYN_COLORS+['k'])
+        ax5.legend(
+            handles=handles,
+            title='Variant_Classification',
+            loc='upper center',
+            ncol=4,
+            fontsize=legend_fontsize,
+            title_fontsize=legend_fontsize
+        )
         ax5.axis('off')
 
         # Remove the bottom right plot.
@@ -1315,8 +1249,8 @@ class MafFrame:
         plt.tight_layout()
         plt.subplots_adjust(wspace=0.01, hspace=0.01)
 
-    def plot_oncoplot_patient(
-        self, af, patient_col, group_col, groups, figsize=(15, 10), legend_fontsize=12
+    def plot_oncoplot_matched(
+        self, af, patient_col, group_col, groups, figsize=(15, 10), legend_fontsize=12, colors='Set2'
     ):
         """
         Create an oncoplot for mached samples.
@@ -1331,7 +1265,7 @@ class MafFrame:
 
         patients = self.matrix_waterfall_patient(af, patient_col, group_col, groups).columns
 
-        self.plot_tmb_patient(af, patient_col, group_col, group_order=groups, ax=ax1, legend=False, patients=patients, width=0.90, color=sns.color_palette('Pastel1')[:3])
+        self.plot_tmb_matched(af, patient_col, group_col, group_order=groups, ax=ax1, legend=False, patients=patients, width=0.90, color=sns.color_palette(colors)[:3])
         ax1.set_xticks([])
         ax1.set_xlim(-0.5, 53-0.5)
         ax1.spines['right'].set_visible(False)
@@ -1340,22 +1274,20 @@ class MafFrame:
 
         ax2.remove()
 
-        self.plot_waterfall_patient(af, patient_col, group_col, groups=groups, ax=ax3)
+        self.plot_waterfall_matched(af, patient_col, group_col, groups=groups, ax=ax3)
         ax3.set_xticks([])
 
-        self.plot_mutated_patient(af, patient_col, group_col, groups=groups, ax=ax4, palette='Pastel1')
+        self.plot_mutated_matched(af, patient_col, group_col, groups=groups, ax=ax4, palette=colors)
         ax4.set_yticks([])
         ax4.legend().remove()
         ax4.spines['right'].set_visible(False)
         ax4.spines['left'].set_visible(False)
         ax4.spines['top'].set_visible(False)
 
-
-
-
         # Create the legends.
-        handles1 = legend_handles(name='waterfall')
-        handles2 = common.legend_handles(groups, colors='Pastel1')
+        handles1 = common.legend_handles(NONSYN_NAMES+['Multi_Hit'],
+            colors=NONSYN_COLORS+['k'])
+        handles2 = common.legend_handles(groups, colors=colors)
         leg1 = ax5.legend(handles=handles1, loc=(0, 0), title='Variant_Classification', ncol=4, fontsize=legend_fontsize, title_fontsize=legend_fontsize)
         leg2 = ax5.legend(handles=handles2, loc=(0.8, 0), title=group_col, fontsize=legend_fontsize, title_fontsize=legend_fontsize)
         ax5.add_artist(leg1)
@@ -2764,12 +2696,14 @@ class MafFrame:
                         labelsize=ticklabels_fontsize)
 
         # Add the legend.
-        axbig.legend(handles=legend_handles('regular'),
-                     title='Variant_Classification',
-                     loc='upper center',
-                     ncol=3,
-                     fontsize=legend_fontsize,
-                     title_fontsize=legend_fontsize)
+        axbig.legend(
+            handles=common.legend_handles(NONSYN_NAMES, colors=NONSYN_COLORS),
+            title='Variant_Classification',
+            loc='upper center',
+            ncol=3,
+            fontsize=legend_fontsize,
+            title_fontsize=legend_fontsize
+        )
         axbig.axis('off')
 
         plt.tight_layout()
@@ -3416,7 +3350,7 @@ class MafFrame:
 
         return ax
 
-    def plot_waterfall_patient(
+    def plot_waterfall_matched(
         self, af, patient_col, group_col, groups, count=10, ax=None,
         figsize=None
     ):
@@ -3776,7 +3710,7 @@ class MafFrame:
         s = self.df.copy().apply(one_row, axis=1)
         return s
 
-    def plot_tmb_patient(
+    def plot_tmb_matched(
         self, af, patient_col, group_col, group_order=None, patients=None,
         legend=True, ax=None, figsize=None, **kwargs
     ):
@@ -3843,7 +3777,7 @@ class MafFrame:
 
         return ax
 
-    def plot_mutated_patient(self, af, patient_col, group_col, groups, ax=None, figsize=None, **kwargs):
+    def plot_mutated_matched(self, af, patient_col, group_col, groups, ax=None, figsize=None, **kwargs):
         df = self.matrix_waterfall_patient(af, patient_col, group_col, groups)
         df = df.applymap(lambda x: 0 if x == 'None' else 1)
         s = df.sum(axis=1) / len(df.columns)
