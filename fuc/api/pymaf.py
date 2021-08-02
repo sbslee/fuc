@@ -3363,13 +3363,12 @@ class MafFrame:
 
         return ax
 
-    def plot_waterfallp(
+    def plot_waterfall_patient(
         self, af, patient_col, group_col, groups, count=10, ax=None,
         figsize=None
     ):
         """
-        Create a waterfall plot (oncoplot) using matched samples from each
-        patient.
+        Create a waterfall plot using matched samples from each patient.
 
         Parameters
         ----------
@@ -3393,43 +3392,12 @@ class MafFrame:
         matplotlib.axes.Axes
             The matplotlib axes containing the plot.
         """
-        df = self.matrix_waterfall(count=count)
-        genes = df.index
-
-        for sample in af.samples:
-            if sample not in df.columns:
-                df[sample] = 'None'
+        genes = self.matrix_waterfall(count=count).index
+        df = self.matrix_waterfall_patient(af, patient_col, group_col, groups, count=count)
 
         l = reversed(NONSYN_NAMES + ['Multi_Hit', 'None'])
         d = {k: v for v, k in enumerate(l)}
         df = df.applymap(lambda x: d[x])
-
-        df = df[af.samples].T
-        df = df.merge(af.df[[patient_col, group_col]],
-            left_index=True, right_index=True)
-        df = df.reset_index()
-
-        l = []
-
-        for group in groups:
-            temp = df[df[group_col] == group].set_index(patient_col)[genes]
-            temp.columns = [x + '_' + group for x in temp.columns]
-            l.append(temp)
-
-        df = pd.concat(l, axis=1)
-
-        gene_order = []
-
-        for gene in genes:
-            for group in groups:
-                gene_order.append(gene + '_' + group)
-
-        df = df[gene_order]
-        df = df.T
-
-        c = df.applymap(lambda x: 1 if x else 0).sort_values(
-            df.index.to_list(), axis=1, ascending=False).columns
-        df = df[c]
 
         colors = list(reversed(NONSYN_COLORS + ['k', 'lightgray']))
 
@@ -3460,6 +3428,77 @@ class MafFrame:
             ax.axvline(i, color='white')
 
         return ax
+
+    def matrix_waterfall_patient(
+        self, af, patient_col, group_col, groups, count=10
+    ):
+        """
+        Compute a matrix of variant classifications with a shape of
+        (gene-group pairs, patients).
+
+        Parameters
+        ----------
+        af : AnnFrame
+            AnnFrame containing sample annotation data.
+        patient_col : str
+            Column in the AnnFrame which contains patient information.
+        group_col : str
+            Column in the AnnFrame which contains group level information.
+        groups : list
+            List of group levels.
+        count : int, default: 10
+            Number of top mutated genes to include.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+        """
+        df = self.matrix_waterfall(count=count)
+
+        genes = df.index
+
+        missing_samples = {}
+
+        for sample in af.samples:
+            if sample not in df.columns:
+                missing_samples[sample] = ['None'] * len(genes)
+
+        df = pd.concat(
+            [df, pd.DataFrame(missing_samples, index=genes)], axis=1)
+
+        df = df[af.samples].T
+        df = df.merge(af.df[[patient_col, group_col]],
+            left_index=True, right_index=True)
+        df = df.reset_index()
+
+        temps = []
+
+        for group in groups:
+            temp = df[df[group_col] == group].set_index(patient_col)[genes]
+            temp.columns = [x + '_' + group for x in temp.columns]
+            temps.append(temp)
+
+        df = pd.concat(temps, axis=1)
+
+        gene_order = []
+
+        for gene in genes:
+            for group in groups:
+                gene_order.append(gene + '_' + group)
+
+        df = df[gene_order]
+        df = df.T
+
+        c = df.applymap(lambda x: 0 if x == 'None' else 1).sort_values(
+            df.index.to_list(), axis=1, ascending=False).columns
+        df = df[c]
+
+        return df
 
     def to_vcf(
         self, fasta=None, ignore_indels=False, cols=None, names=None
@@ -3680,13 +3719,13 @@ class MafFrame:
         s = self.df.copy().apply(one_row, axis=1)
         return s
 
-    def plot_patient_tmb(
-        self, af, patient_col, group_col, group_order=None, ax=None,
-        figsize=None
+    def plot_tmb_patient(
+        self, af, patient_col, group_col, group_order=None, patients=None,
+        legend=True, ax=None, figsize=None, **kwargs
     ):
         """
-        Create a bar plot showing the TMB distributions of samples for each
-        patient.
+        Create a grouped bar plot showing TMB distributions for different
+        group levels in each patient.
 
         Parameters
         ----------
@@ -3698,10 +3737,17 @@ class MafFrame:
             Column in the AnnFrame which contains group level information.
         group_order : list
             List of group levels.
+        patients : list, optional
+            Sample names.
         ax : matplotlib.axes.Axes, optional
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
             Width, height in inches. Format: (float, float).
+        legend : bool, default: True
+            Place legend on axis subplots.
+        kwargs
+            Other keyword arguments will be passed down to
+            :meth:`pandas.DataFrame.plot.bar`
 
         Returns
         -------
@@ -3723,14 +3769,17 @@ class MafFrame:
         if group_order is not None:
             df = df[group_order]
 
+        i = df.sum(axis=1).sort_values(ascending=False).index
+        df = df.loc[i]
+
+        if patients is not None:
+            df = df.loc[patients]
+
         # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
-        i = df.sum(axis=1).sort_values(ascending=False).index
-        df = df.loc[i]
-
-        df.plot(ax=ax, kind='bar', stacked=True)
+        df.plot(ax=ax, kind='bar', stacked=True, legend=legend, **kwargs)
 
         ax.set_xlabel('')
         ax.set_ylabel('TMB')

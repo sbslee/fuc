@@ -4,8 +4,8 @@ Changelog
 0.20.0 (in development)
 -----------------------
 
-* Add new method :meth:`pymaf.MafFrame.plot_waterfallp`.
-* Add new method :meth:`pymaf.MafFrame.plot_patient_tmb`.
+* Add new method :meth:`pymaf.MafFrame.plot_waterfall_patient`.
+* Add new method :meth:`pymaf.MafFrame.plot_tmb_patient`.
 
 0.19.0 (2021-07-31)
 -------------------
