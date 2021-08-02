@@ -460,7 +460,6 @@ class AnnFrame:
         self, col, numeric=False, segments=5, samples=None, decimals=0
     ):
         s = self.df[col]
-        s = s.replace([np.inf, -np.inf], np.nan)
         if numeric:
             boundaries = list(np.linspace(s.min(), s.max(),
                 segments+1, endpoint=True))
