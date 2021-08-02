@@ -3474,24 +3474,26 @@ class MafFrame:
         df = df[af.samples].T
         df = df.merge(af.df[[patient_col, group_col]],
             left_index=True, right_index=True)
-        df = df.reset_index()
+        df = df.reset_index(drop=True)
 
         temps = []
 
         for group in groups:
             temp = df[df[group_col] == group].set_index(patient_col)[genes]
-            temp.columns = [x + '_' + group for x in temp.columns]
+            tuples = [(x, group) for x in genes]
+            mi = pd.MultiIndex.from_tuples(tuples, names=['Gene', 'Group'])
+            temp.columns = mi
             temps.append(temp)
 
         df = pd.concat(temps, axis=1)
 
-        gene_order = []
+        tuples = []
 
         for gene in genes:
             for group in groups:
-                gene_order.append(gene + '_' + group)
+                tuples.append((gene, group))
 
-        df = df[gene_order]
+        df = df[tuples]
         df = df.T
 
         c = df.applymap(lambda x: 0 if x == 'None' else 1).sort_values(
@@ -3499,6 +3501,7 @@ class MafFrame:
         df = df[c]
 
         return df
+
 
     def to_vcf(
         self, fasta=None, ignore_indels=False, cols=None, names=None
