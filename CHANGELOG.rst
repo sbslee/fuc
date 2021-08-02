@@ -4,6 +4,7 @@ Changelog
 0.20.0 (in development)
 -----------------------
 
+* Add new method :meth:`pymaf.MafFrame.matrix_waterfall_matched`.
 * Add new method :meth:`pymaf.MafFrame.plot_waterfall_matched`.
 * Add new method :meth:`pymaf.MafFrame.plot_tmb_matched`.
 * Add new method :meth:`pymaf.MafFrame.plot_mutated_matched`.

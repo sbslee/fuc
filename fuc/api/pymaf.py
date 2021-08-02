@@ -609,6 +609,60 @@ class MafFrame:
         """list : List of the genes."""
         return list(self.df.Hugo_Symbol.unique())
 
+    def compute_clonality(self, col, threshold=0.25):
+        """
+        Compute the clonality of variants based on
+        :ref:`VAF <glossary:Variant allele frequency (VAF)>`.
+
+        A mutation will be defined as "Subclonal" if the VAF is less than the
+        threshold percentage (e.g. 25%) of the highest VAF in the sample and
+        is defined as "Clonal" if it is equal to or above this threshold.
+
+        Parameters
+        ----------
+        col : AnnFrame
+            Column in the MafFrame containing VAF data.
+        threshold : float
+            Minimum VAF to be considered as "Clonal".
+
+        Returns
+        -------
+        panda.Series
+            Clonality for each variant.
+
+        Examples
+        --------
+
+        >>> import matplotlib.pyplot as plt
+        >>> from fuc import common, pymaf
+        >>> common.load_dataset('tcga-laml')
+        >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+        >>> mf = pymaf.MafFrame.from_file(maf_file)
+        >>> mf.df['Clonality'] = mf.compute_clonality('i_TumorVAF_WU')
+        >>> mf.df['Clonality'][:10]
+        0    Clonal
+        1    Clonal
+        2    Clonal
+        3    Clonal
+        4    Clonal
+        5    Clonal
+        6    Clonal
+        7    Clonal
+        8    Clonal
+        9    Clonal
+        Name: Clonality, dtype: object
+        """
+        d = self.df.groupby('Tumor_Sample_Barcode')[col].max().to_dict()
+        def one_row(r):
+            m = d[r.Tumor_Sample_Barcode]
+            if r[col] < m * threshold:
+                result = 'Subclonal'
+            else:
+                result = 'Clonal'
+            return result
+        s = self.df.copy().apply(one_row, axis=1)
+        return s
+
     @classmethod
     def from_file(cls, fn):
         """
@@ -1263,7 +1317,7 @@ class MafFrame:
 
         [[ax1, ax2], [ax3, ax4], [ax5, ax6]] = axes
 
-        patients = self.matrix_waterfall_patient(af, patient_col, group_col, groups).columns
+        patients = self.matrix_waterfall_matched(af, patient_col, group_col, groups).columns
 
         self.plot_tmb_matched(af, patient_col, group_col, group_order=groups, ax=ax1, legend=False, patients=patients, width=0.90, color=sns.color_palette(colors)[:3])
         ax1.set_xticks([])
@@ -3379,7 +3433,7 @@ class MafFrame:
         matplotlib.axes.Axes
             The matplotlib axes containing the plot.
         """
-        df = self.matrix_waterfall_patient(af, patient_col,
+        df = self.matrix_waterfall_matched(af, patient_col,
             group_col, groups, count=count)
         genes = df.index.get_level_values(0).unique().to_list()
 
@@ -3417,7 +3471,7 @@ class MafFrame:
 
         return ax
 
-    def matrix_waterfall_patient(
+    def matrix_waterfall_matched(
         self, af, patient_col, group_col, groups, count=10
     ):
         """
@@ -3691,25 +3745,6 @@ class MafFrame:
         mf = self.__class__(df)
         return mf
 
-    def compute_clonality(self, col, threshold=0.25):
-        """
-        Compute the clonality of variants based on VAF.
-
-        A mutation will be defined as "Subclonal" if the VAF is less than the
-        threshold percentage (e.g. 25%) of the highest VAF in the sample and
-        is defined as "Clonal" if it is equal to or above this threshold.
-        """
-        d = self.df.groupby('Tumor_Sample_Barcode')[col].max().to_dict()
-        def one_row(r):
-            m = d[r.Tumor_Sample_Barcode]
-            if r[col] < m * threshold:
-                result = 'Subclonal'
-            else:
-                result = 'Clonal'
-            return result
-        s = self.df.copy().apply(one_row, axis=1)
-        return s
-
     def plot_tmb_matched(
         self, af, patient_col, group_col, group_order=None, patients=None,
         legend=True, ax=None, figsize=None, **kwargs
@@ -3777,8 +3812,10 @@ class MafFrame:
 
         return ax
 
-    def plot_mutated_matched(self, af, patient_col, group_col, groups, ax=None, figsize=None, **kwargs):
-        df = self.matrix_waterfall_patient(af, patient_col, group_col, groups)
+    def plot_mutated_matched(
+        self, af, patient_col, group_col, groups, ax=None, figsize=None, **kwargs
+    ):
+        df = self.matrix_waterfall_matched(af, patient_col, group_col, groups)
         df = df.applymap(lambda x: 0 if x == 'None' else 1)
         s = df.sum(axis=1) / len(df.columns)
         s.name = 'Count'
