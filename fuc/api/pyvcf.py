@@ -566,162 +566,6 @@ def row_missval(r):
         m += ':.'
     return m
 
-class AnnFrame:
-    """
-    Class for storing sample annotation data.
-
-    This class stores sample annotation data as :class:`pandas.DataFrame`
-    with sample names as index.
-
-    Note that an AnnFrame can have a different set of samples than its
-    accompanying VcfFrame.
-
-    Parameters
-    ----------
-    df : pandas.DataFrame
-        DataFrame containing sample annotation data. The index must be
-        sample names.
-
-    See Also
-    --------
-    AnnFrame.from_dict
-        Construct AnnFrame from dict of array-like or dicts.
-    AnnFrame.from_file
-        Construct AnnFrame from a delimited text file.
-
-    Examples
-    --------
-
-    >>> import pandas as pd
-    >>> from fuc import pyvcf
-    >>> data = {
-    ...     'Sample': ['Steven_N', 'Steven_T', 'Sara_N', 'Sara_T'],
-    ...     'Subject': ['Steven', 'Steven', 'Sara', 'Sara'],
-    ...     'Type': ['Normal', 'Tumor', 'Normal', 'Tumor'],
-    ...     'Age': [30, 30, 57, 57]
-    ... }
-    >>> df = pd.DataFrame(data)
-    >>> df = df.set_index('Sample')
-    >>> af = pyvcf.AnnFrame(df)
-    >>> af.df
-             Subject    Type  Age
-    Sample
-    Steven_N  Steven  Normal   30
-    Steven_T  Steven   Tumor   30
-    Sara_N      Sara  Normal   57
-    Sara_T      Sara   Tumor   57
-    """
-    def _check_df(self, df):
-        if type(df.index) == pd.RangeIndex:
-            m = "Index must be sample names, not 'pandas.RangeIndex'."
-            raise ValueError(m)
-        if df.isin([np.inf]).any().any():
-            raise ValueError('Found positive infinity.')
-        if df.isin([-np.inf]).any().any():
-            raise ValueError('Found negative infinity.')
-        return df
-
-    def __init__(self, df):
-        self._df = self._check_df(df)
-
-    @property
-    def df(self):
-        """pandas.DataFrame : DataFrame containing sample annotation data."""
-        return self._df
-
-    @df.setter
-    def df(self, value):
-        self._df = self._check_df(value)
-
-    @classmethod
-    def from_dict(cls, data, sample_col):
-        """
-        Construct AnnFrame from dict of array-like or dicts.
-
-        The dictionary must have at least one column that represents sample
-        names which are used as index for pandas.DataFrame.
-
-        Parameters
-        ----------
-        data : dict
-            Of the form {field : array-like} or {field : dict}.
-        sample_col : str
-            Column containing sample names.
-
-        Returns
-        -------
-        AnnFrame
-            AnnFrame object.
-
-        See Also
-        --------
-        AnnFrame
-            AnnFrame object creation using constructor.
-        AnnFrame.from_file
-            Construct AnnFrame from a delimited text file.
-
-        Examples
-        --------
-
-        >>> from fuc import pyvcf
-        >>> data = {
-        ...     'Sample': ['Steven_Normal', 'Steven_Tumor', 'Sara_Normal', 'Sara_Tumor'],
-        ...     'Subject': ['Steven', 'Steven', 'Sara', 'Sara'],
-        ...     'Type': ['Normal', 'Tumor', 'Normal', 'Tumor'],
-        ...     'Age': [30, 30, 57, 57]
-        ... }
-        >>> af = pyvcf.AnnFrame.from_dict(data, 'Sample')
-        >>> af.df
-                      Subject    Type  Age
-        Sample
-        Steven_Normal  Steven  Normal   30
-        Steven_Tumor   Steven   Tumor   30
-        Sara_Normal      Sara  Normal   57
-        Sara_Tumor       Sara   Tumor   57
-        """
-        df = pd.DataFrame(data)
-        df = df.set_index(sample_col)
-        return cls(df)
-
-    @classmethod
-    def from_file(cls, fn, sample_col, sep='\t'):
-        """Construct AnnFrame from a delimited text file.
-
-        The text file must have at least one column that represents
-        sample names which are used as index for pandas.DataFrame.
-
-        Parameters
-        ----------
-        fn : str
-            Text file path (zipped or unzipped).
-        sample_col : str
-            Column containing sample names.
-        sep : str, default: '\\\\t'
-            Delimiter to use.
-
-        Returns
-        -------
-        AnnFrame
-            AnnFrame.
-
-        See Also
-        --------
-        AnnFrame
-            AnnFrame object creation using constructor.
-        AnnFrame.from_dict
-            Construct AnnFrame from dict of array-like or dicts.
-
-        Examples
-        --------
-
-        >>> from fuc import pyvcf
-        >>> af1 = pyvcf.AnnFrame.from_file('sample-annot-1.tsv', 'Tumor_Sample_Barcode')
-        >>> af2 = pyvcf.AnnFrame.from_file('sample-annot-2.csv', 'SampleID', sep=',')
-        """
-        df = pd.read_table(fn, sep=sep)
-        df = df.set_index(sample_col)
-        return cls(df)
-
 def simulate_genotype(
     p=0.5, noise_scale=0.05, dp_show=True, dp_loc=30, dp_scale=10,
     ad_show=True, ad_loc=0.5, ad_scale=0.05, af_show=True
@@ -1987,7 +1831,7 @@ class VcfFrame:
         ----------
         k : {'AD', 'AF', 'DP'}
             Genotype key.
-        af : pyvcf.AnnFrame
+        af : fuc.aip.common.AnnFrame
             AnnFrame containing sample annotation data.
         hue : list, optional
             Column in the AnnFrame containing information about sample groups.
@@ -2017,8 +1861,8 @@ class VcfFrame:
 
             >>> from fuc import common, pyvcf
             >>> common.load_dataset('pyvcf')
-            >>> vf = pyvcf.VcfFrame.from_file('~/fuc-data/pyvcf/normal-tumor.vcf')
-            >>> af = pyvcf.AnnFrame.from_file('~/fuc-data/pyvcf/normal-tumor-annot.tsv', 'Sample')
+            >>> vcf_file = '~/fuc-data/pyvcf/normal-tumor.vcf'
+            >>> vf = pyvcf.VcfFrame.from_file(vcf_file)
             >>> vf.plot_hist('DP')
 
         We can draw multiple histograms with hue mapping:
@@ -2026,6 +1870,8 @@ class VcfFrame:
         .. plot::
             :context: close-figs
 
+            >>> annot_file = '~/fuc-data/pyvcf/normal-tumor-annot.tsv'
+            >>> af = common.AnnFrame.from_file(annot_file, sample_col='Sample')
             >>> vf.plot_hist('DP', af=af, hue='Tissue')
 
         We can show AF instead of DP:
@@ -2067,7 +1913,7 @@ class VcfFrame:
 
         Parameters
         ----------
-        af : pyvcf.AnnFrame
+        af : fuc.aip.common.AnnFrame
             AnnFrame containing sample annotation data (requires ``hue``).
         hue : list, optional
             Grouping variable that will produce multiple histograms with
@@ -2096,8 +1942,8 @@ class VcfFrame:
 
             >>> from fuc import common, pyvcf
             >>> common.load_dataset('pyvcf')
-            >>> vf = pyvcf.VcfFrame.from_file('~/fuc-data/pyvcf/normal-tumor.vcf')
-            >>> af = pyvcf.AnnFrame.from_file('~/fuc-data/pyvcf/normal-tumor-annot.tsv', 'Sample')
+            >>> vcf_file = '~/fuc-data/pyvcf/normal-tumor.vcf'
+            >>> vf = pyvcf.VcfFrame.from_file(vcf_file)
             >>> vf.plot_tmb()
 
         We can draw multiple histograms with hue mapping:
@@ -2105,6 +1951,8 @@ class VcfFrame:
         .. plot::
             :context: close-figs
 
+            >>> annot_file = '~/fuc-data/pyvcf/normal-tumor-annot.tsv'
+            >>> af = common.AnnFrame.from_file(annot_file, sample_col='Sample')
             >>> vf.plot_tmb(af=af, hue='Tissue')
         """
         s = self.df.iloc[:, 9:].applymap(gt_hasvar).sum()
@@ -2153,8 +2001,10 @@ class VcfFrame:
 
             >>> from fuc import common, pyvcf
             >>> common.load_dataset('pyvcf')
-            >>> vf = pyvcf.VcfFrame.from_file('~/fuc-data/pyvcf/normal-tumor.vcf')
-            >>> af = pyvcf.AnnFrame.from_file('~/fuc-data/pyvcf/normal-tumor-annot.tsv', 'Sample')
+            >>> vcf_file = '~/fuc-data/pyvcf/normal-tumor.vcf'
+            >>> annot_file = '~/fuc-data/pyvcf/normal-tumor-annot.tsv'
+            >>> vf = pyvcf.VcfFrame.from_file(vcf_file)
+            >>> af = common.AnnFrame.from_file(annot_file, 'Sample')
             >>> normal = af.df[af.df.Tissue == 'Normal'].index
             >>> tumor = af.df[af.df.Tissue == 'Tumor'].index
             >>> vf.plot_regplot(normal, tumor)
@@ -4171,7 +4021,7 @@ class VcfFrame:
             :context: close-figs
 
             >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
-            >>> af = pyvcf.AnnFrame.from_file(annot_file, 'Tumor_Sample_Barcode')
+            >>> af = common.AnnFrame.from_file(annot_file, sample_col='Tumor_Sample_Barcode')
             >>> vf.plot_titv(af=af,
             ...              hue='FAB_classification',
             ...              hue_order=['M0', 'M1', 'M2'])
@@ -4322,7 +4172,7 @@ class VcfFrame:
             :context: close-figs
 
             >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
-            >>> af = pymaf.AnnFrame.from_file(annot_file, 'Tumor_Sample_Barcode')
+            >>> af = common.AnnFrame.from_file(annot_file, sample_col='Tumor_Sample_Barcode')
             >>> vf.plot_snvclsc(af=af,
             ...                 hue='FAB_classification',
             ...                 hue_order=['M0', 'M1', 'M2'])
@@ -4408,7 +4258,7 @@ class VcfFrame:
             :context: close-figs
 
             >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
-            >>> af = pymaf.AnnFrame.from_file(annot_file, 'Tumor_Sample_Barcode')
+            >>> af = common.AnnFrame.from_file(annot_file, sample_col='Tumor_Sample_Barcode')
             >>> vf.plot_snvclsp(af=af,
             ...                 hue='FAB_classification',
             ...                 hue_order=['M0', 'M1', 'M2'])

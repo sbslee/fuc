@@ -11,6 +11,8 @@ Changelog
 * Add new method :meth:`pymaf.MafFrame.plot_oncoplot_matched`.
 * Deprecate method :meth:`pymaf.MafFrame.legend_handles`.
 * Add new method :meth:`common.legend_handles`.
+* Deprecate class :class:`pyvcf.AnnFrame`.
+* Add new class :class:`common.AnnFrame`.
 
 0.19.0 (2021-07-31)
 -------------------
