@@ -3790,7 +3790,7 @@ class MafFrame:
 
         return ax
 
-    def plot_mutated_patient(self, af, patient_col, group_col, groups, ax=None, figsize=None):
+    def plot_mutated_patient(self, af, patient_col, group_col, groups, ax=None, figsize=None, **kwargs):
         df = self.matrix_waterfall_patient(af, patient_col, group_col, groups)
         df = df.applymap(lambda x: 0 if x == 'None' else 1)
         s = df.sum(axis=1) / len(df.columns)
@@ -3801,7 +3801,7 @@ class MafFrame:
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
-        sns.barplot(x='Count', y='Gene', hue='Group', data=df, orient='h', ax=ax)
+        sns.barplot(x='Count', y='Gene', hue='Group', data=df, hue_order=groups, orient='h', ax=ax, **kwargs)
 
 
         ax.set_xlabel('Patients')

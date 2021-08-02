@@ -7,6 +7,7 @@ Changelog
 * Add new method :meth:`pymaf.MafFrame.plot_waterfall_patient`.
 * Add new method :meth:`pymaf.MafFrame.plot_tmb_patient`.
 * Add new method :meth:`pymaf.MafFrame.plot_mutated_patient`.
+* Add new method :meth:`common.legend_handles`.
 
 0.19.0 (2021-07-31)
 -------------------

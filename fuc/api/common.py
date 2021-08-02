@@ -7,15 +7,17 @@ bioinformatics.
 import pathlib
 import re
 import os
+import warnings
+import inspect
+
 from difflib import SequenceMatcher
 from urllib.request import urlretrieve
 from pathlib import Path
 import pysam
-import warnings
-import inspect
 from argparse import RawTextHelpFormatter, SUPPRESS
-from matplotlib import pyplot as plt
+import matplotlib.pyplot as plt
 from matplotlib.collections import BrokenBarHCollection
+import matplotlib.patches as mpatches
 import pandas as pd
 
 FUC_PATH = pathlib.Path(__file__).parent.parent.parent.absolute()
@@ -417,3 +419,49 @@ def file2list(fn):
         for line in f:
             l.append(line.strip())
     return l
+
+def legend_handles(labels, colors='tab10'):
+    """
+    Create custom legend handles.
+
+    Parameters
+    ----------
+    labels : list
+        List of labels.
+    colors : str or list, default: 'tab10'
+        Colormap name or list of colors.
+
+    Returns
+    -------
+    list
+        List of legend handles.
+
+    Examples
+    --------
+
+    .. plot::
+
+        >>> import matplotlib.pyplot as plt
+        >>> from fuc import common
+        >>> fig, ax = plt.subplots()
+        >>> handles1 = common.legend_handles(['A', 'B'], colors='tab10')
+        >>> handles2 = common.legend_handles(['C', 'D'], colors=['yellow', 'green'])
+        >>> legend1 = ax.legend(handles=handles1, loc='center left')
+        >>> legend2 = ax.legend(handles=handles2)
+        >>> ax.add_artist(legend1)
+        >>> ax.add_artist(legend2)
+        >>> plt.tight_layout()
+    """
+    if isinstance(colors, str):
+        colors = plt.get_cmap(colors).colors
+    elif isinstance(colors, list):
+        pass
+    else:
+        raise TypeError(f'Incorrect type of colors: {type(colors)}')
+
+    handles = []
+
+    for i, label in enumerate(labels):
+        handles.append(mpatches.Patch(color=colors[i], label=label))
+
+    return handles
