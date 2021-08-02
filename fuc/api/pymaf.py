@@ -1319,7 +1319,7 @@ class MafFrame:
 
         patients = self.matrix_waterfall_matched(af, patient_col, group_col, groups).columns
 
-        self.plot_tmb_matched(af, patient_col, group_col, group_order=groups, ax=ax1, legend=False, patients=patients, width=0.90, color=sns.color_palette(colors)[:3])
+        self.plot_tmb_matched(af, patient_col, group_col, groups=groups, ax=ax1, legend=False, patients=patients, width=0.90, color=sns.color_palette(colors)[:3])
         ax1.set_xticks([])
         ax1.set_xlim(-0.5, 53-0.5)
         ax1.spines['right'].set_visible(False)
@@ -2049,6 +2049,54 @@ class MafFrame:
         )
 
         ax.set_xlabel('')
+
+        return ax
+
+    def plot_mutated_matched(
+        self, af, patient_col, group_col, groups, ax=None, figsize=None, **kwargs
+    ):
+        """
+        Create a bar plot visualizing the mutation prevalence of top
+        mutated genes.
+
+        Parameters
+        ----------
+        af : AnnFrame
+            AnnFrame containing sample annotation data.
+        patient_col : str
+            Column in the AnnFrame which contains patient information.
+        group_col : str
+            Column in the AnnFrame which contains group level information.
+        groups : list
+            List of group levels.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+        kwargs
+            Other keyword arguments will be passed down to
+            :meth:`seaborn.barplot`.
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+        """
+        df = self.matrix_waterfall_matched(af, patient_col, group_col, groups)
+        df = df.applymap(lambda x: 0 if x == 'None' else 1)
+        s = df.sum(axis=1) / len(df.columns)
+        s.name = 'Count'
+        df = s.to_frame().reset_index()
+
+        # Determine which matplotlib axes to plot on.
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
+        sns.barplot(x='Count', y='Gene', hue='Group', data=df, hue_order=groups, orient='h', ax=ax, **kwargs)
+
+
+        ax.set_xlabel('Patients')
+        ax.set_ylabel('')
 
         return ax
 
@@ -2834,6 +2882,73 @@ class MafFrame:
         ax.set_xlabel('Samples')
         ax.set_ylabel('Count')
         ax.set_xticks([])
+
+        return ax
+
+    def plot_tmb_matched(
+        self, af, patient_col, group_col, groups=None, patients=None,
+        legend=True, ax=None, figsize=None, **kwargs
+    ):
+        """
+        Create a grouped bar plot showing TMB distributions for different
+        group levels in each patient.
+
+        Parameters
+        ----------
+        af : AnnFrame
+            AnnFrame containing sample annotation data.
+        patient_col : str
+            Column in the AnnFrame which contains patient information.
+        group_col : str
+            Column in the AnnFrame which contains group level information.
+        groups : list, optional
+            List of group levels.
+        patients : list, optional
+            List of patient names.
+        legend : bool, default: True
+            Place legend on axis subplots.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+        kwargs
+            Other keyword arguments will be passed down to
+            :meth:`pandas.DataFrame.plot.bar`
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+        """
+        df = self.matrix_tmb().T
+
+        for sample in af.samples:
+            if sample not in df.columns:
+                df[sample] = 0
+
+        s = df.sum()
+        s.name = 'TMB'
+        df = pd.concat([s, af.df[[patient_col, group_col]]], axis=1)
+
+        df = df.pivot(index=patient_col, columns=group_col, values='TMB')
+
+        if groups is not None:
+            df = df[groups]
+
+        i = df.sum(axis=1).sort_values(ascending=False).index
+        df = df.loc[i]
+
+        if patients is not None:
+            df = df.loc[patients]
+
+        # Determine which matplotlib axes to plot on.
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
+        df.plot(ax=ax, kind='bar', stacked=True, legend=legend, **kwargs)
+
+        ax.set_xlabel('')
+        ax.set_ylabel('TMB')
 
         return ax
 
@@ -3744,91 +3859,3 @@ class MafFrame:
         df = self.df[i]
         mf = self.__class__(df)
         return mf
-
-    def plot_tmb_matched(
-        self, af, patient_col, group_col, group_order=None, patients=None,
-        legend=True, ax=None, figsize=None, **kwargs
-    ):
-        """
-        Create a grouped bar plot showing TMB distributions for different
-        group levels in each patient.
-
-        Parameters
-        ----------
-        af : AnnFrame
-            AnnFrame containing sample annotation data.
-        patient_col : str
-            Column in the AnnFrame which contains patient information.
-        group_col : str
-            Column in the AnnFrame which contains group level information.
-        group_order : list
-            List of group levels.
-        patients : list, optional
-            Sample names.
-        ax : matplotlib.axes.Axes, optional
-            Pre-existing axes for the plot. Otherwise, crete a new one.
-        figsize : tuple, optional
-            Width, height in inches. Format: (float, float).
-        legend : bool, default: True
-            Place legend on axis subplots.
-        kwargs
-            Other keyword arguments will be passed down to
-            :meth:`pandas.DataFrame.plot.bar`
-
-        Returns
-        -------
-        matplotlib.axes.Axes
-            The matplotlib axes containing the plot.
-        """
-        df = self.matrix_tmb().T
-
-        for sample in af.samples:
-            if sample not in df.columns:
-                df[sample] = 0
-
-        s = df.sum()
-        s.name = 'TMB'
-        df = pd.concat([s, af.df[[patient_col, group_col]]], axis=1)
-
-        df = df.pivot(index=patient_col, columns=group_col, values='TMB')
-
-        if group_order is not None:
-            df = df[group_order]
-
-        i = df.sum(axis=1).sort_values(ascending=False).index
-        df = df.loc[i]
-
-        if patients is not None:
-            df = df.loc[patients]
-
-        # Determine which matplotlib axes to plot on.
-        if ax is None:
-            fig, ax = plt.subplots(figsize=figsize)
-
-        df.plot(ax=ax, kind='bar', stacked=True, legend=legend, **kwargs)
-
-        ax.set_xlabel('')
-        ax.set_ylabel('TMB')
-
-        return ax
-
-    def plot_mutated_matched(
-        self, af, patient_col, group_col, groups, ax=None, figsize=None, **kwargs
-    ):
-        df = self.matrix_waterfall_matched(af, patient_col, group_col, groups)
-        df = df.applymap(lambda x: 0 if x == 'None' else 1)
-        s = df.sum(axis=1) / len(df.columns)
-        s.name = 'Count'
-        df = s.to_frame().reset_index()
-
-        # Determine which matplotlib axes to plot on.
-        if ax is None:
-            fig, ax = plt.subplots(figsize=figsize)
-
-        sns.barplot(x='Count', y='Gene', hue='Group', data=df, hue_order=groups, orient='h', ax=ax, **kwargs)
-
-
-        ax.set_xlabel('Patients')
-        ax.set_ylabel('')
-
-        return ax
