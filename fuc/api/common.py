@@ -9,16 +9,17 @@ import re
 import os
 import warnings
 import inspect
-
+from argparse import RawTextHelpFormatter, SUPPRESS
+from pathlib import Path
 from difflib import SequenceMatcher
 from urllib.request import urlretrieve
-from pathlib import Path
+
 import pysam
-from argparse import RawTextHelpFormatter, SUPPRESS
+import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.collections import BrokenBarHCollection
 import matplotlib.patches as mpatches
-import pandas as pd
 
 FUC_PATH = pathlib.Path(__file__).parent.parent.parent.absolute()
 

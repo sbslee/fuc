@@ -615,6 +615,10 @@ class AnnFrame:
         if type(df.index) == pd.RangeIndex:
             m = "Index must be sample names, not 'pandas.RangeIndex'."
             raise ValueError(m)
+        if df.isin([np.inf]).any().any():
+            raise ValueError('Found positive infinity.')
+        if df.isin([-np.inf]).any().any():
+            raise ValueError('Found negative infinity.')
         return df
 
     def __init__(self, df):
