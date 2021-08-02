@@ -3789,3 +3789,22 @@ class MafFrame:
         ax.set_ylabel('TMB')
 
         return ax
+
+    def plot_mutated_patient(self, af, patient_col, group_col, groups, ax=None, figsize=None):
+        df = self.matrix_waterfall_patient(af, patient_col, group_col, groups)
+        df = df.applymap(lambda x: 0 if x == 'None' else 1)
+        s = df.sum(axis=1) / len(df.columns)
+        s.name = 'Count'
+        df = s.to_frame().reset_index()
+
+        # Determine which matplotlib axes to plot on.
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
+        sns.barplot(x='Count', y='Gene', hue='Group', data=df, orient='h', ax=ax)
+
+
+        ax.set_xlabel('Patients')
+        ax.set_ylabel('')
+
+        return ax
