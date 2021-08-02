@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from fuc import common, pymaf
 common.load_dataset('tcga-laml')
 mf = pymaf.MafFrame.from_file('~/fuc-data/tcga-laml/tcga_laml.maf.gz')
-af = pymaf.AnnFrame.from_file('~/fuc-data/tcga-laml/tcga_laml_annot.tsv')
+af = common.AnnFrame.from_file('~/fuc-data/tcga-laml/tcga_laml_annot.tsv')
 
 # Filter the MafFrame.
 mf = mf.filter_annot(af, "Overall_Survival_Status == 1")

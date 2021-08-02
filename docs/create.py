@@ -56,7 +56,7 @@ Introduction
 
 The main goal of the fuc package (pronounced "eff-you-see") is to wrap some of the most **f**\ requently **u**\ sed **c**\ ommands in the field of bioinformatics into one place.
 
-The package supports both command line interface (CLI) and application programming interface (API) whose documentations are available at the `Read the Docs <https://sbslee-fuc.readthedocs.io/en/latest/>`_.
+The package is written in Python, and supports both command line interface (CLI) and application programming interface (API) whose documentations are available at the `Read the Docs <https://sbslee-fuc.readthedocs.io/en/latest/>`_.
 
 Currently, fuc can be used to analyze, summarize, visualize, and manipulate the following file formats:
 

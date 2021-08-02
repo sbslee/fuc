@@ -1831,7 +1831,7 @@ class VcfFrame:
         ----------
         k : {'AD', 'AF', 'DP'}
             Genotype key.
-        af : fuc.aip.common.AnnFrame
+        af : common.AnnFrame
             AnnFrame containing sample annotation data.
         hue : list, optional
             Column in the AnnFrame containing information about sample groups.
@@ -1913,7 +1913,7 @@ class VcfFrame:
 
         Parameters
         ----------
-        af : fuc.aip.common.AnnFrame
+        af : common.AnnFrame
             AnnFrame containing sample annotation data (requires ``hue``).
         hue : list, optional
             Grouping variable that will produce multiple histograms with

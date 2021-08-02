@@ -20,6 +20,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.collections import BrokenBarHCollection
 import matplotlib.patches as mpatches
+import seaborn as sns
 
 FUC_PATH = pathlib.Path(__file__).parent.parent.parent.absolute()
 
@@ -50,7 +51,7 @@ class AnnFrame:
     --------
 
     >>> import pandas as pd
-    >>> from fuc import pymaf
+    >>> from fuc import pymaf, common
     >>> data = {
     ...     'Tumor_Sample_Barcode': ['Steven_N', 'Steven_T', 'Sara_N', 'Sara_T'],
     ...     'Subject': ['Steven', 'Steven', 'Sara', 'Sara'],
@@ -59,7 +60,7 @@ class AnnFrame:
     ... }
     >>> df = pd.DataFrame(data)
     >>> df = df.set_index('Tumor_Sample_Barcode')
-    >>> af = pymaf.AnnFrame(df)
+    >>> af = common.AnnFrame(df)
     >>> af.df
                          Subject    Type  Age
     Tumor_Sample_Barcode
@@ -73,10 +74,8 @@ class AnnFrame:
         if type(df.index) == pd.RangeIndex:
             m = "Index must be sample names, not 'pandas.RangeIndex'."
             raise ValueError(m)
-        if df.isin([np.inf]).any().any():
-            raise ValueError('Found positive infinity.')
-        if df.isin([-np.inf]).any().any():
-            raise ValueError('Found negative infinity.')
+        if df.isin([np.inf, -np.inf]).any().any():
+            raise ValueError('Found positive or negative infinity.')
         return df
 
     def __init__(self, df):
@@ -147,14 +146,14 @@ class AnnFrame:
         Examples
         --------
 
-        >>> from fuc import pymaf
+        >>> from fuc import pymaf, common
         >>> data = {
         ...     'Tumor_Sample_Barcode': ['Steven_Normal', 'Steven_Tumor', 'Sara_Normal', 'Sara_Tumor'],
         ...     'Subject': ['Steven', 'Steven', 'Sara', 'Sara'],
         ...     'Type': ['Normal', 'Tumor', 'Normal', 'Tumor'],
         ...     'Age': [30, 30, 57, 57]
         ... }
-        >>> af = pymaf.AnnFrame.from_dict(data)
+        >>> af = common.AnnFrame.from_dict(data)
         >>> af.df
                              Subject    Type  Age
         Tumor_Sample_Barcode
@@ -199,9 +198,9 @@ class AnnFrame:
         Examples
         --------
 
-        >>> from fuc import pymaf
-        >>> af1 = pymaf.AnnFrame.from_file('sample-annot-1.tsv')
-        >>> af2 = pymaf.AnnFrame.from_file('sample-annot-2.csv', sample_col='SampleID', sep=',')
+        >>> from fuc import pymaf, common
+        >>> af1 = common.AnnFrame.from_file('sample-annot-1.tsv')
+        >>> af2 = common.AnnFrame.from_file('sample-annot-2.csv', sample_col='SampleID', sep=',')
         """
         df = pd.read_table(fn, sep=sep)
         df = df.set_index(sample_col)
@@ -253,7 +252,7 @@ class AnnFrame:
             >>> from fuc import common, pymaf
             >>> common.load_dataset('tcga-laml')
             >>> f = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
-            >>> af = pymaf.AnnFrame.from_file(f)
+            >>> af = common.AnnFrame.from_file(f)
             >>> fig, ax = plt.subplots()
             >>> handles1 = af.legend_handles('FAB_classification',
             ...                              cmap='Dark2')
@@ -358,7 +357,7 @@ class AnnFrame:
             >>> from fuc import common, pymaf
             >>> common.load_dataset('tcga-laml')
             >>> f = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
-            >>> af = pymaf.AnnFrame.from_file(f)
+            >>> af = common.AnnFrame.from_file(f)
             >>> fig, [ax1, ax2, ax3] = plt.subplots(3, 1, figsize=(10, 5))
             >>> af.plot_annot('FAB_classification', ax=ax1, linewidths=1, cmap='Dark2')
             >>> af.plot_annot('days_to_last_followup', ax=ax2, linewidths=1, cmap='viridis')
