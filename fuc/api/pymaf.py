@@ -3392,8 +3392,9 @@ class MafFrame:
         matplotlib.axes.Axes
             The matplotlib axes containing the plot.
         """
-        genes = self.matrix_waterfall(count=count).index
-        df = self.matrix_waterfall_patient(af, patient_col, group_col, groups, count=count)
+        df = self.matrix_waterfall_patient(af, patient_col,
+            group_col, groups, count=count)
+        genes = df.index.get_level_values(0).unique().to_list()
 
         l = reversed(NONSYN_NAMES + ['Multi_Hit', 'None'])
         d = {k: v for v, k in enumerate(l)}
@@ -3407,8 +3408,6 @@ class MafFrame:
 
         sns.heatmap(df, cmap=colors, xticklabels=True, cbar=False, ax=ax)
 
-        ax.set_xlabel('')
-
         n = len(groups)
         i = n / 2
         yticks = []
@@ -3416,6 +3415,8 @@ class MafFrame:
             yticks.append(i)
             i += n
 
+        ax.set_xlabel('')
+        ax.set_ylabel('')
         ax.set_yticks(yticks)
         ax.set_yticklabels(genes)
 
