@@ -1315,6 +1315,59 @@ class MafFrame:
         plt.tight_layout()
         plt.subplots_adjust(wspace=0.01, hspace=0.01)
 
+    def plot_oncoplot_patient(
+        self, af, patient_col, group_col, groups, figsize=(15, 10), legend_fontsize=12
+    ):
+        """
+        Create an oncoplot for mached samples.
+
+        """
+
+        fig, axes = plt.subplots(3, 2,
+                                 figsize=figsize,
+                                 gridspec_kw={'height_ratios': [1, 10, 2], 'width_ratios': [10, 1]})
+
+        [[ax1, ax2], [ax3, ax4], [ax5, ax6]] = axes
+
+        patients = self.matrix_waterfall_patient(af, patient_col, group_col, groups).columns
+
+        self.plot_tmb_patient(af, patient_col, group_col, group_order=groups, ax=ax1, legend=False, patients=patients, width=0.90, color=sns.color_palette('Pastel1')[:3])
+        ax1.set_xticks([])
+        ax1.set_xlim(-0.5, 53-0.5)
+        ax1.spines['right'].set_visible(False)
+        ax1.spines['top'].set_visible(False)
+        ax1.spines['bottom'].set_visible(False)
+
+        ax2.remove()
+
+        self.plot_waterfall_patient(af, patient_col, group_col, groups=groups, ax=ax3)
+        ax3.set_xticks([])
+
+        self.plot_mutated_patient(af, patient_col, group_col, groups=groups, ax=ax4, palette='Pastel1')
+        ax4.set_yticks([])
+        ax4.legend().remove()
+        ax4.spines['right'].set_visible(False)
+        ax4.spines['left'].set_visible(False)
+        ax4.spines['top'].set_visible(False)
+
+
+
+
+        # Create the legends.
+        handles1 = legend_handles(name='waterfall')
+        handles2 = common.legend_handles(groups, colors='Pastel1')
+        leg1 = ax5.legend(handles=handles1, loc=(0, 0), title='Variant_Classification', ncol=4, fontsize=legend_fontsize, title_fontsize=legend_fontsize)
+        leg2 = ax5.legend(handles=handles2, loc=(0.8, 0), title=group_col, fontsize=legend_fontsize, title_fontsize=legend_fontsize)
+        ax5.add_artist(leg1)
+        ax5.add_artist(leg2)
+        ax5.axis('off')
+
+        # Remove the bottom right plot.
+        ax6.remove()
+
+        plt.tight_layout()
+        plt.subplots_adjust(wspace=0.01, hspace=0.01)
+
     def plot_clonality(
         self, col, af=None, hue=None, hue_order=None, count=10,
         threshold=0.25, subclonal=False, ax=None, figsize=None

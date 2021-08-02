@@ -8,6 +8,7 @@ Changelog
 * Add new method :meth:`pymaf.MafFrame.plot_tmb_patient`.
 * Add new method :meth:`pymaf.MafFrame.plot_mutated_patient`.
 * Add new method :meth:`common.legend_handles`.
+* Add new method :meth:`pymaf.MafFrame.plot_oncoplot_patient`.
 
 0.19.0 (2021-07-31)
 -------------------
