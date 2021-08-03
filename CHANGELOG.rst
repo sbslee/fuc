@@ -223,7 +223,7 @@ Changelog
 
 * Update Read the Docs.
 * Add new methods to :class:`pyvcf.VcfFrame` class.
-* :issue:`6`: Add ``sphinx.ext.linkcode`` extension to Read the Docs.
+* :issue:`6`: Add new extension ``sphinx.ext.linkcode`` to Read the Docs.
 
 0.3.2 (2021-04-30)
 ------------------
@@ -231,14 +231,14 @@ Changelog
 * Rename ``snpeff`` submodule to ``pysnpeff``.
 * Add new submodule ``pyvep``.
 * Update :class:`pyvcf.VcfFrame` class.
-* Add ``autodocsumm`` extension to Read the Docs.
+* Add new extension ``autodocsumm`` to Read the Docs.
 * Add contents to Read the Docs.
 
 0.2.0 (2021-04-26)
 ------------------
 
 * :issue:`2`: Fix Read the Docs automodule not working properly.
-* :issue:`3`: Add ``sphinx-issues`` extension to Read the Docs.
+* :issue:`3`: Add new extension ``sphinx-issues`` to Read the Docs.
 * Rename submodules ``BedFrame``, ``FastqFrame``, and ``VcfFrame`` to ``pybed``, ``pyfq``, and ``pyvcf``, respectively.
 * Add new methods to ``pyvcf`` submodule.
 * Add new methods to :class:`pyvcf.VcfFrame` class.

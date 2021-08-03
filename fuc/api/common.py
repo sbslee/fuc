@@ -32,13 +32,13 @@ class AnnFrame:
     with sample names as index.
 
     Note that an AnnFrame can have a different set of samples than its
-    accompanying MafFrame.
+    accompanying :class:`pymaf.MafFrame`, :class:`pyvcf.VcfFrame`, etc.
 
     Parameters
     ----------
     df : pandas.DataFrame
         DataFrame containing sample annotation data. The index must be
-        sample names.
+        unique sample names.
 
     See Also
     --------
@@ -51,31 +51,32 @@ class AnnFrame:
     --------
 
     >>> import pandas as pd
-    >>> from fuc import pymaf, common
+    >>> from fuc import common
     >>> data = {
-    ...     'Tumor_Sample_Barcode': ['Steven_N', 'Steven_T', 'Sara_N', 'Sara_T'],
-    ...     'Subject': ['Steven', 'Steven', 'Sara', 'Sara'],
-    ...     'Type': ['Normal', 'Tumor', 'Normal', 'Tumor'],
+    ...     'SampleID': ['A', 'B', 'C', 'D'],
+    ...     'PatientID': ['P1', 'P1', 'P2', 'P2'],
+    ...     'Tissue': ['Normal', 'Tissue', 'Normal', 'Tumor'],
     ...     'Age': [30, 30, 57, 57]
     ... }
     >>> df = pd.DataFrame(data)
-    >>> df = df.set_index('Tumor_Sample_Barcode')
+    >>> df = df.set_index('SampleID')
     >>> af = common.AnnFrame(df)
     >>> af.df
-                         Subject    Type  Age
-    Tumor_Sample_Barcode
-    Steven_N              Steven  Normal   30
-    Steven_T              Steven   Tumor   30
-    Sara_N                  Sara  Normal   57
-    Sara_T                  Sara   Tumor   57
+             PatientID  Tissue  Age
+    SampleID
+    A               P1  Normal   30
+    B               P1  Tissue   30
+    C               P2  Normal   57
+    D               P2   Tumor   57
     """
 
     def _check_df(self, df):
         if type(df.index) == pd.RangeIndex:
-            m = "Index must be sample names, not 'pandas.RangeIndex'."
-            raise ValueError(m)
+            raise ValueError("Index cannot be 'pandas.RangeIndex'.")
         if df.isin([np.inf, -np.inf]).any().any():
             raise ValueError('Found positive or negative infinity.')
+        if df.index.has_duplicates:
+            raise ValueError('Index has duplicates.')
         return df
 
     def __init__(self, df):
@@ -100,36 +101,19 @@ class AnnFrame:
         """tuple : Dimensionality of AnnFrame (samples, annotations)."""
         return self.df.shape
 
-    def filter_mf(self, mf):
-        """
-        Filter the AnnFrame for the samples in the MafFrame.
-
-        Parameters
-        ----------
-        mf : MafFrame
-            MafFrame containing target samples.
-
-        Returns
-        -------
-        AnnFrame
-            Filtered AnnFrame object.
-        """
-        df = self.df.loc[mf.samples]
-        return self.__class__(df)
-
     @classmethod
-    def from_dict(cls, data, sample_col='Tumor_Sample_Barcode'):
-        """Construct AnnFrame from dict of array-like or dicts.
+    def from_dict(cls, data, sample_col):
+        """
+        Construct AnnFrame from dict of array-like or dicts.
 
-        The dictionary must have at least one column that represents sample
-        names which are used as index for pandas.DataFrame.
+        The dictionary must contain a column that represents sample names.
 
         Parameters
         ----------
         data : dict
             Of the form {field : array-like} or {field : dict}.
-        sample_col : str, default: 'Tumor_Sample_Barcode'
-            Column containing sample names.
+        sample_col : str
+            Column containing unique sample names.
 
         Returns
         -------
@@ -146,47 +130,46 @@ class AnnFrame:
         Examples
         --------
 
-        >>> from fuc import pymaf, common
+        >>> from fuc import common
         >>> data = {
-        ...     'Tumor_Sample_Barcode': ['Steven_Normal', 'Steven_Tumor', 'Sara_Normal', 'Sara_Tumor'],
-        ...     'Subject': ['Steven', 'Steven', 'Sara', 'Sara'],
-        ...     'Type': ['Normal', 'Tumor', 'Normal', 'Tumor'],
+        ...     'SampleID': ['A', 'B', 'C', 'D'],
+        ...     'PatientID': ['P1', 'P1', 'P2', 'P2'],
+        ...     'Tissue': ['Normal', 'Tissue', 'Normal', 'Tumor'],
         ...     'Age': [30, 30, 57, 57]
         ... }
-        >>> af = common.AnnFrame.from_dict(data)
+        >>> af = common.AnnFrame.from_dict(data, sample_col='SampleID')
         >>> af.df
-                             Subject    Type  Age
-        Tumor_Sample_Barcode
-        Steven_Normal         Steven  Normal   30
-        Steven_Tumor          Steven   Tumor   30
-        Sara_Normal             Sara  Normal   57
-        Sara_Tumor              Sara   Tumor   57
+                 PatientID  Tissue  Age
+        SampleID
+        A               P1  Normal   30
+        B               P1  Tissue   30
+        C               P2  Normal   57
+        D               P2   Tumor   57
         """
         df = pd.DataFrame(data)
         df = df.set_index(sample_col)
         return cls(df)
 
     @classmethod
-    def from_file(cls, fn, sample_col='Tumor_Sample_Barcode', sep='\t'):
+    def from_file(cls, fn, sample_col, sep='\t'):
         """
         Construct AnnFrame from a delimited text file.
 
-        The text file must have at least one column that represents
-        sample names which are used as index for pandas.DataFrame.
+        The file must contain a column that represents sample names.
 
         Parameters
         ----------
         fn : str
-            Text file path (zipped or unzipped).
-        sample_col : str, default: 'Tumor_Sample_Barcode'
-            Column containing sample names.
+            Text file (zipped or unzipped).
+        sample_col : str
+            Column containing unique sample names.
         sep : str, default: '\\\\t'
             Delimiter to use.
 
         Returns
         -------
         AnnFrame
-            AnnFrame.
+            AnnFrame object.
 
         See Also
         --------
@@ -198,9 +181,9 @@ class AnnFrame:
         Examples
         --------
 
-        >>> from fuc import pymaf, common
-        >>> af1 = common.AnnFrame.from_file('sample-annot-1.tsv')
-        >>> af2 = common.AnnFrame.from_file('sample-annot-2.csv', sample_col='SampleID', sep=',')
+        >>> from fuc import common
+        >>> af = common.AnnFrame.from_file('sample-annot.tsv', sample_col='SampleID')
+        >>> af = common.AnnFrame.from_file('sample-annot.csv', sample_col='SampleID', sep=',')
         """
         df = pd.read_table(fn, sep=sep)
         df = df.set_index(sample_col)
@@ -252,7 +235,7 @@ class AnnFrame:
             >>> from fuc import common, pymaf
             >>> common.load_dataset('tcga-laml')
             >>> f = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
-            >>> af = common.AnnFrame.from_file(f)
+            >>> af = common.AnnFrame.from_file(f, sample_col='Tumor_Sample_Barcode')
             >>> fig, ax = plt.subplots()
             >>> handles1 = af.legend_handles('FAB_classification',
             ...                              cmap='Dark2')
@@ -357,7 +340,7 @@ class AnnFrame:
             >>> from fuc import common, pymaf
             >>> common.load_dataset('tcga-laml')
             >>> f = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
-            >>> af = common.AnnFrame.from_file(f)
+            >>> af = common.AnnFrame.from_file(f, sample_col='Tumor_Sample_Barcode')
             >>> fig, [ax1, ax2, ax3] = plt.subplots(3, 1, figsize=(10, 5))
             >>> af.plot_annot('FAB_classification', ax=ax1, linewidths=1, cmap='Dark2')
             >>> af.plot_annot('days_to_last_followup', ax=ax2, linewidths=1, cmap='viridis')

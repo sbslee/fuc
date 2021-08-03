@@ -293,7 +293,7 @@ To create various figures for normal-tumor analysis:
     >>> from fuc import common, pyvcf
     >>> common.load_dataset('pyvcf')
     >>> vf = pyvcf.VcfFrame.from_file('~/fuc-data/pyvcf/normal-tumor.vcf')
-    >>> af = pyvcf.AnnFrame.from_file('~/fuc-data/pyvcf/normal-tumor-annot.tsv', 'Sample')
+    >>> af = pyvcf.AnnFrame.from_file('~/fuc-data/pyvcf/normal-tumor-annot.tsv', sample_col='Sample')
     >>> normal = af.df[af.df.Tissue == 'Normal'].index
     >>> tumor = af.df[af.df.Tissue == 'Tumor'].index
     >>> fig, [[ax1, ax2], [ax3, ax4]] = plt.subplots(2, 2, figsize=(10, 10))

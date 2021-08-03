@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from fuc import common, pymaf
 common.load_dataset('tcga-laml')
 mf = pymaf.MafFrame.from_file('~/fuc-data/tcga-laml/tcga_laml.maf.gz')
-af = common.AnnFrame.from_file('~/fuc-data/tcga-laml/tcga_laml_annot.tsv')
+af = common.AnnFrame.from_file('~/fuc-data/tcga-laml/tcga_laml_annot.tsv', sample_col='Tumor_Sample_Barcode')
 
 # Define the shared variables.
 count=10

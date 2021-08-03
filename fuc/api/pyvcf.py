@@ -2004,7 +2004,7 @@ class VcfFrame:
             >>> vcf_file = '~/fuc-data/pyvcf/normal-tumor.vcf'
             >>> annot_file = '~/fuc-data/pyvcf/normal-tumor-annot.tsv'
             >>> vf = pyvcf.VcfFrame.from_file(vcf_file)
-            >>> af = common.AnnFrame.from_file(annot_file, 'Sample')
+            >>> af = common.AnnFrame.from_file(annot_file, sample_col='Sample')
             >>> normal = af.df[af.df.Tissue == 'Normal'].index
             >>> tumor = af.df[af.df.Tissue == 'Tumor'].index
             >>> vf.plot_regplot(normal, tumor)

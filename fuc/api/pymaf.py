@@ -1039,7 +1039,7 @@ class MafFrame:
             :context: close-figs
 
             >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
-            >>> af = common.AnnFrame.from_file(annot_file)
+            >>> af = common.AnnFrame.from_file(annot_file, sample_col='Tumor_Sample_Barcode')
             >>> mf.plot_clonality('i_TumorVAF_WU',
             ...                   af=af,
             ...                   hue='FAB_classification',
@@ -1221,7 +1221,7 @@ class MafFrame:
             :context: close-figs
 
             >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
-            >>> af = common.AnnFrame.from_file(annot_file)
+            >>> af = common.AnnFrame.from_file(annot_file, sample_col='Tumor_Sample_Barcode')
             >>> mf.plot_genepair('DNMT3A', 'FLT3', 'i_TumorVAF_WU',
             ...                  af=af,
             ...                  hue='FAB_classification')
@@ -1307,7 +1307,7 @@ class MafFrame:
             >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
             >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
             >>> mf = pymaf.MafFrame.from_file(maf_file)
-            >>> af = common.AnnFrame.from_file(annot_file)
+            >>> af = common.AnnFrame.from_file(annot_file, sample_col='Tumor_Sample_Barcode')
             >>> mf.plot_regplot(af, 'FAB_classification', 'M1', 'M2')
             Results for M2 ~ M1:
             R^2 = 0.43
@@ -1633,7 +1633,7 @@ class MafFrame:
             :context: close-figs
 
             >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
-            >>> af = common.AnnFrame.from_file(annot_file)
+            >>> af = common.AnnFrame.from_file(annot_file, sample_col='Tumor_Sample_Barcode')
             >>> mf.plot_mutated(af=af,
             ...                 hue='FAB_classification',
             ...                 hue_order=['M0', 'M1', 'M2'])
@@ -1907,7 +1907,7 @@ class MafFrame:
             :context: close-figs
 
             >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
-            >>> af = common.AnnFrame.from_file(annot_file)
+            >>> af = common.AnnFrame.from_file(annot_file, sample_col='Tumor_Sample_Barcode')
             >>> mf.plot_snvclsc(af=af,
             ...                 hue='FAB_classification',
             ...                 hue_order=['M0', 'M1', 'M2'])
@@ -2022,7 +2022,7 @@ class MafFrame:
             :context: close-figs
 
             >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
-            >>> af = common.AnnFrame.from_file(annot_file)
+            >>> af = common.AnnFrame.from_file(annot_file, sample_col='Tumor_Sample_Barcode')
             >>> mf.plot_snvclsp(af=af,
             ...                 hue='FAB_classification',
             ...                 hue_order=['M0', 'M1', 'M2'])
@@ -2273,7 +2273,7 @@ class MafFrame:
             :context: close-figs
 
             >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
-            >>> af = common.AnnFrame.from_file(annot_file)
+            >>> af = common.AnnFrame.from_file(annot_file, sample_col='Tumor_Sample_Barcode')
             >>> mf.plot_titv(af=af,
             ...              hue='FAB_classification',
             ...              hue_order=['M0', 'M1', 'M2'])
@@ -2631,7 +2631,7 @@ class MafFrame:
             :context: close-figs
 
             >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
-            >>> af = common.AnnFrame.from_file(annot_file)
+            >>> af = common.AnnFrame.from_file(annot_file, sample_col='Tumor_Sample_Barcode')
             >>> mf.plot_vaf('i_TumorVAF_WU',
             ...             af=af,
             ...             hue='FAB_classification',
@@ -2768,7 +2768,7 @@ class MafFrame:
             >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
             >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
             >>> mf = pymaf.MafFrame.from_file(maf_file)
-            >>> af = common.AnnFrame.from_file(annot_file)
+            >>> af = common.AnnFrame.from_file(annot_file, sample_col='Tumor_Sample_Barcode')
             >>> mf.plot_matrixg('IDH1', af, 'FAB_classification', linewidth=0.5, square=True, annot=True)
             >>> plt.tight_layout()
         """
@@ -3469,7 +3469,7 @@ class MafFrame:
         >>> from fuc import common, pymaf
         >>> common.load_dataset('tcga-laml')
         >>> mf = pymaf.MafFrame.from_file('~/fuc-data/tcga-laml/tcga_laml.maf.gz')
-        >>> af = common.AnnFrame.from_file('~/fuc-data/tcga-laml/tcga_laml_annot.tsv')
+        >>> af = common.AnnFrame.from_file('~/fuc-data/tcga-laml/tcga_laml_annot.tsv', sample_col='Tumor_Sample_Barcode')
         >>> filtered_mf = mf.filter_annot(af, "FAB_classification == 'M4'")
         """
         samples = af.df.query(expr).index
