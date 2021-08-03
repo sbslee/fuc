@@ -197,7 +197,8 @@ class AnnFrame:
         sequential=False, xticklabels=True, ax=None, figsize=None
     ):
         """
-        Create 1D categorical heatmap for the selected column.
+        Create a categorical heatmap for the selected column using unmatched
+        samples.
 
         See this :ref:`tutorial <tutorials:Create customized oncoplots>` to
         learn how to create customized oncoplots.
@@ -307,6 +308,96 @@ class AnnFrame:
 
         # Get the legend handles.
         handles = legend_handles(groups, colors=colors)
+
+        return ax, handles
+
+    def plot_annot_matched(
+        self, patient_col, group_col, annot_col, patient_order=None,
+        group_order=None, annot_order=None, colors='tab10', sequential=False,
+        xticklabels=True, ax=None, figsize=None
+    ):
+        """
+        Create a categorical heatmap for the selected column using matched
+        samples.
+
+        See this :ref:`tutorial <tutorials:Create customized oncoplots>` to
+        learn how to create customized oncoplots.
+
+        Parameters
+        ----------
+        patient_col : str
+            Column to plot.
+        group_col : str
+            Column to plot.
+        annot_col : str
+            Column to plot.
+        patient_order : list, optional
+            Plot only specified patients (in that order too).
+        group_order : list, optional
+            Plot only specified groups (in that order too).
+        annot_order : list, optional
+            Plot only specified annotations (in that order too).
+        colors : str or list, default: 'tab10'
+            Colormap name or list of colors.
+        sequential : bool, default: False
+            Whether the column is sequential data.
+        xticklabels : bool, default: True
+            If True, plot the sample names.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+        list
+            Legend handles.
+        """
+
+        if annot_order is None:
+            annot_order = self.df[annot_col].unique()
+
+        df = self.df.pivot(columns=group_col, index=patient_col,
+            values=annot_col).T
+
+        if patient_order is not None:
+            df = df[patient_order]
+
+        d = {k: v for v, k in enumerate(annot_order)}
+        df = df.applymap(lambda x: x if pd.isna(x) else d[x])
+
+        if group_order is not None:
+            df = df.loc[group_order]
+
+        # Determine the colors to use.
+        if isinstance(colors, str):
+            if sequential:
+                c = plt.get_cmap(colors).colors
+                l = list(np.linspace(0, len(c)-1, len(group_order)))
+                colors = [c[round(i)] for i in l]
+            else:
+                colors = list(plt.get_cmap(colors).colors[:len(group_order)])
+
+        # Determine which matplotlib axes to plot on.
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
+        # Plot the heatmap.
+        sns.heatmap(
+            df, cmap=colors, cbar=False, xticklabels=xticklabels
+        )
+        ax.set_xlabel('')
+        ax.set_ylabel(annot_col)
+        ax.set_yticks([])
+
+        # Add vertical lines.
+        for i, sample in enumerate(df.columns, start=1):
+            ax.axvline(i, color='white')
+
+        # Get the legend handles.
+        handles = legend_handles(annot_order, colors=colors)
 
         return ax, handles
 

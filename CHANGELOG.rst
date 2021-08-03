@@ -15,6 +15,7 @@ Changelog
 * Rename :meth:`common.file2list` method to :meth:`convert_file2list`.
 * Add new method :meth:`common.convert_num2cat`.
 * Add new command :command:`fuc-undetm`.
+* Add new method :meth:`common.plot_annot_matched`.
 
 0.19.0 (2021-07-31)
 -------------------
