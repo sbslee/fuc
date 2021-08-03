@@ -112,8 +112,9 @@ class AnnFrame:
         ----------
         data : dict
             Of the form {field : array-like} or {field : dict}.
-        sample_col : str
-            Column containing unique sample names.
+        sample_col : str or int
+            Column containing unique sample names, either given as string
+            name or column index.
 
         Returns
         -------
@@ -137,7 +138,7 @@ class AnnFrame:
         ...     'Tissue': ['Normal', 'Tissue', 'Normal', 'Tumor'],
         ...     'Age': [30, 30, 57, 57]
         ... }
-        >>> af = common.AnnFrame.from_dict(data, sample_col='SampleID')
+        >>> af = common.AnnFrame.from_dict(data, sample_col='SampleID') # or sample_col=0
         >>> af.df
                  PatientID  Tissue  Age
         SampleID
@@ -147,6 +148,8 @@ class AnnFrame:
         D               P2   Tumor   57
         """
         df = pd.DataFrame(data)
+        if isinstance(sample_col, int):
+            sample_col = list(data)[sample_col]
         df = df.set_index(sample_col)
         return cls(df)
 
@@ -161,8 +164,9 @@ class AnnFrame:
         ----------
         fn : str
             Text file (zipped or unzipped).
-        sample_col : str
-            Column containing unique sample names.
+        sample_col : str or int
+            Column containing unique sample names, either given as string
+            name or column index.
         sep : str, default: '\\\\t'
             Delimiter to use.
 
@@ -183,10 +187,9 @@ class AnnFrame:
 
         >>> from fuc import common
         >>> af = common.AnnFrame.from_file('sample-annot.tsv', sample_col='SampleID')
-        >>> af = common.AnnFrame.from_file('sample-annot.csv', sample_col='SampleID', sep=',')
+        >>> af = common.AnnFrame.from_file('sample-annot.csv', sample_col=0, sep=',')
         """
-        df = pd.read_table(fn, sep=sep)
-        df = df.set_index(sample_col)
+        df = pd.read_table(fn, index_col=sample_col, sep=sep)
         return cls(df)
 
     def legend_handles(
@@ -235,7 +238,7 @@ class AnnFrame:
             >>> from fuc import common, pymaf
             >>> common.load_dataset('tcga-laml')
             >>> f = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
-            >>> af = common.AnnFrame.from_file(f, sample_col='Tumor_Sample_Barcode')
+            >>> af = common.AnnFrame.from_file(f, sample_col=0)
             >>> fig, ax = plt.subplots()
             >>> handles1 = af.legend_handles('FAB_classification',
             ...                              cmap='Dark2')
@@ -340,7 +343,7 @@ class AnnFrame:
             >>> from fuc import common, pymaf
             >>> common.load_dataset('tcga-laml')
             >>> f = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
-            >>> af = common.AnnFrame.from_file(f, sample_col='Tumor_Sample_Barcode')
+            >>> af = common.AnnFrame.from_file(f, sample_col=0)
             >>> fig, [ax1, ax2, ax3] = plt.subplots(3, 1, figsize=(10, 5))
             >>> af.plot_annot('FAB_classification', ax=ax1, linewidths=1, cmap='Dark2')
             >>> af.plot_annot('days_to_last_followup', ax=ax2, linewidths=1, cmap='viridis')

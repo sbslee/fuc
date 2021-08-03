@@ -4021,7 +4021,7 @@ class VcfFrame:
             :context: close-figs
 
             >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
-            >>> af = common.AnnFrame.from_file(annot_file, sample_col='Tumor_Sample_Barcode')
+            >>> af = common.AnnFrame.from_file(annot_file, sample_col=0)
             >>> vf.plot_titv(af=af,
             ...              hue='FAB_classification',
             ...              hue_order=['M0', 'M1', 'M2'])
@@ -4172,7 +4172,7 @@ class VcfFrame:
             :context: close-figs
 
             >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
-            >>> af = common.AnnFrame.from_file(annot_file, sample_col='Tumor_Sample_Barcode')
+            >>> af = common.AnnFrame.from_file(annot_file, sample_col=0)
             >>> vf.plot_snvclsc(af=af,
             ...                 hue='FAB_classification',
             ...                 hue_order=['M0', 'M1', 'M2'])
@@ -4258,7 +4258,7 @@ class VcfFrame:
             :context: close-figs
 
             >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
-            >>> af = common.AnnFrame.from_file(annot_file, sample_col='Tumor_Sample_Barcode')
+            >>> af = common.AnnFrame.from_file(annot_file, sample_col=0)
             >>> vf.plot_snvclsp(af=af,
             ...                 hue='FAB_classification',
             ...                 hue_order=['M0', 'M1', 'M2'])

@@ -830,7 +830,7 @@ class MafFrame:
         ticklabels_fontsize=15, legend_fontsize=15
     ):
         """
-        Create a standard oncoplot.
+        Create an oncoplot.
 
         See the :ref:`tutorials:Create customized oncoplots` tutorial to
         learn how to create customized oncoplots.
@@ -922,16 +922,37 @@ class MafFrame:
         plt.subplots_adjust(wspace=0.01, hspace=0.01)
 
     def plot_oncoplot_matched(
-        self, af, patient_col, group_col, groups, figsize=(15, 10), legend_fontsize=12, colors='Set2'
+        self, af, patient_col, group_col, groups, colors='Set2',
+        figsize=(15, 10), label_fontsize=12, ticklabels_fontsize=12,
+        legend_fontsize=12
     ):
         """
         Create an oncoplot for mached samples.
 
+        Parameters
+        ----------
+        af : AnnFrame
+            AnnFrame containing sample annotation data.
+        patient_col : str
+            Column in the AnnFrame which contains patient information.
+        group_col : str
+            Column in the AnnFrame which contains group level information.
+        groups : list, optional
+            List of group levels.
+        colors : str
+            Colormap name for the sample groups.
+        figsize : tuple, default: (15, 10)
+            Width, height in inches. Format: (float, float).
+        label_fontsize : float, default: 12
+            Font size of labels.
+        ticklabels_fontsize : float, default: 12
+            Font size of tick labels.
+        legend_fontsize : float, default: 12
+            Font size of legend texts.
         """
-
-        fig, axes = plt.subplots(3, 2,
-                                 figsize=figsize,
-                                 gridspec_kw={'height_ratios': [1, 10, 2], 'width_ratios': [10, 1]})
+        fig, axes = plt.subplots(3, 2, figsize=figsize,
+            gridspec_kw={'height_ratios': [1, 10, 1.5], 'width_ratios': [10, 1]}
+        )
 
         [[ax1, ax2], [ax3, ax4], [ax5, ax6]] = axes
 
@@ -943,18 +964,28 @@ class MafFrame:
         ax1.spines['right'].set_visible(False)
         ax1.spines['top'].set_visible(False)
         ax1.spines['bottom'].set_visible(False)
+        ax1.set_ylabel('TMB', fontsize=label_fontsize)
+        ax1.tick_params(axis='y', which='major',
+                        labelsize=ticklabels_fontsize)
 
         ax2.remove()
 
         self.plot_waterfall_matched(af, patient_col, group_col, groups=groups, ax=ax3)
         ax3.set_xticks([])
+        ax3.tick_params(axis='y', which='major', labelrotation=0,
+                        labelsize=ticklabels_fontsize)
 
-        self.plot_mutated_matched(af, patient_col, group_col, groups=groups, ax=ax4, palette=colors)
+        self.plot_mutated_matched(
+            af, patient_col, group_col, groups=groups, ax=ax4, palette=colors
+        )
         ax4.set_yticks([])
         ax4.legend().remove()
         ax4.spines['right'].set_visible(False)
         ax4.spines['left'].set_visible(False)
         ax4.spines['top'].set_visible(False)
+        ax4.tick_params(axis='x', which='major',
+                        labelsize=ticklabels_fontsize)
+        ax4.set_xlabel('Patients', fontsize=label_fontsize)
 
         # Create the legends.
         handles1 = common.legend_handles(NONSYN_NAMES+['Multi_Hit'],
@@ -1039,7 +1070,7 @@ class MafFrame:
             :context: close-figs
 
             >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
-            >>> af = common.AnnFrame.from_file(annot_file, sample_col='Tumor_Sample_Barcode')
+            >>> af = common.AnnFrame.from_file(annot_file, sample_col=0)
             >>> mf.plot_clonality('i_TumorVAF_WU',
             ...                   af=af,
             ...                   hue='FAB_classification',
@@ -1221,7 +1252,7 @@ class MafFrame:
             :context: close-figs
 
             >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
-            >>> af = common.AnnFrame.from_file(annot_file, sample_col='Tumor_Sample_Barcode')
+            >>> af = common.AnnFrame.from_file(annot_file, sample_col=0)
             >>> mf.plot_genepair('DNMT3A', 'FLT3', 'i_TumorVAF_WU',
             ...                  af=af,
             ...                  hue='FAB_classification')
@@ -1307,7 +1338,7 @@ class MafFrame:
             >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
             >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
             >>> mf = pymaf.MafFrame.from_file(maf_file)
-            >>> af = common.AnnFrame.from_file(annot_file, sample_col='Tumor_Sample_Barcode')
+            >>> af = common.AnnFrame.from_file(annot_file, sample_col=0)
             >>> mf.plot_regplot(af, 'FAB_classification', 'M1', 'M2')
             Results for M2 ~ M1:
             R^2 = 0.43
@@ -1633,7 +1664,7 @@ class MafFrame:
             :context: close-figs
 
             >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
-            >>> af = common.AnnFrame.from_file(annot_file, sample_col='Tumor_Sample_Barcode')
+            >>> af = common.AnnFrame.from_file(annot_file, sample_col=0)
             >>> mf.plot_mutated(af=af,
             ...                 hue='FAB_classification',
             ...                 hue_order=['M0', 'M1', 'M2'])
@@ -1907,7 +1938,7 @@ class MafFrame:
             :context: close-figs
 
             >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
-            >>> af = common.AnnFrame.from_file(annot_file, sample_col='Tumor_Sample_Barcode')
+            >>> af = common.AnnFrame.from_file(annot_file, sample_col=0)
             >>> mf.plot_snvclsc(af=af,
             ...                 hue='FAB_classification',
             ...                 hue_order=['M0', 'M1', 'M2'])
@@ -2022,7 +2053,7 @@ class MafFrame:
             :context: close-figs
 
             >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
-            >>> af = common.AnnFrame.from_file(annot_file, sample_col='Tumor_Sample_Barcode')
+            >>> af = common.AnnFrame.from_file(annot_file, sample_col=0)
             >>> mf.plot_snvclsp(af=af,
             ...                 hue='FAB_classification',
             ...                 hue_order=['M0', 'M1', 'M2'])
@@ -2273,7 +2304,7 @@ class MafFrame:
             :context: close-figs
 
             >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
-            >>> af = common.AnnFrame.from_file(annot_file, sample_col='Tumor_Sample_Barcode')
+            >>> af = common.AnnFrame.from_file(annot_file, sample_col=0)
             >>> mf.plot_titv(af=af,
             ...              hue='FAB_classification',
             ...              hue_order=['M0', 'M1', 'M2'])
@@ -2631,7 +2662,7 @@ class MafFrame:
             :context: close-figs
 
             >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
-            >>> af = common.AnnFrame.from_file(annot_file, sample_col='Tumor_Sample_Barcode')
+            >>> af = common.AnnFrame.from_file(annot_file, sample_col=0)
             >>> mf.plot_vaf('i_TumorVAF_WU',
             ...             af=af,
             ...             hue='FAB_classification',
@@ -2768,7 +2799,7 @@ class MafFrame:
             >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
             >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
             >>> mf = pymaf.MafFrame.from_file(maf_file)
-            >>> af = common.AnnFrame.from_file(annot_file, sample_col='Tumor_Sample_Barcode')
+            >>> af = common.AnnFrame.from_file(annot_file, sample_col=0)
             >>> mf.plot_matrixg('IDH1', af, 'FAB_classification', linewidth=0.5, square=True, annot=True)
             >>> plt.tight_layout()
         """
@@ -3469,7 +3500,7 @@ class MafFrame:
         >>> from fuc import common, pymaf
         >>> common.load_dataset('tcga-laml')
         >>> mf = pymaf.MafFrame.from_file('~/fuc-data/tcga-laml/tcga_laml.maf.gz')
-        >>> af = common.AnnFrame.from_file('~/fuc-data/tcga-laml/tcga_laml_annot.tsv', sample_col='Tumor_Sample_Barcode')
+        >>> af = common.AnnFrame.from_file('~/fuc-data/tcga-laml/tcga_laml_annot.tsv', sample_col=0)
         >>> filtered_mf = mf.filter_annot(af, "FAB_classification == 'M4'")
         """
         samples = af.df.query(expr).index
