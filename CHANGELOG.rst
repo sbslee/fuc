@@ -14,6 +14,7 @@ Changelog
 * Deprecate classes :class:`pyvcf.AnnFrame` and :class:`pymaf.AnnFrame`. Add new class :class:`common.AnnFrame`.
 * Rename :meth:`common.file2list` method to :meth:`convert_file2list`.
 * Add new method :meth:`common.convert_num2cat`.
+* Add new command :command:`fuc-undetm`.
 
 0.19.0 (2021-07-31)
 -------------------

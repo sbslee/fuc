@@ -27,6 +27,7 @@ For getting help on the fuc CLI:
        bed-sum      Summarize a BED file.
        fq-count     Count sequence reads in FASTQ files.
        fq-sum       Summarize a FASTQ file.
+       fuc-undetm   Compute top unknown barcodes using undertermined FASTQ from bcl2fastq.
        fuc-compf    Compare the contents of two files.
        fuc-demux    Parse the Reports directory from bcl2fastq.
        fuc-exist    Check whether certain files exist.
@@ -254,6 +255,26 @@ fq-sum
    
    Optional arguments:
      -h, --help  Show this help message and exit.
+
+fuc-undetm
+==========
+
+.. code-block:: text
+
+   $ fuc fuc-undetm -h
+   usage: fuc fuc-undetm [-h] [--count INT] fastq
+   
+   This command will compute top unknown barcodes using undertermined FASTQ from the bcl2fastq or bcl2fastq2 prograrm.
+   
+   Usage examples:
+     $ fuc fuc-undetm Undetermined_S0_R1_001.fastq.gz
+   
+   Positional arguments:
+     fastq        Undertermined FASTQ (zipped or unzipped).
+   
+   Optional arguments:
+     -h, --help   Show this help message and exit.
+     --count INT  Number of top unknown barcodes to return (default: 30).
 
 fuc-compf
 =========

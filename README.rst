@@ -120,6 +120,7 @@ For getting help on the fuc CLI:
        bed-sum      Summarize a BED file.
        fq-count     Count sequence reads in FASTQ files.
        fq-sum       Summarize a FASTQ file.
+       fuc-undetm   Compute top unknown barcodes using undertermined FASTQ from bcl2fastq.
        fuc-compf    Compare the contents of two files.
        fuc-demux    Parse the Reports directory from bcl2fastq.
        fuc-exist    Check whether certain files exist.
@@ -307,7 +308,7 @@ To create various figures for normal-tumor analysis:
     >>> from fuc import common, pyvcf
     >>> common.load_dataset('pyvcf')
     >>> vf = pyvcf.VcfFrame.from_file('~/fuc-data/pyvcf/normal-tumor.vcf')
-    >>> af = pyvcf.AnnFrame.from_file('~/fuc-data/pyvcf/normal-tumor-annot.tsv', 'Sample')
+    >>> af = pyvcf.AnnFrame.from_file('~/fuc-data/pyvcf/normal-tumor-annot.tsv', sample_col='Sample')
     >>> normal = af.df[af.df.Tissue == 'Normal'].index
     >>> tumor = af.df[af.df.Tissue == 'Tumor'].index
     >>> fig, [[ax1, ax2], [ax3, ax4]] = plt.subplots(2, 2, figsize=(10, 10))
