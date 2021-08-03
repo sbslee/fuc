@@ -12,7 +12,7 @@ Changelog
 * Deprecate method :meth:`pymaf.MafFrame.legend_handles`.
 * Add new method :meth:`common.legend_handles`.
 * Deprecate classes :class:`pyvcf.AnnFrame` and :class:`pymaf.AnnFrame`. Add new class :class:`common.AnnFrame`.
-* Rename :meth:`common.file2list` method to `convert_file2list`.
+* Rename :meth:`common.file2list` method to :meth:`convert_file2list`.
 * Add new method :meth:`common.convert_num2cat`.
 
 0.19.0 (2021-07-31)

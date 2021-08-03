@@ -254,6 +254,19 @@ class AnnFrame:
             >>> legend = ax.legend(handles=handles)
             >>> ax.add_artist(legend)
             >>> plt.tight_layout()
+
+        We can also display sequenital data in the following way:
+
+        .. plot::
+            :context: close-figs
+
+            >>> ax, handles = af.plot_annot('FAB_classification',
+            ...                             samples=af.samples[:10],
+            ...                             colors='viridis',
+            ...                             sequential=True)
+            >>> legend = ax.legend(handles=handles)
+            >>> ax.add_artist(legend)
+            >>> plt.tight_layout()
         """
         # Get the selected column.
         s = self.df[col]
