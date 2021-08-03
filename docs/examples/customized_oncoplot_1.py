@@ -50,22 +50,18 @@ ax4.set_ylim(-0.5, count-0.5)
 ax4.tick_params(axis='x', which='major', labelsize=ticklabels_fontsize)
 
 # Create the annotation plot for 'FAB_classification'.
-_, handles1 = af.plot_annot('FAB_classification', samples=samples, ax=ax5, colors='Dark2')
-ax5.set_xticks([])
+_, handles1 = af.plot_annot('FAB_classification', samples=samples, ax=ax5, colors='Dark2', xticklabels=False)
 ax5.set_ylabel('')
 
 ax6.remove()
 
 # Create the annotation plot for 'days_to_last_followup'.
-_, handles2 = af.plot_annot('days_to_last_followup', samples=samples, ax=ax7, colors='viridis', sequential=True)
-ax7.set_xticks([])
+_, handles2 = af.plot_annot('days_to_last_followup', samples=samples, ax=ax7, colors='viridis', sequential=True, xticklabels=False)
 ax7.set_ylabel('')
-
 ax8.remove()
 
 # Create the annotation plot for 'Overall_Survival_Status'.
-_, handles3 = af.plot_annot('Overall_Survival_Status', samples=samples, ax=ax9, colors='Pastel1')
-ax9.set_xticks([])
+_, handles3 = af.plot_annot('Overall_Survival_Status', samples=samples, ax=ax9, colors='Pastel1', xticklabels=False)
 ax9.set_xlabel('Samples', fontsize=label_fontsize)
 ax9.set_ylabel('')
 
