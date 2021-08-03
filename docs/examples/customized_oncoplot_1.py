@@ -2,9 +2,11 @@
 
 import matplotlib.pyplot as plt
 from fuc import common, pymaf
+
 common.load_dataset('tcga-laml')
 mf = pymaf.MafFrame.from_file('~/fuc-data/tcga-laml/tcga_laml.maf.gz')
 af = common.AnnFrame.from_file('~/fuc-data/tcga-laml/tcga_laml_annot.tsv', sample_col=0)
+af.df['days_to_last_followup'] = common.convert_num2cat(af.df['days_to_last_followup'])
 
 # Define the shared variables.
 count=10
@@ -32,7 +34,7 @@ ax1.tick_params(axis='y', which='major', labelsize=ticklabels_fontsize)
 ax2.remove()
 
 # Create the waterfall plot.
-mf.plot_waterfall(count=count, ax=ax3, linewidths=1)
+mf.plot_waterfall(count=count, ax=ax3, linewidths=0.5)
 ax3.set_xlabel('')
 ax3.tick_params(axis='y', which='major', labelrotation=0, labelsize=ticklabels_fontsize)
 
@@ -43,40 +45,40 @@ ax4.spines['left'].set_visible(False)
 ax4.spines['top'].set_visible(False)
 ax4.set_yticks([])
 ax4.set_xlabel('Samples', fontsize=label_fontsize)
-ax4.set_xticks([0, mf.matrix_genes(10, mode='samples').sum(axis=1).max()])
+ax4.set_xticks([0, mf.matrix_genes(count=10, mode='samples').sum(axis=1).max()])
 ax4.set_ylim(-0.5, count-0.5)
 ax4.tick_params(axis='x', which='major', labelsize=ticklabels_fontsize)
 
 # Create the annotation plot for 'FAB_classification'.
-af.plot_annot('FAB_classification', samples=samples, ax=ax5, linewidths=1, cmap='Dark2')
-ax5.set_xlabel('')
+_, handles1 = af.plot_annot('FAB_classification', samples=samples, ax=ax5, colors='Dark2')
+ax5.set_xticks([])
 ax5.set_ylabel('')
 
 ax6.remove()
 
 # Create the annotation plot for 'days_to_last_followup'.
-af.plot_annot('days_to_last_followup', samples=samples, numeric=True, ax=ax7, linewidths=1, cmap='viridis')
-ax7.set_xlabel('')
+_, handles2 = af.plot_annot('days_to_last_followup', samples=samples, ax=ax7, colors='viridis', sequential=True)
+ax7.set_xticks([])
 ax7.set_ylabel('')
 
 ax8.remove()
 
 # Create the annotation plot for 'Overall_Survival_Status'.
-af.plot_annot('Overall_Survival_Status', samples=samples, ax=ax9, linewidths=1)
+_, handles3 = af.plot_annot('Overall_Survival_Status', samples=samples, ax=ax9, colors='Pastel1')
+ax9.set_xticks([])
 ax9.set_xlabel('Samples', fontsize=label_fontsize)
 ax9.set_ylabel('')
 
 ax10.remove()
 
 # Create the legends. Getting the right legend locations can be tricky and often requires a trial-and-error process.
-handles1 = pymaf.legend_handles(name='waterfall')
-handles2 = af.legend_handles('FAB_classification', samples=samples, cmap='Dark2')
-handles3 = af.legend_handles('days_to_last_followup', samples=samples, numeric=True, cmap='viridis')
-handles4 = af.legend_handles('Overall_Survival_Status', samples=samples)
-leg1 = ax11.legend(handles=handles1, loc=(0, 0), title='Variant_Classification', ncol=2, fontsize=legend_fontsize, title_fontsize=legend_fontsize)
-leg2 = ax11.legend(handles=handles2, loc=(0.43, 0), title='FAB_classification', ncol=2, fontsize=legend_fontsize, title_fontsize=legend_fontsize)
-leg3 = ax11.legend(handles=handles3, loc=(0.62, 0), title='days_to_last_followup', fontsize=legend_fontsize, title_fontsize=legend_fontsize)
-leg4 = ax11.legend(handles=handles4, loc=(0.82, 0), title='Overall_Survival_Status', fontsize=legend_fontsize, title_fontsize=legend_fontsize)
+handles4 = common.legend_handles(pymaf.NONSYN_NAMES + ['Multi_Hit'], pymaf.NONSYN_COLORS + ['k'])
+
+leg1 = ax11.legend(handles=handles1, loc=(0.43, 0), title='FAB_classification', ncol=2, fontsize=legend_fontsize, title_fontsize=legend_fontsize)
+leg2 = ax11.legend(handles=handles2, loc=(0.62, 0), title='days_to_last_followup', fontsize=legend_fontsize, title_fontsize=legend_fontsize)
+leg3 = ax11.legend(handles=handles3, loc=(0.82, 0), title='Overall_Survival_Status', fontsize=legend_fontsize, title_fontsize=legend_fontsize)
+leg4 = ax11.legend(handles=handles4, loc=(0, 0), title='Variant_Classification', ncol=2, fontsize=legend_fontsize, title_fontsize=legend_fontsize)
+
 ax11.add_artist(leg1)
 ax11.add_artist(leg2)
 ax11.add_artist(leg3)

@@ -832,7 +832,7 @@ class MafFrame:
         """
         Create an oncoplot.
 
-        See the :ref:`tutorials:Create customized oncoplots` tutorial to
+        See this :ref:`tutorial <tutorials:Create customized oncoplots>` to
         learn how to create customized oncoplots.
 
         Parameters
@@ -3092,7 +3092,7 @@ class MafFrame:
         """
         Create a waterfall plot (oncoplot).
 
-        See the :ref:`tutorials:Create customized oncoplots` tutorial to
+        See this :ref:`tutorial <tutorials:Create customized oncoplots>` to
         learn how to create customized oncoplots.
 
         Parameters

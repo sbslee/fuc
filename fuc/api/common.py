@@ -192,133 +192,30 @@ class AnnFrame:
         df = pd.read_table(fn, index_col=sample_col, sep=sep)
         return cls(df)
 
-    def legend_handles(
-        self, col, samples=None, numeric=False, segments=5, decimals=0,
-        cmap='Pastel1'
-    ):
-        """Return legend handles for the given column.
-
-        In the case of a numeric column, use ``numeric=True`` which will
-        divide the values into equal-sized intervals, with the number of
-        intervals determined by the `segments` option.
-
-        Parameters
-        ----------
-        col : str
-            Column name.
-        samples : list, optional
-            If provided, these samples will be used to create legend handles.
-        numeric : bool, default: False
-            If True, the column will be treated as numeric.
-        segments : int, default: 5
-            If ``numeric`` is True, the numbers will be divided
-            into this number of equal-sized segments.
-        decimals : int, default: 0
-            If ``numeric`` is True, the numbers will be rounded up to this
-            number of decimals.
-        cmap : str, default: 'Pastel1'
-            Color map.
-
-        Returns
-        -------
-        list
-            Legend handles.
-
-        See Also
-        --------
-        AnnFrame.plot_annot
-            Create a 1D categorical heatmap for the given column.
-
-        Examples
-        --------
-
-        .. plot::
-
-            >>> import matplotlib.pyplot as plt
-            >>> from fuc import common, pymaf
-            >>> common.load_dataset('tcga-laml')
-            >>> f = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
-            >>> af = common.AnnFrame.from_file(f, sample_col=0)
-            >>> fig, ax = plt.subplots()
-            >>> handles1 = af.legend_handles('FAB_classification',
-            ...                              cmap='Dark2')
-            >>> handles2 = af.legend_handles('days_to_last_followup',
-            ...                              numeric=True,
-            ...                              cmap='viridis')
-            >>> handles3 = af.legend_handles('Overall_Survival_Status')
-            >>> leg1 = ax.legend(handles=handles1,
-            ...                  title='FAB_classification',
-            ...                  loc='center left')
-            >>> leg2 = ax.legend(handles=handles2,
-            ...                  title='days_to_last_followup',
-            ...                  loc='center')
-            >>> leg3 = ax.legend(handles=handles3,
-            ...                  title='Overall_Survival_Status',
-            ...                  loc='center right')
-            >>> ax.add_artist(leg1)
-            >>> ax.add_artist(leg2)
-            >>> ax.add_artist(leg3)
-            >>> plt.tight_layout()
-        """
-        s, l = self._get_col(col, numeric=numeric, segments=segments,
-            samples=samples)
-        colors = plt.cm.get_cmap(cmap)(np.linspace(0, 1, len(l)))
-        handles = []
-        for i, label in enumerate(l):
-            handles.append(mpatches.Patch(color=colors[i], label=label))
-        return handles
-
-    def _get_col(
-        self, col, numeric=False, segments=5, samples=None, decimals=0
-    ):
-        s = self.df[col]
-        if numeric:
-            boundaries = list(np.linspace(s.min(), s.max(),
-                segments+1, endpoint=True))
-            intervals = list(zip(boundaries[:-1], boundaries[1:]))
-            def f(x):
-                if pd.isna(x):
-                    return x
-                for i, interval in enumerate(intervals):
-                    a, b = interval
-                    if a <= x <= b:
-                        return f'G{i} ({b:.{decimals}f})'
-            s = s.apply(f)
-        if samples is not None:
-            s = s[samples]
-        l = sorted([x for x in s.unique() if x == x])
-        return s, l
-
     def plot_annot(
-        self, col, samples=None, numeric=False, segments=5, decimals=0,
-        cmap='Pastel1', ax=None, figsize=None, **kwargs
+        self, col, groups=None, samples=None, colors='tab10',
+        sequential=False, xticklabels=True, ax=None, figsize=None
     ):
         """
-        Create a 1D categorical heatmap of the column.
+        Create 1D categorical heatmap for the selected column.
 
-        In the case of a numeric column, set ``numeric`` as True which will
-        divide the values into equal-sized intervals, with the number of
-        intervals determined by ``segments``.
-
-        See the :ref:`tutorials:Create customized oncoplots` tutorial to
+        See this :ref:`tutorial <tutorials:Create customized oncoplots>` to
         learn how to create customized oncoplots.
 
         Parameters
         ----------
         col : str
-            Column name.
+            Column to plot.
+        groups : list, optional
+            Display only specified groups (in that order too).
         samples : list, optional
-            If provided, these samples will be used to create legend handles.
-        numeric : bool, default: False
-            If True, the column will be treated as numeric.
-        segments : int, default: 5
-            If ``numeric`` is True, the numbers will be divided
-            into this number of equal-sized segments.
-        decimals : int, default: 0
-            If ``numeric`` is True, the numbers will be rounded up to this
-            number of decimals.
-        cmap : str, default: 'Pastel1'
-            Color map.
+            Display only specified samples (in that order too).
+        colors : str or list, default: 'tab10'
+            Colormap name or list of colors.
+        sequential : bool, default: False
+            Whether the column is sequential data.
+        xticklabels : bool, default: True
+            If True, plot the sample names.
         ax : matplotlib.axes.Axes, optional
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
@@ -326,53 +223,79 @@ class AnnFrame:
 
         Returns
         -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
         list
             Legend handles.
 
-        See Also
-        --------
-        AnnFrame.legend_handles
-            Return legend handles for the given column.
-
         Examples
         --------
+        Below is a simple example:
 
         .. plot::
+            :context: close-figs
 
             >>> import matplotlib.pyplot as plt
             >>> from fuc import common, pymaf
             >>> common.load_dataset('tcga-laml')
-            >>> f = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
-            >>> af = common.AnnFrame.from_file(f, sample_col=0)
-            >>> fig, [ax1, ax2, ax3] = plt.subplots(3, 1, figsize=(10, 5))
-            >>> af.plot_annot('FAB_classification', ax=ax1, linewidths=1, cmap='Dark2')
-            >>> af.plot_annot('days_to_last_followup', ax=ax2, linewidths=1, cmap='viridis')
-            >>> af.plot_annot('Overall_Survival_Status', ax=ax3, linewidths=1)
-            >>> ax1.set_xlabel('')
-            >>> ax2.set_xlabel('')
-            >>> ax1.set_ylabel('')
-            >>> ax2.set_ylabel('')
-            >>> ax3.set_ylabel('')
+            >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
+            >>> af = common.AnnFrame.from_file(annot_file, sample_col=0)
+            >>> ax, handles = af.plot_annot('FAB_classification', samples=af.samples[:10])
+            >>> legend = ax.legend(handles=handles)
+            >>> ax.add_artist(legend)
             >>> plt.tight_layout()
-            >>> plt.subplots_adjust(wspace=0.01, hspace=0.01)
+
+        We can display only selected groups:
+
+        .. plot::
+            :context: close-figs
+
+            >>> ax, handles = af.plot_annot('FAB_classification', groups=['M7', 'M6'])
+            >>> legend = ax.legend(handles=handles)
+            >>> ax.add_artist(legend)
+            >>> plt.tight_layout()
         """
-        s, l = self._get_col(col, numeric=numeric, segments=segments,
-            samples=samples)
-        d = {k: v for v, k in enumerate(l)}
+        # Get the selected column.
+        s = self.df[col]
+
+        # Subset the samples, if necessary.
+        if samples is not None:
+            s = s.reindex(samples)
+
+        # Establish mapping from groups to numbers.
+        if groups is None:
+            groups = sorted([x for x in s.unique() if x == x])
+        else:
+            s = s[s.isin(groups)]
+        d = {k: v for v, k in enumerate(groups)}
         df = s.to_frame().applymap(lambda x: x if pd.isna(x) else d[x])
+
+        # Determine the colors to use.
+        if isinstance(colors, str):
+            if sequential:
+                c = plt.get_cmap(colors).colors
+                l = list(np.linspace(0, len(c)-1, len(groups)))
+                colors = [c[round(i)] for i in l]
+            else:
+                colors = list(plt.get_cmap(colors).colors[:len(groups)])
 
         # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
-        sns.heatmap(df.T, ax=ax, cmap=cmap, xticklabels=True, cbar=False, **kwargs)
-
-        ax.set_xlabel('Samples')
+        # Plot the heatmap.
+        sns.heatmap(
+            df.T, ax=ax, cmap=colors, xticklabels=xticklabels, cbar=False,
+            linewidths=0.5
+        )
+        ax.set_xlabel('')
         ax.set_ylabel(col)
-        #ax.set_xticks([])
         ax.set_yticks([])
 
-        return ax
+        # Get the legend handles.
+        handles = legend_handles(groups, colors=colors)
+
+        return ax, handles
 
     def sorted_samples(self, by, mf=None, keep_empty=False, nonsyn=False):
         """
@@ -791,7 +714,7 @@ def convert_file2list(fn):
             l.append(line.strip())
     return l
 
-def convert_num2cat(s, n=5):
+def convert_num2cat(s, n=5, decimals=0):
     """
     Convert numeric values to categorical variables.
 
@@ -857,7 +780,7 @@ def convert_num2cat(s, n=5):
             if a <= x <= b:
                 return b
 
-    return s.apply(f)
+    return s.apply(f).round(decimals=decimals)
 
 def legend_handles(labels, colors='tab10'):
     """
