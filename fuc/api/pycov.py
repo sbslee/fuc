@@ -187,7 +187,7 @@ class CovFrame:
             else:
                 bam_files += bam
         else:
-            bam_files += common.file2list(fn)
+            bam_files += common.convert_file2list(fn)
 
         args = []
 

@@ -365,11 +365,11 @@ class AnnFrame:
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
-        sns.heatmap(df.T, ax=ax, cmap=cmap, cbar=False, **kwargs)
+        sns.heatmap(df.T, ax=ax, cmap=cmap, xticklabels=True, cbar=False, **kwargs)
 
         ax.set_xlabel('Samples')
         ax.set_ylabel(col)
-        ax.set_xticks([])
+        #ax.set_xticks([])
         ax.set_yticks([])
 
         return ax
@@ -764,9 +764,9 @@ def plot_cytobands(cytoband, bed, ax=None, figsize=None):
 
     return ax
 
-def file2list(fn):
+def convert_file2list(fn):
     """
-    Return a list of filenames from the input file.
+    Convert a text file to a list of filenames.
 
     Parameters
     ----------
@@ -782,7 +782,7 @@ def file2list(fn):
     --------
 
     >>> from fuc import common
-    >>> common.file2list('bam.list')
+    >>> common.convert_file2list('bam.list')
     ['1.bam', '2.bam', '3.bam']
     """
     l = []
@@ -790,6 +790,74 @@ def file2list(fn):
         for line in f:
             l.append(line.strip())
     return l
+
+def convert_num2cat(s, n=5):
+    """
+    Convert numeric values to categorical variables.
+
+    Parameters
+    ----------
+    pandas.Series
+        Series object containing numeric values.
+    n : int, default: 5
+        Number of variables to output.
+
+    Returns
+    -------
+    pandas.Series
+        Series object containing categorical variables.
+
+    Examples
+    --------
+
+    >>> import matplotlib.pyplot as plt
+    >>> from fuc import common, pymaf
+    >>> common.load_dataset('tcga-laml')
+    >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
+    >>> af = common.AnnFrame.from_file(annot_file, sample_col=0)
+    >>> s = af.df.days_to_last_followup
+    >>> s[:10]
+    Tumor_Sample_Barcode
+    TCGA-AB-2802     365.0
+    TCGA-AB-2803     792.0
+    TCGA-AB-2804    2557.0
+    TCGA-AB-2805     577.0
+    TCGA-AB-2806     945.0
+    TCGA-AB-2807     181.0
+    TCGA-AB-2808    2861.0
+    TCGA-AB-2809      62.0
+    TCGA-AB-2810      31.0
+    TCGA-AB-2811     243.0
+    Name: days_to_last_followup, dtype: float64
+    >>> s = common.convert_num2cat(s)
+    >>> s.unique()
+    array([ 572.2, 1144.4, 2861. , 2288.8, 1716.6,    nan])
+    >>> s[:10]
+    Tumor_Sample_Barcode
+    TCGA-AB-2802     572.2
+    TCGA-AB-2803    1144.4
+    TCGA-AB-2804    2861.0
+    TCGA-AB-2805    1144.4
+    TCGA-AB-2806    1144.4
+    TCGA-AB-2807     572.2
+    TCGA-AB-2808    2861.0
+    TCGA-AB-2809     572.2
+    TCGA-AB-2810     572.2
+    TCGA-AB-2811     572.2
+    Name: days_to_last_followup, dtype: float64
+    """
+    boundaries = list(np.linspace(s.min(), s.max(), n+1, endpoint=True))
+    intervals = list(zip(boundaries[:-1], boundaries[1:]))
+
+    def f(x):
+        if pd.isna(x):
+            return x
+        for i, interval in enumerate(intervals):
+            a, b = interval
+            if a <= x <= b:
+                return b
+
+    return s.apply(f)
 
 def legend_handles(labels, colors='tab10'):
     """
