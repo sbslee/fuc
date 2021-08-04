@@ -1733,7 +1733,7 @@ class MafFrame:
         """
         df = self.matrix_waterfall_matched(af, patient_col, group_col, groups)
         df = df.applymap(lambda x: 0 if x == 'None' else 1)
-        s = df.sum(axis=1) / len(df.columns)
+        s = df.sum(axis=1) / len(df.columns) * 100
         s.name = 'Count'
         df = s.to_frame().reset_index()
 
@@ -1741,10 +1741,12 @@ class MafFrame:
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
-        sns.barplot(x='Count', y='Gene', hue='Group', data=df, hue_order=groups, orient='h', ax=ax, **kwargs)
+        sns.barplot(
+            x='Count', y='Gene', hue='Group', data=df, hue_order=groups,
+            orient='h', ax=ax, **kwargs
+        )
 
-
-        ax.set_xlabel('Patients')
+        ax.set_xlabel('Patients (%)')
         ax.set_ylabel('')
 
         return ax
