@@ -16,6 +16,7 @@ Changelog
 * Add new method :meth:`common.convert_num2cat`.
 * Add new command :command:`fuc-undetm`.
 * Add new method :meth:`common.plot_annot_matched`.
+* Add new argument ``sheet`` to :command:`fuc-demux` command.
 
 0.19.0 (2021-07-31)
 -------------------
