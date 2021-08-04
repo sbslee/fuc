@@ -386,7 +386,7 @@ class AnnFrame:
 
         # Plot the heatmap.
         sns.heatmap(
-            df, cmap=colors, cbar=False, xticklabels=xticklabels
+            df, cmap=colors, cbar=False, xticklabels=xticklabels, ax=ax
         )
         ax.set_xlabel('')
         ax.set_ylabel(annot_col)
