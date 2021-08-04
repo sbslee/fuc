@@ -23,6 +23,7 @@ def create_parser(subparsers):
     )
     parser.add_argument(
         '--bam',
+        metavar='PATH',
         nargs='+',
         help='One or more input files.'
     )
