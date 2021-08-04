@@ -1702,7 +1702,7 @@ class MafFrame:
         return ax
 
     def plot_mutated_matched(
-        self, af, patient_col, group_col, groups, ax=None, figsize=None, **kwargs
+        self, af, patient_col, group_col, group_order, ax=None, figsize=None, **kwargs
     ):
         """
         Create a bar plot visualizing the mutation prevalence of top
@@ -1716,7 +1716,7 @@ class MafFrame:
             Column in the AnnFrame which contains patient information.
         group_col : str
             Column in the AnnFrame which contains group level information.
-        groups : list
+        group_order : list
             List of group levels.
         ax : matplotlib.axes.Axes, optional
             Pre-existing axes for the plot. Otherwise, crete a new one.
@@ -1731,7 +1731,7 @@ class MafFrame:
         matplotlib.axes.Axes
             The matplotlib axes containing the plot.
         """
-        df = self.matrix_waterfall_matched(af, patient_col, group_col, groups)
+        df = self.matrix_waterfall_matched(af, patient_col, group_col, group_order)
         df = df.applymap(lambda x: 0 if x == 'None' else 1)
         s = df.sum(axis=1) / len(df.columns) * 100
         s.name = 'Count'
@@ -1742,7 +1742,7 @@ class MafFrame:
             fig, ax = plt.subplots(figsize=figsize)
 
         sns.barplot(
-            x='Count', y='Gene', hue='Group', data=df, hue_order=groups,
+            x='Count', y='Gene', hue='Group', data=df, hue_order=group_order,
             orient='h', ax=ax, **kwargs
         )
 
@@ -2537,7 +2537,7 @@ class MafFrame:
         return ax
 
     def plot_tmb_matched(
-        self, af, patient_col, group_col, groups=None, patients=None,
+        self, af, patient_col, group_col, group_order=None, patients=None,
         legend=True, ax=None, figsize=None, **kwargs
     ):
         """
@@ -2552,7 +2552,7 @@ class MafFrame:
             Column in the AnnFrame which contains patient information.
         group_col : str
             Column in the AnnFrame which contains group level information.
-        groups : list, optional
+        group_order : list, optional
             List of group levels.
         patients : list, optional
             List of patient names.
@@ -2583,8 +2583,8 @@ class MafFrame:
 
         df = df.pivot(index=patient_col, columns=group_col, values='TMB')
 
-        if groups is not None:
-            df = df[groups]
+        if group_order is not None:
+            df = df[group_order]
 
         i = df.sum(axis=1).sort_values(ascending=False).index
         df = df.loc[i]
@@ -3171,7 +3171,7 @@ class MafFrame:
         return ax
 
     def plot_waterfall_matched(
-        self, af, patient_col, group_col, groups, count=10, ax=None,
+        self, af, patient_col, group_col, group_order, count=10, ax=None,
         figsize=None
     ):
         """
@@ -3185,7 +3185,7 @@ class MafFrame:
             Column in the AnnFrame which contains patient information.
         group_col : str
             Column in the AnnFrame which contains group level information.
-        groups : list
+        group_order : list
             List of group levels.
         count : int, default: 10
             Number of top mutated genes to include.
@@ -3200,7 +3200,7 @@ class MafFrame:
             The matplotlib axes containing the plot.
         """
         df = self.matrix_waterfall_matched(af, patient_col,
-            group_col, groups, count=count)
+            group_col, group_order, count=count)
         genes = df.index.get_level_values(0).unique().to_list()
 
         l = reversed(NONSYN_NAMES + ['Multi_Hit', 'None'])
@@ -3215,7 +3215,7 @@ class MafFrame:
 
         sns.heatmap(df, cmap=colors, xticklabels=True, cbar=False, ax=ax)
 
-        n = len(groups)
+        n = len(group_order)
         i = n / 2
         yticks = []
         for gene in genes:
@@ -3238,7 +3238,7 @@ class MafFrame:
         return ax
 
     def matrix_waterfall_matched(
-        self, af, patient_col, group_col, groups, count=10
+        self, af, patient_col, group_col, group_order, count=10
     ):
         """
         Compute a matrix of variant classifications with a shape of
@@ -3252,7 +3252,7 @@ class MafFrame:
             Column in the AnnFrame which contains patient information.
         group_col : str
             Column in the AnnFrame which contains group level information.
-        groups : list
+        group_order : list
             List of group levels.
         count : int, default: 10
             Number of top mutated genes to include.
@@ -3286,7 +3286,7 @@ class MafFrame:
 
         temps = []
 
-        for group in groups:
+        for group in group_order:
             temp = df[df[group_col] == group].set_index(patient_col)[genes]
             tuples = [(x, group) for x in genes]
             mi = pd.MultiIndex.from_tuples(tuples, names=['Gene', 'Group'])
@@ -3298,7 +3298,7 @@ class MafFrame:
         tuples = []
 
         for gene in genes:
-            for group in groups:
+            for group in group_order:
                 tuples.append((gene, group))
 
         df = df[tuples]
