@@ -24,6 +24,29 @@ import seaborn as sns
 
 FUC_PATH = pathlib.Path(__file__).parent.parent.parent.absolute()
 
+class Variant:
+    def __init__(self, chrom, pos, ref, alt):
+        self.chrom = chrom
+        self.pos = pos
+        self.ref = ref
+        self.alt = alt
+
+    def __members(self):
+        return (self.chrom, self.pos, self.ref, self.alt)
+
+    def __eq__(self, other):
+        if type(other) is type(self):
+            return self.__members() == other.__members()
+        else:
+            return False
+
+    def __hash__(self):
+        return hash(self.__members())
+
+    def __repr__(self):
+        s = ', '.join([str(x) for x in self.__members()])
+        return f'Variant({s})'
+
 class AnnFrame:
     """
     Class for storing sample annotation data.
