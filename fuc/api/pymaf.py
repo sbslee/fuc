@@ -1287,8 +1287,8 @@ class MafFrame:
 
 
     def plot_regplot(
-        self, af, col, a, b, genes=None, count=10, to_csv=None, ax=None,
-        figsize=None, **kwargs
+        self, af, col, a, b, a_size=None, b_size=None, genes=None, count=10,
+        to_csv=None, ax=None, figsize=None, **kwargs
     ):
         """
         Create a scatter plot with a linear regression model fit visualizing
@@ -1306,6 +1306,10 @@ class MafFrame:
             Column in the AnnFrame containing information about sample groups.
         a, b : str
             Sample group levels.
+        a_size, b_size : int, optional
+            Sample sizes of the group levels to use. By default, the method
+            will use each group's total number of samples in the MAF file as
+            denominator.
         genes : list, optional
             Genes to display. When absent, top mutated genes (``count``) will
             be used.
@@ -1346,17 +1350,23 @@ class MafFrame:
             >>> plt.tight_layout()
         """
         df1 = self.matrix_prevalence()
+        df2 = af.df[af.df.index.isin(df1.columns)]
+        i_a = df2[df2[col] == a].index
+        i_b = df2[df2[col] == b].index
 
         # Determine which genes to display.
         if genes is None:
             genes = self.matrix_genes(count=count).index.to_list()
 
-        df2 = af.df[af.df.index.isin(df1.columns)]
-        i_a = df2[df2[col] == a].index
-        i_b = df2[df2[col] == b].index
+        # Determine each group's sample size.
+        if a_size is None:
+            a_size = len(i_a)
+        if b_size is None:
+            b_size = len(i_b)
+
         f = lambda x: 0 if x == 0 else 1
-        s_a = df1.T.loc[i_a].applymap(f).sum().loc[genes] / len(i_a)
-        s_b = df1.T.loc[i_b].applymap(f).sum().loc[genes] / len(i_b)
+        s_a = df1.T.loc[i_a].applymap(f).sum().loc[genes] / a_size
+        s_b = df1.T.loc[i_b].applymap(f).sum().loc[genes] / b_size
         df3 = pd.concat([s_a, s_b], axis=1)
         df3.columns = [a, b]
 

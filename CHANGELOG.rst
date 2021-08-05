@@ -19,6 +19,7 @@ Changelog
 * Add new argument ``sheet`` to :command:`fuc-demux` command.
 * Add new class :class:`common.Variant`.
 * Add new method :meth:`pyvcf.rescue_filtered_variants`.
+* Add new arguments ``a_size`` and ``b_size`` to :meth:`pymaf.MafFrame.plot_regplot` method.
 
 0.19.0 (2021-07-31)
 -------------------
