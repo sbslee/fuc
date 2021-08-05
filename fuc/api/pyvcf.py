@@ -105,6 +105,110 @@ CUSTOM_GENOTYPE_KEYS = {
     'AF':  {'number': 1,   'type': float},  # Allele fraction of the event in the tumor
 }
 
+def rescue_filtered_variants(vfs, format='GT'):
+    """
+    Rescue filtered variants if they are PASS in at least one of the input
+    VCF files.
+
+    Parameters
+    ----------
+    vfs : list
+        List of VcfFrame objects.
+
+    Returns
+    -------
+    VcfFrame
+        VcfFrame object.
+
+    Examples
+    --------
+
+    >>> from fuc import pyvcf
+    >>> data1 = {
+    ...     'CHROM': ['chr1', 'chr1', 'chr1'],
+    ...     'POS': [100, 101, 102],
+    ...     'ID': ['.', '.', '.'],
+    ...     'REF': ['G', 'T', 'C'],
+    ...     'ALT': ['A', 'C', 'T'],
+    ...     'QUAL': ['.', '.', '.'],
+    ...     'FILTER': ['PASS', 'weak_evidence', 'PASS'],
+    ...     'INFO': ['.', '.', '.'],
+    ...     'FORMAT': ['GT', 'GT', 'GT'],
+    ...     'A': ['0/1', '0/1', '0/1']
+    ... }
+    >>> data2 = {
+    ...     'CHROM': ['chr1', 'chr1', 'chr1'],
+    ...     'POS': [100, 101, 102],
+    ...     'ID': ['.', '.', '.'],
+    ...     'REF': ['G', 'T', 'C'],
+    ...     'ALT': ['A', 'C', 'T'],
+    ...     'QUAL': ['.', '.', '.'],
+    ...     'FILTER': ['orientation', 'weak_evidence', 'PASS'],
+    ...     'INFO': ['.', '.', '.'],
+    ...     'FORMAT': ['GT', 'GT', 'GT'],
+    ...     'B': ['0/1', '0/1', '0/1']
+    ... }
+    >>> data3 = {
+    ...     'CHROM': ['chr1', 'chr1', 'chr1'],
+    ...     'POS': [102, 103, 104],
+    ...     'ID': ['.', '.', '.'],
+    ...     'REF': ['C', 'T', 'A'],
+    ...     'ALT': ['T', 'C', 'T'],
+    ...     'QUAL': ['.', '.', '.'],
+    ...     'FILTER': ['PASS', 'weak_evidence', 'PASS'],
+    ...     'INFO': ['.', '.', '.'],
+    ...     'FORMAT': ['GT', 'GT', 'GT'],
+    ...     'C': ['0/1', '0/1', '0/1']
+    ... }
+    >>> vf1 = pyvcf.VcfFrame.from_dict([], data1)
+    >>> vf2 = pyvcf.VcfFrame.from_dict([], data2)
+    >>> vf3 = pyvcf.VcfFrame.from_dict([], data3)
+    >>> vf1.df
+      CHROM  POS ID REF ALT QUAL         FILTER INFO FORMAT    A
+    0  chr1  100  .   G   A    .           PASS    .     GT  0/1
+    1  chr1  101  .   T   C    .  weak_evidence    .     GT  0/1
+    2  chr1  102  .   C   T    .           PASS    .     GT  0/1
+    >>> vf2.df
+      CHROM  POS ID REF ALT QUAL         FILTER INFO FORMAT    B
+    0  chr1  100  .   G   A    .    orientation    .     GT  0/1
+    1  chr1  101  .   T   C    .  weak_evidence    .     GT  0/1
+    2  chr1  102  .   C   T    .           PASS    .     GT  0/1
+    >>> vf3.df
+      CHROM  POS ID REF ALT QUAL         FILTER INFO FORMAT    C
+    0  chr1  102  .   C   T    .           PASS    .     GT  0/1
+    1  chr1  103  .   T   C    .  weak_evidence    .     GT  0/1
+    2  chr1  104  .   A   T    .           PASS    .     GT  0/1
+    >>> rescued_vf = pyvcf.rescue_filtered_variants([vf1, vf2, vf3])
+    >>> rescued_vf.df
+      CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    B    C
+    0  chr1  100  .   G   A    .      .    .     GT  0/1  0/1  ./.
+    1  chr1  102  .   C   T    .      .    .     GT  0/1  0/1  0/1
+    2  chr1  104  .   A   T    .      .    .     GT  ./.  ./.  0/1
+    """
+    # Check for duplicate samples.
+    samples = []
+    for vf in vfs:
+        samples += vf.samples
+    s = pd.Series(samples)
+    duplicates = s[s.duplicated()].values
+    if duplicates:
+        raise ValueError(f'Duplicate samples found: {duplicates}.')
+
+    dfs = []
+    for vf in vfs:
+        df = vf.df[vf.df.FILTER == 'PASS']
+        dfs.append(df[['CHROM', 'POS', 'REF', 'ALT']])
+    df = pd.concat(dfs).drop_duplicates()
+    s = df.apply(lambda r: common.Variant(r.CHROM, r.POS, r.REF, r.ALT), axis=1)
+    filtered_vfs = []
+    for vf in vfs:
+        i = vf.df.apply(lambda r: common.Variant(r.CHROM, r.POS, r.REF, r.ALT) in s.values, axis=1)
+        filtered_vf = vf.copy()
+        filtered_vf.df = vf.df[i]
+        filtered_vfs.append(filtered_vf)
+    merged_vf = merge(filtered_vfs, how='outer', format=format)
+    return merged_vf
+
 def gt_miss(g):
     """
     Return True if sample genotype is missing.

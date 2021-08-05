@@ -18,6 +18,7 @@ Changelog
 * Add new method :meth:`common.plot_annot_matched`.
 * Add new argument ``sheet`` to :command:`fuc-demux` command.
 * Add new class :class:`common.Variant`.
+* Add new method :meth:`pyvcf.rescue_filtered_variants`.
 
 0.19.0 (2021-07-31)
 -------------------
