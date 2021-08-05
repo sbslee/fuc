@@ -61,7 +61,7 @@ bam-depth
 .. code-block:: text
 
    $ fuc bam-depth -h
-   usage: fuc bam-depth [-h] [--bam BAM [BAM ...]] [--fn PATH] [--bed PATH]
+   usage: fuc bam-depth [-h] [--bam PATH [PATH ...]] [--fn PATH] [--bed PATH]
                         [--region TEXT]
    
    This command will compute read depth from the input SAM/BAM/CRAM files.
@@ -73,11 +73,12 @@ bam-depth
      $ fuc bam-depth --fn bam.list --region chr1:100-200 > out.tsv
    
    Optional arguments:
-     -h, --help           Show this help message and exit.
-     --bam BAM [BAM ...]  One or more input files.
-     --fn PATH            File containing one input filename per line.
-     --bed PATH           BED file.
-     --region TEXT        Only report depth in specified region ('chrom:start-end').
+     -h, --help            Show this help message and exit.
+     --bam PATH [PATH ...]
+                           One or more input files.
+     --fn PATH             File containing one input filename per line.
+     --bed PATH            BED file.
+     --region TEXT         Only report depth in specified region ('chrom:start-end').
 
 bam-head
 ========
@@ -302,11 +303,11 @@ fuc-demux
 .. code-block:: text
 
    $ fuc fuc-demux -h
-   usage: fuc fuc-demux [-h] reports_dir output_dir
+   usage: fuc fuc-demux [-h] [--sheet PATH] reports output
    
    This command will parse the Reports directory from the bcl2fastq or bcl2fastq2 prograrm.
    
-   In the output directory, the command will create four files:
+   After creating the output directory, the command will write the following files:
      - flowcell_summary.csv
      - lane_summary.csv
      - top_unknown_barcodes.csv
@@ -316,11 +317,12 @@ fuc-demux
      $ fuc fuc-demux reports_dir output_dir
    
    Positional arguments:
-     reports_dir  Reports directory.
-     output_dir   Output directory.
+     reports       Reports directory.
+     output        Output directory (will be created).
    
    Optional arguments:
-     -h, --help   Show this help message and exit.
+     -h, --help    Show this help message and exit.
+     --sheet PATH  SampleSheet.csv file. When provided, samples in the lane_summary.csv file will be sorted in the same order as in the SampleSheet.csv file.
 
 fuc-exist
 =========
@@ -502,9 +504,8 @@ tbl-merge
                         left right
    
    This command will merge two table files using one or more shared columns.
-   It essentially wraps the 'pandas.DataFrame.merge' method from the pandas
-   package. For details on the merging algorithms, please visit the method's
-   documentation page.
+   
+   The command essentially wraps the 'pandas.DataFrame.merge' method from the pandas package. For details on the merging algorithms, please visit the method's documentation page.
    
    Usage examples:
      $ fuc tbl-merge left.tsv right.tsv > merged.tsv
