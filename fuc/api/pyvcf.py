@@ -2083,8 +2083,8 @@ class VcfFrame:
 
         Parameters
         ----------
-        a, b : list
-            Sample names. The lists must have the same shape.
+        a, b : array-like
+            Lists of sample names. The lists must have the same shape.
         ax : matplotlib.axes.Axes, optional
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
@@ -2110,7 +2110,9 @@ class VcfFrame:
             >>> vf = pyvcf.VcfFrame.from_file(vcf_file)
             >>> af = common.AnnFrame.from_file(annot_file, sample_col='Sample')
             >>> normal = af.df[af.df.Tissue == 'Normal'].index
+            >>> normal.name = 'Normal'
             >>> tumor = af.df[af.df.Tissue == 'Tumor'].index
+            >>> tumor.name = 'Tumor'
             >>> vf.plot_regplot(normal, tumor)
             Results for B ~ A:
             R^2 = 0.01
@@ -2118,15 +2120,24 @@ class VcfFrame:
             >>> plt.tight_layout()
         """
         s = self.df.iloc[:, 9:].applymap(gt_hasvar).sum()
+        df = pd.concat([s[a].reset_index(), s[b].reset_index()], axis=1)
+        df.columns = ['A_Label', 'A_TMB', 'B_Label', 'B_TMB']
 
         # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
-        df = pd.concat([s[a].reset_index(), s[b].reset_index()], axis=1)
-        df.columns = ['A_Label', 'A_TMB', 'B_Label', 'B_TMB']
-
         sns.regplot(x='A_TMB', y='B_TMB', data=df, ax=ax, **kwargs)
+
+        try:
+            ax.set_xlabel(a.name)
+        except AttributeError:
+            ax.set_xlabel('A')
+
+        try:
+            ax.set_ylabel(b.name)
+        except AttributeError:
+            ax.set_ylabel('B')
 
         # Print summary statistics including R-squared and p-value.
         results = smf.ols(f'B_TMB ~ A_TMB', data=df).fit()
