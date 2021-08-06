@@ -1287,13 +1287,15 @@ class MafFrame:
 
 
     def plot_regplot(
-        self, af, col, a, b, a_size=None, b_size=None, genes=None, count=10,
-        to_csv=None, ax=None, figsize=None, **kwargs
+        self, af, group_col, a, b, a_size=None, b_size=None, genes=None,
+        count=10, to_csv=None, ax=None, figsize=None, **kwargs
     ):
         """
         Create a scatter plot with a linear regression model fit visualizing
         correlation between gene mutation frequencies in two sample groups
         A and B.
+
+        Each point in the plot represents a gene.
 
         The method will automatically calculate and print summary statistics
         including R-squared and p-value.
@@ -1302,14 +1304,13 @@ class MafFrame:
         ----------
         af : AnnFrame
             AnnFrame containing sample annotation data.
-        col : str
-            Column in the AnnFrame containing information about sample groups.
+        group_col : str
+            AnnFrame column containing sample group information.
         a, b : str
-            Sample group levels.
+            Sample group names.
         a_size, b_size : int, optional
-            Sample sizes of the group levels to use. By default, the method
-            will use each group's total number of samples in the MAF file as
-            denominator.
+            Sample group sizes to use as denominator. By default, these are
+            inferred from the MafFrame and AnnFrame objects.
         genes : list, optional
             Genes to display. When absent, top mutated genes (``count``) will
             be used.
@@ -1351,8 +1352,8 @@ class MafFrame:
         """
         df1 = self.matrix_prevalence()
         df2 = af.df[af.df.index.isin(df1.columns)]
-        i_a = df2[df2[col] == a].index
-        i_b = df2[df2[col] == b].index
+        i_a = df2[df2[group_col] == a].index
+        i_b = df2[df2[group_col] == b].index
 
         # Determine which genes to display.
         if genes is None:
