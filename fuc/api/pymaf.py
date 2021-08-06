@@ -2615,26 +2615,27 @@ class MafFrame:
         return ax
 
     def plot_vaf(
-        self, col, count=10, af=None, hue=None, hue_order=None,
+        self, vaf_col, count=10, af=None, group_col=None, group_order=None,
         flip=False, sort=True, ax=None, figsize=None, **kwargs
     ):
         """
-        Create a box plot showing the VAF distributions of top mutated genes.
+        Create a box plot showing the :ref:`VAF <glossary:Variant allele
+        frequency (VAF)>` distributions of top mutated genes.
 
-        A grouped box plot can be created with ``hue`` (requires an
+        A grouped box plot can be created with ``group_col`` (requires an
         AnnFrame).
 
         Parameters
         ----------
-        col : str
-            Column in the MafFrame containing VAF data.
+        vaf_col : str
+            MafFrame column containing VAF data.
         count : int, default: 10
             Number of top mutated genes to display.
         af : AnnFrame, optional
             AnnFrame containing sample annotation data.
-        hue : str, optional
-            Column in the AnnFrame containing information about sample groups.
-        hue_order : list, optional
+        group_col : str, optional
+            AnnFrame column containing sample group information.
+        group_order : list, optional
             Order to plot the group levels in.
         flip : bool, default: False
             If True, flip the x and y axes.
@@ -2678,21 +2679,21 @@ class MafFrame:
             >>> af = common.AnnFrame.from_file(annot_file, sample_col=0)
             >>> mf.plot_vaf('i_TumorVAF_WU',
             ...             af=af,
-            ...             hue='FAB_classification',
-            ...             hue_order=['M1', 'M2', 'M3'],
+            ...             group_col='FAB_classification',
+            ...             group_order=['M1', 'M2', 'M3'],
             ...             count=5)
             >>> plt.tight_layout()
         """
         genes = self.matrix_genes(count=count).index.to_list()
 
         if sort:
-            medians = self.df.groupby('Hugo_Symbol')[col].median()
+            medians = self.df.groupby('Hugo_Symbol')[vaf_col].median()
             genes = medians[genes].sort_values(
                 ascending=False).index.to_list()
 
         df = self.df[self.df.Hugo_Symbol.isin(genes)]
 
-        if hue is not None:
+        if group_col is not None:
             df = pd.merge(df, af.df, left_on='Tumor_Sample_Barcode',
                 right_index=True)
 
@@ -2701,15 +2702,15 @@ class MafFrame:
             fig, ax = plt.subplots(figsize=figsize)
 
         if flip:
-            x, y = col, 'Hugo_Symbol'
+            x, y = vaf_col, 'Hugo_Symbol'
             xlabel, ylabel = 'VAF', ''
         else:
-            x, y = 'Hugo_Symbol', col
+            x, y = 'Hugo_Symbol', vaf_col
             xlabel, ylabel = '', 'VAF'
 
         sns.boxplot(
-            x=x, y=y, data=df, ax=ax, order=genes, hue=hue,
-            hue_order=hue_order, **kwargs
+            x=x, y=y, data=df, ax=ax, order=genes, hue=group_col,
+            hue_order=group_order, **kwargs
         )
 
         ax.set_xlabel(xlabel)
