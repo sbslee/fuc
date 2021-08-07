@@ -31,3 +31,12 @@ Tumor mutational burden (TMB)
 =============================
 
 Number of genetic alternations detected within an individual.
+
+Variant allele frequency (VAF)
+==============================
+
+VAF is used to infer whether a variant comes from somatic cells or inherited from parents when a matched normal sample is not provided. A variant is potentially a germline mutation if the VAF is approximately 50% or 100%.
+
+References:
+
+- `Variant Interpretation for Cancer (VIC): a computational tool for assessing clinical impacts of somatic variants <https://genomemedicine.biomedcentral.com/articles/10.1186/s13073-019-0664-4>`__

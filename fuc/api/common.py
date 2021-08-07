@@ -7,18 +7,441 @@ bioinformatics.
 import pathlib
 import re
 import os
-from difflib import SequenceMatcher
-from urllib.request import urlretrieve
-from pathlib import Path
-import pysam
 import warnings
 import inspect
 from argparse import RawTextHelpFormatter, SUPPRESS
-from matplotlib import pyplot as plt
-from matplotlib.collections import BrokenBarHCollection
+from pathlib import Path
+from difflib import SequenceMatcher
+from urllib.request import urlretrieve
+
+import pysam
 import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.collections import BrokenBarHCollection
+import matplotlib.patches as mpatches
+import seaborn as sns
 
 FUC_PATH = pathlib.Path(__file__).parent.parent.parent.absolute()
+
+class Variant:
+    def __init__(self, chrom, pos, ref, alt):
+        self.chrom = chrom
+        self.pos = pos
+        self.ref = ref
+        self.alt = alt
+
+    def __members(self):
+        return (self.chrom, self.pos, self.ref, self.alt)
+
+    def __eq__(self, other):
+        if type(other) is type(self):
+            return self.__members() == other.__members()
+        else:
+            return False
+
+    def __hash__(self):
+        return hash(self.__members())
+
+    def __repr__(self):
+        s = ', '.join([str(x) for x in self.__members()])
+        return f'Variant({s})'
+
+class AnnFrame:
+    """
+    Class for storing sample annotation data.
+
+    This class stores sample annotation data as :class:`pandas.DataFrame`
+    with sample names as index.
+
+    Note that an AnnFrame can have a different set of samples than its
+    accompanying :class:`pymaf.MafFrame`, :class:`pyvcf.VcfFrame`, etc.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        DataFrame containing sample annotation data. The index must be
+        unique sample names.
+
+    See Also
+    --------
+    AnnFrame.from_dict
+        Construct AnnFrame from dict of array-like or dicts.
+    AnnFrame.from_file
+        Construct AnnFrame from a delimited text file.
+
+    Examples
+    --------
+
+    >>> import pandas as pd
+    >>> from fuc import common
+    >>> data = {
+    ...     'SampleID': ['A', 'B', 'C', 'D'],
+    ...     'PatientID': ['P1', 'P1', 'P2', 'P2'],
+    ...     'Tissue': ['Normal', 'Tissue', 'Normal', 'Tumor'],
+    ...     'Age': [30, 30, 57, 57]
+    ... }
+    >>> df = pd.DataFrame(data)
+    >>> df = df.set_index('SampleID')
+    >>> af = common.AnnFrame(df)
+    >>> af.df
+             PatientID  Tissue  Age
+    SampleID
+    A               P1  Normal   30
+    B               P1  Tissue   30
+    C               P2  Normal   57
+    D               P2   Tumor   57
+    """
+
+    def _check_df(self, df):
+        if type(df.index) == pd.RangeIndex:
+            raise ValueError("Index cannot be 'pandas.RangeIndex'.")
+        if df.isin([np.inf, -np.inf]).any().any():
+            raise ValueError('Found positive or negative infinity.')
+        if df.index.has_duplicates:
+            raise ValueError('Index has duplicates.')
+        return df
+
+    def __init__(self, df):
+        self._df = self._check_df(df)
+
+    @property
+    def df(self):
+        """pandas.DataFrame : DataFrame containing sample annotation data."""
+        return self._df
+
+    @df.setter
+    def df(self, value):
+        self._df = self._check_df(value)
+
+    @property
+    def samples(self):
+        """list : List of the sample names."""
+        return list(self.df.index.to_list())
+
+    @property
+    def shape(self):
+        """tuple : Dimensionality of AnnFrame (samples, annotations)."""
+        return self.df.shape
+
+    @classmethod
+    def from_dict(cls, data, sample_col):
+        """
+        Construct AnnFrame from dict of array-like or dicts.
+
+        The dictionary must contain a column that represents sample names.
+
+        Parameters
+        ----------
+        data : dict
+            Of the form {field : array-like} or {field : dict}.
+        sample_col : str or int
+            Column containing unique sample names, either given as string
+            name or column index.
+
+        Returns
+        -------
+        AnnFrame
+            AnnFrame object.
+
+        See Also
+        --------
+        AnnFrame
+            AnnFrame object creation using constructor.
+        AnnFrame.from_file
+            Construct AnnFrame from a delimited text file.
+
+        Examples
+        --------
+
+        >>> from fuc import common
+        >>> data = {
+        ...     'SampleID': ['A', 'B', 'C', 'D'],
+        ...     'PatientID': ['P1', 'P1', 'P2', 'P2'],
+        ...     'Tissue': ['Normal', 'Tissue', 'Normal', 'Tumor'],
+        ...     'Age': [30, 30, 57, 57]
+        ... }
+        >>> af = common.AnnFrame.from_dict(data, sample_col='SampleID') # or sample_col=0
+        >>> af.df
+                 PatientID  Tissue  Age
+        SampleID
+        A               P1  Normal   30
+        B               P1  Tissue   30
+        C               P2  Normal   57
+        D               P2   Tumor   57
+        """
+        df = pd.DataFrame(data)
+        if isinstance(sample_col, int):
+            sample_col = list(data)[sample_col]
+        df = df.set_index(sample_col)
+        return cls(df)
+
+    @classmethod
+    def from_file(cls, fn, sample_col, sep='\t'):
+        """
+        Construct AnnFrame from a delimited text file.
+
+        The file must contain a column that represents sample names.
+
+        Parameters
+        ----------
+        fn : str
+            Text file (zipped or unzipped).
+        sample_col : str or int
+            Column containing unique sample names, either given as string
+            name or column index.
+        sep : str, default: '\\\\t'
+            Delimiter to use.
+
+        Returns
+        -------
+        AnnFrame
+            AnnFrame object.
+
+        See Also
+        --------
+        AnnFrame
+            AnnFrame object creation using constructor.
+        AnnFrame.from_dict
+            Construct AnnFrame from dict of array-like or dicts.
+
+        Examples
+        --------
+
+        >>> from fuc import common
+        >>> af = common.AnnFrame.from_file('sample-annot.tsv', sample_col='SampleID')
+        >>> af = common.AnnFrame.from_file('sample-annot.csv', sample_col=0, sep=',')
+        """
+        df = pd.read_table(fn, index_col=sample_col, sep=sep)
+        return cls(df)
+
+    def plot_annot(
+        self, group_col, group_order=None, samples=None, colors='tab10',
+        sequential=False, xticklabels=True, ax=None, figsize=None
+    ):
+        """
+        Create a categorical heatmap for the selected column using unmatched
+        samples.
+
+        See this :ref:`tutorial <tutorials:Create customized oncoplots>` to
+        learn how to create customized oncoplots.
+
+        Parameters
+        ----------
+        group_col : str
+            AnnFrame column containing sample group information.
+        group_order : list, optional
+            List of sample group names.
+        samples : list, optional
+            Display only specified samples (in that order too).
+        colors : str or list, default: 'tab10'
+            Colormap name or list of colors.
+        sequential : bool, default: False
+            Whether the column is sequential data.
+        xticklabels : bool, default: True
+            If True, plot the sample names.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+        list
+            Legend handles.
+
+        Examples
+        --------
+        Below is a simple example:
+
+        .. plot::
+            :context: close-figs
+
+            >>> import matplotlib.pyplot as plt
+            >>> from fuc import common, pymaf
+            >>> common.load_dataset('tcga-laml')
+            >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
+            >>> af = common.AnnFrame.from_file(annot_file, sample_col=0)
+            >>> ax, handles = af.plot_annot('FAB_classification', samples=af.samples[:10])
+            >>> legend = ax.legend(handles=handles)
+            >>> ax.add_artist(legend)
+            >>> plt.tight_layout()
+
+        We can display only selected groups:
+
+        .. plot::
+            :context: close-figs
+
+            >>> ax, handles = af.plot_annot('FAB_classification', group_order=['M7', 'M6'])
+            >>> legend = ax.legend(handles=handles)
+            >>> ax.add_artist(legend)
+            >>> plt.tight_layout()
+
+        We can also display sequenital data in the following way:
+
+        .. plot::
+            :context: close-figs
+
+            >>> ax, handles = af.plot_annot('FAB_classification',
+            ...                             samples=af.samples[:10],
+            ...                             colors='viridis',
+            ...                             sequential=True)
+            >>> legend = ax.legend(handles=handles)
+            >>> ax.add_artist(legend)
+            >>> plt.tight_layout()
+        """
+        # Get the selected column.
+        s = self.df[group_col]
+
+        # Subset the samples, if necessary.
+        if samples is not None:
+            s = s.reindex(samples)
+
+        # Establish mapping from groups to numbers.
+        if group_order is None:
+            group_order = sorted([x for x in s.unique() if x == x])
+        else:
+            s = s[s.isin(group_order)]
+        d = {k: v for v, k in enumerate(group_order)}
+        df = s.to_frame().applymap(lambda x: x if pd.isna(x) else d[x])
+
+        # Determine the colors to use.
+        if isinstance(colors, str):
+            if sequential:
+                c = plt.get_cmap(colors).colors
+                l = list(np.linspace(0, len(c)-1, len(group_order)))
+                colors = [c[round(i)] for i in l]
+            else:
+                colors = list(plt.get_cmap(colors).colors[:len(group_order)])
+
+        # Determine which matplotlib axes to plot on.
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
+        # Plot the heatmap.
+        sns.heatmap(
+            df.T, ax=ax, cmap=colors, xticklabels=xticklabels, cbar=False,
+            linewidths=0.5
+        )
+        ax.set_xlabel('')
+        ax.set_ylabel(group_col)
+        ax.set_yticks([])
+
+        # Get the legend handles.
+        handles = legend_handles(group_order, colors=colors)
+
+        return ax, handles
+
+    def plot_annot_matched(
+        self, patient_col, group_col, annot_col, patient_order=None,
+        group_order=None, annot_order=None, colors='tab10', sequential=False,
+        xticklabels=True, ax=None, figsize=None
+    ):
+        """
+        Create a categorical heatmap for the selected column using matched
+        samples.
+
+        See this :ref:`tutorial <tutorials:Create customized oncoplots>` to
+        learn how to create customized oncoplots.
+
+        Parameters
+        ----------
+        patient_col : str
+            AnnFrame column containing patient information.
+        group_col : str
+            AnnFrame column containing sample group information.
+        annot_col : str
+            Column to plot.
+        patient_order : list, optional
+            Plot only specified patients (in that order too).
+        group_order : list, optional
+            List of sample group names.
+        annot_order : list, optional
+            Plot only specified annotations (in that order too).
+        colors : str or list, default: 'tab10'
+            Colormap name or list of colors.
+        sequential : bool, default: False
+            Whether the column is sequential data.
+        xticklabels : bool, default: True
+            If True, plot the sample names.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+        list
+            Legend handles.
+        """
+
+        if annot_order is None:
+            annot_order = self.df[annot_col].unique()
+
+        df = self.df.pivot(columns=group_col, index=patient_col,
+            values=annot_col).T
+
+        if patient_order is not None:
+            df = df[patient_order]
+
+        d = {k: v for v, k in enumerate(annot_order)}
+        df = df.applymap(lambda x: x if pd.isna(x) else d[x])
+
+        if group_order is not None:
+            df = df.loc[group_order]
+
+        # Determine the colors to use.
+        if isinstance(colors, str):
+            if sequential:
+                c = plt.get_cmap(colors).colors
+                l = list(np.linspace(0, len(c)-1, len(group_order)))
+                colors = [c[round(i)] for i in l]
+            else:
+                colors = list(plt.get_cmap(colors).colors[:len(group_order)])
+
+        # Determine which matplotlib axes to plot on.
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
+        # Plot the heatmap.
+        sns.heatmap(
+            df, cmap=colors, cbar=False, xticklabels=xticklabels, ax=ax
+        )
+        ax.set_xlabel('')
+        ax.set_ylabel(annot_col)
+        ax.set_yticks([])
+
+        # Add vertical lines.
+        for i, sample in enumerate(df.columns, start=1):
+            ax.axvline(i, color='white')
+
+        # Get the legend handles.
+        handles = legend_handles(annot_order, colors=colors)
+
+        return ax, handles
+
+    def sorted_samples(self, by, mf=None, keep_empty=False, nonsyn=False):
+        """
+        Return a sorted list of sample names.
+
+        Parameters
+        ----------
+        df : str or list
+            Column or list of columns to sort by.
+        """
+        df = self.df.copy()
+
+        if nonsyn:
+            samples = mf.matrix_waterfall(keep_empty=keep_empty).columns
+            df = df.loc[samples]
+
+        df = df.sort_values(by=by)
+
+        return df.index.to_list()
 
 def _script_name():
     """Return the current script's filename."""
@@ -391,9 +814,9 @@ def plot_cytobands(cytoband, bed, ax=None, figsize=None):
 
     return ax
 
-def file2list(fn):
+def convert_file2list(fn):
     """
-    Return a list of filenames from the input file.
+    Convert a text file to a list of filenames.
 
     Parameters
     ----------
@@ -409,7 +832,7 @@ def file2list(fn):
     --------
 
     >>> from fuc import common
-    >>> common.file2list('bam.list')
+    >>> common.convert_file2list('bam.list')
     ['1.bam', '2.bam', '3.bam']
     """
     l = []
@@ -417,3 +840,117 @@ def file2list(fn):
         for line in f:
             l.append(line.strip())
     return l
+
+def convert_num2cat(s, n=5, decimals=0):
+    """
+    Convert numeric values to categorical variables.
+
+    Parameters
+    ----------
+    pandas.Series
+        Series object containing numeric values.
+    n : int, default: 5
+        Number of variables to output.
+
+    Returns
+    -------
+    pandas.Series
+        Series object containing categorical variables.
+
+    Examples
+    --------
+
+    >>> import matplotlib.pyplot as plt
+    >>> from fuc import common, pymaf
+    >>> common.load_dataset('tcga-laml')
+    >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
+    >>> af = common.AnnFrame.from_file(annot_file, sample_col=0)
+    >>> s = af.df.days_to_last_followup
+    >>> s[:10]
+    Tumor_Sample_Barcode
+    TCGA-AB-2802     365.0
+    TCGA-AB-2803     792.0
+    TCGA-AB-2804    2557.0
+    TCGA-AB-2805     577.0
+    TCGA-AB-2806     945.0
+    TCGA-AB-2807     181.0
+    TCGA-AB-2808    2861.0
+    TCGA-AB-2809      62.0
+    TCGA-AB-2810      31.0
+    TCGA-AB-2811     243.0
+    Name: days_to_last_followup, dtype: float64
+    >>> s = common.convert_num2cat(s)
+    >>> s.unique()
+    array([ 572.2, 1144.4, 2861. , 2288.8, 1716.6,    nan])
+    >>> s[:10]
+    Tumor_Sample_Barcode
+    TCGA-AB-2802     572.2
+    TCGA-AB-2803    1144.4
+    TCGA-AB-2804    2861.0
+    TCGA-AB-2805    1144.4
+    TCGA-AB-2806    1144.4
+    TCGA-AB-2807     572.2
+    TCGA-AB-2808    2861.0
+    TCGA-AB-2809     572.2
+    TCGA-AB-2810     572.2
+    TCGA-AB-2811     572.2
+    Name: days_to_last_followup, dtype: float64
+    """
+    boundaries = list(np.linspace(s.min(), s.max(), n+1, endpoint=True))
+    intervals = list(zip(boundaries[:-1], boundaries[1:]))
+
+    def f(x):
+        if pd.isna(x):
+            return x
+        for i, interval in enumerate(intervals):
+            a, b = interval
+            if a <= x <= b:
+                return b
+
+    return s.apply(f).round(decimals=decimals)
+
+def legend_handles(labels, colors='tab10'):
+    """
+    Create custom legend handles.
+
+    Parameters
+    ----------
+    labels : list
+        List of labels.
+    colors : str or list, default: 'tab10'
+        Colormap name or list of colors.
+
+    Returns
+    -------
+    list
+        List of legend handles.
+
+    Examples
+    --------
+
+    .. plot::
+
+        >>> import matplotlib.pyplot as plt
+        >>> from fuc import common
+        >>> fig, ax = plt.subplots()
+        >>> handles1 = common.legend_handles(['A', 'B'], colors='tab10')
+        >>> handles2 = common.legend_handles(['C', 'D'], colors=['yellow', 'green'])
+        >>> legend1 = ax.legend(handles=handles1, loc='center left')
+        >>> legend2 = ax.legend(handles=handles2)
+        >>> ax.add_artist(legend1)
+        >>> ax.add_artist(legend2)
+        >>> plt.tight_layout()
+    """
+    if isinstance(colors, str):
+        colors = plt.get_cmap(colors).colors
+    elif isinstance(colors, list):
+        pass
+    else:
+        raise TypeError(f'Incorrect type of colors: {type(colors)}')
+
+    handles = []
+
+    for i, label in enumerate(labels):
+        handles.append(mpatches.Patch(color=colors[i], label=label))
+
+    return handles

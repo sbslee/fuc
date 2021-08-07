@@ -41,7 +41,7 @@ It is also recommended to include additional custom columns such as variant
 allele frequecy (VAF) and transcript name.
 
 If sample annotation data are available for a given MAF file, use
-the :class:`AnnFrame` class to import the data.
+the :class:`fuc.api.common.AnnFrame` class to import the data.
 
 There are nine nonsynonymous variant classifcations that pymaf primarily
 uses: Missense_Mutation, Frame_Shift_Del, Frame_Shift_Ins, In_Frame_Del,
@@ -196,458 +196,6 @@ SNV_CLASSES = {
 
 SNV_CLASS_ORDER = ['C>A', 'C>G', 'C>T', 'T>A', 'T>C', 'T>G']
 
-def legend_handles(name='regular'):
-    """Return legend handles for one of the pre-defined legends.
-
-    Parameters
-    ----------
-    name : {'regaulr', 'waterfall'}, default: 'regular'
-        Type of legend to be drawn. See the examples below for details.
-
-    Returns
-    -------
-    list
-        Legend handles.
-
-    Examples
-    --------
-    There are currently two types of legends:
-
-    .. plot::
-        :context: close-figs
-
-        >>> import matplotlib.pyplot as plt
-        >>> from fuc import pymaf
-        >>> fig, ax = plt.subplots()
-        >>> handles1 = pymaf.legend_handles(name='regular')
-        >>> handles2 = pymaf.legend_handles(name='waterfall')
-        >>> leg1 = ax.legend(handles=handles1, title="name='regular'", loc='center left')
-        >>> leg2 = ax.legend(handles=handles2, title="name='waterfall'", loc='center right')
-        >>> ax.add_artist(leg1)
-        >>> ax.add_artist(leg2)
-        >>> plt.tight_layout()
-
-    A common way of adding a legend is as follows:
-
-    .. plot::
-        :context: close-figs
-
-        >>> from fuc import common
-        >>> common.load_dataset('tcga-laml')
-        >>> mf = pymaf.MafFrame.from_file('~/fuc-data/tcga-laml/tcga_laml.maf.gz')
-        >>> fig, [ax1, ax2] = plt.subplots(2, 1, figsize=(10, 6), gridspec_kw={'height_ratios': [10, 1]})
-        >>> mf.plot_waterfall(ax=ax1, linewidths=0.5)
-        >>> handles = pymaf.legend_handles(name='waterfall')
-        >>> ax2.legend(handles=handles, ncol=4, loc='upper center', title='Variant_Classification')
-        >>> ax2.axis('off')
-        >>> plt.tight_layout()
-
-    Alternatively, you can insert a legend directly to an existing plot:
-
-    .. plot::
-        :context: close-figs
-
-        >>> ax = mf.plot_genes()
-        >>> handles = pymaf.legend_handles(name='regular')
-        >>> ax.legend(handles=handles, title='Variant_Classification')
-        >>> plt.tight_layout()
-    """
-    handles = []
-    labels = copy.deepcopy(NONSYN_NAMES)
-    colors = copy.deepcopy(NONSYN_COLORS)
-    if name == 'regular':
-        pass
-    elif name == 'waterfall':
-        labels += ['Multi_Hit']
-        colors += ['k']
-    else:
-        raise ValueError(f'Found incorrect name: {name}')
-    for i, label in enumerate(labels):
-        handles.append(mpatches.Patch(color=colors[i], label=label))
-    return handles
-
-class AnnFrame:
-    """
-    Class for storing sample annotation data.
-
-    This class stores sample annotation data as :class:`pandas.DataFrame`
-    with sample names as index.
-
-    Note that an AnnFrame can have a different set of samples than its
-    accompanying MafFrame.
-
-    Parameters
-    ----------
-    df : pandas.DataFrame
-        DataFrame containing sample annotation data. The index must be
-        sample names.
-
-    See Also
-    --------
-    AnnFrame.from_dict
-        Construct AnnFrame from dict of array-like or dicts.
-    AnnFrame.from_file
-        Construct AnnFrame from a delimited text file.
-
-    Examples
-    --------
-
-    >>> import pandas as pd
-    >>> from fuc import pymaf
-    >>> data = {
-    ...     'Tumor_Sample_Barcode': ['Steven_N', 'Steven_T', 'Sara_N', 'Sara_T'],
-    ...     'Subject': ['Steven', 'Steven', 'Sara', 'Sara'],
-    ...     'Type': ['Normal', 'Tumor', 'Normal', 'Tumor'],
-    ...     'Age': [30, 30, 57, 57]
-    ... }
-    >>> df = pd.DataFrame(data)
-    >>> df = df.set_index('Tumor_Sample_Barcode')
-    >>> af = pymaf.AnnFrame(df)
-    >>> af.df
-                         Subject    Type  Age
-    Tumor_Sample_Barcode
-    Steven_N              Steven  Normal   30
-    Steven_T              Steven   Tumor   30
-    Sara_N                  Sara  Normal   57
-    Sara_T                  Sara   Tumor   57
-    """
-
-    def _check_df(self, df):
-        if type(df.index) == pd.RangeIndex:
-            m = "Index must be sample names, not 'pandas.RangeIndex'."
-            raise ValueError(m)
-        return df
-
-    def __init__(self, df):
-        self._df = self._check_df(df)
-
-    @property
-    def df(self):
-        """pandas.DataFrame : DataFrame containing sample annotation data."""
-        return self._df
-
-    @df.setter
-    def df(self, value):
-        self._df = self._check_df(value)
-
-    @property
-    def samples(self):
-        """list : List of the sample names."""
-        return list(self.df.index.to_list())
-
-    @property
-    def shape(self):
-        """tuple : Dimensionality of AnnFrame (samples, annotations)."""
-        return self.df.shape
-
-    def filter_mf(self, mf):
-        """
-        Filter the AnnFrame for the samples in the MafFrame.
-
-        Parameters
-        ----------
-        mf : MafFrame
-            MafFrame containing target samples.
-
-        Returns
-        -------
-        AnnFrame
-            Filtered AnnFrame object.
-        """
-        df = self.df.loc[mf.samples]
-        return self.__class__(df)
-
-    @classmethod
-    def from_dict(cls, data, sample_col='Tumor_Sample_Barcode'):
-        """Construct AnnFrame from dict of array-like or dicts.
-
-        The dictionary must have at least one column that represents sample
-        names which are used as index for pandas.DataFrame.
-
-        Parameters
-        ----------
-        data : dict
-            Of the form {field : array-like} or {field : dict}.
-        sample_col : str, default: 'Tumor_Sample_Barcode'
-            Column containing sample names.
-
-        Returns
-        -------
-        AnnFrame
-            AnnFrame object.
-
-        See Also
-        --------
-        AnnFrame
-            AnnFrame object creation using constructor.
-        AnnFrame.from_file
-            Construct AnnFrame from a delimited text file.
-
-        Examples
-        --------
-
-        >>> from fuc import pymaf
-        >>> data = {
-        ...     'Tumor_Sample_Barcode': ['Steven_Normal', 'Steven_Tumor', 'Sara_Normal', 'Sara_Tumor'],
-        ...     'Subject': ['Steven', 'Steven', 'Sara', 'Sara'],
-        ...     'Type': ['Normal', 'Tumor', 'Normal', 'Tumor'],
-        ...     'Age': [30, 30, 57, 57]
-        ... }
-        >>> af = pymaf.AnnFrame.from_dict(data)
-        >>> af.df
-                             Subject    Type  Age
-        Tumor_Sample_Barcode
-        Steven_Normal         Steven  Normal   30
-        Steven_Tumor          Steven   Tumor   30
-        Sara_Normal             Sara  Normal   57
-        Sara_Tumor              Sara   Tumor   57
-        """
-        df = pd.DataFrame(data)
-        df = df.set_index(sample_col)
-        return cls(df)
-
-    @classmethod
-    def from_file(cls, fn, sample_col='Tumor_Sample_Barcode', sep='\t'):
-        """
-        Construct AnnFrame from a delimited text file.
-
-        The text file must have at least one column that represents
-        sample names which are used as index for pandas.DataFrame.
-
-        Parameters
-        ----------
-        fn : str
-            Text file path (zipped or unzipped).
-        sample_col : str, default: 'Tumor_Sample_Barcode'
-            Column containing sample names.
-        sep : str, default: '\\\\t'
-            Delimiter to use.
-
-        Returns
-        -------
-        AnnFrame
-            AnnFrame.
-
-        See Also
-        --------
-        AnnFrame
-            AnnFrame object creation using constructor.
-        AnnFrame.from_dict
-            Construct AnnFrame from dict of array-like or dicts.
-
-        Examples
-        --------
-
-        >>> from fuc import pymaf
-        >>> af1 = pymaf.AnnFrame.from_file('sample-annot-1.tsv')
-        >>> af2 = pymaf.AnnFrame.from_file('sample-annot-2.csv', sample_col='SampleID', sep=',')
-        """
-        df = pd.read_table(fn, sep=sep)
-        df = df.set_index(sample_col)
-        return cls(df)
-
-    def legend_handles(
-        self, col, samples=None, numeric=False, segments=5, decimals=0,
-        cmap='Pastel1'
-    ):
-        """Return legend handles for the given column.
-
-        In the case of a numeric column, use ``numeric=True`` which will
-        divide the values into equal-sized intervals, with the number of
-        intervals determined by the `segments` option.
-
-        Parameters
-        ----------
-        col : str
-            Column name.
-        samples : list, optional
-            If provided, these samples will be used to create legend handles.
-        numeric : bool, default: False
-            If True, the column will be treated as numeric.
-        segments : int, default: 5
-            If ``numeric`` is True, the numbers will be divided
-            into this number of equal-sized segments.
-        decimals : int, default: 0
-            If ``numeric`` is True, the numbers will be rounded up to this
-            number of decimals.
-        cmap : str, default: 'Pastel1'
-            Color map.
-
-        Returns
-        -------
-        list
-            Legend handles.
-
-        See Also
-        --------
-        AnnFrame.plot_annot
-            Create a 1D categorical heatmap for the given column.
-
-        Examples
-        --------
-
-        .. plot::
-
-            >>> import matplotlib.pyplot as plt
-            >>> from fuc import common, pymaf
-            >>> common.load_dataset('tcga-laml')
-            >>> f = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
-            >>> af = pymaf.AnnFrame.from_file(f)
-            >>> fig, ax = plt.subplots()
-            >>> handles1 = af.legend_handles('FAB_classification',
-            ...                              cmap='Dark2')
-            >>> handles2 = af.legend_handles('days_to_last_followup',
-            ...                              numeric=True,
-            ...                              cmap='viridis')
-            >>> handles3 = af.legend_handles('Overall_Survival_Status')
-            >>> leg1 = ax.legend(handles=handles1,
-            ...                  title='FAB_classification',
-            ...                  loc='center left')
-            >>> leg2 = ax.legend(handles=handles2,
-            ...                  title='days_to_last_followup',
-            ...                  loc='center')
-            >>> leg3 = ax.legend(handles=handles3,
-            ...                  title='Overall_Survival_Status',
-            ...                  loc='center right')
-            >>> ax.add_artist(leg1)
-            >>> ax.add_artist(leg2)
-            >>> ax.add_artist(leg3)
-            >>> plt.tight_layout()
-        """
-        s, l = self._get_col(col, numeric=numeric, segments=segments,
-            samples=samples)
-        colors = plt.cm.get_cmap(cmap)(np.linspace(0, 1, len(l)))
-        handles = []
-        for i, label in enumerate(l):
-            handles.append(mpatches.Patch(color=colors[i], label=label))
-        return handles
-
-    def _get_col(
-        self, col, numeric=False, segments=5, samples=None, decimals=0
-    ):
-        s = self.df[col]
-        s = s.replace([np.inf, -np.inf], np.nan)
-        if numeric:
-            boundaries = list(np.linspace(s.min(), s.max(),
-                segments+1, endpoint=True))
-            intervals = list(zip(boundaries[:-1], boundaries[1:]))
-            def f(x):
-                if pd.isna(x):
-                    return x
-                for i, interval in enumerate(intervals):
-                    a, b = interval
-                    if a <= x <= b:
-                        return f'G{i} ({b:.{decimals}f})'
-            s = s.apply(f)
-        if samples is not None:
-            s = s[samples]
-        l = sorted([x for x in s.unique() if x == x])
-        return s, l
-
-    def plot_annot(
-        self, col, samples=None, numeric=False, segments=5, decimals=0,
-        cmap='Pastel1', ax=None, figsize=None, **kwargs
-    ):
-        """
-        Create a 1D categorical heatmap of the column.
-
-        In the case of a numeric column, set ``numeric`` as True which will
-        divide the values into equal-sized intervals, with the number of
-        intervals determined by ``segments``.
-
-        See the :ref:`tutorials:Create customized oncoplots` tutorial to
-        learn how to create customized oncoplots.
-
-        Parameters
-        ----------
-        col : str
-            Column name.
-        samples : list, optional
-            If provided, these samples will be used to create legend handles.
-        numeric : bool, default: False
-            If True, the column will be treated as numeric.
-        segments : int, default: 5
-            If ``numeric`` is True, the numbers will be divided
-            into this number of equal-sized segments.
-        decimals : int, default: 0
-            If ``numeric`` is True, the numbers will be rounded up to this
-            number of decimals.
-        cmap : str, default: 'Pastel1'
-            Color map.
-        ax : matplotlib.axes.Axes, optional
-            Pre-existing axes for the plot. Otherwise, crete a new one.
-        figsize : tuple, optional
-            Width, height in inches. Format: (float, float).
-
-        Returns
-        -------
-        list
-            Legend handles.
-
-        See Also
-        --------
-        AnnFrame.legend_handles
-            Return legend handles for the given column.
-
-        Examples
-        --------
-
-        .. plot::
-
-            >>> import matplotlib.pyplot as plt
-            >>> from fuc import common, pymaf
-            >>> common.load_dataset('tcga-laml')
-            >>> f = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
-            >>> af = pymaf.AnnFrame.from_file(f)
-            >>> fig, [ax1, ax2, ax3] = plt.subplots(3, 1, figsize=(10, 5))
-            >>> af.plot_annot('FAB_classification', ax=ax1, linewidths=1, cmap='Dark2')
-            >>> af.plot_annot('days_to_last_followup', ax=ax2, linewidths=1, cmap='viridis')
-            >>> af.plot_annot('Overall_Survival_Status', ax=ax3, linewidths=1)
-            >>> ax1.set_xlabel('')
-            >>> ax2.set_xlabel('')
-            >>> ax1.set_ylabel('')
-            >>> ax2.set_ylabel('')
-            >>> ax3.set_ylabel('')
-            >>> plt.tight_layout()
-            >>> plt.subplots_adjust(wspace=0.01, hspace=0.01)
-        """
-        s, l = self._get_col(col, numeric=numeric, segments=segments,
-            samples=samples)
-        d = {k: v for v, k in enumerate(l)}
-        df = s.to_frame().applymap(lambda x: x if pd.isna(x) else d[x])
-
-        # Determine which matplotlib axes to plot on.
-        if ax is None:
-            fig, ax = plt.subplots(figsize=figsize)
-
-        sns.heatmap(df.T, ax=ax, cmap=cmap, cbar=False, **kwargs)
-
-        ax.set_xlabel('Samples')
-        ax.set_ylabel(col)
-        ax.set_xticks([])
-        ax.set_yticks([])
-
-        return ax
-
-    def sorted_samples(self, by, mf=None, keep_empty=False, nonsyn=False):
-        """
-        Return a sorted list of sample names.
-
-        Parameters
-        ----------
-        df : str or list
-            Column or list of columns to sort by.
-        """
-        df = self.df.copy()
-
-        if nonsyn:
-            samples = mf.matrix_waterfall(keep_empty=keep_empty).columns
-            df = df.loc[samples]
-
-        df = df.sort_values(by=by)
-
-        return df.index.to_list()
-
 class MafFrame:
     """Class for storing MAF data.
 
@@ -678,6 +226,60 @@ class MafFrame:
     def genes(self):
         """list : List of the genes."""
         return list(self.df.Hugo_Symbol.unique())
+
+    def compute_clonality(self, vaf_col, threshold=0.25):
+        """
+        Compute the clonality of variants based on
+        :ref:`VAF <glossary:Variant allele frequency (VAF)>`.
+
+        A mutation will be defined as "Subclonal" if the VAF is less than the
+        threshold percentage (e.g. 25%) of the highest VAF in the sample and
+        is defined as "Clonal" if it is equal to or above this threshold.
+
+        Parameters
+        ----------
+        vaf_col : str
+            MafFrame column containing VAF data.
+        threshold : float
+            Minimum VAF to be considered as "Clonal".
+
+        Returns
+        -------
+        panda.Series
+            Clonality for each variant.
+
+        Examples
+        --------
+
+        >>> import matplotlib.pyplot as plt
+        >>> from fuc import common, pymaf
+        >>> common.load_dataset('tcga-laml')
+        >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+        >>> mf = pymaf.MafFrame.from_file(maf_file)
+        >>> mf.df['Clonality'] = mf.compute_clonality('i_TumorVAF_WU')
+        >>> mf.df['Clonality'][:10]
+        0    Clonal
+        1    Clonal
+        2    Clonal
+        3    Clonal
+        4    Clonal
+        5    Clonal
+        6    Clonal
+        7    Clonal
+        8    Clonal
+        9    Clonal
+        Name: Clonality, dtype: object
+        """
+        d = self.df.groupby('Tumor_Sample_Barcode')[vaf_col].max().to_dict()
+        def one_row(r):
+            m = d[r.Tumor_Sample_Barcode]
+            if r[vaf_col] < m * threshold:
+                result = 'Subclonal'
+            else:
+                result = 'Clonal'
+            return result
+        s = self.df.copy().apply(one_row, axis=1)
+        return s
 
     @classmethod
     def from_file(cls, fn):
@@ -1228,9 +830,9 @@ class MafFrame:
         ticklabels_fontsize=15, legend_fontsize=15
     ):
         """
-        Create a standard oncoplot.
+        Create an oncoplot.
 
-        See the :ref:`tutorials:Create customized oncoplots` tutorial to
+        See this :ref:`tutorial <tutorials:Create customized oncoplots>` to
         learn how to create customized oncoplots.
 
         Parameters
@@ -1301,12 +903,102 @@ class MafFrame:
                         labelsize=ticklabels_fontsize)
 
         # Create the legend.
-        ax5.legend(handles=legend_handles('waterfall'),
-                   title='Variant_Classification',
-                   loc='upper center',
-                   ncol=4,
-                   fontsize=legend_fontsize,
-                   title_fontsize=legend_fontsize)
+        handles = common.legend_handles(NONSYN_NAMES+['Multi_Hit'],
+            colors=NONSYN_COLORS+['k'])
+        ax5.legend(
+            handles=handles,
+            title='Variant_Classification',
+            loc='upper center',
+            ncol=4,
+            fontsize=legend_fontsize,
+            title_fontsize=legend_fontsize
+        )
+        ax5.axis('off')
+
+        # Remove the bottom right plot.
+        ax6.remove()
+
+        plt.tight_layout()
+        plt.subplots_adjust(wspace=0.01, hspace=0.01)
+
+    def plot_oncoplot_matched(
+        self, af, patient_col, group_col, group_order, colors='Set2',
+        figsize=(15, 10), label_fontsize=12, ticklabels_fontsize=12,
+        legend_fontsize=12
+    ):
+        """
+        Create an oncoplot for mached samples.
+
+        Parameters
+        ----------
+        af : AnnFrame
+            AnnFrame containing sample annotation data.
+        patient_col : str
+            AnnFrame column containing patient information.
+        group_col : str
+            AnnFrame column containing sample group information.
+        group_order : list, optional
+            List of sample group names.
+        colors : str
+            Colormap name for the sample groups.
+        figsize : tuple, default: (15, 10)
+            Width, height in inches. Format: (float, float).
+        label_fontsize : float, default: 12
+            Font size of labels.
+        ticklabels_fontsize : float, default: 12
+            Font size of tick labels.
+        legend_fontsize : float, default: 12
+            Font size of legend texts.
+        """
+        fig, axes = plt.subplots(3, 2, figsize=figsize,
+            gridspec_kw={'height_ratios': [1, 10, 1.5], 'width_ratios': [10, 1]}
+        )
+
+        [[ax1, ax2], [ax3, ax4], [ax5, ax6]] = axes
+
+        patients = self.matrix_waterfall_matched(af, patient_col, group_col, group_order).columns
+
+        self.plot_tmb_matched(
+            af, patient_col, group_col, group_order=group_order, ax=ax1,
+            legend=False, patients=patients, width=0.90,
+            color=sns.color_palette(colors)[:3]
+        )
+        ax1.set_xticks([])
+        ax1.set_xlim(-0.5, 53-0.5)
+        ax1.spines['right'].set_visible(False)
+        ax1.spines['top'].set_visible(False)
+        ax1.spines['bottom'].set_visible(False)
+        ax1.set_ylabel('TMB', fontsize=label_fontsize)
+        ax1.tick_params(axis='y', which='major',
+                        labelsize=ticklabels_fontsize)
+
+        ax2.remove()
+
+        self.plot_waterfall_matched(af, patient_col, group_col, group_order=group_order, ax=ax3)
+        ax3.set_xticks([])
+        ax3.tick_params(axis='y', which='major', labelrotation=0,
+                        labelsize=ticklabels_fontsize)
+
+        self.plot_mutated_matched(
+            af, patient_col, group_col, group_order=group_order, ax=ax4, palette=colors
+        )
+        ax4.set_yticks([])
+        ax4.legend().remove()
+        ax4.spines['right'].set_visible(False)
+        ax4.spines['left'].set_visible(False)
+        ax4.spines['top'].set_visible(False)
+        ax4.tick_params(axis='x', which='major',
+                        labelsize=ticklabels_fontsize)
+        ax4.set_xlabel('Patients', fontsize=label_fontsize)
+
+        # Create the legends.
+        handles1 = common.legend_handles(NONSYN_NAMES+['Multi_Hit'],
+            colors=NONSYN_COLORS+['k'])
+        handles2 = common.legend_handles(group_order, colors=colors)
+        leg1 = ax5.legend(handles=handles1, loc=(0, 0), title='Variant_Classification', ncol=4, fontsize=legend_fontsize, title_fontsize=legend_fontsize)
+        leg2 = ax5.legend(handles=handles2, loc=(0.8, 0), title=group_col, fontsize=legend_fontsize, title_fontsize=legend_fontsize)
+        ax5.add_artist(leg1)
+        ax5.add_artist(leg2)
         ax5.axis('off')
 
         # Remove the bottom right plot.
@@ -1316,7 +1008,7 @@ class MafFrame:
         plt.subplots_adjust(wspace=0.01, hspace=0.01)
 
     def plot_clonality(
-        self, col, af=None, hue=None, hue_order=None, count=10,
+        self, vaf_col, af=None, group_col=None, group_order=None, count=10,
         threshold=0.25, subclonal=False, ax=None, figsize=None
     ):
         """
@@ -1328,14 +1020,14 @@ class MafFrame:
 
         Parameters
         ----------
-        col : str
-            Column in the MafFrame containing VAF data.
+        vaf_col : str
+            MafFrame column containing VAF data.
         af : AnnFrame, optional
             AnnFrame containing sample annotation data.
-        hue : str, optional
-            Column in the AnnFrame containing information about sample groups.
-        hue_order : list, optional
-            Order to plot the group levels in.
+        group_col : str, optional
+            AnnFrame column containing sample group information.
+        group_order : list, optional
+            List of sample group names.
         count : int, defualt: 10
             Number of top mutated genes to display.
         threshold : float, default: 0.25
@@ -1382,27 +1074,27 @@ class MafFrame:
             :context: close-figs
 
             >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
-            >>> af = pymaf.AnnFrame.from_file(annot_file)
+            >>> af = common.AnnFrame.from_file(annot_file, sample_col=0)
             >>> mf.plot_clonality('i_TumorVAF_WU',
             ...                   af=af,
-            ...                   hue='FAB_classification',
-            ...                   hue_order=['M0', 'M1', 'M2'])
+            ...                   group_col='FAB_classification',
+            ...                   group_order=['M0', 'M1', 'M2'])
             >>> plt.tight_layout()
         """
         df = self.df.copy()
-        df['Clonality'] = self.compute_clonality(col, threshold=threshold)
+        df['Clonality'] = self.compute_clonality(vaf_col, threshold=threshold)
 
-        if hue is None:
+        if group_col is None:
             s = df.groupby('Hugo_Symbol')['Clonality'].value_counts()
             s.name = 'Count'
             df = s.to_frame().reset_index()
             df = df.pivot(index='Hugo_Symbol', columns='Clonality', values='Count')
         else:
-            df = df.merge(af.df[hue], left_on='Tumor_Sample_Barcode', right_index=True)
-            s = df.groupby(['Hugo_Symbol', hue])['Clonality'].value_counts()
+            df = df.merge(af.df[group_col], left_on='Tumor_Sample_Barcode', right_index=True)
+            s = df.groupby(['Hugo_Symbol', group_col])['Clonality'].value_counts()
             s.name = 'Count'
             df = s.to_frame().reset_index()
-            df = df.pivot(index=['Hugo_Symbol', hue], columns='Clonality', values='Count')
+            df = df.pivot(index=['Hugo_Symbol', group_col], columns='Clonality', values='Count')
 
         df = df.reset_index()
         df = df.fillna(0)
@@ -1420,8 +1112,8 @@ class MafFrame:
             y = 'Clonal'
 
         sns.barplot(
-            x='Hugo_Symbol', y=y, data=df, order=genes, hue=hue,
-            hue_order=hue_order, ax=ax
+            x='Hugo_Symbol', y=y, data=df, order=genes, hue=group_col,
+            hue_order=group_order, ax=ax
         )
 
         ax.set_xlabel('')
@@ -1429,8 +1121,8 @@ class MafFrame:
         return ax
 
     def plot_evolution(
-        self, samples, col, anchor=None, normalize=True, count=5, ax=None,
-        figsize=None, **kwargs
+        self, samples, vaf_col, anchor=None, normalize=True, count=5,
+        ax=None, figsize=None, **kwargs
     ):
         """
         Create a line plot visualizing changes in VAF between specified
@@ -1440,8 +1132,8 @@ class MafFrame:
         ----------
         samples : list
             List of samples to display.
-        col : str
-            Column in the MafFrame containing VAF data.
+        vaf_col : str
+            MafFrame column containing VAF data.
         anchor : str, optional
             Sample to use as the anchor. If absent, use the first sample in
             the list.
@@ -1479,7 +1171,7 @@ class MafFrame:
 
         df['Variant_Name'] = df.apply(one_row, axis=1)
         df = df.pivot(index=['Variant_Name'],
-            columns=['Tumor_Sample_Barcode'], values=[col])
+            columns=['Tumor_Sample_Barcode'], values=[vaf_col])
         df.columns = df.columns.get_level_values(1)
         df.columns.name = ''
         df = df.fillna(0)
@@ -1511,8 +1203,8 @@ class MafFrame:
         return ax
 
     def plot_genepair(
-        self, x, y, col, af=None, hue=None, hue_order=None, ax=None,
-        figsize=None, **kwargs
+        self, x, y, vaf_col, af=None, group_col=None, group_order=None,
+        ax=None, figsize=None, **kwargs
     ):
         """
         Create a scatter plot of VAF between Gene X and Gene Y.
@@ -1521,14 +1213,14 @@ class MafFrame:
         ----------
         x, y : str
             Gene names.
-        col : str
-            Column in the MafFrame containing VAF data.
+        vaf_col : str
+            MafFrame column containing VAF data.
         af : AnnFrame, optional
             AnnFrame containing sample annotation data.
-        hue : str, optional
-            Column in the AnnFrame containing information about sample groups.
-        hue_order : list, optional
-            Order to plot the group levels in.
+        group_col : str, optional
+            AnnFrame column containing sample group information.
+        group_order : list, optional
+            List of sample group names.
         ax : matplotlib.axes.Axes, optional
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
@@ -1564,29 +1256,30 @@ class MafFrame:
             :context: close-figs
 
             >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
-            >>> af = pymaf.AnnFrame.from_file(annot_file)
+            >>> af = common.AnnFrame.from_file(annot_file, sample_col=0)
             >>> mf.plot_genepair('DNMT3A', 'FLT3', 'i_TumorVAF_WU',
             ...                  af=af,
-            ...                  hue='FAB_classification')
+            ...                  group_col='FAB_classification')
             >>> plt.tight_layout()
         """
         df = self.df[self.df.Hugo_Symbol.isin([x, y])]
-        df = df[['Tumor_Sample_Barcode', 'Hugo_Symbol', col]]
-        df = df.sort_values(col, ascending=False)
+        df = df[['Tumor_Sample_Barcode', 'Hugo_Symbol', vaf_col]]
+        df = df.sort_values(vaf_col, ascending=False)
         df = df.drop_duplicates(subset=['Tumor_Sample_Barcode', 'Hugo_Symbol'])
         df = df.pivot(index='Tumor_Sample_Barcode',
-            columns='Hugo_Symbol', values=col)
+            columns='Hugo_Symbol', values=vaf_col)
         df = df.fillna(0)
 
-        if hue is not None:
-            df = df.merge(af.df[hue], left_index=True, right_index=True)
+        if group_col is not None:
+            df = df.merge(af.df[group_col], left_index=True, right_index=True)
 
         # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
         sns.scatterplot(
-            x=x, y=y, data=df, ax=ax, hue=hue, hue_order=hue_order, **kwargs
+            x=x, y=y, data=df, ax=ax, hue=group_col, hue_order=group_order,
+            **kwargs
         )
 
         # Print summary statistics including R-squared and p-value.
@@ -1597,15 +1290,16 @@ class MafFrame:
 
         return ax
 
-
     def plot_regplot(
-        self, af, col, a, b, genes=None, count=10, to_csv=None, ax=None,
-        figsize=None, **kwargs
+        self, af, group_col, a, b, a_size=None, b_size=None, genes=None,
+        count=10, to_csv=None, ax=None, figsize=None, **kwargs
     ):
         """
         Create a scatter plot with a linear regression model fit visualizing
         correlation between gene mutation frequencies in two sample groups
         A and B.
+
+        Each point in the plot represents a gene.
 
         The method will automatically calculate and print summary statistics
         including R-squared and p-value.
@@ -1614,10 +1308,13 @@ class MafFrame:
         ----------
         af : AnnFrame
             AnnFrame containing sample annotation data.
-        col : str
-            Column in the AnnFrame containing information about sample groups.
+        group_col : str
+            AnnFrame column containing sample group information.
         a, b : str
-            Sample group levels.
+            Sample group names.
+        a_size, b_size : int, optional
+            Sample group sizes to use as denominator. By default, these are
+            inferred from the MafFrame and AnnFrame objects.
         genes : list, optional
             Genes to display. When absent, top mutated genes (``count``) will
             be used.
@@ -1650,7 +1347,7 @@ class MafFrame:
             >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
             >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
             >>> mf = pymaf.MafFrame.from_file(maf_file)
-            >>> af = pymaf.AnnFrame.from_file(annot_file)
+            >>> af = common.AnnFrame.from_file(annot_file, sample_col=0)
             >>> mf.plot_regplot(af, 'FAB_classification', 'M1', 'M2')
             Results for M2 ~ M1:
             R^2 = 0.43
@@ -1658,17 +1355,23 @@ class MafFrame:
             >>> plt.tight_layout()
         """
         df1 = self.matrix_prevalence()
+        df2 = af.df[af.df.index.isin(df1.columns)]
+        i_a = df2[df2[group_col] == a].index
+        i_b = df2[df2[group_col] == b].index
 
         # Determine which genes to display.
         if genes is None:
             genes = self.matrix_genes(count=count).index.to_list()
 
-        df2 = af.df[af.df.index.isin(df1.columns)]
-        i_a = df2[df2[col] == a].index
-        i_b = df2[df2[col] == b].index
+        # Determine each group's sample size.
+        if a_size is None:
+            a_size = len(i_a)
+        if b_size is None:
+            b_size = len(i_b)
+
         f = lambda x: 0 if x == 0 else 1
-        s_a = df1.T.loc[i_a].applymap(f).sum().loc[genes] / len(i_a)
-        s_b = df1.T.loc[i_b].applymap(f).sum().loc[genes] / len(i_b)
+        s_a = df1.T.loc[i_a].applymap(f).sum().loc[genes] / a_size
+        s_b = df1.T.loc[i_b].applymap(f).sum().loc[genes] / b_size
         df3 = pd.concat([s_a, s_b], axis=1)
         df3.columns = [a, b]
 
@@ -1920,8 +1623,8 @@ class MafFrame:
         return ax
 
     def plot_mutated(
-        self, af=None, hue=None, hue_order=None, genes=None, count=10,
-        ax=None, figsize=None
+        self, af=None, group_col=None, group_order=None, genes=None,
+        count=10, ax=None, figsize=None
     ):
         """
         Create a bar plot visualizing the mutation prevalence of top
@@ -1931,10 +1634,10 @@ class MafFrame:
         ----------
         af : AnnFrame, optional
             AnnFrame containing sample annotation data.
-        hue : str, optional
-            Column in the AnnFrame containing information about sample groups.
-        hue_order : list, optional
-            Order to plot the group levels in.
+        group_col : str, optional
+            AnnFrame column containing sample group information.
+        group_order : list, optional
+            List of sample group names.
         genes : list, optional
             Genes to display. When absent, top mutated genes (``count``) will
             be used.
@@ -1976,10 +1679,10 @@ class MafFrame:
             :context: close-figs
 
             >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
-            >>> af = pymaf.AnnFrame.from_file(annot_file)
+            >>> af = common.AnnFrame.from_file(annot_file, sample_col=0)
             >>> mf.plot_mutated(af=af,
-            ...                 hue='FAB_classification',
-            ...                 hue_order=['M0', 'M1', 'M2'])
+            ...                 group_col='FAB_classification',
+            ...                 group_order=['M0', 'M1', 'M2'])
             >>> plt.tight_layout()
         """
         df = self.matrix_prevalence()
@@ -1990,26 +1693,77 @@ class MafFrame:
 
         df = df.loc[genes]
         df = df.applymap(lambda x: True if x else False)
-        if hue is None:
+        if group_col is None:
             df = (df.sum(axis=1) / df.shape[1]).to_frame().reset_index()
             df.columns.values[1] = 'Prevalence'
         else:
             df = df.T
-            df = pd.merge(df, af.df[hue], left_index=True, right_index=True)
-            df = df.groupby([hue]).mean().reset_index()
-            df = df.melt(id_vars=[hue])
-            df.columns = [hue, 'Hugo_Symbol', 'Prevalence']
+            df = pd.merge(df, af.df[group_col], left_index=True, right_index=True)
+            df = df.groupby([group_col]).mean().reset_index()
+            df = df.melt(id_vars=[group_col])
+            df.columns = [group_col, 'Hugo_Symbol', 'Prevalence']
 
         # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
         sns.barplot(
-            x='Hugo_Symbol', y='Prevalence', data=df, hue=hue,
-            hue_order=hue_order, ax=ax
+            x='Hugo_Symbol', y='Prevalence', data=df, hue=group_col,
+            hue_order=group_order, ax=ax
         )
 
         ax.set_xlabel('')
+
+        return ax
+
+    def plot_mutated_matched(
+        self, af, patient_col, group_col, group_order, ax=None, figsize=None,
+        **kwargs
+    ):
+        """
+        Create a bar plot visualizing the mutation prevalence of top
+        mutated genes.
+
+        Parameters
+        ----------
+        af : AnnFrame
+            AnnFrame containing sample annotation data.
+        patient_col : str
+            AnnFrame column containing patient information.
+        group_col : str
+            AnnFrame column containing sample group information.
+        group_order : list
+            List of sample group names.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+        kwargs
+            Other keyword arguments will be passed down to
+            :meth:`seaborn.barplot`.
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+        """
+        df = self.matrix_waterfall_matched(af, patient_col, group_col, group_order)
+        df = df.applymap(lambda x: 0 if x == 'None' else 1)
+        s = df.sum(axis=1) / len(df.columns) * 100
+        s.name = 'Count'
+        df = s.to_frame().reset_index()
+
+        # Determine which matplotlib axes to plot on.
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
+        sns.barplot(
+            x='Count', y='Gene', hue='Group', data=df, hue_order=group_order,
+            orient='h', ax=ax, **kwargs
+        )
+
+        ax.set_xlabel('Patients (%)')
+        ax.set_ylabel('')
 
         return ax
 
@@ -2136,23 +1890,23 @@ class MafFrame:
         return ax
 
     def plot_snvclsc(
-        self, af=None, hue=None, hue_order=None, palette=None,
+        self, af=None, group_col=None, group_order=None, palette=None,
         flip=False, ax=None, figsize=None, **kwargs
     ):
         """
         Create a bar plot summarizing the count distrubtions of the six
         :ref:`glossary:SNV classes` for all samples.
 
-        A grouped bar plot can be created with ``hue`` (requires an AnnFrame).
+        A grouped bar plot can be created with ``group_col`` (requires an AnnFrame).
 
         Parameters
         ----------
         af : AnnFrame, optional
             AnnFrame containing sample annotation data.
-        hue : str, optional
-            Column in the AnnFrame containing information about sample groups.
-        hue_order : list, optional
-            Order to plot the group levels in.
+        group_col : str, optional
+            AnnFrame column containing sample group information.
+        group_order : list, optional
+            List of sample group names.
         palette : str, optional
             Name of the seaborn palette. See the :ref:`tutorials:Control plot
             colors` tutorial for details.
@@ -2202,10 +1956,10 @@ class MafFrame:
             :context: close-figs
 
             >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
-            >>> af = pymaf.AnnFrame.from_file(annot_file)
+            >>> af = common.AnnFrame.from_file(annot_file, sample_col=0)
             >>> mf.plot_snvclsc(af=af,
-            ...                 hue='FAB_classification',
-            ...                 hue_order=['M0', 'M1', 'M2'])
+            ...                 group_col='FAB_classification',
+            ...                 group_order=['M0', 'M1', 'M2'])
             >>> plt.tight_layout()
         """
         # Add the SNV_Class column.
@@ -2218,10 +1972,10 @@ class MafFrame:
         df = pd.concat([df, s], axis=1)
 
         # Count the occurance of each SNV class.
-        if hue is not None:
-            df = pd.merge(df, af.df[hue], left_on='Tumor_Sample_Barcode',
+        if group_col is not None:
+            df = pd.merge(df, af.df[group_col], left_on='Tumor_Sample_Barcode',
                 right_index=True)
-            s = df.groupby([hue]).SNV_Class.value_counts()
+            s = df.groupby([group_col]).SNV_Class.value_counts()
             df = s.to_frame().rename(columns={'SNV_Class': 'Count'}
                 ).reset_index()
         else:
@@ -2241,7 +1995,7 @@ class MafFrame:
             xlabel, ylabel = '', 'Count'
 
         sns.barplot(
-            x=x, y=y, data=df, ax=ax, hue=hue, hue_order=hue_order,
+            x=x, y=y, data=df, ax=ax, hue=group_col, hue_order=group_order,
             palette=palette, order=SNV_CLASS_ORDER, **kwargs
         )
 
@@ -2251,23 +2005,21 @@ class MafFrame:
         return ax
 
     def plot_snvclsp(
-        self, af=None, hue=None, hue_order=None, palette=None, flip=False,
+        self, af=None, group_col=None, group_order=None, palette=None, flip=False,
         ax=None, figsize=None, **kwargs
     ):
         """
         Create a box plot summarizing the proportion distrubtions of the six
         :ref:`glossary:SNV classes` for all sample.
 
-        A grouped box plot can be created with ``hue`` (requires an AnnFrame).
-
         Parameters
         ----------
         af : AnnFrame, optional
             AnnFrame containing sample annotation data.
-        hue : str, optional
-            Column in the AnnFrame containing information about sample groups.
-        hue_order : list, optional
-            Order to plot the group levels in.
+        group_col : str, optional
+            AnnFrame column containing sample group information.
+        group_order : list, optional
+            List of sample group names.
         palette : str, optional
             Name of the seaborn palette. See the :ref:`tutorials:Control plot
             colors` tutorial for details.
@@ -2317,10 +2069,10 @@ class MafFrame:
             :context: close-figs
 
             >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
-            >>> af = pymaf.AnnFrame.from_file(annot_file)
+            >>> af = common.AnnFrame.from_file(annot_file, sample_col=0)
             >>> mf.plot_snvclsp(af=af,
-            ...                 hue='FAB_classification',
-            ...                 hue_order=['M0', 'M1', 'M2'])
+            ...                 group_col='FAB_classification',
+            ...                 group_order=['M0', 'M1', 'M2'])
             >>> plt.tight_layout()
         """
         # Add the SNV_Class column.
@@ -2342,11 +2094,11 @@ class MafFrame:
         df.columns = df.columns.get_level_values(1)
         df.columns.name = ''
 
-        if hue is None:
+        if group_col is None:
             df = pd.melt(df, var_name='SNV_Class', value_name='Proportion')
         else:
-            df = pd.merge(df, af.df[hue], left_index=True, right_index=True)
-            df = pd.melt(df, id_vars=[hue], var_name='SNV_Class',
+            df = pd.merge(df, af.df[group_col], left_index=True, right_index=True)
+            df = pd.melt(df, id_vars=[group_col], var_name='SNV_Class',
                 value_name='Proportion')
 
         # Determine which matplotlib axes to plot on.
@@ -2361,8 +2113,8 @@ class MafFrame:
             xlabel, ylabel = '', 'Proportion'
 
         sns.boxplot(
-            x=x, y=y, data=df, hue=hue, hue_order=hue_order, palette=palette,
-            ax=ax, **kwargs
+            x=x, y=y, data=df, hue=group_col, hue_order=group_order,
+            palette=palette, ax=ax, **kwargs
         )
 
         ax.set_xlabel(xlabel)
@@ -2509,24 +2261,21 @@ class MafFrame:
         return ax
 
     def plot_titv(
-        self, af=None, hue=None, hue_order=None, flip=False, ax=None,
+        self, af=None, group_col=None, group_order=None, flip=False, ax=None,
         figsize=None, **kwargs
     ):
         """
         Create a box plot showing the :ref:`Ti/Tv <glossary:Transitions (Ti)
         and transversions (Tv)>` proportions of samples.
 
-        A grouped box plot can be created with ``hue`` (requires an
-        AnnFrame).
-
         Parameters
         ----------
         af : AnnFrame, optional
             AnnFrame containing sample annotation data.
-        hue : str, optional
-            Column in the AnnFrame containing information about sample groups.
-        hue_order : list, optional
-            Order to plot the group levels in.
+        group_col : str, optional
+            AnnFrame column containing sample group information.
+        group_order : list, optional
+            List of sample group names.
         flip : bool, default: False
             If True, flip the x and y axes.
         ax : matplotlib.axes.Axes, optional
@@ -2568,10 +2317,10 @@ class MafFrame:
             :context: close-figs
 
             >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
-            >>> af = pymaf.AnnFrame.from_file(annot_file)
+            >>> af = common.AnnFrame.from_file(annot_file, sample_col=0)
             >>> mf.plot_titv(af=af,
-            ...              hue='FAB_classification',
-            ...              hue_order=['M0', 'M1', 'M2'])
+            ...              group_col='FAB_classification',
+            ...              group_order=['M0', 'M1', 'M2'])
             >>> plt.tight_layout()
         """
         df = self.df[self.df.Variant_Type == 'SNP']
@@ -2591,10 +2340,10 @@ class MafFrame:
         df.columns = df.columns.get_level_values(1)
         df.columns.name = ''
 
-        if hue is not None:
-            df = pd.merge(df, af.df[hue], left_index=True, right_index=True)
+        if group_col is not None:
+            df = pd.merge(df, af.df[group_col], left_index=True, right_index=True)
             df = df.reset_index(drop=True)
-            df = df.set_index(hue)
+            df = df.set_index(group_col)
             df = pd.melt(df, var_name='SNV_Type', value_name='Proportion',
                 ignore_index=False)
             df = df.reset_index()
@@ -2612,8 +2361,10 @@ class MafFrame:
             x, y = 'SNV_Type', 'Proportion'
             xlabel, ylabel = '', 'Proportion'
 
-        sns.boxplot(x=x, y=y, data=df, hue=hue, hue_order=hue_order, ax=ax,
-            **kwargs)
+        sns.boxplot(
+            x=x, y=y, data=df, hue=group_col, hue_order=group_order, ax=ax,
+            **kwargs
+        )
 
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
@@ -2711,12 +2462,14 @@ class MafFrame:
                         labelsize=ticklabels_fontsize)
 
         # Add the legend.
-        axbig.legend(handles=legend_handles('regular'),
-                     title='Variant_Classification',
-                     loc='upper center',
-                     ncol=3,
-                     fontsize=legend_fontsize,
-                     title_fontsize=legend_fontsize)
+        axbig.legend(
+            handles=common.legend_handles(NONSYN_NAMES, colors=NONSYN_COLORS),
+            title='Variant_Classification',
+            loc='upper center',
+            ncol=3,
+            fontsize=legend_fontsize,
+            title_fontsize=legend_fontsize
+        )
         axbig.axis('off')
 
         plt.tight_layout()
@@ -2796,28 +2549,96 @@ class MafFrame:
 
         return ax
 
+    def plot_tmb_matched(
+        self, af, patient_col, group_col, group_order=None, patients=None,
+        legend=True, ax=None, figsize=None, **kwargs
+    ):
+        """
+        Create a grouped bar plot showing TMB distributions for different
+        group levels in each patient.
+
+        Parameters
+        ----------
+        af : AnnFrame
+            AnnFrame containing sample annotation data.
+        patient_col : str
+            AnnFrame column containing patient information.
+        group_col : str
+            AnnFrame column containing sample group information.
+        group_order : list, optional
+            List of sample group names.
+        patients : list, optional
+            List of patient names.
+        legend : bool, default: True
+            Place legend on axis subplots.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+        kwargs
+            Other keyword arguments will be passed down to
+            :meth:`pandas.DataFrame.plot.bar`
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+        """
+        df = self.matrix_tmb().T
+
+        for sample in af.samples:
+            if sample not in df.columns:
+                df[sample] = 0
+
+        s = df.sum()
+        s.name = 'TMB'
+        df = pd.concat([s, af.df[[patient_col, group_col]]], axis=1)
+
+        df = df.pivot(index=patient_col, columns=group_col, values='TMB')
+
+        if group_order is not None:
+            df = df[group_order]
+
+        i = df.sum(axis=1).sort_values(ascending=False).index
+        df = df.loc[i]
+
+        if patients is not None:
+            df = df.loc[patients]
+
+        # Determine which matplotlib axes to plot on.
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
+        df.plot(ax=ax, kind='bar', stacked=True, legend=legend, **kwargs)
+
+        ax.set_xlabel('')
+        ax.set_ylabel('TMB')
+
+        return ax
+
     def plot_vaf(
-        self, col, count=10, af=None, hue=None, hue_order=None,
+        self, vaf_col, count=10, af=None, group_col=None, group_order=None,
         flip=False, sort=True, ax=None, figsize=None, **kwargs
     ):
         """
-        Create a box plot showing the VAF distributions of top mutated genes.
+        Create a box plot showing the :ref:`VAF <glossary:Variant allele
+        frequency (VAF)>` distributions of top mutated genes.
 
-        A grouped box plot can be created with ``hue`` (requires an
+        A grouped box plot can be created with ``group_col`` (requires an
         AnnFrame).
 
         Parameters
         ----------
-        col : str
-            Column in the MafFrame containing VAF data.
+        vaf_col : str
+            MafFrame column containing VAF data.
         count : int, default: 10
             Number of top mutated genes to display.
         af : AnnFrame, optional
             AnnFrame containing sample annotation data.
-        hue : str, optional
-            Column in the AnnFrame containing information about sample groups.
-        hue_order : list, optional
-            Order to plot the group levels in.
+        group_col : str, optional
+            AnnFrame column containing sample group information.
+        group_order : list, optional
+            List of sample group names.
         flip : bool, default: False
             If True, flip the x and y axes.
         sort : bool, default: True
@@ -2857,24 +2678,24 @@ class MafFrame:
             :context: close-figs
 
             >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
-            >>> af = pymaf.AnnFrame.from_file(annot_file)
+            >>> af = common.AnnFrame.from_file(annot_file, sample_col=0)
             >>> mf.plot_vaf('i_TumorVAF_WU',
             ...             af=af,
-            ...             hue='FAB_classification',
-            ...             hue_order=['M1', 'M2', 'M3'],
+            ...             group_col='FAB_classification',
+            ...             group_order=['M1', 'M2', 'M3'],
             ...             count=5)
             >>> plt.tight_layout()
         """
         genes = self.matrix_genes(count=count).index.to_list()
 
         if sort:
-            medians = self.df.groupby('Hugo_Symbol')[col].median()
+            medians = self.df.groupby('Hugo_Symbol')[vaf_col].median()
             genes = medians[genes].sort_values(
                 ascending=False).index.to_list()
 
         df = self.df[self.df.Hugo_Symbol.isin(genes)]
 
-        if hue is not None:
+        if group_col is not None:
             df = pd.merge(df, af.df, left_on='Tumor_Sample_Barcode',
                 right_index=True)
 
@@ -2883,15 +2704,15 @@ class MafFrame:
             fig, ax = plt.subplots(figsize=figsize)
 
         if flip:
-            x, y = col, 'Hugo_Symbol'
+            x, y = vaf_col, 'Hugo_Symbol'
             xlabel, ylabel = 'VAF', ''
         else:
-            x, y = 'Hugo_Symbol', col
+            x, y = 'Hugo_Symbol', vaf_col
             xlabel, ylabel = '', 'VAF'
 
         sns.boxplot(
-            x=x, y=y, data=df, ax=ax, order=genes, hue=hue,
-            hue_order=hue_order, **kwargs
+            x=x, y=y, data=df, ax=ax, order=genes, hue=group_col,
+            hue_order=group_order, **kwargs
         )
 
         ax.set_xlabel(xlabel)
@@ -2953,8 +2774,8 @@ class MafFrame:
         return ax
 
     def plot_matrixg(
-        self, gene, af, col, groups=None, cbar=True, ax=None, figsize=None,
-        **kwargs
+        self, gene, af, group_col, group_order=None, cbar=True, ax=None,
+        figsize=None, **kwargs
     ):
         """
         Create a heatmap of count matrix with a shape of (sample groups,
@@ -2966,8 +2787,10 @@ class MafFrame:
             Name of the gene.
         af : AnnFrame
             AnnFrame containing sample annotation data.
-        col : str
-            Column in the AnnFrame containing information about sample groups.
+        group_col : str
+            AnnFrame column containing sample group information.
+        group_order : list, optional
+            List of sample group names.
         cbar : bool, default: True
             Whether to draw a colorbar.
         ax : matplotlib.axes.Axes, optional
@@ -2994,7 +2817,7 @@ class MafFrame:
             >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
             >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
             >>> mf = pymaf.MafFrame.from_file(maf_file)
-            >>> af = pymaf.AnnFrame.from_file(annot_file)
+            >>> af = common.AnnFrame.from_file(annot_file, sample_col=0)
             >>> mf.plot_matrixg('IDH1', af, 'FAB_classification', linewidth=0.5, square=True, annot=True)
             >>> plt.tight_layout()
         """
@@ -3005,18 +2828,18 @@ class MafFrame:
 
         df = df[['Tumor_Sample_Barcode', 'Protein_Change']]
         df = df[df.Protein_Change != '.']
-        df = df.merge(af.df[col], left_on='Tumor_Sample_Barcode', right_index=True)
-        s = df.groupby(col)['Protein_Change'].value_counts()
+        df = df.merge(af.df[group_col], left_on='Tumor_Sample_Barcode', right_index=True)
+        s = df.groupby(group_col)['Protein_Change'].value_counts()
         s.name = 'Count'
         df = s.to_frame().reset_index()
-        df = df.pivot(index=col,
+        df = df.pivot(index=group_col,
                       columns='Protein_Change',
                       values='Count')
         df = df.fillna(0)
 
-        if groups is not None:
+        if group_order is not None:
             missing_groups = []
-            for group in groups:
+            for group in group_order:
                 if group not in df.index:
                     missing_groups.append(group)
             if missing_groups:
@@ -3285,9 +3108,9 @@ class MafFrame:
         figsize=None, **kwargs
     ):
         """
-        Create a waterfall plot.
+        Create a waterfall plot (oncoplot).
 
-        See the :ref:`tutorials:Create customized oncoplots` tutorial to
+        See this :ref:`tutorial <tutorials:Create customized oncoplots>` to
         learn how to create customized oncoplots.
 
         Parameters
@@ -3362,6 +3185,147 @@ class MafFrame:
         ax.set_ylabel('')
 
         return ax
+
+    def plot_waterfall_matched(
+        self, af, patient_col, group_col, group_order, count=10, ax=None,
+        figsize=None
+    ):
+        """
+        Create a waterfall plot using matched samples from each patient.
+
+        Parameters
+        ----------
+        af : AnnFrame
+            AnnFrame containing sample annotation data.
+        patient_col : str
+            AnnFrame column containing patient information.
+        group_col : str
+            AnnFrame column containing sample group information.
+        group_order : list
+            List of sample group names.
+        count : int, default: 10
+            Number of top mutated genes to include.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+        """
+        df = self.matrix_waterfall_matched(af, patient_col,
+            group_col, group_order, count=count)
+        genes = df.index.get_level_values(0).unique().to_list()
+
+        l = reversed(NONSYN_NAMES + ['Multi_Hit', 'None'])
+        d = {k: v for v, k in enumerate(l)}
+        df = df.applymap(lambda x: d[x])
+
+        colors = list(reversed(NONSYN_COLORS + ['k', 'lightgray']))
+
+        # Determine which matplotlib axes to plot on.
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
+        sns.heatmap(df, cmap=colors, xticklabels=True, cbar=False, ax=ax)
+
+        n = len(group_order)
+        i = n / 2
+        yticks = []
+        for gene in genes:
+            yticks.append(i)
+            i += n
+
+        ax.set_xlabel('')
+        ax.set_ylabel('')
+        ax.set_yticks(yticks)
+        ax.set_yticklabels(genes)
+
+        # Add horizontal lines.
+        for i, gene in enumerate(genes, start=1):
+            ax.axhline(i*n, color='white')
+
+        # Add vertical lines.
+        for i, sample in enumerate(af.samples, start=1):
+            ax.axvline(i, color='white')
+
+        return ax
+
+    def matrix_waterfall_matched(
+        self, af, patient_col, group_col, group_order, count=10
+    ):
+        """
+        Compute a matrix of variant classifications with a shape of
+        (gene-group pairs, patients).
+
+        Parameters
+        ----------
+        af : AnnFrame
+            AnnFrame containing sample annotation data.
+        patient_col : str
+            AnnFrame column containing patient information.
+        group_col : str
+            AnnFrame column containing sample group information.
+        group_order : list
+            List of sample group names.
+        count : int, default: 10
+            Number of top mutated genes to include.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+        """
+        df = self.matrix_waterfall(count=count)
+
+        genes = df.index
+
+        missing_samples = {}
+
+        for sample in af.samples:
+            if sample not in df.columns:
+                missing_samples[sample] = ['None'] * len(genes)
+
+        df = pd.concat(
+            [df, pd.DataFrame(missing_samples, index=genes)], axis=1)
+
+        df = df[af.samples].T
+        df = df.merge(af.df[[patient_col, group_col]],
+            left_index=True, right_index=True)
+        df = df.reset_index(drop=True)
+
+        temps = []
+
+        for group in group_order:
+            temp = df[df[group_col] == group].set_index(patient_col)[genes]
+            tuples = [(x, group) for x in genes]
+            mi = pd.MultiIndex.from_tuples(tuples, names=['Gene', 'Group'])
+            temp.columns = mi
+            temps.append(temp)
+
+        df = pd.concat(temps, axis=1)
+
+        tuples = []
+
+        for gene in genes:
+            for group in group_order:
+                tuples.append((gene, group))
+
+        df = df[tuples]
+        df = df.T
+
+        c = df.applymap(lambda x: 0 if x == 'None' else 1).sort_values(
+            df.index.to_list(), axis=1, ascending=False).columns
+        df = df[c]
+
+        return df
+
 
     def to_vcf(
         self, fasta=None, ignore_indels=False, cols=None, names=None
@@ -3554,7 +3518,7 @@ class MafFrame:
         >>> from fuc import common, pymaf
         >>> common.load_dataset('tcga-laml')
         >>> mf = pymaf.MafFrame.from_file('~/fuc-data/tcga-laml/tcga_laml.maf.gz')
-        >>> af = pymaf.AnnFrame.from_file('~/fuc-data/tcga-laml/tcga_laml_annot.tsv')
+        >>> af = common.AnnFrame.from_file('~/fuc-data/tcga-laml/tcga_laml_annot.tsv', sample_col=0)
         >>> filtered_mf = mf.filter_annot(af, "FAB_classification == 'M4'")
         """
         samples = af.df.query(expr).index
@@ -3562,22 +3526,3 @@ class MafFrame:
         df = self.df[i]
         mf = self.__class__(df)
         return mf
-
-    def compute_clonality(self, col, threshold=0.25):
-        """
-        Compute the clonality of variants based on VAF.
-
-        A mutation will be defined as "Subclonal" if the VAF is less than the
-        threshold percentage (e.g. 25%) of the highest VAF in the sample and
-        is defined as "Clonal" if it is equal to or above this threshold.
-        """
-        d = self.df.groupby('Tumor_Sample_Barcode')[col].max().to_dict()
-        def one_row(r):
-            m = d[r.Tumor_Sample_Barcode]
-            if r[col] < m * threshold:
-                result = 'Subclonal'
-            else:
-                result = 'Clonal'
-            return result
-        s = self.df.copy().apply(one_row, axis=1)
-        return s

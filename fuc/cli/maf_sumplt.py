@@ -16,7 +16,7 @@ def create_parser(subparsers):
     parser = api.common._add_parser(
         subparsers,
         api.common._script_name(),
-        help='[MAF] Create a summary plot with a MAF file.',
+        help='Create a summary plot with a MAF file.',
         description=description,
     )
     parser.add_argument(

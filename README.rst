@@ -28,7 +28,7 @@ Introduction
 
 The main goal of the fuc package (pronounced "eff-you-see") is to wrap some of the most **f**\ requently **u**\ sed **c**\ ommands in the field of bioinformatics into one place.
 
-The package supports both command line interface (CLI) and application programming interface (API) whose documentations are available at the `Read the Docs <https://sbslee-fuc.readthedocs.io/en/latest/>`_.
+The package is written in Python, and supports both command line interface (CLI) and application programming interface (API) whose documentations are available at the `Read the Docs <https://sbslee-fuc.readthedocs.io/en/latest/>`_.
 
 Currently, fuc can be used to analyze, summarize, visualize, and manipulate the following file formats:
 
@@ -97,7 +97,7 @@ Finally, you can clone the GitHub repository and then install fuc locally:
 
 The nice thing about this approach is that you will have access to development versions that are not available in Anaconda or PyPI. For example, you can access a development branch with the ``git checkout`` command. When you do this, please make sure your environment already has all the dependencies installed.
 
-Getting Help
+Getting help
 ============
 
 For detailed documentations on the fuc package's CLI and API, please refer to the `Read the Docs <https://sbslee-fuc.readthedocs.io/en/latest/>`_.
@@ -111,30 +111,32 @@ For getting help on the fuc CLI:
    
    positional arguments:
      COMMAND
-       bam-head     [BAM] Print the header of a SAM/BAM/CRAM file.
-       bam-index    [BAM] Index a SAM/BAM/CRAM file.
-       bam-rename   [BAM] Rename the samples in a SAM/BAM/CRAM file.
-       bam-slice    [BAM] Slice a SAM/BAM/CRAM file.
-       bed-intxn    [BED] Find the intersection of two or more BED files.
-       bed-sum      [BED] Summarize a BED file.
-       fq-count     [FASTQ] Count sequence reads in FASTQ files.
-       fq-sum       [FASTQ] Summarize a FASTQ file.
-       fuc-compf    [FUC] Compare the contents of two files.
-       fuc-demux    [FUC] Parse the Reports directory from bcl2fastq.
-       fuc-exist    [FUC] Check whether certain files exist.
-       fuc-find     [FUC] Find all filenames matching a specified pattern recursively.
-       maf-maf2vcf  [MAF] Convert a MAF file to a VCF file.
-       maf-oncoplt  [MAF] Create an oncoplot with a MAF file.
-       maf-sumplt   [MAF] Create a summary plot with a MAF file.
-       maf-vcf2maf  [MAF] Convert a VCF file to a MAF file.
-       tbl-merge    [TABLE] Merge two table files.
-       tbl-sum      [TABLE] Summarize a table file.
-       vcf-filter   [VCF] Filter a VCF file.
-       vcf-merge    [VCF] Merge two or more VCF files.
-       vcf-rename   [VCF] Rename the samples in a VCF file.
-       vcf-slice    [VCF] Slice a VCF file.
-       vcf-vcf2bed  [VCF] Convert a VCF file to a BED file.
-       vcf-vep      [VCF] Filter a VCF file annotated by Ensembl VEP.
+       bam-depth    Compute read depth from SAM/BAM/CRAM files.
+       bam-head     Print the header of a SAM/BAM/CRAM file.
+       bam-index    Index a SAM/BAM/CRAM file.
+       bam-rename   Rename the samples in a SAM/BAM/CRAM file.
+       bam-slice    Slice a SAM/BAM/CRAM file.
+       bed-intxn    Find the intersection of two or more BED files.
+       bed-sum      Summarize a BED file.
+       fq-count     Count sequence reads in FASTQ files.
+       fq-sum       Summarize a FASTQ file.
+       fuc-undetm   Compute top unknown barcodes using undertermined FASTQ from bcl2fastq.
+       fuc-compf    Compare the contents of two files.
+       fuc-demux    Parse the Reports directory from bcl2fastq.
+       fuc-exist    Check whether certain files exist.
+       fuc-find     Find all filenames matching a specified pattern recursively.
+       maf-maf2vcf  Convert a MAF file to a VCF file.
+       maf-oncoplt  Create an oncoplot with a MAF file.
+       maf-sumplt   Create a summary plot with a MAF file.
+       maf-vcf2maf  Convert a VCF file to a MAF file.
+       tbl-merge    Merge two table files.
+       tbl-sum      Summarize a table file.
+       vcf-filter   Filter a VCF file.
+       vcf-merge    Merge two or more VCF files.
+       vcf-rename   Rename the samples in a VCF file.
+       vcf-slice    Slice a VCF file.
+       vcf-vcf2bed  Convert a VCF file to a BED file.
+       vcf-vep      Filter a VCF file annotated by Ensembl VEP.
    
    optional arguments:
      -h, --help     Show this help message and exit.
@@ -166,7 +168,7 @@ For getting help on a specific submodule (e.g. pyvcf):
    >>> from fuc import pyvcf
    >>> help(pyvcf)
 
-CLI Examples
+CLI examples
 ============
 
 **SAM/BAM/CRAM**
@@ -247,7 +249,7 @@ To filter a VCF file annotated by Ensembl VEP:
 
    $ fuc vcf-vep in.vcf 'SYMBOL == "TP53"' > out.vcf
 
-API Examples
+API examples
 ============
 
 **BAM**
@@ -306,13 +308,13 @@ To create various figures for normal-tumor analysis:
     >>> from fuc import common, pyvcf
     >>> common.load_dataset('pyvcf')
     >>> vf = pyvcf.VcfFrame.from_file('~/fuc-data/pyvcf/normal-tumor.vcf')
-    >>> af = pyvcf.AnnFrame.from_file('~/fuc-data/pyvcf/normal-tumor-annot.tsv', 'Sample')
+    >>> af = pyvcf.AnnFrame.from_file('~/fuc-data/pyvcf/normal-tumor-annot.tsv', sample_col='Sample')
     >>> normal = af.df[af.df.Tissue == 'Normal'].index
     >>> tumor = af.df[af.df.Tissue == 'Tumor'].index
     >>> fig, [[ax1, ax2], [ax3, ax4]] = plt.subplots(2, 2, figsize=(10, 10))
     >>> vf.plot_tmb(ax=ax1)
-    >>> vf.plot_tmb(ax=ax2, af=af, hue='Tissue')
-    >>> vf.plot_hist('DP', ax=ax3, af=af, hue='Tissue')
+    >>> vf.plot_tmb(ax=ax2, af=af, group_col='Tissue')
+    >>> vf.plot_hist('DP', ax=ax3, af=af, group_col='Tissue')
     >>> vf.plot_regplot(normal, tumor, ax=ax4)
     >>> plt.tight_layout()
 

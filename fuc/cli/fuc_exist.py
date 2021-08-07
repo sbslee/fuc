@@ -18,7 +18,7 @@ def create_parser(subparsers):
     parser = api.common._add_parser(
         subparsers,
         api.common._script_name(),
-        help='[FUC] Check whether certain files exist.',
+        help='Check whether certain files exist.',
         description=description,
     )
     parser.add_argument('files', nargs='*',

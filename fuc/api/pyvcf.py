@@ -105,6 +105,110 @@ CUSTOM_GENOTYPE_KEYS = {
     'AF':  {'number': 1,   'type': float},  # Allele fraction of the event in the tumor
 }
 
+def rescue_filtered_variants(vfs, format='GT'):
+    """
+    Rescue filtered variants if they are PASS in at least one of the input
+    VCF files.
+
+    Parameters
+    ----------
+    vfs : list
+        List of VcfFrame objects.
+
+    Returns
+    -------
+    VcfFrame
+        VcfFrame object.
+
+    Examples
+    --------
+
+    >>> from fuc import pyvcf
+    >>> data1 = {
+    ...     'CHROM': ['chr1', 'chr1', 'chr1'],
+    ...     'POS': [100, 101, 102],
+    ...     'ID': ['.', '.', '.'],
+    ...     'REF': ['G', 'T', 'C'],
+    ...     'ALT': ['A', 'C', 'T'],
+    ...     'QUAL': ['.', '.', '.'],
+    ...     'FILTER': ['PASS', 'weak_evidence', 'PASS'],
+    ...     'INFO': ['.', '.', '.'],
+    ...     'FORMAT': ['GT', 'GT', 'GT'],
+    ...     'A': ['0/1', '0/1', '0/1']
+    ... }
+    >>> data2 = {
+    ...     'CHROM': ['chr1', 'chr1', 'chr1'],
+    ...     'POS': [100, 101, 102],
+    ...     'ID': ['.', '.', '.'],
+    ...     'REF': ['G', 'T', 'C'],
+    ...     'ALT': ['A', 'C', 'T'],
+    ...     'QUAL': ['.', '.', '.'],
+    ...     'FILTER': ['orientation', 'weak_evidence', 'PASS'],
+    ...     'INFO': ['.', '.', '.'],
+    ...     'FORMAT': ['GT', 'GT', 'GT'],
+    ...     'B': ['0/1', '0/1', '0/1']
+    ... }
+    >>> data3 = {
+    ...     'CHROM': ['chr1', 'chr1', 'chr1'],
+    ...     'POS': [102, 103, 104],
+    ...     'ID': ['.', '.', '.'],
+    ...     'REF': ['C', 'T', 'A'],
+    ...     'ALT': ['T', 'C', 'T'],
+    ...     'QUAL': ['.', '.', '.'],
+    ...     'FILTER': ['PASS', 'weak_evidence', 'PASS'],
+    ...     'INFO': ['.', '.', '.'],
+    ...     'FORMAT': ['GT', 'GT', 'GT'],
+    ...     'C': ['0/1', '0/1', '0/1']
+    ... }
+    >>> vf1 = pyvcf.VcfFrame.from_dict([], data1)
+    >>> vf2 = pyvcf.VcfFrame.from_dict([], data2)
+    >>> vf3 = pyvcf.VcfFrame.from_dict([], data3)
+    >>> vf1.df
+      CHROM  POS ID REF ALT QUAL         FILTER INFO FORMAT    A
+    0  chr1  100  .   G   A    .           PASS    .     GT  0/1
+    1  chr1  101  .   T   C    .  weak_evidence    .     GT  0/1
+    2  chr1  102  .   C   T    .           PASS    .     GT  0/1
+    >>> vf2.df
+      CHROM  POS ID REF ALT QUAL         FILTER INFO FORMAT    B
+    0  chr1  100  .   G   A    .    orientation    .     GT  0/1
+    1  chr1  101  .   T   C    .  weak_evidence    .     GT  0/1
+    2  chr1  102  .   C   T    .           PASS    .     GT  0/1
+    >>> vf3.df
+      CHROM  POS ID REF ALT QUAL         FILTER INFO FORMAT    C
+    0  chr1  102  .   C   T    .           PASS    .     GT  0/1
+    1  chr1  103  .   T   C    .  weak_evidence    .     GT  0/1
+    2  chr1  104  .   A   T    .           PASS    .     GT  0/1
+    >>> rescued_vf = pyvcf.rescue_filtered_variants([vf1, vf2, vf3])
+    >>> rescued_vf.df
+      CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    B    C
+    0  chr1  100  .   G   A    .      .    .     GT  0/1  0/1  ./.
+    1  chr1  102  .   C   T    .      .    .     GT  0/1  0/1  0/1
+    2  chr1  104  .   A   T    .      .    .     GT  ./.  ./.  0/1
+    """
+    # Check for duplicate samples.
+    samples = []
+    for vf in vfs:
+        samples += vf.samples
+    s = pd.Series(samples)
+    duplicates = s[s.duplicated()].values
+    if duplicates:
+        raise ValueError(f'Duplicate samples found: {duplicates}.')
+
+    dfs = []
+    for vf in vfs:
+        df = vf.df[vf.df.FILTER == 'PASS']
+        dfs.append(df[['CHROM', 'POS', 'REF', 'ALT']])
+    df = pd.concat(dfs).drop_duplicates()
+    s = df.apply(lambda r: common.Variant(r.CHROM, r.POS, r.REF, r.ALT), axis=1)
+    filtered_vfs = []
+    for vf in vfs:
+        i = vf.df.apply(lambda r: common.Variant(r.CHROM, r.POS, r.REF, r.ALT) in s.values, axis=1)
+        filtered_vf = vf.copy()
+        filtered_vf.df = vf.df[i]
+        filtered_vfs.append(filtered_vf)
+    merged_vf = merge(filtered_vfs, how='outer', format=format)
+    return merged_vf
+
 def gt_miss(g):
     """
     Return True if sample genotype is missing.
@@ -565,158 +669,6 @@ def row_missval(r):
     for i in range(1, len(r.FORMAT.split(':'))):
         m += ':.'
     return m
-
-class AnnFrame:
-    """
-    Class for storing sample annotation data.
-
-    This class stores sample annotation data as :class:`pandas.DataFrame`
-    with sample names as index.
-
-    Note that an AnnFrame can have a different set of samples than its
-    accompanying VcfFrame.
-
-    Parameters
-    ----------
-    df : pandas.DataFrame
-        DataFrame containing sample annotation data. The index must be
-        sample names.
-
-    See Also
-    --------
-    AnnFrame.from_dict
-        Construct AnnFrame from dict of array-like or dicts.
-    AnnFrame.from_file
-        Construct AnnFrame from a delimited text file.
-
-    Examples
-    --------
-
-    >>> import pandas as pd
-    >>> from fuc import pyvcf
-    >>> data = {
-    ...     'Sample': ['Steven_N', 'Steven_T', 'Sara_N', 'Sara_T'],
-    ...     'Subject': ['Steven', 'Steven', 'Sara', 'Sara'],
-    ...     'Type': ['Normal', 'Tumor', 'Normal', 'Tumor'],
-    ...     'Age': [30, 30, 57, 57]
-    ... }
-    >>> df = pd.DataFrame(data)
-    >>> df = df.set_index('Sample')
-    >>> af = pyvcf.AnnFrame(df)
-    >>> af.df
-             Subject    Type  Age
-    Sample
-    Steven_N  Steven  Normal   30
-    Steven_T  Steven   Tumor   30
-    Sara_N      Sara  Normal   57
-    Sara_T      Sara   Tumor   57
-    """
-    def _check_df(self, df):
-        if type(df.index) == pd.RangeIndex:
-            m = "Index must be sample names, not 'pandas.RangeIndex'."
-            raise ValueError(m)
-        return df
-
-    def __init__(self, df):
-        self._df = self._check_df(df)
-
-    @property
-    def df(self):
-        """pandas.DataFrame : DataFrame containing sample annotation data."""
-        return self._df
-
-    @df.setter
-    def df(self, value):
-        self._df = self._check_df(value)
-
-    @classmethod
-    def from_dict(cls, data, sample_col):
-        """
-        Construct AnnFrame from dict of array-like or dicts.
-
-        The dictionary must have at least one column that represents sample
-        names which are used as index for pandas.DataFrame.
-
-        Parameters
-        ----------
-        data : dict
-            Of the form {field : array-like} or {field : dict}.
-        sample_col : str
-            Column containing sample names.
-
-        Returns
-        -------
-        AnnFrame
-            AnnFrame object.
-
-        See Also
-        --------
-        AnnFrame
-            AnnFrame object creation using constructor.
-        AnnFrame.from_file
-            Construct AnnFrame from a delimited text file.
-
-        Examples
-        --------
-
-        >>> from fuc import pyvcf
-        >>> data = {
-        ...     'Sample': ['Steven_Normal', 'Steven_Tumor', 'Sara_Normal', 'Sara_Tumor'],
-        ...     'Subject': ['Steven', 'Steven', 'Sara', 'Sara'],
-        ...     'Type': ['Normal', 'Tumor', 'Normal', 'Tumor'],
-        ...     'Age': [30, 30, 57, 57]
-        ... }
-        >>> af = pyvcf.AnnFrame.from_dict(data, 'Sample')
-        >>> af.df
-                      Subject    Type  Age
-        Sample
-        Steven_Normal  Steven  Normal   30
-        Steven_Tumor   Steven   Tumor   30
-        Sara_Normal      Sara  Normal   57
-        Sara_Tumor       Sara   Tumor   57
-        """
-        df = pd.DataFrame(data)
-        df = df.set_index(sample_col)
-        return cls(df)
-
-    @classmethod
-    def from_file(cls, fn, sample_col, sep='\t'):
-        """Construct AnnFrame from a delimited text file.
-
-        The text file must have at least one column that represents
-        sample names which are used as index for pandas.DataFrame.
-
-        Parameters
-        ----------
-        fn : str
-            Text file path (zipped or unzipped).
-        sample_col : str
-            Column containing sample names.
-        sep : str, default: '\\\\t'
-            Delimiter to use.
-
-        Returns
-        -------
-        AnnFrame
-            AnnFrame.
-
-        See Also
-        --------
-        AnnFrame
-            AnnFrame object creation using constructor.
-        AnnFrame.from_dict
-            Construct AnnFrame from dict of array-like or dicts.
-
-        Examples
-        --------
-
-        >>> from fuc import pyvcf
-        >>> af1 = pyvcf.AnnFrame.from_file('sample-annot-1.tsv', 'Tumor_Sample_Barcode')
-        >>> af2 = pyvcf.AnnFrame.from_file('sample-annot-2.csv', 'SampleID', sep=',')
-        """
-        df = pd.read_table(fn, sep=sep)
-        df = df.set_index(sample_col)
-        return cls(df)
 
 def simulate_genotype(
     p=0.5, noise_scale=0.05, dp_show=True, dp_loc=30, dp_scale=10,
@@ -1971,24 +1923,22 @@ class VcfFrame:
         return out
 
     def plot_hist(
-        self, k, af=None, hue=None, kde=True, ax=None, figsize=None, **kwargs
+        self, k, af=None, group_col=None, group_order=None, kde=True,
+        ax=None, figsize=None, **kwargs
     ):
         """
         Create a histogram showing AD/AF/DP distribution.
-
-        A grouped histogram can be created with ``hue`` (requires an
-        AnnFrame).
 
         Parameters
         ----------
         k : {'AD', 'AF', 'DP'}
             Genotype key.
-        af : pyvcf.AnnFrame
+        af : common.AnnFrame
             AnnFrame containing sample annotation data.
-        hue : list, optional
-            Column in the AnnFrame containing information about sample groups.
-        hue_order : list, optional
-            Order to plot the group levels in.
+        group_col : list, optional
+            AnnFrame column containing sample group information.
+        group_order : list, optional
+            List of sample group names.
         kde : bool, default: True
             Compute a kernel density estimate to smooth the distribution.
         ax : matplotlib.axes.Axes, optional
@@ -2013,8 +1963,8 @@ class VcfFrame:
 
             >>> from fuc import common, pyvcf
             >>> common.load_dataset('pyvcf')
-            >>> vf = pyvcf.VcfFrame.from_file('~/fuc-data/pyvcf/normal-tumor.vcf')
-            >>> af = pyvcf.AnnFrame.from_file('~/fuc-data/pyvcf/normal-tumor-annot.tsv', 'Sample')
+            >>> vcf_file = '~/fuc-data/pyvcf/normal-tumor.vcf'
+            >>> vf = pyvcf.VcfFrame.from_file(vcf_file)
             >>> vf.plot_hist('DP')
 
         We can draw multiple histograms with hue mapping:
@@ -2022,7 +1972,9 @@ class VcfFrame:
         .. plot::
             :context: close-figs
 
-            >>> vf.plot_hist('DP', af=af, hue='Tissue')
+            >>> annot_file = '~/fuc-data/pyvcf/normal-tumor-annot.tsv'
+            >>> af = common.AnnFrame.from_file(annot_file, sample_col='Sample')
+            >>> vf.plot_hist('DP', af=af, group_col='Tissue')
 
         We can show AF instead of DP:
 
@@ -2039,9 +1991,9 @@ class VcfFrame:
         df = self.extract(k, as_nan=True, func=d[k])
         df = df.T
         id_vars = ['index']
-        if hue is not None:
-            df = pd.concat([df, af.df[hue]], axis=1, join='inner')
-            id_vars.append(hue)
+        if group_col is not None:
+            df = pd.concat([df, af.df[group_col]], axis=1, join='inner')
+            id_vars.append(group_col)
         df = df.reset_index()
         df = pd.melt(df, id_vars=id_vars)
         df = df.dropna()
@@ -2051,23 +2003,27 @@ class VcfFrame:
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
-        sns.histplot(data=df, x=k, hue=hue, kde=kde, ax=ax, **kwargs)
+        sns.histplot(
+            data=df, x=k, hue=group_col, hue_order=group_order, kde=kde,
+            ax=ax, **kwargs
+        )
 
         return ax
 
     def plot_tmb(
-        self, af=None, hue=None, kde=True, ax=None, figsize=None, **kwargs
+        self, af=None, group_col=None, group_order=None, kde=True, ax=None, figsize=None, **kwargs
     ):
         """
         Create a histogram showing TMB distribution.
 
         Parameters
         ----------
-        af : pyvcf.AnnFrame
+        af : common.AnnFrame
             AnnFrame containing sample annotation data (requires ``hue``).
-        hue : list, optional
-            Grouping variable that will produce multiple histograms with
-            different colors (requires ``af``).
+        group_col : str, optional
+            AnnFrame column containing sample group information.
+        group_order : list, optional
+            List of sample group names.
         kde : bool, default: True
             Compute a kernel density estimate to smooth the distribution.
         ax : matplotlib.axes.Axes, optional
@@ -2092,8 +2048,8 @@ class VcfFrame:
 
             >>> from fuc import common, pyvcf
             >>> common.load_dataset('pyvcf')
-            >>> vf = pyvcf.VcfFrame.from_file('~/fuc-data/pyvcf/normal-tumor.vcf')
-            >>> af = pyvcf.AnnFrame.from_file('~/fuc-data/pyvcf/normal-tumor-annot.tsv', 'Sample')
+            >>> vcf_file = '~/fuc-data/pyvcf/normal-tumor.vcf'
+            >>> vf = pyvcf.VcfFrame.from_file(vcf_file)
             >>> vf.plot_tmb()
 
         We can draw multiple histograms with hue mapping:
@@ -2101,7 +2057,9 @@ class VcfFrame:
         .. plot::
             :context: close-figs
 
-            >>> vf.plot_tmb(af=af, hue='Tissue')
+            >>> annot_file = '~/fuc-data/pyvcf/normal-tumor-annot.tsv'
+            >>> af = common.AnnFrame.from_file(annot_file, sample_col='Sample')
+            >>> vf.plot_tmb(af=af, group_col='Tissue')
         """
         s = self.df.iloc[:, 9:].applymap(gt_hasvar).sum()
         s.name = 'TMB'
@@ -2114,7 +2072,11 @@ class VcfFrame:
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
-        sns.histplot(data=df, x='TMB', ax=ax, hue=hue, kde=kde, **kwargs)
+        sns.histplot(
+            data=df, x='TMB', ax=ax, hue=group_col, hue_order=group_order,
+            kde=kde, **kwargs
+        )
+
         return ax
 
     def plot_regplot(self, a, b, ax=None, figsize=None, **kwargs):
@@ -2127,8 +2089,8 @@ class VcfFrame:
 
         Parameters
         ----------
-        a, b : list
-            Sample names. The lists must have the same shape.
+        a, b : array-like
+            Lists of sample names. The lists must have the same shape.
         ax : matplotlib.axes.Axes, optional
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
@@ -2149,10 +2111,14 @@ class VcfFrame:
 
             >>> from fuc import common, pyvcf
             >>> common.load_dataset('pyvcf')
-            >>> vf = pyvcf.VcfFrame.from_file('~/fuc-data/pyvcf/normal-tumor.vcf')
-            >>> af = pyvcf.AnnFrame.from_file('~/fuc-data/pyvcf/normal-tumor-annot.tsv', 'Sample')
+            >>> vcf_file = '~/fuc-data/pyvcf/normal-tumor.vcf'
+            >>> annot_file = '~/fuc-data/pyvcf/normal-tumor-annot.tsv'
+            >>> vf = pyvcf.VcfFrame.from_file(vcf_file)
+            >>> af = common.AnnFrame.from_file(annot_file, sample_col='Sample')
             >>> normal = af.df[af.df.Tissue == 'Normal'].index
+            >>> normal.name = 'Normal'
             >>> tumor = af.df[af.df.Tissue == 'Tumor'].index
+            >>> tumor.name = 'Tumor'
             >>> vf.plot_regplot(normal, tumor)
             Results for B ~ A:
             R^2 = 0.01
@@ -2160,15 +2126,24 @@ class VcfFrame:
             >>> plt.tight_layout()
         """
         s = self.df.iloc[:, 9:].applymap(gt_hasvar).sum()
+        df = pd.concat([s[a].reset_index(), s[b].reset_index()], axis=1)
+        df.columns = ['A_Label', 'A_TMB', 'B_Label', 'B_TMB']
 
         # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
-        df = pd.concat([s[a].reset_index(), s[b].reset_index()], axis=1)
-        df.columns = ['A_Label', 'A_TMB', 'B_Label', 'B_TMB']
-
         sns.regplot(x='A_TMB', y='B_TMB', data=df, ax=ax, **kwargs)
+
+        try:
+            ax.set_xlabel(a.name)
+        except AttributeError:
+            ax.set_xlabel('A')
+
+        try:
+            ax.set_ylabel(b.name)
+        except AttributeError:
+            ax.set_ylabel('B')
 
         # Print summary statistics including R-squared and p-value.
         results = smf.ols(f'B_TMB ~ A_TMB', data=df).fit()
@@ -4104,15 +4079,12 @@ class VcfFrame:
         return self.__class__(self.copy_meta(), df)
 
     def plot_titv(
-        self, af=None, hue=None, hue_order=None, flip=False, ax=None,
+        self, af=None, group_col=None, group_order=None, flip=False, ax=None,
         figsize=None, **kwargs
     ):
         """
         Create a box plot showing the :ref:`Ti/Tv <glossary:Transitions (Ti)
         and transversions (Tv)>` proportions of samples.
-
-        A grouped box plot can be created with ``hue`` (requires an
-        AnnFrame).
 
         Under the hood, this method simply converts the VcfFrame to the
         :class:`pymaf.MafFrame` class and then applies the
@@ -4122,10 +4094,10 @@ class VcfFrame:
         ----------
         af : AnnFrame, optional
             AnnFrame containing sample annotation data.
-        hue : str, optional
-            Column in the AnnFrame containing information about sample groups.
-        hue_order : list, optional
-            Order to plot the group levels in.
+        group_col : str, optional
+            AnnFrame column containing sample group information.
+        group_order : list, optional
+            List of sample group names.
         flip : bool, default: False
             If True, flip the x and y axes.
         ax : matplotlib.axes.Axes, optional
@@ -4167,10 +4139,10 @@ class VcfFrame:
             :context: close-figs
 
             >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
-            >>> af = pyvcf.AnnFrame.from_file(annot_file, 'Tumor_Sample_Barcode')
+            >>> af = common.AnnFrame.from_file(annot_file, sample_col=0)
             >>> vf.plot_titv(af=af,
-            ...              hue='FAB_classification',
-            ...              hue_order=['M0', 'M1', 'M2'])
+            ...              group_col='FAB_classification',
+            ...              group_order=['M0', 'M1', 'M2'])
             >>> plt.tight_layout()
         """
         mf = pymaf.MafFrame.from_vcf(self)
@@ -4180,8 +4152,8 @@ class VcfFrame:
             fig, ax = plt.subplots(figsize=figsize)
 
         mf.plot_titv(
-            af=af, hue=hue, hue_order=hue_order, flip=flip, ax=ax,
-            figsize=figsize, **kwargs
+            af=af, group_col=group_col, group_order=group_order, flip=flip,
+            ax=ax, figsize=figsize, **kwargs
         )
 
         return ax
@@ -4252,14 +4224,14 @@ class VcfFrame:
         return ax
 
     def plot_snvclsc(
-        self, af=None, hue=None, hue_order=None, palette=None,
+        self, af=None, group_col=None, group_order=None, palette=None,
         flip=False, ax=None, figsize=None, **kwargs
     ):
         """
         Create a bar plot summarizing the count distrubtions of the six
         :ref:`glossary:SNV classes` for all samples.
 
-        A grouped bar plot can be created with ``hue`` (requires an AnnFrame).
+        A grouped bar plot can be created with ``group_col`` (requires an AnnFrame).
 
         Under the hood, this method simply converts the VcfFrame to the
         :class:`fuc.api.pymaf.MafFrame` class and then applies the
@@ -4269,10 +4241,10 @@ class VcfFrame:
         ----------
         af : AnnFrame, optional
             AnnFrame containing sample annotation data.
-        hue : str, optional
-            Column in the AnnFrame containing information about sample groups.
-        hue_order : list, optional
-            Order to plot the group levels in.
+        group_col : str, optional
+            AnnFrame column containing sample group information.
+        group_order : list, optional
+            List of sample group names.
         palette : str, optional
             Name of the seaborn palette. See the :ref:`tutorials:Control plot
             colors` tutorial for details.
@@ -4318,10 +4290,10 @@ class VcfFrame:
             :context: close-figs
 
             >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
-            >>> af = pymaf.AnnFrame.from_file(annot_file, 'Tumor_Sample_Barcode')
+            >>> af = common.AnnFrame.from_file(annot_file, sample_col=0)
             >>> vf.plot_snvclsc(af=af,
-            ...                 hue='FAB_classification',
-            ...                 hue_order=['M0', 'M1', 'M2'])
+            ...                 group_col='FAB_classification',
+            ...                 group_order=['M0', 'M1', 'M2'])
             >>> plt.tight_layout()
         """
         mf = pymaf.MafFrame.from_vcf(self)
@@ -4331,21 +4303,19 @@ class VcfFrame:
             fig, ax = plt.subplots(figsize=figsize)
 
         mf.plot_snvclsc(
-            af=af, hue=hue, hue_order=hue_order, palette=palette, flip=flip,
-            ax=ax, **kwargs
+            af=af, group_col=group_col, group_order=group_order,
+            palette=palette, flip=flip, ax=ax, **kwargs
         )
 
         return ax
 
     def plot_snvclsp(
-        self, af=None, hue=None, hue_order=None, palette=None, flip=False,
+        self, af=None, group_col=None, group_order=None, palette=None, flip=False,
         ax=None, figsize=None, **kwargs
     ):
         """
         Create a box plot summarizing the proportion distrubtions of the six
         :ref:`glossary:SNV classes` for all sample.
-
-        A grouped box plot can be created with ``hue`` (requires an AnnFrame).
 
         Under the hood, this method simply converts the VcfFrame to the
         :class:`fuc.api.pymaf.MafFrame` class and then applies the
@@ -4355,10 +4325,10 @@ class VcfFrame:
         ----------
         af : AnnFrame, optional
             AnnFrame containing sample annotation data.
-        hue : str, optional
-            Column in the AnnFrame containing information about sample groups.
-        hue_order : list, optional
-            Order to plot the group levels in.
+        group_col : str, optional
+            AnnFrame column containing sample group information.
+        group_order : list, optional
+            List of sample group names.
         palette : str, optional
             Name of the seaborn palette. See the :ref:`tutorials:Control plot
             colors` tutorial for details.
@@ -4404,10 +4374,10 @@ class VcfFrame:
             :context: close-figs
 
             >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
-            >>> af = pymaf.AnnFrame.from_file(annot_file, 'Tumor_Sample_Barcode')
+            >>> af = common.AnnFrame.from_file(annot_file, sample_col=0)
             >>> vf.plot_snvclsp(af=af,
-            ...                 hue='FAB_classification',
-            ...                 hue_order=['M0', 'M1', 'M2'])
+            ...                 group_col='FAB_classification',
+            ...                 group_order=['M0', 'M1', 'M2'])
             >>> plt.tight_layout()
         """
         mf = pymaf.MafFrame.from_vcf(self)
@@ -4417,8 +4387,8 @@ class VcfFrame:
             fig, ax = plt.subplots(figsize=figsize)
 
         mf.plot_snvclsp(
-            af=af, hue=hue, hue_order=hue_order, palette=palette, flip=flip,
-            ax=ax, **kwargs
+            af=af, group_col=group_col, group_order=group_order,
+            palette=palette, flip=flip, ax=ax, **kwargs
         )
 
         return ax

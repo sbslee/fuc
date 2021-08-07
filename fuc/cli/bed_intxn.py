@@ -13,7 +13,7 @@ def create_parser(subparsers):
     parser = api.common._add_parser(
         subparsers,
         api.common._script_name(),
-        help='[BED] Find the intersection of two or more BED files.',
+        help='Find the intersection of two or more BED files.',
         description=description,
     )
     parser.add_argument('bed', help='BED files.', nargs='+')
