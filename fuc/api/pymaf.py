@@ -1023,7 +1023,7 @@ class MafFrame:
         group_col : str, optional
             AnnFrame column containing sample group information.
         group_order : list, optional
-            Order to plot the group levels in.
+            List of sample group names.
         count : int, defualt: 10
             Number of top mutated genes to display.
         threshold : float, default: 0.25
@@ -1216,7 +1216,7 @@ class MafFrame:
         group_col : str, optional
             AnnFrame column containing sample group information.
         group_order : list, optional
-            Order to plot the group levels in.
+            List of sample group names.
         ax : matplotlib.axes.Axes, optional
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
@@ -1633,7 +1633,7 @@ class MafFrame:
         group_col : str, optional
             AnnFrame column containing sample group information.
         group_order : list, optional
-            Order to plot the group levels in.
+            List of sample group names.
         genes : list, optional
             Genes to display. When absent, top mutated genes (``count``) will
             be used.
@@ -1729,7 +1729,7 @@ class MafFrame:
         group_col : str
             AnnFrame column containing sample group information.
         group_order : list
-            List of group levels.
+            List of sample group names.
         ax : matplotlib.axes.Axes, optional
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
@@ -1902,7 +1902,7 @@ class MafFrame:
         group_col : str, optional
             AnnFrame column containing sample group information.
         group_order : list, optional
-            Order to plot the group levels in.
+            List of sample group names.
         palette : str, optional
             Name of the seaborn palette. See the :ref:`tutorials:Control plot
             colors` tutorial for details.
@@ -2015,7 +2015,7 @@ class MafFrame:
         group_col : str, optional
             AnnFrame column containing sample group information.
         group_order : list, optional
-            Order to plot the group levels in.
+            List of sample group names.
         palette : str, optional
             Name of the seaborn palette. See the :ref:`tutorials:Control plot
             colors` tutorial for details.
@@ -2271,7 +2271,7 @@ class MafFrame:
         group_col : str, optional
             AnnFrame column containing sample group information.
         group_order : list, optional
-            Order to plot the group levels in.
+            List of sample group names.
         flip : bool, default: False
             If True, flip the x and y axes.
         ax : matplotlib.axes.Axes, optional
@@ -2562,7 +2562,7 @@ class MafFrame:
         group_col : str
             AnnFrame column containing sample group information.
         group_order : list, optional
-            List of group levels.
+            List of sample group names.
         patients : list, optional
             List of patient names.
         legend : bool, default: True
@@ -2634,7 +2634,7 @@ class MafFrame:
         group_col : str, optional
             AnnFrame column containing sample group information.
         group_order : list, optional
-            Order to plot the group levels in.
+            List of sample group names.
         flip : bool, default: False
             If True, flip the x and y axes.
         sort : bool, default: True
@@ -3196,7 +3196,7 @@ class MafFrame:
         group_col : str
             AnnFrame column containing sample group information.
         group_order : list
-            List of group levels.
+            List of sample group names.
         count : int, default: 10
             Number of top mutated genes to include.
         ax : matplotlib.axes.Axes, optional
@@ -3263,7 +3263,7 @@ class MafFrame:
         group_col : str
             AnnFrame column containing sample group information.
         group_order : list
-            List of group levels.
+            List of sample group names.
         count : int, default: 10
             Number of top mutated genes to include.
         ax : matplotlib.axes.Axes, optional

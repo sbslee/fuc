@@ -1938,7 +1938,7 @@ class VcfFrame:
         group_col : list, optional
             AnnFrame column containing sample group information.
         group_order : list, optional
-            Order to plot the group levels in.
+            List of sample group names.
         kde : bool, default: True
             Compute a kernel density estimate to smooth the distribution.
         ax : matplotlib.axes.Axes, optional
@@ -2023,7 +2023,7 @@ class VcfFrame:
         group_col : str, optional
             AnnFrame column containing sample group information.
         group_order : list, optional
-            List of group levels.
+            List of sample group names.
         kde : bool, default: True
             Compute a kernel density estimate to smooth the distribution.
         ax : matplotlib.axes.Axes, optional
@@ -4097,7 +4097,7 @@ class VcfFrame:
         group_col : str, optional
             AnnFrame column containing sample group information.
         group_order : list, optional
-            Order to plot the group levels in.
+            List of sample group names.
         flip : bool, default: False
             If True, flip the x and y axes.
         ax : matplotlib.axes.Axes, optional
@@ -4244,7 +4244,7 @@ class VcfFrame:
         group_col : str, optional
             AnnFrame column containing sample group information.
         group_order : list, optional
-            Order to plot the group levels in.
+            List of sample group names.
         palette : str, optional
             Name of the seaborn palette. See the :ref:`tutorials:Control plot
             colors` tutorial for details.
@@ -4328,7 +4328,7 @@ class VcfFrame:
         group_col : str, optional
             AnnFrame column containing sample group information.
         group_order : list, optional
-            Order to plot the group levels in.
+            List of sample group names.
         palette : str, optional
             Name of the seaborn palette. See the :ref:`tutorials:Control plot
             colors` tutorial for details.

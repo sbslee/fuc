@@ -357,7 +357,7 @@ class AnnFrame:
         patient_order : list, optional
             Plot only specified patients (in that order too).
         group_order : list, optional
-            Plot only specified groups (in that order too).
+            List of sample group names.
         annot_order : list, optional
             Plot only specified annotations (in that order too).
         colors : str or list, default: 'tab10'
