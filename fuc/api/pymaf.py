@@ -934,9 +934,9 @@ class MafFrame:
         af : AnnFrame
             AnnFrame containing sample annotation data.
         patient_col : str
-            Column in the AnnFrame which contains patient information.
+            AnnFrame column containing patient information.
         group_col : str
-            Column in the AnnFrame which contains group level information.
+            AnnFrame column containing sample group information.
         groups : list, optional
             List of group levels.
         colors : str
@@ -1004,7 +1004,7 @@ class MafFrame:
         plt.subplots_adjust(wspace=0.01, hspace=0.01)
 
     def plot_clonality(
-        self, col, af=None, hue=None, hue_order=None, count=10,
+        self, col, af=None, group_col=None, group_order=None, count=10,
         threshold=0.25, subclonal=False, ax=None, figsize=None
     ):
         """
@@ -1020,9 +1020,9 @@ class MafFrame:
             Column in the MafFrame containing VAF data.
         af : AnnFrame, optional
             AnnFrame containing sample annotation data.
-        hue : str, optional
-            Column in the AnnFrame containing information about sample groups.
-        hue_order : list, optional
+        group_col : str, optional
+            AnnFrame column containing sample group information.
+        group_order : list, optional
             Order to plot the group levels in.
         count : int, defualt: 10
             Number of top mutated genes to display.
@@ -1073,24 +1073,24 @@ class MafFrame:
             >>> af = common.AnnFrame.from_file(annot_file, sample_col=0)
             >>> mf.plot_clonality('i_TumorVAF_WU',
             ...                   af=af,
-            ...                   hue='FAB_classification',
-            ...                   hue_order=['M0', 'M1', 'M2'])
+            ...                   group_col='FAB_classification',
+            ...                   group_order=['M0', 'M1', 'M2'])
             >>> plt.tight_layout()
         """
         df = self.df.copy()
         df['Clonality'] = self.compute_clonality(col, threshold=threshold)
 
-        if hue is None:
+        if group_col is None:
             s = df.groupby('Hugo_Symbol')['Clonality'].value_counts()
             s.name = 'Count'
             df = s.to_frame().reset_index()
             df = df.pivot(index='Hugo_Symbol', columns='Clonality', values='Count')
         else:
-            df = df.merge(af.df[hue], left_on='Tumor_Sample_Barcode', right_index=True)
-            s = df.groupby(['Hugo_Symbol', hue])['Clonality'].value_counts()
+            df = df.merge(af.df[group_col], left_on='Tumor_Sample_Barcode', right_index=True)
+            s = df.groupby(['Hugo_Symbol', group_col])['Clonality'].value_counts()
             s.name = 'Count'
             df = s.to_frame().reset_index()
-            df = df.pivot(index=['Hugo_Symbol', hue], columns='Clonality', values='Count')
+            df = df.pivot(index=['Hugo_Symbol', group_col], columns='Clonality', values='Count')
 
         df = df.reset_index()
         df = df.fillna(0)
@@ -1108,8 +1108,8 @@ class MafFrame:
             y = 'Clonal'
 
         sns.barplot(
-            x='Hugo_Symbol', y=y, data=df, order=genes, hue=hue,
-            hue_order=hue_order, ax=ax
+            x='Hugo_Symbol', y=y, data=df, order=genes, hue=group_col,
+            hue_order=group_order, ax=ax
         )
 
         ax.set_xlabel('')
@@ -1199,8 +1199,8 @@ class MafFrame:
         return ax
 
     def plot_genepair(
-        self, x, y, col, af=None, hue=None, hue_order=None, ax=None,
-        figsize=None, **kwargs
+        self, x, y, vaf_col, af=None, group_col=None, group_order=None,
+        ax=None, figsize=None, **kwargs
     ):
         """
         Create a scatter plot of VAF between Gene X and Gene Y.
@@ -1209,13 +1209,13 @@ class MafFrame:
         ----------
         x, y : str
             Gene names.
-        col : str
-            Column in the MafFrame containing VAF data.
+        vaf_col : str
+            MafFrame column containing VAF data.
         af : AnnFrame, optional
             AnnFrame containing sample annotation data.
-        hue : str, optional
-            Column in the AnnFrame containing information about sample groups.
-        hue_order : list, optional
+        group_col : str, optional
+            AnnFrame column containing sample group information.
+        group_order : list, optional
             Order to plot the group levels in.
         ax : matplotlib.axes.Axes, optional
             Pre-existing axes for the plot. Otherwise, crete a new one.
@@ -1255,26 +1255,27 @@ class MafFrame:
             >>> af = common.AnnFrame.from_file(annot_file, sample_col=0)
             >>> mf.plot_genepair('DNMT3A', 'FLT3', 'i_TumorVAF_WU',
             ...                  af=af,
-            ...                  hue='FAB_classification')
+            ...                  group_col='FAB_classification')
             >>> plt.tight_layout()
         """
         df = self.df[self.df.Hugo_Symbol.isin([x, y])]
-        df = df[['Tumor_Sample_Barcode', 'Hugo_Symbol', col]]
-        df = df.sort_values(col, ascending=False)
+        df = df[['Tumor_Sample_Barcode', 'Hugo_Symbol', vaf_col]]
+        df = df.sort_values(vaf_col, ascending=False)
         df = df.drop_duplicates(subset=['Tumor_Sample_Barcode', 'Hugo_Symbol'])
         df = df.pivot(index='Tumor_Sample_Barcode',
-            columns='Hugo_Symbol', values=col)
+            columns='Hugo_Symbol', values=vaf_col)
         df = df.fillna(0)
 
-        if hue is not None:
-            df = df.merge(af.df[hue], left_index=True, right_index=True)
+        if group_col is not None:
+            df = df.merge(af.df[group_col], left_index=True, right_index=True)
 
         # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
         sns.scatterplot(
-            x=x, y=y, data=df, ax=ax, hue=hue, hue_order=hue_order, **kwargs
+            x=x, y=y, data=df, ax=ax, hue=group_col, hue_order=group_order,
+            **kwargs
         )
 
         # Print summary statistics including R-squared and p-value.
@@ -1284,7 +1285,6 @@ class MafFrame:
         print(f'  P = {results.f_pvalue:.2e}')
 
         return ax
-
 
     def plot_regplot(
         self, af, group_col, a, b, a_size=None, b_size=None, genes=None,
@@ -1619,8 +1619,8 @@ class MafFrame:
         return ax
 
     def plot_mutated(
-        self, af=None, hue=None, hue_order=None, genes=None, count=10,
-        ax=None, figsize=None
+        self, af=None, group_col=None, group_order=None, genes=None,
+        count=10, ax=None, figsize=None
     ):
         """
         Create a bar plot visualizing the mutation prevalence of top
@@ -1630,9 +1630,9 @@ class MafFrame:
         ----------
         af : AnnFrame, optional
             AnnFrame containing sample annotation data.
-        hue : str, optional
-            Column in the AnnFrame containing information about sample groups.
-        hue_order : list, optional
+        group_col : str, optional
+            AnnFrame column containing sample group information.
+        group_order : list, optional
             Order to plot the group levels in.
         genes : list, optional
             Genes to display. When absent, top mutated genes (``count``) will
@@ -1677,8 +1677,8 @@ class MafFrame:
             >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
             >>> af = common.AnnFrame.from_file(annot_file, sample_col=0)
             >>> mf.plot_mutated(af=af,
-            ...                 hue='FAB_classification',
-            ...                 hue_order=['M0', 'M1', 'M2'])
+            ...                 group_col='FAB_classification',
+            ...                 group_order=['M0', 'M1', 'M2'])
             >>> plt.tight_layout()
         """
         df = self.matrix_prevalence()
@@ -1689,23 +1689,23 @@ class MafFrame:
 
         df = df.loc[genes]
         df = df.applymap(lambda x: True if x else False)
-        if hue is None:
+        if group_col is None:
             df = (df.sum(axis=1) / df.shape[1]).to_frame().reset_index()
             df.columns.values[1] = 'Prevalence'
         else:
             df = df.T
-            df = pd.merge(df, af.df[hue], left_index=True, right_index=True)
-            df = df.groupby([hue]).mean().reset_index()
-            df = df.melt(id_vars=[hue])
-            df.columns = [hue, 'Hugo_Symbol', 'Prevalence']
+            df = pd.merge(df, af.df[group_col], left_index=True, right_index=True)
+            df = df.groupby([group_col]).mean().reset_index()
+            df = df.melt(id_vars=[group_col])
+            df.columns = [group_col, 'Hugo_Symbol', 'Prevalence']
 
         # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
         sns.barplot(
-            x='Hugo_Symbol', y='Prevalence', data=df, hue=hue,
-            hue_order=hue_order, ax=ax
+            x='Hugo_Symbol', y='Prevalence', data=df, hue=group_col,
+            hue_order=group_order, ax=ax
         )
 
         ax.set_xlabel('')
@@ -1713,7 +1713,8 @@ class MafFrame:
         return ax
 
     def plot_mutated_matched(
-        self, af, patient_col, group_col, group_order, ax=None, figsize=None, **kwargs
+        self, af, patient_col, group_col, group_order, ax=None, figsize=None,
+        **kwargs
     ):
         """
         Create a bar plot visualizing the mutation prevalence of top
@@ -1724,9 +1725,9 @@ class MafFrame:
         af : AnnFrame
             AnnFrame containing sample annotation data.
         patient_col : str
-            Column in the AnnFrame which contains patient information.
+            AnnFrame column containing patient information.
         group_col : str
-            Column in the AnnFrame which contains group level information.
+            AnnFrame column containing sample group information.
         group_order : list
             List of group levels.
         ax : matplotlib.axes.Axes, optional
@@ -1885,22 +1886,22 @@ class MafFrame:
         return ax
 
     def plot_snvclsc(
-        self, af=None, hue=None, hue_order=None, palette=None,
+        self, af=None, group_col=None, group_order=None, palette=None,
         flip=False, ax=None, figsize=None, **kwargs
     ):
         """
         Create a bar plot summarizing the count distrubtions of the six
         :ref:`glossary:SNV classes` for all samples.
 
-        A grouped bar plot can be created with ``hue`` (requires an AnnFrame).
+        A grouped bar plot can be created with ``group_col`` (requires an AnnFrame).
 
         Parameters
         ----------
         af : AnnFrame, optional
             AnnFrame containing sample annotation data.
-        hue : str, optional
-            Column in the AnnFrame containing information about sample groups.
-        hue_order : list, optional
+        group_col : str, optional
+            AnnFrame column containing sample group information.
+        group_order : list, optional
             Order to plot the group levels in.
         palette : str, optional
             Name of the seaborn palette. See the :ref:`tutorials:Control plot
@@ -1953,8 +1954,8 @@ class MafFrame:
             >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
             >>> af = common.AnnFrame.from_file(annot_file, sample_col=0)
             >>> mf.plot_snvclsc(af=af,
-            ...                 hue='FAB_classification',
-            ...                 hue_order=['M0', 'M1', 'M2'])
+            ...                 group_col='FAB_classification',
+            ...                 group_order=['M0', 'M1', 'M2'])
             >>> plt.tight_layout()
         """
         # Add the SNV_Class column.
@@ -1967,10 +1968,10 @@ class MafFrame:
         df = pd.concat([df, s], axis=1)
 
         # Count the occurance of each SNV class.
-        if hue is not None:
-            df = pd.merge(df, af.df[hue], left_on='Tumor_Sample_Barcode',
+        if group_col is not None:
+            df = pd.merge(df, af.df[group_col], left_on='Tumor_Sample_Barcode',
                 right_index=True)
-            s = df.groupby([hue]).SNV_Class.value_counts()
+            s = df.groupby([group_col]).SNV_Class.value_counts()
             df = s.to_frame().rename(columns={'SNV_Class': 'Count'}
                 ).reset_index()
         else:
@@ -1990,7 +1991,7 @@ class MafFrame:
             xlabel, ylabel = '', 'Count'
 
         sns.barplot(
-            x=x, y=y, data=df, ax=ax, hue=hue, hue_order=hue_order,
+            x=x, y=y, data=df, ax=ax, hue=group_col, hue_order=group_order,
             palette=palette, order=SNV_CLASS_ORDER, **kwargs
         )
 
@@ -2000,22 +2001,20 @@ class MafFrame:
         return ax
 
     def plot_snvclsp(
-        self, af=None, hue=None, hue_order=None, palette=None, flip=False,
+        self, af=None, group_col=None, group_order=None, palette=None, flip=False,
         ax=None, figsize=None, **kwargs
     ):
         """
         Create a box plot summarizing the proportion distrubtions of the six
         :ref:`glossary:SNV classes` for all sample.
 
-        A grouped box plot can be created with ``hue`` (requires an AnnFrame).
-
         Parameters
         ----------
         af : AnnFrame, optional
             AnnFrame containing sample annotation data.
-        hue : str, optional
-            Column in the AnnFrame containing information about sample groups.
-        hue_order : list, optional
+        group_col : str, optional
+            AnnFrame column containing sample group information.
+        group_order : list, optional
             Order to plot the group levels in.
         palette : str, optional
             Name of the seaborn palette. See the :ref:`tutorials:Control plot
@@ -2068,8 +2067,8 @@ class MafFrame:
             >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
             >>> af = common.AnnFrame.from_file(annot_file, sample_col=0)
             >>> mf.plot_snvclsp(af=af,
-            ...                 hue='FAB_classification',
-            ...                 hue_order=['M0', 'M1', 'M2'])
+            ...                 group_col='FAB_classification',
+            ...                 group_order=['M0', 'M1', 'M2'])
             >>> plt.tight_layout()
         """
         # Add the SNV_Class column.
@@ -2091,11 +2090,11 @@ class MafFrame:
         df.columns = df.columns.get_level_values(1)
         df.columns.name = ''
 
-        if hue is None:
+        if group_col is None:
             df = pd.melt(df, var_name='SNV_Class', value_name='Proportion')
         else:
-            df = pd.merge(df, af.df[hue], left_index=True, right_index=True)
-            df = pd.melt(df, id_vars=[hue], var_name='SNV_Class',
+            df = pd.merge(df, af.df[group_col], left_index=True, right_index=True)
+            df = pd.melt(df, id_vars=[group_col], var_name='SNV_Class',
                 value_name='Proportion')
 
         # Determine which matplotlib axes to plot on.
@@ -2110,8 +2109,8 @@ class MafFrame:
             xlabel, ylabel = '', 'Proportion'
 
         sns.boxplot(
-            x=x, y=y, data=df, hue=hue, hue_order=hue_order, palette=palette,
-            ax=ax, **kwargs
+            x=x, y=y, data=df, hue=group_col, hue_order=group_order,
+            palette=palette, ax=ax, **kwargs
         )
 
         ax.set_xlabel(xlabel)
@@ -2258,23 +2257,20 @@ class MafFrame:
         return ax
 
     def plot_titv(
-        self, af=None, hue=None, hue_order=None, flip=False, ax=None,
+        self, af=None, group_col=None, group_order=None, flip=False, ax=None,
         figsize=None, **kwargs
     ):
         """
         Create a box plot showing the :ref:`Ti/Tv <glossary:Transitions (Ti)
         and transversions (Tv)>` proportions of samples.
 
-        A grouped box plot can be created with ``hue`` (requires an
-        AnnFrame).
-
         Parameters
         ----------
         af : AnnFrame, optional
             AnnFrame containing sample annotation data.
-        hue : str, optional
-            Column in the AnnFrame containing information about sample groups.
-        hue_order : list, optional
+        group_col : str, optional
+            AnnFrame column containing sample group information.
+        group_order : list, optional
             Order to plot the group levels in.
         flip : bool, default: False
             If True, flip the x and y axes.
@@ -2319,8 +2315,8 @@ class MafFrame:
             >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
             >>> af = common.AnnFrame.from_file(annot_file, sample_col=0)
             >>> mf.plot_titv(af=af,
-            ...              hue='FAB_classification',
-            ...              hue_order=['M0', 'M1', 'M2'])
+            ...              group_col='FAB_classification',
+            ...              group_order=['M0', 'M1', 'M2'])
             >>> plt.tight_layout()
         """
         df = self.df[self.df.Variant_Type == 'SNP']
@@ -2340,10 +2336,10 @@ class MafFrame:
         df.columns = df.columns.get_level_values(1)
         df.columns.name = ''
 
-        if hue is not None:
-            df = pd.merge(df, af.df[hue], left_index=True, right_index=True)
+        if group_col is not None:
+            df = pd.merge(df, af.df[group_col], left_index=True, right_index=True)
             df = df.reset_index(drop=True)
-            df = df.set_index(hue)
+            df = df.set_index(group_col)
             df = pd.melt(df, var_name='SNV_Type', value_name='Proportion',
                 ignore_index=False)
             df = df.reset_index()
@@ -2361,8 +2357,10 @@ class MafFrame:
             x, y = 'SNV_Type', 'Proportion'
             xlabel, ylabel = '', 'Proportion'
 
-        sns.boxplot(x=x, y=y, data=df, hue=hue, hue_order=hue_order, ax=ax,
-            **kwargs)
+        sns.boxplot(
+            x=x, y=y, data=df, hue=group_col, hue_order=group_order, ax=ax,
+            **kwargs
+        )
 
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
@@ -2560,9 +2558,9 @@ class MafFrame:
         af : AnnFrame
             AnnFrame containing sample annotation data.
         patient_col : str
-            Column in the AnnFrame which contains patient information.
+            AnnFrame column containing patient information.
         group_col : str
-            Column in the AnnFrame which contains group level information.
+            AnnFrame column containing sample group information.
         group_order : list, optional
             List of group levels.
         patients : list, optional
@@ -3194,9 +3192,9 @@ class MafFrame:
         af : AnnFrame
             AnnFrame containing sample annotation data.
         patient_col : str
-            Column in the AnnFrame which contains patient information.
+            AnnFrame column containing patient information.
         group_col : str
-            Column in the AnnFrame which contains group level information.
+            AnnFrame column containing sample group information.
         group_order : list
             List of group levels.
         count : int, default: 10
@@ -3261,9 +3259,9 @@ class MafFrame:
         af : AnnFrame
             AnnFrame containing sample annotation data.
         patient_col : str
-            Column in the AnnFrame which contains patient information.
+            AnnFrame column containing patient information.
         group_col : str
-            Column in the AnnFrame which contains group level information.
+            AnnFrame column containing sample group information.
         group_order : list
             List of group levels.
         count : int, default: 10

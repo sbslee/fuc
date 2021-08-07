@@ -349,9 +349,9 @@ class AnnFrame:
         Parameters
         ----------
         patient_col : str
-            Column to plot.
+            AnnFrame column containing patient information.
         group_col : str
-            Column to plot.
+            AnnFrame column containing sample group information.
         annot_col : str
             Column to plot.
         patient_order : list, optional

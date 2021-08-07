@@ -20,6 +20,7 @@ Changelog
 * Add new class :class:`common.Variant`.
 * Add new method :meth:`pyvcf.rescue_filtered_variants`.
 * Add new arguments ``a_size`` and ``b_size`` to :meth:`pymaf.MafFrame.plot_regplot` method.
+* Rename ``hue`` and ``hue_order`` arguments in plotting methods to ``group_col`` and ``group_order``, respectively.
 
 0.19.0 (2021-07-31)
 -------------------

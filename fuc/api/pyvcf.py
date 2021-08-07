@@ -1923,13 +1923,11 @@ class VcfFrame:
         return out
 
     def plot_hist(
-        self, k, af=None, hue=None, kde=True, ax=None, figsize=None, **kwargs
+        self, k, af=None, group_col=None, group_order=None, kde=True,
+        ax=None, figsize=None, **kwargs
     ):
         """
         Create a histogram showing AD/AF/DP distribution.
-
-        A grouped histogram can be created with ``hue`` (requires an
-        AnnFrame).
 
         Parameters
         ----------
@@ -1937,9 +1935,9 @@ class VcfFrame:
             Genotype key.
         af : common.AnnFrame
             AnnFrame containing sample annotation data.
-        hue : list, optional
-            Column in the AnnFrame containing information about sample groups.
-        hue_order : list, optional
+        group_col : list, optional
+            AnnFrame column containing sample group information.
+        group_order : list, optional
             Order to plot the group levels in.
         kde : bool, default: True
             Compute a kernel density estimate to smooth the distribution.
@@ -1976,7 +1974,7 @@ class VcfFrame:
 
             >>> annot_file = '~/fuc-data/pyvcf/normal-tumor-annot.tsv'
             >>> af = common.AnnFrame.from_file(annot_file, sample_col='Sample')
-            >>> vf.plot_hist('DP', af=af, hue='Tissue')
+            >>> vf.plot_hist('DP', af=af, group_col='Tissue')
 
         We can show AF instead of DP:
 
@@ -1993,9 +1991,9 @@ class VcfFrame:
         df = self.extract(k, as_nan=True, func=d[k])
         df = df.T
         id_vars = ['index']
-        if hue is not None:
-            df = pd.concat([df, af.df[hue]], axis=1, join='inner')
-            id_vars.append(hue)
+        if group_col is not None:
+            df = pd.concat([df, af.df[group_col]], axis=1, join='inner')
+            id_vars.append(group_col)
         df = df.reset_index()
         df = pd.melt(df, id_vars=id_vars)
         df = df.dropna()
@@ -2005,12 +2003,15 @@ class VcfFrame:
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
-        sns.histplot(data=df, x=k, hue=hue, kde=kde, ax=ax, **kwargs)
+        sns.histplot(
+            data=df, x=k, hue=group_col, hue_order=group_order, kde=kde,
+            ax=ax, **kwargs
+        )
 
         return ax
 
     def plot_tmb(
-        self, af=None, hue=None, kde=True, ax=None, figsize=None, **kwargs
+        self, af=None, group_col=None, group_order=None, kde=True, ax=None, figsize=None, **kwargs
     ):
         """
         Create a histogram showing TMB distribution.
@@ -2019,9 +2020,10 @@ class VcfFrame:
         ----------
         af : common.AnnFrame
             AnnFrame containing sample annotation data (requires ``hue``).
-        hue : list, optional
-            Grouping variable that will produce multiple histograms with
-            different colors (requires ``af``).
+        group_col : str, optional
+            AnnFrame column containing sample group information.
+        group_order : list, optional
+            List of group levels.
         kde : bool, default: True
             Compute a kernel density estimate to smooth the distribution.
         ax : matplotlib.axes.Axes, optional
@@ -2057,7 +2059,7 @@ class VcfFrame:
 
             >>> annot_file = '~/fuc-data/pyvcf/normal-tumor-annot.tsv'
             >>> af = common.AnnFrame.from_file(annot_file, sample_col='Sample')
-            >>> vf.plot_tmb(af=af, hue='Tissue')
+            >>> vf.plot_tmb(af=af, group_col='Tissue')
         """
         s = self.df.iloc[:, 9:].applymap(gt_hasvar).sum()
         s.name = 'TMB'
@@ -2070,7 +2072,11 @@ class VcfFrame:
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
-        sns.histplot(data=df, x='TMB', ax=ax, hue=hue, kde=kde, **kwargs)
+        sns.histplot(
+            data=df, x='TMB', ax=ax, hue=group_col, hue_order=group_order,
+            kde=kde, **kwargs
+        )
+
         return ax
 
     def plot_regplot(self, a, b, ax=None, figsize=None, **kwargs):
@@ -4073,15 +4079,12 @@ class VcfFrame:
         return self.__class__(self.copy_meta(), df)
 
     def plot_titv(
-        self, af=None, hue=None, hue_order=None, flip=False, ax=None,
+        self, af=None, group_col=None, group_order=None, flip=False, ax=None,
         figsize=None, **kwargs
     ):
         """
         Create a box plot showing the :ref:`Ti/Tv <glossary:Transitions (Ti)
         and transversions (Tv)>` proportions of samples.
-
-        A grouped box plot can be created with ``hue`` (requires an
-        AnnFrame).
 
         Under the hood, this method simply converts the VcfFrame to the
         :class:`pymaf.MafFrame` class and then applies the
@@ -4091,9 +4094,9 @@ class VcfFrame:
         ----------
         af : AnnFrame, optional
             AnnFrame containing sample annotation data.
-        hue : str, optional
-            Column in the AnnFrame containing information about sample groups.
-        hue_order : list, optional
+        group_col : str, optional
+            AnnFrame column containing sample group information.
+        group_order : list, optional
             Order to plot the group levels in.
         flip : bool, default: False
             If True, flip the x and y axes.
@@ -4138,8 +4141,8 @@ class VcfFrame:
             >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
             >>> af = common.AnnFrame.from_file(annot_file, sample_col=0)
             >>> vf.plot_titv(af=af,
-            ...              hue='FAB_classification',
-            ...              hue_order=['M0', 'M1', 'M2'])
+            ...              group_col='FAB_classification',
+            ...              group_order=['M0', 'M1', 'M2'])
             >>> plt.tight_layout()
         """
         mf = pymaf.MafFrame.from_vcf(self)
@@ -4149,8 +4152,8 @@ class VcfFrame:
             fig, ax = plt.subplots(figsize=figsize)
 
         mf.plot_titv(
-            af=af, hue=hue, hue_order=hue_order, flip=flip, ax=ax,
-            figsize=figsize, **kwargs
+            af=af, group_col=group_col, group_order=group_order, flip=flip,
+            ax=ax, figsize=figsize, **kwargs
         )
 
         return ax
@@ -4221,14 +4224,14 @@ class VcfFrame:
         return ax
 
     def plot_snvclsc(
-        self, af=None, hue=None, hue_order=None, palette=None,
+        self, af=None, group_col=None, group_order=None, palette=None,
         flip=False, ax=None, figsize=None, **kwargs
     ):
         """
         Create a bar plot summarizing the count distrubtions of the six
         :ref:`glossary:SNV classes` for all samples.
 
-        A grouped bar plot can be created with ``hue`` (requires an AnnFrame).
+        A grouped bar plot can be created with ``group_col`` (requires an AnnFrame).
 
         Under the hood, this method simply converts the VcfFrame to the
         :class:`fuc.api.pymaf.MafFrame` class and then applies the
@@ -4238,9 +4241,9 @@ class VcfFrame:
         ----------
         af : AnnFrame, optional
             AnnFrame containing sample annotation data.
-        hue : str, optional
-            Column in the AnnFrame containing information about sample groups.
-        hue_order : list, optional
+        group_col : str, optional
+            AnnFrame column containing sample group information.
+        group_order : list, optional
             Order to plot the group levels in.
         palette : str, optional
             Name of the seaborn palette. See the :ref:`tutorials:Control plot
@@ -4289,8 +4292,8 @@ class VcfFrame:
             >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
             >>> af = common.AnnFrame.from_file(annot_file, sample_col=0)
             >>> vf.plot_snvclsc(af=af,
-            ...                 hue='FAB_classification',
-            ...                 hue_order=['M0', 'M1', 'M2'])
+            ...                 group_col='FAB_classification',
+            ...                 group_order=['M0', 'M1', 'M2'])
             >>> plt.tight_layout()
         """
         mf = pymaf.MafFrame.from_vcf(self)
@@ -4300,21 +4303,19 @@ class VcfFrame:
             fig, ax = plt.subplots(figsize=figsize)
 
         mf.plot_snvclsc(
-            af=af, hue=hue, hue_order=hue_order, palette=palette, flip=flip,
-            ax=ax, **kwargs
+            af=af, group_col=group_col, group_order=group_order,
+            palette=palette, flip=flip, ax=ax, **kwargs
         )
 
         return ax
 
     def plot_snvclsp(
-        self, af=None, hue=None, hue_order=None, palette=None, flip=False,
+        self, af=None, group_col=None, group_order=None, palette=None, flip=False,
         ax=None, figsize=None, **kwargs
     ):
         """
         Create a box plot summarizing the proportion distrubtions of the six
         :ref:`glossary:SNV classes` for all sample.
-
-        A grouped box plot can be created with ``hue`` (requires an AnnFrame).
 
         Under the hood, this method simply converts the VcfFrame to the
         :class:`fuc.api.pymaf.MafFrame` class and then applies the
@@ -4324,9 +4325,9 @@ class VcfFrame:
         ----------
         af : AnnFrame, optional
             AnnFrame containing sample annotation data.
-        hue : str, optional
-            Column in the AnnFrame containing information about sample groups.
-        hue_order : list, optional
+        group_col : str, optional
+            AnnFrame column containing sample group information.
+        group_order : list, optional
             Order to plot the group levels in.
         palette : str, optional
             Name of the seaborn palette. See the :ref:`tutorials:Control plot
@@ -4375,8 +4376,8 @@ class VcfFrame:
             >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
             >>> af = common.AnnFrame.from_file(annot_file, sample_col=0)
             >>> vf.plot_snvclsp(af=af,
-            ...                 hue='FAB_classification',
-            ...                 hue_order=['M0', 'M1', 'M2'])
+            ...                 group_col='FAB_classification',
+            ...                 group_order=['M0', 'M1', 'M2'])
             >>> plt.tight_layout()
         """
         mf = pymaf.MafFrame.from_vcf(self)
@@ -4386,8 +4387,8 @@ class VcfFrame:
             fig, ax = plt.subplots(figsize=figsize)
 
         mf.plot_snvclsp(
-            af=af, hue=hue, hue_order=hue_order, palette=palette, flip=flip,
-            ax=ax, **kwargs
+            af=af, group_col=group_col, group_order=group_order,
+            palette=palette, flip=flip, ax=ax, **kwargs
         )
 
         return ax
