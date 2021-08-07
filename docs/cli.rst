@@ -314,7 +314,8 @@ fuc-demux
      - reports.pdf
    
    Usage examples:
-     $ fuc fuc-demux reports_dir output_dir
+     $ fuc fuc-demux Reports output
+     $ fuc fuc-demux Reports output --sheet SampleSheet.csv
    
    Positional arguments:
      reports       Reports directory.
