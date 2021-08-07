@@ -125,7 +125,7 @@ Finally, you can clone the GitHub repository and then install fuc locally:
 
 The nice thing about this approach is that you will have access to development versions that are not available in Anaconda or PyPI. For example, you can access a development branch with the ``git checkout`` command. When you do this, please make sure your environment already has all the dependencies installed.
 
-Getting Help
+Getting help
 ============
 
 For detailed documentations on the fuc package's CLI and API, please refer to the `Read the Docs <https://sbslee-fuc.readthedocs.io/en/latest/>`_.
@@ -153,7 +153,7 @@ For getting help on a specific submodule (e.g. pyvcf):
    >>> from fuc import pyvcf
    >>> help(pyvcf)
 
-CLI Examples
+CLI examples
 ============
 
 **SAM/BAM/CRAM**
@@ -234,7 +234,7 @@ To filter a VCF file annotated by Ensembl VEP:
 
    $ fuc vcf-vep in.vcf 'SYMBOL == "TP53"' > out.vcf
 
-API Examples
+API examples
 ============
 
 **BAM**
