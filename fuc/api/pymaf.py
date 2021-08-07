@@ -227,7 +227,7 @@ class MafFrame:
         """list : List of the genes."""
         return list(self.df.Hugo_Symbol.unique())
 
-    def compute_clonality(self, col, threshold=0.25):
+    def compute_clonality(self, vaf_col, threshold=0.25):
         """
         Compute the clonality of variants based on
         :ref:`VAF <glossary:Variant allele frequency (VAF)>`.
@@ -238,8 +238,8 @@ class MafFrame:
 
         Parameters
         ----------
-        col : AnnFrame
-            Column in the MafFrame containing VAF data.
+        vaf_col : str
+            MafFrame column containing VAF data.
         threshold : float
             Minimum VAF to be considered as "Clonal".
 
@@ -270,10 +270,10 @@ class MafFrame:
         9    Clonal
         Name: Clonality, dtype: object
         """
-        d = self.df.groupby('Tumor_Sample_Barcode')[col].max().to_dict()
+        d = self.df.groupby('Tumor_Sample_Barcode')[vaf_col].max().to_dict()
         def one_row(r):
             m = d[r.Tumor_Sample_Barcode]
-            if r[col] < m * threshold:
+            if r[vaf_col] < m * threshold:
                 result = 'Subclonal'
             else:
                 result = 'Clonal'
@@ -922,7 +922,7 @@ class MafFrame:
         plt.subplots_adjust(wspace=0.01, hspace=0.01)
 
     def plot_oncoplot_matched(
-        self, af, patient_col, group_col, groups, colors='Set2',
+        self, af, patient_col, group_col, group_order, colors='Set2',
         figsize=(15, 10), label_fontsize=12, ticklabels_fontsize=12,
         legend_fontsize=12
     ):
@@ -937,8 +937,8 @@ class MafFrame:
             AnnFrame column containing patient information.
         group_col : str
             AnnFrame column containing sample group information.
-        groups : list, optional
-            List of group levels.
+        group_order : list, optional
+            List of sample group names.
         colors : str
             Colormap name for the sample groups.
         figsize : tuple, default: (15, 10)
@@ -956,9 +956,13 @@ class MafFrame:
 
         [[ax1, ax2], [ax3, ax4], [ax5, ax6]] = axes
 
-        patients = self.matrix_waterfall_matched(af, patient_col, group_col, groups).columns
+        patients = self.matrix_waterfall_matched(af, patient_col, group_col, group_order).columns
 
-        self.plot_tmb_matched(af, patient_col, group_col, groups=groups, ax=ax1, legend=False, patients=patients, width=0.90, color=sns.color_palette(colors)[:3])
+        self.plot_tmb_matched(
+            af, patient_col, group_col, group_order=group_order, ax=ax1,
+            legend=False, patients=patients, width=0.90,
+            color=sns.color_palette(colors)[:3]
+        )
         ax1.set_xticks([])
         ax1.set_xlim(-0.5, 53-0.5)
         ax1.spines['right'].set_visible(False)
@@ -970,13 +974,13 @@ class MafFrame:
 
         ax2.remove()
 
-        self.plot_waterfall_matched(af, patient_col, group_col, groups=groups, ax=ax3)
+        self.plot_waterfall_matched(af, patient_col, group_col, group_order=group_order, ax=ax3)
         ax3.set_xticks([])
         ax3.tick_params(axis='y', which='major', labelrotation=0,
                         labelsize=ticklabels_fontsize)
 
         self.plot_mutated_matched(
-            af, patient_col, group_col, groups=groups, ax=ax4, palette=colors
+            af, patient_col, group_col, group_order=group_order, ax=ax4, palette=colors
         )
         ax4.set_yticks([])
         ax4.legend().remove()
@@ -990,7 +994,7 @@ class MafFrame:
         # Create the legends.
         handles1 = common.legend_handles(NONSYN_NAMES+['Multi_Hit'],
             colors=NONSYN_COLORS+['k'])
-        handles2 = common.legend_handles(groups, colors=colors)
+        handles2 = common.legend_handles(group_order, colors=colors)
         leg1 = ax5.legend(handles=handles1, loc=(0, 0), title='Variant_Classification', ncol=4, fontsize=legend_fontsize, title_fontsize=legend_fontsize)
         leg2 = ax5.legend(handles=handles2, loc=(0.8, 0), title=group_col, fontsize=legend_fontsize, title_fontsize=legend_fontsize)
         ax5.add_artist(leg1)
@@ -1004,7 +1008,7 @@ class MafFrame:
         plt.subplots_adjust(wspace=0.01, hspace=0.01)
 
     def plot_clonality(
-        self, col, af=None, group_col=None, group_order=None, count=10,
+        self, vaf_col, af=None, group_col=None, group_order=None, count=10,
         threshold=0.25, subclonal=False, ax=None, figsize=None
     ):
         """
@@ -1016,8 +1020,8 @@ class MafFrame:
 
         Parameters
         ----------
-        col : str
-            Column in the MafFrame containing VAF data.
+        vaf_col : str
+            MafFrame column containing VAF data.
         af : AnnFrame, optional
             AnnFrame containing sample annotation data.
         group_col : str, optional
@@ -1078,7 +1082,7 @@ class MafFrame:
             >>> plt.tight_layout()
         """
         df = self.df.copy()
-        df['Clonality'] = self.compute_clonality(col, threshold=threshold)
+        df['Clonality'] = self.compute_clonality(vaf_col, threshold=threshold)
 
         if group_col is None:
             s = df.groupby('Hugo_Symbol')['Clonality'].value_counts()
@@ -1117,8 +1121,8 @@ class MafFrame:
         return ax
 
     def plot_evolution(
-        self, samples, col, anchor=None, normalize=True, count=5, ax=None,
-        figsize=None, **kwargs
+        self, samples, vaf_col, anchor=None, normalize=True, count=5,
+        ax=None, figsize=None, **kwargs
     ):
         """
         Create a line plot visualizing changes in VAF between specified
@@ -1128,8 +1132,8 @@ class MafFrame:
         ----------
         samples : list
             List of samples to display.
-        col : str
-            Column in the MafFrame containing VAF data.
+        vaf_col : str
+            MafFrame column containing VAF data.
         anchor : str, optional
             Sample to use as the anchor. If absent, use the first sample in
             the list.
@@ -1167,7 +1171,7 @@ class MafFrame:
 
         df['Variant_Name'] = df.apply(one_row, axis=1)
         df = df.pivot(index=['Variant_Name'],
-            columns=['Tumor_Sample_Barcode'], values=[col])
+            columns=['Tumor_Sample_Barcode'], values=[vaf_col])
         df.columns = df.columns.get_level_values(1)
         df.columns.name = ''
         df = df.fillna(0)
@@ -2770,8 +2774,8 @@ class MafFrame:
         return ax
 
     def plot_matrixg(
-        self, gene, af, col, groups=None, cbar=True, ax=None, figsize=None,
-        **kwargs
+        self, gene, af, group_col, group_order=None, cbar=True, ax=None,
+        figsize=None, **kwargs
     ):
         """
         Create a heatmap of count matrix with a shape of (sample groups,
@@ -2783,8 +2787,10 @@ class MafFrame:
             Name of the gene.
         af : AnnFrame
             AnnFrame containing sample annotation data.
-        col : str
-            Column in the AnnFrame containing information about sample groups.
+        group_col : str
+            AnnFrame column containing sample group information.
+        group_order : list, optional
+            List of sample group names.
         cbar : bool, default: True
             Whether to draw a colorbar.
         ax : matplotlib.axes.Axes, optional
@@ -2822,18 +2828,18 @@ class MafFrame:
 
         df = df[['Tumor_Sample_Barcode', 'Protein_Change']]
         df = df[df.Protein_Change != '.']
-        df = df.merge(af.df[col], left_on='Tumor_Sample_Barcode', right_index=True)
-        s = df.groupby(col)['Protein_Change'].value_counts()
+        df = df.merge(af.df[group_col], left_on='Tumor_Sample_Barcode', right_index=True)
+        s = df.groupby(group_col)['Protein_Change'].value_counts()
         s.name = 'Count'
         df = s.to_frame().reset_index()
-        df = df.pivot(index=col,
+        df = df.pivot(index=group_col,
                       columns='Protein_Change',
                       values='Count')
         df = df.fillna(0)
 
-        if groups is not None:
+        if group_order is not None:
             missing_groups = []
-            for group in groups:
+            for group in group_order:
                 if group not in df.index:
                     missing_groups.append(group)
             if missing_groups:

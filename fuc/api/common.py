@@ -216,7 +216,7 @@ class AnnFrame:
         return cls(df)
 
     def plot_annot(
-        self, col, groups=None, samples=None, colors='tab10',
+        self, group_col, group_order=None, samples=None, colors='tab10',
         sequential=False, xticklabels=True, ax=None, figsize=None
     ):
         """
@@ -228,10 +228,10 @@ class AnnFrame:
 
         Parameters
         ----------
-        col : str
-            Column to plot.
-        groups : list, optional
-            Display only specified groups (in that order too).
+        group_col : str
+            AnnFrame column containing sample group information.
+        group_order : list, optional
+            List of sample group names.
         samples : list, optional
             Display only specified samples (in that order too).
         colors : str or list, default: 'tab10'
@@ -274,7 +274,7 @@ class AnnFrame:
         .. plot::
             :context: close-figs
 
-            >>> ax, handles = af.plot_annot('FAB_classification', groups=['M7', 'M6'])
+            >>> ax, handles = af.plot_annot('FAB_classification', group_order=['M7', 'M6'])
             >>> legend = ax.legend(handles=handles)
             >>> ax.add_artist(legend)
             >>> plt.tight_layout()
@@ -293,28 +293,28 @@ class AnnFrame:
             >>> plt.tight_layout()
         """
         # Get the selected column.
-        s = self.df[col]
+        s = self.df[group_col]
 
         # Subset the samples, if necessary.
         if samples is not None:
             s = s.reindex(samples)
 
         # Establish mapping from groups to numbers.
-        if groups is None:
-            groups = sorted([x for x in s.unique() if x == x])
+        if group_order is None:
+            group_order = sorted([x for x in s.unique() if x == x])
         else:
-            s = s[s.isin(groups)]
-        d = {k: v for v, k in enumerate(groups)}
+            s = s[s.isin(group_order)]
+        d = {k: v for v, k in enumerate(group_order)}
         df = s.to_frame().applymap(lambda x: x if pd.isna(x) else d[x])
 
         # Determine the colors to use.
         if isinstance(colors, str):
             if sequential:
                 c = plt.get_cmap(colors).colors
-                l = list(np.linspace(0, len(c)-1, len(groups)))
+                l = list(np.linspace(0, len(c)-1, len(group_order)))
                 colors = [c[round(i)] for i in l]
             else:
-                colors = list(plt.get_cmap(colors).colors[:len(groups)])
+                colors = list(plt.get_cmap(colors).colors[:len(group_order)])
 
         # Determine which matplotlib axes to plot on.
         if ax is None:
@@ -326,11 +326,11 @@ class AnnFrame:
             linewidths=0.5
         )
         ax.set_xlabel('')
-        ax.set_ylabel(col)
+        ax.set_ylabel(group_col)
         ax.set_yticks([])
 
         # Get the legend handles.
-        handles = legend_handles(groups, colors=colors)
+        handles = legend_handles(group_order, colors=colors)
 
         return ax, handles
 

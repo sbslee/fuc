@@ -17,7 +17,8 @@ After creating the output directory, the command will write the following files:
   - reports.pdf
 
 Usage examples:
-  $ fuc {api.common._script_name()} reports_dir output_dir
+  $ fuc {api.common._script_name()} Reports output
+  $ fuc {api.common._script_name()} Reports output --sheet SampleSheet.csv
 """
 
 def create_parser(subparsers):
