@@ -4519,3 +4519,76 @@ class VcfFrame:
             raise ValueError(f'Incorrect mode: {mode}')
         df = self.df.apply(one_row, axis=1)
         return self.__class__(self.copy_meta(), df)
+
+    def compare(self, other):
+        """
+        Compare to another VcfFrame and show the differences in genotype
+        calling.
+
+        Parameters
+        ----------
+        other : VcfFrame
+            VcfFrame to compare with.
+
+        Returns
+        -------
+        pandas.DataFrame
+            DataFrame comtaining genotype differences.
+
+        Examples
+        --------
+
+        >>> from fuc import pyvcf
+        >>> data1 = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102, 103, 104],
+        ...     'ID': ['.', '.', '.', '.', '.'],
+        ...     'REF': ['G', 'CT', 'T', 'C', 'A'],
+        ...     'ALT': ['A', 'C', 'A', 'T', 'G,C'],
+        ...     'QUAL': ['.', '.', '.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.', '.', '.'],
+        ...     'INFO': ['.', '.', '.', '.', '.'],
+        ...     'FORMAT': ['GT', 'GT', 'GT', 'GT', 'GT'],
+        ...     'A': ['0/1', '0/0', '0/0', '0/1', '0/0'],
+        ...     'B': ['1/1', '0/1', './.', '0/1', '0/0'],
+        ...     'C': ['0/1', '0/1', '1/1', './.', '1/2'],
+        ... }
+        >>> data2 = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102, 103, 104],
+        ...     'ID': ['.', '.', '.', '.', '.'],
+        ...     'REF': ['G', 'CT', 'T', 'C', 'A'],
+        ...     'ALT': ['A', 'C', 'A', 'T', 'G,C'],
+        ...     'QUAL': ['.', '.', '.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.', '.', '.'],
+        ...     'INFO': ['.', '.', '.', '.', '.'],
+        ...     'FORMAT': ['GT', 'GT', 'GT', 'GT', 'GT'],
+        ...     'A': ['./.', '0/0', '0/0', '0/1', '0/0'],
+        ...     'B': ['1/1', '0/1', './.', '1/1', '0/0'],
+        ...     'C': ['0/1', '0/1', '0/1', './.', '1/2'],
+        ... }
+        >>> vf1 = pyvcf.VcfFrame.from_dict([], data1)
+        >>> vf2 = pyvcf.VcfFrame.from_dict([], data2)
+        >>> vf1.compare(vf2)
+                  Locus Sample Self Other
+        0  chr1-100-G-A      A  0/1   ./.
+        1  chr1-102-T-A      C  1/1   0/1
+        2  chr1-103-C-T      B  0/1   1/1
+        """
+        df1 = self.df.copy()
+        df2 = other.df.copy()
+        i1 = df1['CHROM'] + '-' + df1['POS'].astype(str) + '-' + df1['REF'] + '-' + df1['ALT']
+        i2 = df2['CHROM'] + '-' + df2['POS'].astype(str) + '-' + df2['REF'] + '-' + df2['ALT']
+        df1 = df1.set_index(i1)
+        df2 = df2.set_index(i2)
+        df1 = df1.iloc[:, 9:]
+        df2 = df2.iloc[:, 9:]
+        if df1.equals(df2):
+            return pd.DataFrame(columns=['Locus', 'Sample', 'Self', 'Other'])
+        df = df1.compare(df2, align_axis=0)
+        df = df.stack().to_frame().reset_index().pivot(
+            columns='level_1', index=['level_0', 'level_2'], values=0)
+        df = df.reset_index()
+        df.columns = ['Locus', 'Sample', 'Other', 'Self']
+        df = df[['Locus', 'Sample', 'Self', 'Other']]
+        return df
