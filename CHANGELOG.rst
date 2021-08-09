@@ -4,6 +4,8 @@ Changelog
 0.21.0 (in development)
 -----------------------
 
+* Rename :meth:`pyvcf.VcfFrame.compare` method to :meth:`pyvcf.VcfFrame.calculate_concordance`.
+
 0.20.0 (2021-08-07)
 -------------------
 

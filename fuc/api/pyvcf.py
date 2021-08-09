@@ -1333,16 +1333,17 @@ class VcfFrame:
         f.close()
         return cls(meta, df)
 
-    def compare(self, a, b, c=None, mode='all'):
+    def calculate_concordance(self, a, b, c=None, mode='all'):
         """
-        Compare genotype data between two (A, B) or three (A, B, C) samples.
+        Calculate genotype concordance between two (A, B) or three (A, B, C)
+        samples.
 
         This method will return (Ab, aB, AB, ab) for comparison between two
         samples and (Abc, aBc, ABc, abC, AbC, aBC, ABC, abc) for three
         samples. Note that the former is equivalent to (FP, FN, TP, TN) if
         we assume A is the test sample and B is the truth sample.
 
-        Only biallelic sites will be used for comparison. Additionally, the
+        Only biallelic sites will be used for calculation. Additionally, the
         method will only consider presence or absence of variant calls (i.e.
         zygosity is ignored).
 
@@ -1399,16 +1400,16 @@ class VcfFrame:
 
         We can first compare the samples A and B:
 
-        >>> vf.compare('A', 'B', mode='all')
+        >>> vf.calculate_concordance('A', 'B', mode='all')
         (0, 1, 2, 1)
-        >>> vf.compare('A', 'B', mode='snv')
+        >>> vf.calculate_concordance('A', 'B', mode='snv')
         (0, 0, 2, 1)
-        >>> vf.compare('A', 'B', mode='indel')
+        >>> vf.calculate_concordance('A', 'B', mode='indel')
         (0, 1, 0, 0)
 
         We can also compare all three samples at once:
 
-        >>> vf.compare('A', 'B', 'C')
+        >>> vf.calculate_concordance('A', 'B', 'C')
         (0, 0, 1, 1, 0, 1, 1, 0)
         """
         vf = self.filter_multialt()
@@ -1842,7 +1843,8 @@ class VcfFrame:
     def plot_comparison(
         self, a, b, c=None, labels=None, ax=None, figsize=None
     ):
-        """Create a Venn diagram showing genotype concordance between groups.
+        """
+        Create a Venn diagram showing genotype concordance between groups.
 
         This method supports comparison between two groups (Groups A & B)
         as well as three groups (Groups A, B, & C).
@@ -1911,14 +1913,14 @@ class VcfFrame:
     def _plot_comparison_two(self, a, b, venn_kws):
         n = [0, 0, 0, 0]
         for i in range(len(a)):
-            n = [x + y for x, y in zip(n, self.compare(a[i], b[i]))]
+            n = [x + y for x, y in zip(n, self.calculate_concordance(a[i], b[i]))]
         out = venn2(subsets=n[:-1], **venn_kws)
         return out
 
     def _plot_comparison_three(self, a, b, c, venn_kws):
         n = [0, 0, 0, 0, 0, 0, 0, 0]
         for i in range(len(a)):
-            n = [x + y for x, y in zip(n, self.compare(a[i], b[i], c[i]))]
+            n = [x + y for x, y in zip(n, self.calculate_concordance(a[i], b[i], c[i]))]
         out = venn3(subsets=n[:-1], **venn_kws)
         return out
 
