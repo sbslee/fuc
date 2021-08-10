@@ -7,6 +7,7 @@ Changelog
 * Rename :meth:`pyvcf.VcfFrame.compare` method to :meth:`pyvcf.VcfFrame.calculate_concordance`.
 * Add new method :meth:`pyvcf.VcfFrame.compare`.
 * Add new property ``contigs`` to :class:`pyvcf.VcfFrame`.
+* Add new method :meth:`pyvcf.VcfFrame.plot_region`.
 
 0.20.0 (2021-08-07)
 -------------------

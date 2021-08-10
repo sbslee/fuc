@@ -1852,6 +1852,48 @@ class VcfFrame:
         df.iloc[:, 9:] = df.iloc[:, 9:].applymap(one_gt)
         return self.__class__(self.copy_meta(), df)
 
+    def plot_region(self, sample, region=None, ax=None, figsize=None):
+        """
+        Create a scatter plot showing read depth profile of a sample for
+        the specified region.
+
+        Parameters
+        ----------
+        sample : str
+            Target sample.
+        region : str, optional
+            Target region ('chrom:start-end').
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+        """
+        if region is None:
+            if len(self.contigs) == 1:
+                vf = self.copy()
+            else:
+                raise ValueError('Multiple contigs found.')
+        else:
+            vf = self.slice(region)
+
+        df = vf.extract('DP', func=lambda x: int(x), as_nan=True)
+
+        # Determine which matplotlib axes to plot on.
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
+        ax.scatter(x=vf.df.POS, y=df[sample])
+
+        ax.set_xlabel('Position')
+        ax.set_ylabel('Depth')
+
+        return ax
+
     def plot_comparison(
         self, a, b, c=None, labels=None, ax=None, figsize=None
     ):
