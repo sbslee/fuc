@@ -770,9 +770,15 @@ class VcfFrame:
     1  chr1  101  .   T   C    .      .    .     GT    0/1
     2  chr1  102  .   A   T    .      .    .     GT    0/1
     """
+
+    def _check_df(self, df):
+        df = df.reset_index(drop=True)
+        df.CHROM = df.CHROM.astype(str)
+        return df
+
     def __init__(self, meta, df):
         self._meta = meta
-        self._df = df.reset_index(drop=True)
+        self._df = self._check_df(df)
 
     @property
     def meta(self):
@@ -790,17 +796,22 @@ class VcfFrame:
 
     @df.setter
     def df(self, value):
-        self._df = value.reset_index(drop=True)
+        self._df = self._check_df(value)
 
     @property
     def samples(self):
-        """list : List of the sample names."""
+        """list : List of sample names."""
         return self.df.columns[9:].to_list()
 
     @property
     def shape(self):
         """tuple : Dimensionality of VcfFrame (variants, samples)."""
         return (self.df.shape[0], len(self.samples))
+
+    @property
+    def contigs(self):
+        """list : List of contig names."""
+        return list(self.df.CHROM.unique())
 
     def add_af(self, decimals=3):
         """Compute AF using AD and add it to the FORMAT field.
@@ -1282,7 +1293,8 @@ class VcfFrame:
 
     @classmethod
     def from_file(cls, fn, compression=False):
-        """Construct VcfFrame from a VCF file.
+        """
+        Construct VcfFrame from a VCF file.
 
         If the file name ends with '.gz', the method will automatically
         use the BGZF decompression when reading the file.
