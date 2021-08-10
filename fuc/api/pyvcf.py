@@ -3901,13 +3901,19 @@ class VcfFrame:
         Parameters
         ----------
         k : str
-            Genotype key such as 'DP' and 'AD'.
+            Genotype key to use for extracting data. In addition to regular
+            genotype keys (e.g. 'DP', 'AD'), the method also accepts the
+            special keys listed below, which have predetermined values for
+            ``func`` and ``as_nan`` for convenience:
+
+            - '#DP': Return numerical values of 'DP'.
+            - '#AD_REF': Return numerical values of REF 'AD'.
+            - '#AD_ALT': Return the sum of numerical values for ALT 'AD'.
+
         func : function, optional
-            Function to apply to each of the returned values. For example, if
-            the goal is to extract AD only for reference alleles, one can use
-            ``func=lambda x: x.split(',')[0]``
+            Function to apply to each of the sample genotypes.
         as_nan : bool, default: False
-            If True, missing values will be returned as ``NaN``.
+            If True, return missing values (e.g. './.', '.') as ``NaN``.
 
         Returns
         -------
@@ -3919,53 +3925,87 @@ class VcfFrame:
 
         >>> from fuc import pyvcf
         >>> data = {
-        ...     'CHROM': ['chr1', 'chr1'],
-        ...     'POS': [100, 101],
-        ...     'ID': ['.', '.'],
-        ...     'REF': ['A', 'T'],
-        ...     'ALT': ['A', 'T'],
-        ...     'QUAL': ['.', '.'],
-        ...     'FILTER': ['.', '.'],
-        ...     'INFO': ['.', '.'],
-        ...     'FORMAT': ['GT:AD:DP', 'GT:AD:DP'],
-        ...     'A': ['0/1:15,13:28', '0/0:28,1:29'],
-        ...     'B': ['./.:.:.', '1/1:0,26:26'],
+        ...     'CHROM': ['chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102],
+        ...     'ID': ['.', '.', '.'],
+        ...     'REF': ['A', 'C', 'A'],
+        ...     'ALT': ['G', 'T', 'C,T'],
+        ...     'QUAL': ['.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.'],
+        ...     'INFO': ['.', '.', '.'],
+        ...     'FORMAT': ['GT:AD:DP', 'GT', 'GT:AD:DP'],
+        ...     'A': ['0/1:15,13:28', '0/0', '0/1:9,14,0:23'],
+        ...     'B': ['./.:.:.', '1/1', '1/2:0,11,15:26'],
         ... }
         >>> vf = pyvcf.VcfFrame.from_dict([], data)
         >>> vf.df
-          CHROM  POS ID REF ALT QUAL FILTER INFO    FORMAT             A            B
-        0  chr1  100  .   A   A    .      .    .  GT:AD:DP  0/1:15,13:28      ./.:.:.
-        1  chr1  101  .   T   T    .      .    .  GT:AD:DP   0/0:28,1:29  1/1:0,26:26
+          CHROM  POS ID REF  ALT QUAL FILTER INFO    FORMAT              A               B
+        0  chr1  100  .   A    G    .      .    .  GT:AD:DP   0/1:15,13:28         ./.:.:.
+        1  chr1  101  .   C    T    .      .    .        GT            0/0             1/1
+        2  chr1  102  .   A  C,T    .      .    .  GT:AD:DP  0/1:9,14,0:23  1/2:0,11,15:26
         >>> vf.extract('GT')
              A    B
         0  0/1  ./.
         1  0/0  1/1
+        2  0/1  1/2
         >>> vf.extract('GT', as_nan=True)
              A    B
         0  0/1  NaN
         1  0/0  1/1
+        2  0/1  1/2
         >>> vf.extract('AD')
-               A     B
-        0  15,13     .
-        1   28,1  0,26
-        >>> vf.extract('AD', as_nan=True, func=lambda x: float(x.split(',')[1]))
+                A        B
+        0   15,13        .
+        1     NaN      NaN
+        2  9,14,0  0,11,15
+        >>> vf.extract('DP', func=lambda x: int(x), as_nan=True)
               A     B
-        0  13.0   NaN
-        1   1.0  26.0
+        0  28.0   NaN
+        1   NaN   NaN
+        2  23.0  26.0
+        >>> vf.extract('#DP') # Same as above
+              A     B
+        0  28.0   NaN
+        1   NaN   NaN
+        2  23.0  26.0
+        >>> vf.extract('AD', func=lambda x: float(x.split(',')[0]), as_nan=True)
+              A    B
+        0  15.0  NaN
+        1   NaN  NaN
+        2   9.0  0.0
+        >>> vf.extract('#AD_REF') # Same as above
+              A    B
+        0  15.0  NaN
+        1   NaN  NaN
+        2   9.0  0.0
         """
-        def one_row(r):
-            i = r.FORMAT.split(':').index(k)
+        special_keys = {
+            '#DP': ['DP', lambda x: int(x), True],
+            '#AD_REF': ['AD', lambda x: float(x.split(',')[0]), True],
+            '#AD_ALT': ['AD', lambda x: sum([int(y) for y in x.split(',')[1:]]), True],
+        }
+
+        def one_row(r, k, func, as_nan):
+            try:
+                i = r.FORMAT.split(':').index(k)
+            except ValueError:
+                return pd.Series([np.nan] * len(self.samples), index=self.samples)
             def one_gt(g):
-                v = g.split(':')[i]
-                if as_nan and not i and gt_miss(v):
+                if k == 'GT' and gt_miss(g) and as_nan:
                     return np.nan
-                if as_nan and v == '.':
+                v = g.split(':')[i]
+                if v == '.' and as_nan:
                     return np.nan
                 if func is not None:
                     return func(v)
                 return v
             return r[9:].apply(one_gt)
-        df = self.df.apply(one_row, axis=1)
+
+        if k in special_keys:
+            k, func, as_nan = special_keys[k]
+
+        df = self.df.apply(one_row, args=(k, func, as_nan), axis=1)
+
         return df
 
     def rename(self, names, indicies=None):

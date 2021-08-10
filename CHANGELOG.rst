@@ -8,6 +8,7 @@ Changelog
 * Add new method :meth:`pyvcf.VcfFrame.compare`.
 * Add new property ``contigs`` to :class:`pyvcf.VcfFrame`.
 * Add new method :meth:`pyvcf.VcfFrame.plot_region`.
+* Add special genotype keys to :meth:`pyvcf.VcfFrame.extract` method.
 
 0.20.0 (2021-08-07)
 -------------------
