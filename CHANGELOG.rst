@@ -9,6 +9,7 @@ Changelog
 * Add new property ``contigs`` to :class:`pyvcf.VcfFrame`.
 * Add new method :meth:`pyvcf.VcfFrame.plot_region`.
 * Add special genotype keys to :meth:`pyvcf.VcfFrame.extract` method.
+* Add new method :meth:`common.plot_exons`.
 
 0.20.0 (2021-08-07)
 -------------------

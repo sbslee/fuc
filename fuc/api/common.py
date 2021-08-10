@@ -955,3 +955,77 @@ def legend_handles(labels, colors='tab10'):
         handles.append(mpatches.Patch(color=colors[i], label=label))
 
     return handles
+
+def plot_exons(
+    starts, ends, name=None, offset=1, fontsize=None, color='black', y=0,
+    height=1, ax=None, figsize=None
+):
+    """
+    Create a gene model where exons are drawn as boxes.
+
+    Parameters
+    ----------
+    starts : list
+        List of exon start positions.
+    ends : list
+        List of exon end positions.
+    name : str, optional
+        Gene name.
+    offset : float, default: 1
+        How far gene name should be plotted from the gene model.
+    color : str, default: 'black'
+        Box color.
+    y : float, default: 0
+        Y position of the backbone.
+    height : float, default: 1
+        Height of the gene model.
+    ax : matplotlib.axes.Axes, optional
+        Pre-existing axes for the plot. Otherwise, crete a new one.
+    figsize : tuple, optional
+        Width, height in inches. Format: (float, float).
+
+    Returns
+    -------
+    matplotlib.axes.Axes
+        The matplotlib axes containing the plot.
+
+    Examples
+    --------
+
+    .. plot::
+
+        >>> import matplotlib.pyplot as plt
+        >>> from fuc import common
+        >>> cyp2d6_starts = [42522500, 42522852, 42523448, 42523843, 42524175, 42524785, 42525034, 42525739, 42526613]
+        >>> cyp2d6_ends = [42522754, 42522994, 42523636, 42523985, 42524352, 42524946, 42525187, 42525911, 42526883]
+        >>> ax = common.plot_exons(cyp2d6_starts, cyp2d6_ends, name='CYP2D6', fontsize=20)
+        >>> ax.set_ylim([-2, 2])
+        >>> plt.tight_layout()
+    """
+
+    # Determine which matplotlib axes to plot on.
+    if ax is None:
+        fig, ax = plt.subplots(figsize=figsize)
+
+    ax.hlines(
+        y=y, xmin=starts[0], xmax=ends[-1], color=color
+    )
+
+    for i in range(len(starts)):
+        ax.add_patch(mpatches.Rectangle(
+            xy=(starts[i], y - height/2),
+            width=ends[i] - starts[i],
+            height=height,
+            color="black"
+        ))
+
+    if name is not None:
+        ax.text(
+            x=(starts[0]+ends[-1]) / 2,
+            y=y-offset,
+            s=f'${name}$',
+            horizontalalignment='center',
+            fontsize=fontsize,
+        )
+
+    return ax

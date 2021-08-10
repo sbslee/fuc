@@ -634,30 +634,26 @@ vcf-rename
    
    This command will rename the samples in a VCF file.
    
-   There are three renaming modes: 'MAP', 'INDICIES', and 'RANGE'. The default
-   mode is 'MAP' in which case the 'names' file must contain two columns, one
-   for the old names and the other for the new names. If the mode is 'INDICIES'
-   the first column should be the new names and the second column must be
-   0-based indicies of the samples to be renamed. Lastly, in the 'RANGE' mode
-   only the first column is required but the 'range' argument must be specified.
-   For more details on the renaming modes, please visit the
-   'pyvcf.VcfFrame.rename' method's documentation page.
+   There are three different renaming modes using the 'names' file:
+     - 'MAP': Default mode. Requires two columns, old names in the first and new names in the second.
+     - 'INDEX': Requires two columns, new names in the first and 0-based indicies in the second.
+     - 'RANGE': Requires only one column of new names but '--range' must be specified.
    
    Usage examples:
      $ fuc vcf-rename in.vcf old_new.tsv > out.vcf
-     $ fuc vcf-rename in.vcf new_idx.tsv --mode INDICIES > out.vcf
+     $ fuc vcf-rename in.vcf new_idx.tsv --mode INDEX > out.vcf
      $ fuc vcf-rename in.vcf new_only.tsv --mode RANGE --range 2 5 > out.vcf
      $ fuc vcf-rename in.vcf old_new.csv --sep , > out.vcf
    
    Positional arguments:
-     vcf              VCF file
-     names            delimited text file
+     vcf              VCF file (zipped or unzipped).
+     names            Text file containing information for renaming the samples.
    
    Optional arguments:
      -h, --help       Show this help message and exit.
-     --mode TEXT      renaming mode (default: 'MAP') (choices: 'MAP', 'INDICIES', 'RANGE')
-     --range INT INT  specify an index range
-     --sep TEXT       delimiter to use (default: '\t')
+     --mode TEXT      Renaming mode (default: 'MAP') (choices: 'MAP', 'INDEX', 'RANGE').
+     --range INT INT  Index range to use when renaming the samples. Applicable only with the 'RANGE' mode.
+     --sep TEXT       Delimiter to use for reading the 'names' file (default: '\t').
 
 vcf-slice
 =========

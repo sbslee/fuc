@@ -1853,7 +1853,7 @@ class VcfFrame:
         return self.__class__(self.copy_meta(), df)
 
     def plot_region(
-        self, sample, k='#DP', region=None, label=None, ax=None,
+        self, sample, k='#DP', color=None, region=None, label=None, ax=None,
         figsize=None, **kwargs
     ):
         """
@@ -1865,7 +1865,16 @@ class VcfFrame:
         sample : str or int
             Name or index of target sample.
         k : str, default: '#DP'
-            Genotype key.
+            Genotype key to use for extracting data:
+
+            - '#DP': Return read depth.
+            - '#AD_REF': Return REF allele depth.
+            - '#AD_ALT': Return ALT allele depth.
+            - '#AD_FRAC_REF': Return REF allele fraction.
+            - '#AD_FRAC_ALT': Return ALT allele fraction.
+
+        color : str, optional
+            Marker color.
         region : str, optional
             Target region ('chrom:start-end').
         label : str, optional
@@ -1882,6 +1891,30 @@ class VcfFrame:
         -------
         matplotlib.axes.Axes
             The matplotlib axes containing the plot.
+
+        Examples
+        --------
+        Below is a simple example:
+
+        .. plot::
+            :context: close-figs
+
+            >>> from fuc import pyvcf, common
+            >>> import matplotlib.pyplot as plt
+            >>> common.load_dataset('pyvcf')
+            >>> vcf_file = '~/fuc-data/pyvcf/getrm-cyp2d6-vdr.vcf'
+            >>> vf = pyvcf.VcfFrame.from_file(vcf_file)
+            >>> vf.plot_region('NA18973')
+            >>> plt.tight_layout()
+
+        We can display allele fraction of REF and ALT instead of DP:
+
+        .. plot::
+            :context: close-figs
+
+            >>> ax = vf.plot_region('NA18973', k='#AD_FRAC_REF', label='REF')
+            >>> vf.plot_region('NA18973', k='#AD_FRAC_ALT', label='ALT', ax=ax)
+            >>> plt.tight_layout()
         """
         sample = sample if isinstance(sample, str) else self.samples[sample]
 
@@ -1899,7 +1932,9 @@ class VcfFrame:
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
-        ax.scatter(x=vf.df.POS, y=df[sample], label=label, **kwargs)
+        ax.scatter(
+            x=vf.df.POS, y=df[sample], c=color, label=label, **kwargs
+        )
 
         ax.set_xlabel('Position')
         ax.set_ylabel('Depth')
@@ -3918,9 +3953,11 @@ class VcfFrame:
             special keys listed below, which have predetermined values for
             ``func`` and ``as_nan`` for convenience:
 
-            - '#DP': Return numerical values of 'DP'.
-            - '#AD_REF': Return numerical values of REF 'AD'.
-            - '#AD_ALT': Return the sum of numerical values for ALT 'AD'.
+            - '#DP': Return read depth.
+            - '#AD_REF': Return REF allele depth.
+            - '#AD_ALT': Return ALT allele depth.
+            - '#AD_FRAC_REF': Return REF allele fraction.
+            - '#AD_FRAC_ALT': Return ALT allele fraction.
 
         func : function, optional
             Function to apply to each of the sample genotypes.
