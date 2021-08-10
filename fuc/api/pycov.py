@@ -441,8 +441,10 @@ class CovFrame:
 
         frac : float, default: 0.1
             Fraction of data to be sampled (to speed up the process).
-        n : int, default: 20
-            Number of points to generate for the x-axis.
+        n : int or list, default: 20
+            Number of evenly spaced points to generate for the x-axis.
+            Alternatively, positions can be manually specified by providing
+            a list.
         m : float, optional
             Maximum point in the x-axis. By default, it will be the maximum
             depth in the entire dataset.
@@ -494,9 +496,12 @@ class CovFrame:
         df = self.df.sample(frac=frac)
 
         # Determine x-axis points.
-        if m is None:
-            m = df.iloc[:, 2:].max().max()
-        coverages = np.linspace(1, m, n, endpoint=True)
+        if isinstance(n, list):
+            coverages = n
+        else:
+            if m is None:
+                m = df.iloc[:, 2:].max().max()
+            coverages = np.linspace(1, m, n, endpoint=True)
 
         data = {'Coverage': coverages}
 
@@ -525,8 +530,8 @@ class CovFrame:
             ax=ax, **kwargs
         )
 
-        ax.set_xlabel('Sequencing coverage')
-        ax.set_ylabel('Fraction of sampled bases')
+        ax.set_xlabel('Coverage')
+        ax.set_ylabel('Fraction of sampled bases >= coverage')
 
         return ax
 
@@ -617,7 +622,7 @@ class CovFrame:
             x='Coverage', y='Fraction', data=df, hue=hue, ax=ax, **kwargs
         )
 
-        ax.set_xlabel('Sequencing coverage')
+        ax.set_xlabel('Coverage')
         ax.set_ylabel('Fraction of sampled bases')
 
         return ax

@@ -10,6 +10,7 @@ Changelog
 * Add new method :meth:`pyvcf.VcfFrame.plot_region`.
 * Add special genotype keys to :meth:`pyvcf.VcfFrame.extract` method.
 * Add new method :meth:`common.plot_exons`.
+* Update :meth:`pycov.CovFrame.plot_uniformity` method to accept a list of x positions.
 
 0.20.0 (2021-08-07)
 -------------------
