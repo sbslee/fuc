@@ -1852,27 +1852,39 @@ class VcfFrame:
         df.iloc[:, 9:] = df.iloc[:, 9:].applymap(one_gt)
         return self.__class__(self.copy_meta(), df)
 
-    def plot_region(self, sample, region=None, ax=None, figsize=None):
+    def plot_region(
+        self, sample, k='#DP', region=None, label=None, ax=None,
+        figsize=None, **kwargs
+    ):
         """
         Create a scatter plot showing read depth profile of a sample for
         the specified region.
 
         Parameters
         ----------
-        sample : str
-            Target sample.
+        sample : str or int
+            Name or index of target sample.
+        k : str, default: '#DP'
+            Genotype key.
         region : str, optional
             Target region ('chrom:start-end').
+        label : str, optional
+            Label to use for the data points.
         ax : matplotlib.axes.Axes, optional
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
             Width, height in inches. Format: (float, float).
+        kwargs
+            Other keyword arguments will be passed down to
+            :meth:`matplotlib.axes.Axes.scatter`.
 
         Returns
         -------
         matplotlib.axes.Axes
             The matplotlib axes containing the plot.
         """
+        sample = sample if isinstance(sample, str) else self.samples[sample]
+
         if region is None:
             if len(self.contigs) == 1:
                 vf = self.copy()
@@ -1881,13 +1893,13 @@ class VcfFrame:
         else:
             vf = self.slice(region)
 
-        df = vf.extract('DP', func=lambda x: int(x), as_nan=True)
+        df = vf.extract(k)
 
         # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
-        ax.scatter(x=vf.df.POS, y=df[sample])
+        ax.scatter(x=vf.df.POS, y=df[sample], label=label, **kwargs)
 
         ax.set_xlabel('Position')
         ax.set_ylabel('Depth')
@@ -3983,6 +3995,8 @@ class VcfFrame:
             '#DP': ['DP', lambda x: int(x), True],
             '#AD_REF': ['AD', lambda x: float(x.split(',')[0]), True],
             '#AD_ALT': ['AD', lambda x: sum([int(y) for y in x.split(',')[1:]]), True],
+            '#AD_FRAC_REF': ['AD', lambda x: np.nan if sum([int(y) for y in x.split(',')]) == 0 else int(x.split(',')[0]) / sum([int(y) for y in x.split(',')]), True],
+            '#AD_FRAC_ALT': ['AD', lambda x: np.nan if sum([int(y) for y in x.split(',')]) == 0 else sum([int(y) for y in x.split(',')[1:]]) / sum([int(y) for y in x.split(',')]), True],
         }
 
         def one_row(r, k, func, as_nan):

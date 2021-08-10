@@ -585,6 +585,7 @@ def load_dataset(name, force=False):
             'plot_comparison.vcf',
             'normal-tumor.vcf',
             'normal-tumor-annot.tsv',
+            'getrm-cyp2d6-vdr.vcf',
         ],
         'cytoband': [
             'cytoBandIdeo.txt.gz',
