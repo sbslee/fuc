@@ -87,7 +87,8 @@ def main(args):
             f.write(
 f"""#!/bin/bash
 
-source activate {args.env}
+# Activate the conda environment.
+source activate {api.common.conda_env()}
 
 # Set up variables.
 name={r.Name}
