@@ -13,6 +13,7 @@ Changelog
 * Add new method :meth:`common.plot_exons`.
 * Update :meth:`pycov.CovFrame.plot_uniformity` method to accept a list of x positions.
 * Add new command :command:`ngs-fq2bam`.
+* Add new command :command:`ngs-recbam`.
 * Add new method :meth:`common.conda_env`.
 
 0.20.0 (2021-08-07)
