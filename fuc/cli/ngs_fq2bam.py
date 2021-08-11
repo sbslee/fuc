@@ -87,6 +87,8 @@ def main(args):
             f.write(
 f"""#!/bin/bash
 
+source activate {args.env}
+
 # Set up variables.
 name={r.Name}
 read1={r.Read1}

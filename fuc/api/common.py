@@ -7,6 +7,7 @@ bioinformatics.
 import pathlib
 import re
 import os
+import sys
 import warnings
 import inspect
 from argparse import RawTextHelpFormatter, SUPPRESS
@@ -1029,3 +1030,7 @@ def plot_exons(
         )
 
     return ax
+
+def conda_env():
+    """str : Name of the current conda environment."""
+    return sys.executable.split('/')[-3]
