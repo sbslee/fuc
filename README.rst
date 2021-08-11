@@ -129,6 +129,7 @@ For getting help on the fuc CLI:
        maf-oncoplt  Create an oncoplot with a MAF file.
        maf-sumplt   Create a summary plot with a MAF file.
        maf-vcf2maf  Convert a VCF file to a MAF file.
+       ngs-fq2bam   Convert FASTQ files to sorted BAM files with SGE.
        tbl-merge    Merge two table files.
        tbl-sum      Summarize a table file.
        vcf-filter   Filter a VCF file.

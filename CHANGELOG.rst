@@ -12,6 +12,7 @@ Changelog
 * :issue:`39`: Update :meth:`pyvcf.VcfFrame.extract` method to ignore rows where the genotype key of interest is not present.
 * Add new method :meth:`common.plot_exons`.
 * Update :meth:`pycov.CovFrame.plot_uniformity` method to accept a list of x positions.
+* Add new command :command:`ngs-fq2bam`.
 
 0.20.0 (2021-08-07)
 -------------------

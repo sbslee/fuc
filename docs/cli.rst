@@ -36,6 +36,7 @@ For getting help on the fuc CLI:
        maf-oncoplt  Create an oncoplot with a MAF file.
        maf-sumplt   Create a summary plot with a MAF file.
        maf-vcf2maf  Convert a VCF file to a MAF file.
+       ngs-fq2bam   Convert FASTQ files to sorted BAM files with SGE.
        tbl-merge    Merge two table files.
        tbl-sum      Summarize a table file.
        vcf-filter   Filter a VCF file.
@@ -493,6 +494,40 @@ maf-vcf2maf
    
    Optional arguments:
      -h, --help  Show this help message and exit.
+
+ngs-fq2bam
+==========
+
+.. code-block:: text
+
+   $ fuc ngs-fq2bam -h
+   usage: fuc ngs-fq2bam [-h] [--force] [--thread INT] [--platform TEXT]
+                         manifest fasta output qsub
+   
+   This command will prepare a pipeline that converts FASTQ files to sorted BAM files with SGE.
+   
+   Dependencies:
+     - BWA
+   
+   Manifest columns:
+     - Name: Sample name.
+     - Read1: Path to forward read FASTA file.
+     - Read2: Path to reverse read FASTA file.
+   
+   Usage examples:
+     $ fuc ngs-fq2bam manifest.csv ref.fa output_dir "-q queue_name -pe pe_name 10" --thread 10
+   
+   Positional arguments:
+     manifest         Sample manifest CSV file.
+     fasta            Reference FASTA file.
+     output           Output directory.
+     qsub             Options for qsub.
+   
+   Optional arguments:
+     -h, --help       Show this help message and exit.
+     --force          Overwrite the output directory if it already exists.
+     --thread INT     Number of threads to use (default: 1).
+     --platform TEXT  Sequencing platform (default: Illumina).
 
 tbl-merge
 =========
