@@ -37,6 +37,7 @@ For getting help on the fuc CLI:
        maf-sumplt   Create a summary plot with a MAF file.
        maf-vcf2maf  Convert a VCF file to a MAF file.
        ngs-fq2bam   Convert FASTQ files to sorted BAM files with SGE.
+       ngs-recbam   Mark duplicate reads and recalibrate BAM files with SGE.
        tbl-merge    Merge two table files.
        tbl-sum      Summarize a table file.
        vcf-filter   Filter a VCF file.
@@ -507,7 +508,8 @@ ngs-fq2bam
    This command will prepare a pipeline that converts FASTQ files to sorted BAM files with SGE.
    
    Dependencies:
-     - BWA
+     - BWA: The BWA-MEM algorithm is used to perform read alignment.
+     - samtools: The 'samtools sort' command is used to sort sequence reads.
    
    Manifest columns:
      - Name: Sample name.
@@ -516,6 +518,7 @@ ngs-fq2bam
    
    Usage examples:
      $ fuc ngs-fq2bam manifest.csv ref.fa output_dir "-q queue_name -pe pe_name 10" --thread 10
+     $ fuc ngs-fq2bam manifest.csv ref.fa output_dir "-l h='node_A|node_B' -pe pe_name 10" --thread 10
    
    Positional arguments:
      manifest         Sample manifest CSV file.
@@ -528,6 +531,42 @@ ngs-fq2bam
      --force          Overwrite the output directory if it already exists.
      --thread INT     Number of threads to use (default: 1).
      --platform TEXT  Sequencing platform (default: Illumina).
+
+ngs-recbam
+==========
+
+.. code-block:: text
+
+   $ fuc ngs-recbam -h
+   usage: fuc ngs-recbam [-h] [--bed PATH] [--force] [--keep]
+                         manifest fasta output qsub java vcf [vcf ...]
+   
+   This command will prepare a pipeline that mark duplicate reads and recalibrate BAM files with SGE.
+   
+   Dependencies:
+     - GATK: Used to mark duplicate reads and recalibrate BAM files.
+     - samtools: Used to index BAM files.
+   
+   Manifest columns:
+     - BAM: Path to sorted BAM file.
+   
+   Usage examples:
+     $ fuc ngs-recbam manifest.csv ref.fa output_dir "-q queue_name" "-Xmx4g -Xms4g" 1.vcf 2.vcf 3.vcf --bed in.bed
+     $ fuc ngs-recbam manifest.csv ref.fa output_dir "-l h='node_A|node_B'" "-Xmx4g -Xms4g" 1.vcf 2.vcf 3.vcf --bed in.bed
+   
+   Positional arguments:
+     manifest    Sample manifest CSV file.
+     fasta       Reference FASTA file.
+     output      Output directory.
+     qsub        Options for qsub.
+     java        Options for Java.
+     vcf         VCF file containing known sites.
+   
+   Optional arguments:
+     -h, --help  Show this help message and exit.
+     --bed PATH  BED file.
+     --force     Overwrite the output directory if it already exists.
+     --keep      Remove temporary files.
 
 tbl-merge
 =========
@@ -571,9 +610,7 @@ tbl-sum
                       [--expr TEXT] [--columns TEXT [TEXT ...]] [--dtypes PATH]
                       table_file
    
-   This command will summarize a table file. It essentially wraps the
-   'pandas.Series.describe' and 'pandas.Series.value_counts' methods from the
-   pandas pacakge.
+   This command will summarize a table file.
    
    Usage examples:
      $ fuc tbl-sum table.tsv

@@ -130,6 +130,7 @@ For getting help on the fuc CLI:
        maf-sumplt   Create a summary plot with a MAF file.
        maf-vcf2maf  Convert a VCF file to a MAF file.
        ngs-fq2bam   Convert FASTQ files to sorted BAM files with SGE.
+       ngs-recbam   Mark duplicate reads and recalibrate BAM files with SGE.
        tbl-merge    Merge two table files.
        tbl-sum      Summarize a table file.
        vcf-filter   Filter a VCF file.
