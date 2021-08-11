@@ -104,11 +104,13 @@ def main(args):
             remove = f'# rm {args.output}/temp/{fn}.markdup.bam\n'
             remove += f'# rm {args.output}/temp/{fn}.metrics\n'
             remove += f'# rm {args.output}/temp/{fn}.table'
+            remove += f'# rm {args.output}/temp/{fn}.markdup.bam.bai'
         else:
             remove = f'rm {args.output}/temp/{fn}.markdup.bam\n'
             remove += f'rm {args.output}/temp/{fn}.metrics\n'
             remove += f'rm {args.output}/temp/{fn}.table'
-
+            remove += f'rm {args.output}/temp/{fn}.markdup.bam.bai'
+            
         with open(f'{args.output}/shell/{fn}.sh', 'w') as f:
             f.write(
 f"""#!/bin/bash
