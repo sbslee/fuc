@@ -75,7 +75,6 @@ def main(args):
     os.mkdir(args.output)
     os.mkdir(f'{args.output}/shell')
     os.mkdir(f'{args.output}/log')
-    os.mkdir(f'{args.output}/temp')
 
     with open(f'{args.output}/command.txt', 'w') as f:
         f.write(' '.join(sys.argv) + '\n')
