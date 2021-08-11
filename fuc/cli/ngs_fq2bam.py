@@ -75,6 +75,9 @@ def main(args):
     os.mkdir(f'{args.output}/log')
     os.mkdir(f'{args.output}/temp')
 
+    with open(f'{args.output}/command.txt', 'w') as f:
+        f.write(' '.join(sys.argv) + '\n')
+
     df = pd.read_csv(args.manifest)
 
     for i, r in df.iterrows():
