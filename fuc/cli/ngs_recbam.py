@@ -67,6 +67,11 @@ def create_parser(subparsers):
         action='store_true',
         help='Overwrite the output directory if it already exists.'
     )
+    parser.add_argument(
+        '--keep',
+        action='store_true',
+        help='Remove temporary files.'
+    )
 
 def main(args):
     if os.path.exists(args.output) and args.force:
@@ -94,6 +99,15 @@ def main(args):
             intervals = '# --intervals'
         else:
             intervals = f'--intervals {args.bed}'
+
+        if args.keep:
+            remove = f'# rm {args.output}/temp/{fn}.markdup.bam\n'
+            remove += f'# rm {args.output}/temp/{fn}.metrics\n'
+            remove += f'# rm {args.output}/temp/{fn}.table'
+        else:
+            remove = f'rm {args.output}/temp/{fn}.markdup.bam\n'
+            remove += f'rm {args.output}/temp/{fn}.metrics\n'
+            remove += f'rm {args.output}/temp/{fn}.table'
 
         with open(f'{args.output}/shell/{fn}.sh', 'w') as f:
             f.write(
@@ -128,6 +142,9 @@ gatk ApplyBQSR \\
 {intervals} \\
 -bqsr {args.output}/temp/{fn}.table \\
 -O {args.output}/{fn}.markdup.recal.bam
+
+# Remove temporary files.
+{remove}
 """)
 
     with open(f'{args.output}/shell/qsubme.sh', 'w') as f:
