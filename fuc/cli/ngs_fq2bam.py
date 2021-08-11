@@ -10,7 +10,8 @@ description = f"""
 This command will prepare a pipeline that converts FASTQ files to sorted BAM files with SGE.
 
 Dependencies:
-  - BWA
+  - BWA: The BWA-MEM algorithm is used to perform read alignment.
+  - samtools: The 'samtools sort' command is used to sort sequence reads.
 
 Manifest columns:
   - Name: Sample name.
@@ -19,6 +20,7 @@ Manifest columns:
 
 Usage examples:
   $ fuc {api.common._script_name()} manifest.csv ref.fa output_dir "-q queue_name -pe pe_name 10" --thread 10
+  $ fuc {api.common._script_name()} manifest.csv ref.fa output_dir "-l h='node_A|node_B' -pe pe_name 10" --thread 10
 """
 
 def create_parser(subparsers):
