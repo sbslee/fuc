@@ -4139,26 +4139,24 @@ class VcfFrame:
 
     def extract_info(vf, k, func=None, as_nan=False):
         """
-        Extract requested data for the specified INFO key.
+        Extract data for the specified INFO key.
 
-        By default, this method will return extracted results as string. To
-        output numeric values, you can set ``func=lambda x: float(x)`` and
-        ``as_nan=True``.
+        By default, this method will return an array of string. Use ``func``
+        and ``as_nan`` to output an array of numbers. Alternatvely, select
+        one of the special keys for ``k``, which have predetermined values
+        of ``func`` and ``as_nan`` for convenience.
 
         Parameters
         ----------
         k : str
             INFO key to use when extracting data. In addition to regular
             INFO keys (e.g. 'AC', 'AF'), the method also accepts the
-            special keys listed below, which have predetermined values for
-            ``func`` and ``as_nan`` for convenience:
+            special keys listed below:
 
             - '#AC': Results will be numeric. If multiple 'AC' values are
               available because the site is multiallelic, then their sum
               will be returned.
-            - '#AF': Results will be numeric. If multiple 'AF' values are
-              available because the site is multiallelic, then their sum
-              will be returned.
+            - '#AF': Same as '#AC' except it is for 'AF' instead of 'AC'.
 
         func : function, optional
             Function to apply to each of the extracted results.
