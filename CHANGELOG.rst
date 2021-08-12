@@ -17,6 +17,7 @@ Changelog
 * Add new command :command:`ngs-hapcall`.
 * Add new method :meth:`common.conda_env`.
 * Add new argument ``meta_only`` to :meth:`pyvcf.VcfFrame.from_file` method.
+* Add new argument ``nrows`` to :meth:`pyvcf.VcfFrame.from_file` method.
 
 0.20.0 (2021-08-07)
 -------------------
