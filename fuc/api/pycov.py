@@ -203,7 +203,7 @@ class CovFrame:
         args += bam_files
         s = pysam.depth(*args)
         headers = ['Chromosome', 'Position']
-        dtype = {'Chromosome': str,'Position': np.int32}
+        dtype = {'Chromosome': str,'Position': int}
         for i, bam_file in enumerate(bam_files):
             if names:
                 name = names[i]
@@ -214,7 +214,7 @@ class CovFrame:
                     raise ValueError(m)
                 name = samples[0]
             headers.append(name)
-            dtype[name] = np.int32
+            dtype[name] = int
         df = pd.read_csv(StringIO(s), sep='\t', header=None,
                          names=headers, dtype=dtype)
         return cls(df)
@@ -346,7 +346,6 @@ class CovFrame:
         if kwargs is None:
             kwargs = {}
 
-        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -521,7 +520,6 @@ class CovFrame:
         else:
             hue = 'Sample'
 
-        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -614,7 +612,6 @@ class CovFrame:
         else:
             hue = 'Sample'
 
-        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 

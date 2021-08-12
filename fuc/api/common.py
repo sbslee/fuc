@@ -317,7 +317,6 @@ class AnnFrame:
             else:
                 colors = list(plt.get_cmap(colors).colors[:len(group_order)])
 
-        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -404,7 +403,6 @@ class AnnFrame:
             else:
                 colors = list(plt.get_cmap(colors).colors[:len(group_order)])
 
-        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -795,7 +793,6 @@ def plot_cytobands(cytoband, bed, ax=None, figsize=None):
     genes['width'] = genes.end - genes.start
     genes['colors'] = '#2243a8'
 
-    # Determine which matplotlib axes to plot on.
     if ax is None:
         fig, ax = plt.subplots(figsize=figsize)
 
@@ -1004,7 +1001,6 @@ def plot_exons(
         >>> plt.tight_layout()
     """
 
-    # Determine which matplotlib axes to plot on.
     if ax is None:
         fig, ax = plt.subplots(figsize=figsize)
 

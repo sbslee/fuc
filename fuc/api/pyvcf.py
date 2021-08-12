@@ -1941,7 +1941,6 @@ class VcfFrame:
 
         df = vf.extract(k)
 
-        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -2013,7 +2012,6 @@ class VcfFrame:
             else:
                 labels = ('A', 'B', 'C')
 
-        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -2115,7 +2113,6 @@ class VcfFrame:
         df = df.dropna()
         df = df.rename(columns={'value': k})
 
-        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -2126,8 +2123,79 @@ class VcfFrame:
 
         return ax
 
+    def plot_hist_info(
+        self, k, kde=True, ax=None, figsize=None, **kwargs
+    ):
+        """
+        Create a histogram showing the distribution of requested data for
+        the specified INFO key.
+
+        Parameters
+        ----------
+        k : str
+            One of the special INFO keys as defined in
+            :meth:`pyvcf.VcfFrame.extract_info`.
+        kde : bool, default: True
+            Compute a kernel density estimate to smooth the distribution.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+        kwargs
+            Other keyword arguments will be passed down to
+            :meth:`seaborn.histplot`.
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+
+        Examples
+        --------
+        Below is a simple example:
+
+        .. plot::
+            :context: close-figs
+
+            >>> from fuc import common, pyvcf
+            >>> common.load_dataset('pyvcf')
+            >>> vcf_file = '~/fuc-data/pyvcf/normal-tumor.vcf'
+            >>> vf = pyvcf.VcfFrame.from_file(vcf_file)
+            >>> vf.plot_hist('DP')
+
+        We can draw multiple histograms with hue mapping:
+
+        .. plot::
+            :context: close-figs
+
+            >>> annot_file = '~/fuc-data/pyvcf/normal-tumor-annot.tsv'
+            >>> af = common.AnnFrame.from_file(annot_file, sample_col='Sample')
+            >>> vf.plot_hist('DP', af=af, group_col='Tissue')
+
+        We can show AF instead of DP:
+
+        .. plot::
+            :context: close-figs
+
+            >>> vf.plot_hist('AF')
+        """
+        s = self.extract_info(k)
+
+        if s.isnull().all():
+            raise ValueError('Dataset is empty.')
+
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
+        sns.histplot(
+            data=s, kde=kde, ax=ax, **kwargs
+        )
+
+        return ax
+
     def plot_tmb(
-        self, af=None, group_col=None, group_order=None, kde=True, ax=None, figsize=None, **kwargs
+        self, af=None, group_col=None, group_order=None, kde=True, ax=None,
+        figsize=None, **kwargs
     ):
         """
         Create a histogram showing TMB distribution.
@@ -2184,7 +2252,6 @@ class VcfFrame:
         else:
             df = pd.concat([af.df, s], axis=1, join='inner')
 
-        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -2245,7 +2312,6 @@ class VcfFrame:
         df = pd.concat([s[a].reset_index(), s[b].reset_index()], axis=1)
         df.columns = ['A_Label', 'A_TMB', 'B_Label', 'B_TMB']
 
-        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -3955,8 +4021,7 @@ class VcfFrame:
 
     def extract(self, k, func=None, as_nan=False):
         """
-        Create a DataFrame containing analysis-ready data for the given
-        genotype key.
+        Extract requested data for the specified FORMAT key.
 
         Parameters
         ----------
@@ -3973,9 +4038,9 @@ class VcfFrame:
             - '#AD_FRAC_ALT': Return ALT allele fraction.
 
         func : function, optional
-            Function to apply to each of the sample genotypes.
+            Function to apply to each of the extracted results.
         as_nan : bool, default: False
-            If True, return missing values (e.g. './.', '.') as ``NaN``.
+            If True, return missing values as ``NaN``.
 
         Returns
         -------
@@ -4071,6 +4136,129 @@ class VcfFrame:
         df = self.df.apply(one_row, args=(k, func, as_nan), axis=1)
 
         return df
+
+    def extract_info(vf, k, func=None, as_nan=False):
+        """
+        Extract requested data for the specified INFO key.
+
+        By default, this method will return extracted results as string. To
+        output numeric values, you can set ``func=lambda x: float(x)`` and
+        ``as_nan=True``.
+
+        Parameters
+        ----------
+        k : str
+            INFO key to use when extracting data. In addition to regular
+            INFO keys (e.g. 'AC', 'AF'), the method also accepts the
+            special keys listed below, which have predetermined values for
+            ``func`` and ``as_nan`` for convenience:
+
+            - '#AC': Results will be numeric. If multiple 'AC' values are
+              available because the site is multiallelic, then their sum
+              will be returned.
+            - '#AF': Results will be numeric. If multiple 'AF' values are
+              available because the site is multiallelic, then their sum
+              will be returned.
+
+        func : function, optional
+            Function to apply to each of the extracted results.
+        as_nan : bool, default: False
+            If True, return missing values as ``NaN``.
+
+        Returns
+        -------
+        pandas.Series
+            Requested data.
+
+        Examples
+        --------
+
+        >>> from fuc import pyvcf
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102, 103],
+        ...     'ID': ['.', '.', '.', '.'],
+        ...     'REF': ['A', 'C', 'A', 'A'],
+        ...     'ALT': ['G', 'T', 'C,T', 'T'],
+        ...     'QUAL': ['.', '.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.', '.'],
+        ...     'INFO': ['AC=1;AF=0.167;H2', 'AC=2;AF=0.333', 'AC=1,2;AF=0.167,0.333;H2', 'AC=.;AF=.'],
+        ...     'FORMAT': ['GT', 'GT', 'GT', 'GT'],
+        ...     'A': ['0/1', '0/0', '0/1', './.'],
+        ...     'B': ['0/0', '1/1', '0/2', './.'],
+        ...     'C': ['0/0', '0/0', '0/2', './.'],
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF  ALT QUAL FILTER                      INFO FORMAT    A    B    C
+        0  chr1  100  .   A    G    .      .          AC=1;AF=0.167;H2     GT  0/1  0/0  0/0
+        1  chr1  101  .   C    T    .      .             AC=2;AF=0.333     GT  0/0  1/1  0/0
+        2  chr1  102  .   A  C,T    .      .  AC=1,2;AF=0.167,0.333;H2     GT  0/1  0/2  0/2
+        3  chr1  103  .   A    T    .      .                 AC=.;AF=.     GT  ./.  ./.  ./.
+        >>> vf.extract_info('H2')
+        0     H2
+        1    NaN
+        2     H2
+        3    NaN
+        dtype: object
+        >>> vf.extract_info('AC')
+        0      1
+        1      2
+        2    1,2
+        3      .
+        dtype: object
+        >>> vf.extract_info('AC', as_nan=True)
+        0      1
+        1      2
+        2    1,2
+        3    NaN
+        dtype: object
+        >>> vf.extract_info('AC', func=lambda x: sum([int(x) for x in x.split(',')]), as_nan=True)
+        0    1.0
+        1    2.0
+        2    3.0
+        3    NaN
+        dtype: float64
+        >>> vf.extract_info('#AC') # Same as above
+        0    1.0
+        1    2.0
+        2    3.0
+        3    NaN
+        dtype: float64
+        """
+        special_keys = {
+            '#AC': ['AC', lambda x: sum([int(x) for x in x.split(',')]), True],
+            '#AF': ['AF', lambda x: sum([float(x) for x in x.split(',')]), True],
+        }
+
+        def one_row(r, k, func, as_nan):
+            d = {}
+
+            for field in r.INFO.split(';'):
+                if '=' not in field:
+                    d[field] = field
+                else:
+                    d[field.split('=')[0]] = field.split('=')[1]
+
+            try:
+                result = d[k]
+            except KeyError:
+                return np.nan
+
+            if result == '.' and as_nan:
+                return np.nan
+
+            if func is not None:
+                return func(result)
+
+            return result
+
+        if k in special_keys:
+            k, func, as_nan = special_keys[k]
+
+        s = vf.df.apply(one_row, args=(k, func, as_nan), axis=1)
+
+        return s
 
     def rename(self, names, indicies=None):
         """
@@ -4307,7 +4495,6 @@ class VcfFrame:
         """
         mf = pymaf.MafFrame.from_vcf(self)
 
-        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -4373,7 +4560,6 @@ class VcfFrame:
         """
         mf = pymaf.MafFrame.from_vcf(self)
 
-        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -4458,7 +4644,6 @@ class VcfFrame:
         """
         mf = pymaf.MafFrame.from_vcf(self)
 
-        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -4542,7 +4727,6 @@ class VcfFrame:
         """
         mf = pymaf.MafFrame.from_vcf(self)
 
-        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -4614,7 +4798,6 @@ class VcfFrame:
         """
         mf = pymaf.MafFrame.from_vcf(self)
 
-        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
