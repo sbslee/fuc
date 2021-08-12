@@ -1292,7 +1292,7 @@ class VcfFrame:
         return cls(meta, pd.DataFrame(data))
 
     @classmethod
-    def from_file(cls, fn, compression=False):
+    def from_file(cls, fn, compression=False, meta_only=False):
         """
         Construct VcfFrame from a VCF file.
 
@@ -1305,6 +1305,8 @@ class VcfFrame:
             VCF file path (zipped or unzipped).
         compression : bool, default: False
             If True, use the BGZF decompression regardless of file name.
+        meta_only : bool, default: False
+            If True, only read the metadata.
 
         Returns
         -------
@@ -1338,9 +1340,15 @@ class VcfFrame:
             if line.startswith('##'):
                 meta.append(line.strip())
                 skip_rows += 1
+            elif line.startswith('#CHROM'):
+                headers = line.strip().split('\t')
+                skip_rows += 1
             else:
                 break
-        df = pd.read_table(fn, skiprows=skip_rows)
+        if meta_only:
+            df = pd.DataFrame(columns=headers)
+        else:
+            df = pd.read_table(fn, skiprows=skip_rows, names=headers)
         df = df.rename(columns={'#CHROM': 'CHROM'})
         f.close()
         return cls(meta, df)
