@@ -175,7 +175,7 @@ source activate {api.common.conda_env()}
             command3 += f' --QUIET'
             command3 += f' --java-options "{args.java2}"'
             command3 += f' -R {args.fasta}'
-            command3 += f' -O {args.output}/{chrom}.joint.filtered.vcf'
+            command3 += f' -O {args.output}/temp/{chrom}.joint.filtered.vcf'
             command3 += f' --variant {args.output}/temp/{chrom}.joint.vcf'
             command3 += f' --filter-expression "QUAL <= 50.0"'
             command3 += f' --filter-name QUALFilter'
@@ -215,6 +215,9 @@ source activate {api.common.conda_env()}
 
         f.write(
 f"""#!/bin/bash
+
+# Activate conda environment.
+source activate {api.common.conda_env()}
 
 # Merge VCF files.
 {command}
