@@ -46,7 +46,11 @@ def create_parser(subparsers):
         help='Options for qsub.'
     )
     parser.add_argument(
-        'java',
+        'java1',
+        help='Options for Java.'
+    )
+    parser.add_argument(
+        'java2',
         help='Options for Java.'
     )
     parser.add_argument(
@@ -94,7 +98,7 @@ def main(args):
 
         with open(f'{args.output}/shell/S1-{basename}.sh', 'w') as f:
             command = 'gatk HaplotypeCaller'
-            command += f' --java-options "{args.java}"'
+            command += f' --java-options "{args.java1}"'
             command += f' -R {args.fasta}'
             command += f' --emit-ref-confidence GVCF'
             command += f' -I {r.BAM}'
@@ -129,7 +133,7 @@ source activate {api.common.conda_env()}
         ####################
 
         command1 = 'gatk GenomicsDBImport'
-        command1 += f' --java-options "{args.java}"'
+        command1 += f' --java-options "{args.java2}"'
         command1 += f' --genomicsdb-workspace-path {args.output}/temp/datastore'
         command1 += f' --merge-input-intervals'
         command1 += f' --QUIET'
@@ -144,7 +148,7 @@ source activate {api.common.conda_env()}
         #################
 
         command2 = 'gatk GenotypeGVCFs'
-        command2 += f' --java-options "{args.java}"'
+        command2 += f' --java-options "{args.java2}"'
         command2 += f' -R {args.fasta}'
         command2 += f' -V gendb://{args.output}/temp/datastore'
         command2 += f' -O {args.output}/temp/joint.vcf'
@@ -158,7 +162,7 @@ source activate {api.common.conda_env()}
         #####################
 
         command3 = 'gatk VariantFiltration'
-        command3 += f' --java-options "{args.java}"'
+        command3 += f' --java-options "{args.java2}"'
         command3 += f' -R {args.fasta}'
         command3 += f' -O {args.output}/joint.filtered.vcf'
         command3 += f' --variant {args.output}/temp/joint.vcf'
