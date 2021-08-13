@@ -7,25 +7,25 @@ from .. import api
 import pandas as pd
 
 description = f"""
-This command will prepare a pipeline that mark duplicate reads and recalibrate BAM files with SGE.
+This command will prepare a pipeline that marks duplicate reads and recalibrates BAM files.
 
-Dependencies:
-  - GATK: Used to mark duplicate reads and recalibrate BAM files.
-  - samtools: Used to index BAM files.
+External dependencies:
+  - GATK: Required for marking duplicate reads and recalibrating BAM files.
+  - samtools: Required for indexing BAM files.
 
 Manifest columns:
-  - BAM: Path to sorted BAM file.
+  - BAM: Sorted BAM file.
 
 Usage examples:
-  $ fuc {api.common._script_name()} manifest.csv ref.fa output_dir "-q queue_name" "-Xmx4g -Xms4g" 1.vcf 2.vcf 3.vcf --bed in.bed
-  $ fuc {api.common._script_name()} manifest.csv ref.fa output_dir "-l h='node_A|node_B'" "-Xmx4g -Xms4g" 1.vcf 2.vcf 3.vcf --bed in.bed
+  $ fuc {api.common._script_name()} manifest.csv ref.fa output_dir "-q queue_name" "-Xmx4g -Xms4g" 1.vcf 2.vcf 3.vcf
+  $ fuc {api.common._script_name()} manifest.csv ref.fa output_dir "-l h='node_A|node_B'" "-Xmx4g -Xms4g" 1.vcf 2.vcf 3.vcf
 """
 
 def create_parser(subparsers):
     parser = api.common._add_parser(
         subparsers,
         api.common._script_name(),
-        help='Mark duplicate reads and recalibrate BAM files with SGE.',
+        help='Pipeline for marking duplicate reads and recalibrating BAM files.',
         description=description,
     )
     parser.add_argument(
@@ -70,7 +70,7 @@ def create_parser(subparsers):
     parser.add_argument(
         '--keep',
         action='store_true',
-        help='Remove temporary files.'
+        help='Keep temporary files.'
     )
 
 def main(args):
