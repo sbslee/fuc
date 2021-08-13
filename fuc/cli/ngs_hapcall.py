@@ -86,6 +86,8 @@ def main(args):
 
     df = pd.read_csv(args.manifest)
 
+    fns = []
+
     if args.bed is None:
         intervals = '# --intervals'
     else:
@@ -102,7 +104,10 @@ def main(args):
         remove = 'rm'
 
     for i, r in df.iterrows():
-        with open(f'{args.output}/shell/{r.BAM}.sh', 'w') as f:
+        fn = os.path.basename(r.BAM).replace('.bam', '')
+        fns.append(fn)
+
+        with open(f'{args.output}/shell/{fn}.sh', 'w') as f:
             f.write(
 f"""#!/bin/bash
 
@@ -116,12 +121,12 @@ gatk HaplotypeCaller \\
 --emit-ref-confidence GVCF \\
 {intervals} \\
 -I {r.BAM} \\
--O {args.output}/temp/{r.BAM}.g.vcf \\
+-O {args.output}/temp/{fn}.g.vcf \\
 --QUIET
 """)
 
     with open(f'{args.output}/shell/jointcall.sh', 'w') as f:
-        gvcfs = ' '.join([f'-V {args.output}/temp/{x}.g.vcf' for x in df.BAM])
+        gvcfs = ' '.join([f'-V {args.output}/temp/{x}.g.vcf' for x in fns])
 
         f.write(
 f"""#!/bin/bash
