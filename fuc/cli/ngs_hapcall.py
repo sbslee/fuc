@@ -161,6 +161,9 @@ gatk VariantFiltration \\
 --filter-expression 'QUAL <= 50.0' \\
 --filter-name QUALFilter \\
 --QUIET
+
+# Remove temporary files.
+{remove} {args.output}/temp/*
 """)
 
     with open(f'{args.output}/shell/qsubme.sh', 'w') as f:
