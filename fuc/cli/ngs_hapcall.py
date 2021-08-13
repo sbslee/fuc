@@ -169,7 +169,7 @@ f"""#!/bin/bash
 
 p={args.output}
 
-samples=({" ".join(df.BAM)})
+samples=({" ".join(fns)})
 
 for sample in ${{samples[@]}}
 do
