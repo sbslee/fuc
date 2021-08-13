@@ -7,7 +7,7 @@ from .. import api
 import pandas as pd
 
 description = f"""
-This command will prepare a pipeline that performs germline short variant discovery with SGE.
+This command will prepare a pipeline that constructs a panel of normals (PoN).
 
 The pipeline is based on GATK's documentation "CreateSomaticPanelOfNormals (BETA)" (https://gatk.broadinstitute.org/hc/en-us/articles/360037058172-CreateSomaticPanelOfNormals-BETA-).
 
@@ -26,7 +26,7 @@ def create_parser(subparsers):
     parser = api.common._add_parser(
         subparsers,
         api.common._script_name(),
-        help='Perform germline short variant discovery with SGE.',
+        help='Pipeline for creating a panel of normals (PoN).',
         description=description,
     )
     parser.add_argument(

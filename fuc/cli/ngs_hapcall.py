@@ -98,6 +98,11 @@ def main(args):
 
     df = pd.read_csv(args.manifest)
 
+    if args.keep:
+        remove = '# rm'
+    else:
+        remove = 'rm'
+
     basenames = []
 
     for i, r in df.iterrows():
@@ -195,11 +200,6 @@ source activate {api.common.conda_env()}
 # Filter variants.
 {command3}
 """)
-
-    if args.keep:
-        remove = '# rm'
-    else:
-        remove = 'rm'
 
     with open(f'{args.output}/shell/S3.sh', 'w') as f:
 

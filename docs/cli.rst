@@ -36,9 +36,9 @@ For getting help on the fuc CLI:
        maf-oncoplt  Create an oncoplot with a MAF file.
        maf-sumplt   Create a summary plot with a MAF file.
        maf-vcf2maf  Convert a VCF file to a MAF file.
-       ngs-fq2bam   Convert FASTQ files to sorted BAM files with SGE.
-       ngs-hapcall  Perform germline short variant discovery with SGE.
-       ngs-recbam   Mark duplicate reads and recalibrate BAM files with SGE.
+       ngs-fq2bam   Pipeline for converting FASTQ files to analysis-ready BAM files.
+       ngs-hapcall  Pipeline for germline short variant discovery.
+       ngs-pon      Pipeline for creating a panel of normals (PoN).
        tbl-merge    Merge two table files.
        tbl-sum      Summarize a table file.
        vcf-filter   Filter a VCF file.
@@ -503,19 +503,24 @@ ngs-fq2bam
 .. code-block:: text
 
    $ fuc ngs-fq2bam -h
-   usage: fuc ngs-fq2bam [-h] [--force] [--thread INT] [--platform TEXT]
-                         manifest fasta output qsub
+   usage: fuc ngs-fq2bam [-h] [--bed PATH] [--force] [--keep] [--thread INT]
+                         [--platform TEXT]
+                         manifest fasta output qsub1 qsub2 java vcf [vcf ...]
    
-   This command will prepare a pipeline that converts FASTQ files to sorted BAM files with SGE.
+   This command will prepare a pipeline that converts FASTQ files to analysis-ready BAM files.
    
-   Dependencies:
-     - BWA: The BWA-MEM algorithm is used to perform read alignment.
-     - samtools: The 'samtools sort' command is used to sort sequence reads.
+   Here, "analysis-ready" means the final BAM files will be: 1) aligned to a reference genome, 2) sorted by genomic coordinate, 3) marked for duplicate reads, 4) recalibrated by BQSR model, and 5) ready for downstream analyses such as variant calling.
+   
+   External dependencies:
+     - SGE: Required for job submission (i.e. qsub).
+     - BWA: Required for read alignment.
+     - SAMtools: Required for sorting and indexing BAM files.
+     - GATK: Required for marking duplicate reads and recalibrating BAM files.
    
    Manifest columns:
      - Name: Sample name.
-     - Read1: Path to forward read FASTA file.
-     - Read2: Path to reverse read FASTA file.
+     - Read1: Path to forward FASTA file.
+     - Read2: Path to reverse FASTA file.
    
    Usage examples:
      $ fuc ngs-fq2bam manifest.csv ref.fa output_dir "-q queue_name -pe pe_name 10" --thread 10
@@ -525,11 +530,16 @@ ngs-fq2bam
      manifest         Sample manifest CSV file.
      fasta            Reference FASTA file.
      output           Output directory.
-     qsub             Options for qsub.
+     qsub1            Options for qsub.
+     qsub2            Options for qsub.
+     java             Options for Java.
+     vcf              VCF file containing known sites.
    
    Optional arguments:
      -h, --help       Show this help message and exit.
+     --bed PATH       BED file.
      --force          Overwrite the output directory if it already exists.
+     --keep           Keep temporary files.
      --thread INT     Number of threads to use (default: 1).
      --platform TEXT  Sequencing platform (default: Illumina).
 
@@ -539,54 +549,61 @@ ngs-hapcall
 .. code-block:: text
 
    $ fuc ngs-hapcall -h
-   usage: fuc ngs-hapcall [-h] [--force] [--thread INT] [--platform TEXT]
-                          manifest fasta output qsub
+   usage: fuc ngs-hapcall [-h] [--bed PATH] [--dbsnp PATH] [--chr] [--force]
+                          [--keep]
+                          manifest fasta output qsub java1 java2
    
-   This command will prepare a pipeline performs germline short variant discovery with SGE.
+   This command will prepare a pipeline that performs germline short variant discovery.
+   
+   External dependencies:
+     - SGE: Required for job submission (i.e. qsub).
+     - GATK: Required for variant discovery and filtration.
+   
+   Manifest columns:
+     - BAM: Recalibrated BAM file.
+   
+   Usage examples:
+     $ fuc ngs-hapcall manifest.csv ref.fa output_dir "-q queue_name" "-Xmx15g -Xms15g" "-Xmx30g -Xms30g"
+     $ fuc ngs-hapcall manifest.csv ref.fa output_dir "-l h='node_A|node_B'" "-Xmx15g -Xms15g" "-Xmx30g -Xms30g"
+   
+   Positional arguments:
+     manifest      Sample manifest CSV file.
+     fasta         Reference FASTA file.
+     output        Output directory.
+     qsub          SGE resoruce to request for qsub.
+     java1         Java resoruce to request for single-sample variant calling.
+     java2         Java resoruce to request for joint variant calling.
+   
+   Optional arguments:
+     -h, --help    Show this help message and exit.
+     --bed PATH    BED file.
+     --dbsnp PATH  dbSNP file.
+     --chr         Whether contig names have "chr" string (e.g. "chr1" vs. "1").
+     --force       Overwrite the output directory if it already exists.
+     --keep        Keep temporary files.
+
+ngs-pon
+=======
+
+.. code-block:: text
+
+   $ fuc ngs-pon -h
+   usage: fuc ngs-pon [-h] [--bed PATH] [--force] [--keep]
+                      manifest fasta output qsub java
+   
+   This command will prepare a pipeline that constructs a panel of normals (PoN).
+   
+   The pipeline is based on GATK's documentation "CreateSomaticPanelOfNormals (BETA)" (https://gatk.broadinstitute.org/hc/en-us/articles/360037058172-CreateSomaticPanelOfNormals-BETA-).
    
    Dependencies:
      - GATK: Used for germline short variant discovery.
    
    Manifest columns:
-     - BAM: Path to sorted BAM file.
+     - BAM: Path to recalibrated BAM file.
    
    Usage examples:
-     $ fuc ngs-hapcall manifest.csv ref.fa output_dir "-q queue_name -pe pe_name 10" --thread 10
-     $ fuc ngs-hapcall manifest.csv ref.fa output_dir "-l h='node_A|node_B' -pe pe_name 10" --thread 10
-   
-   Positional arguments:
-     manifest         Sample manifest CSV file.
-     fasta            Reference FASTA file.
-     output           Output directory.
-     qsub             Options for qsub.
-   
-   Optional arguments:
-     -h, --help       Show this help message and exit.
-     --force          Overwrite the output directory if it already exists.
-     --thread INT     Number of threads to use (default: 1).
-     --platform TEXT  Sequencing platform (default: Illumina).
-
-ngs-recbam
-==========
-
-.. code-block:: text
-
-   $ fuc ngs-recbam -h
-   usage: fuc ngs-recbam [-h] [--bed PATH] [--force] [--keep]
-                         manifest fasta output qsub java vcf [vcf ...]
-   
-   This command will prepare a pipeline that mark duplicate reads and recalibrate BAM files with SGE.
-   
-   Dependencies:
-     - GATK: Used to mark duplicate reads and recalibrate BAM files.
-     - samtools: Used to index BAM files.
-   
-   Manifest columns:
-     - BAM: Path to sorted BAM file.
-   
-   Usage examples:
-     $ fuc ngs-recbam manifest.csv ref.fa output_dir "-q queue_name" "-Xmx4g -Xms4g" 1.vcf 2.vcf 3.vcf --bed in.bed
-     $ fuc ngs-recbam manifest.csv ref.fa output_dir "-l h='node_A|node_B'" "-Xmx4g -Xms4g" 1.vcf 2.vcf 3.vcf --bed in.bed
+     $ fuc ngs-pon manifest.csv ref.fa output_dir "-q queue_name -pe pe_name 10" --thread 10
+     $ fuc ngs-pon manifest.csv ref.fa output_dir "-l h='node_A|node_B' -pe pe_name 10" --thread 10
    
    Positional arguments:
      manifest    Sample manifest CSV file.
@@ -594,7 +611,6 @@ ngs-recbam
      output      Output directory.
      qsub        Options for qsub.
      java        Options for Java.
-     vcf         VCF file containing known sites.
    
    Optional arguments:
      -h, --help  Show this help message and exit.
