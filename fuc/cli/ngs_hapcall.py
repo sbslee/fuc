@@ -10,15 +10,15 @@ description = f"""
 This command will prepare a pipeline that performs germline short variant discovery.
 
 External dependencies:
-  - SGE: Required for job submission (i.e. qsub) and parallelization.
-  - GATK: Required for germline short variant discovery.
+  - SGE: Required for job submission (i.e. qsub).
+  - GATK: Required for variant discovery and filtration.
 
 Manifest columns:
-  - BAM: Path to recalibrated BAM file.
+  - BAM: Recalibrated BAM file.
 
 Usage examples:
-  $ fuc {api.common._script_name()} manifest.csv ref.fa output_dir "-q queue_name -pe pe_name 10" --thread 10
-  $ fuc {api.common._script_name()} manifest.csv ref.fa output_dir "-l h='node_A|node_B' -pe pe_name 10" --thread 10
+  $ fuc {api.common._script_name()} manifest.csv ref.fa output_dir "-q queue_name" "-Xmx15g -Xms15g" "-Xmx30g -Xms30g"
+  $ fuc {api.common._script_name()} manifest.csv ref.fa output_dir "-l h='node_A|node_B'" "-Xmx15g -Xms15g" "-Xmx30g -Xms30g"
 """
 
 def create_parser(subparsers):
@@ -44,15 +44,17 @@ def create_parser(subparsers):
     parser.add_argument(
         'qsub',
         type=str,
-        help='Options for qsub.'
+        help='SGE resoruce to request for qsub.'
     )
     parser.add_argument(
         'java1',
-        help='Options for Java.'
+        type=str,
+        help='Java resoruce to request during single-sample variant calling.'
     )
     parser.add_argument(
         'java2',
-        help='Options for Java.'
+        type=str,
+        help='Java resoruce to request during multi-sample, joint variant calling.'
     )
     parser.add_argument(
         '--bed',
@@ -137,10 +139,10 @@ source activate {api.common.conda_env()}
         command1 += f' --QUIET'
         command1 += f' --java-options "{args.java2}"'
         command1 += f' --genomicsdb-workspace-path {args.output}/temp/datastore'
-        command1 += f' --merge-input-intervals'
 
         if args.bed is not None:
-            command += f' -L {args.bed}'
+            command1 += f' -L {args.bed}'
+            command1 += f' --merge-input-intervals'
 
         command1 += ' ' + ' '.join([f'-V {args.output}/temp/{x}.g.vcf' for x in basenames])
 
@@ -154,6 +156,9 @@ source activate {api.common.conda_env()}
         command2 += f' -R {args.fasta}'
         command2 += f' -V gendb://{args.output}/temp/datastore'
         command2 += f' -O {args.output}/temp/joint.vcf'
+
+        if args.bed is not None:
+            command2 += f' -L {args.bed}'
 
         if args.dbsnp is not None:
             command2 += f' --dbsnp {args.dbsnp}'
@@ -170,6 +175,9 @@ source activate {api.common.conda_env()}
         command3 += f' --variant {args.output}/temp/joint.vcf'
         command3 += f' --filter-expression "QUAL <= 50.0"'
         command3 += f' --filter-name QUALFilter'
+
+        if args.bed is not None:
+            command3 += f' -L {args.bed}'
 
         f.write(
 f"""#!/bin/bash
@@ -203,5 +211,5 @@ do
   qsub {args.qsub} -S /bin/bash -e $p/log -o $p/log -N S1 $p/shell/S1-$sample.sh
 done
 
-qsub {args.qsub} -S /bin/bash -e $p/log -o $p/log -hold_jid S1 $p/shell/S2.sh
+qsub {args.qsub} -S /bin/bash -e $p/log -o $p/log -N S2 -hold_jid S1 $p/shell/S2.sh
 """)
