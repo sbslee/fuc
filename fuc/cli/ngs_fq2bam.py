@@ -86,7 +86,7 @@ def main(args):
             f.write(
 f"""#!/bin/bash
 
-# Activate the conda environment.
+# Activate conda environment.
 source activate {api.common.conda_env()}
 
 # Set up variables.
@@ -119,6 +119,6 @@ samples=({" ".join(df.Name)})
 
 for sample in ${{samples[@]}}
 do
-  qsub -V {args.qsub} -S /bin/bash -e $p/log -o $p/log $p/shell/$sample.sh
+  qsub {args.qsub} -S /bin/bash -e $p/log -o $p/log $p/shell/$sample.sh
 done
 """)

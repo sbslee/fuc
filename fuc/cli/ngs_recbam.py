@@ -101,21 +101,15 @@ def main(args):
             intervals = f'--intervals {args.bed}'
 
         if args.keep:
-            remove = f'# rm {args.output}/temp/{fn}.markdup.bam\n'
-            remove += f'# rm {args.output}/temp/{fn}.metrics\n'
-            remove += f'# rm {args.output}/temp/{fn}.table'
-            remove += f'# rm {args.output}/temp/{fn}.markdup.bam.bai'
+            remove = '# rm'
         else:
-            remove = f'rm {args.output}/temp/{fn}.markdup.bam\n'
-            remove += f'rm {args.output}/temp/{fn}.metrics\n'
-            remove += f'rm {args.output}/temp/{fn}.table'
-            remove += f'rm {args.output}/temp/{fn}.markdup.bam.bai'
-            
+            remove = 'rm'
+
         with open(f'{args.output}/shell/{fn}.sh', 'w') as f:
             f.write(
 f"""#!/bin/bash
 
-# Activate the conda environment.
+# Activate conda environment.
 source activate {api.common.conda_env()}
 
 # Mark duplicate reads.
@@ -125,10 +119,10 @@ gatk MarkDuplicates \\
 -M {args.output}/temp/{fn}.metrics \\
 -O {args.output}/temp/{fn}.markdup.bam
 
-# Index the BAM file.
+# Index BAM file.
 samtools index {args.output}/temp/{fn}.markdup.bam
 
-# Build the BQSR model.
+# Build BQSR model.
 gatk BaseRecalibrator \\
 --java-options "{args.java}" \\
 -I {args.output}/temp/{fn}.markdup.bam \\
@@ -137,7 +131,7 @@ gatk BaseRecalibrator \\
 -R {args.fasta} \\
 -O {args.output}/temp/{fn}.table
 
-# Apply the BQSR model.
+# Apply BQSR model.
 gatk ApplyBQSR \\
 --java-options "{args.java}" \\
 -I {args.output}/temp/{fn}.markdup.bam \\
@@ -146,7 +140,10 @@ gatk ApplyBQSR \\
 -O {args.output}/{fn}.markdup.recal.bam
 
 # Remove temporary files.
-{remove}
+{remove} {args.output}/temp/{fn}.markdup.bam
+{remove} {args.output}/temp/{fn}.metrics
+{remove} {args.output}/temp/{fn}.table
+{remove} {args.output}/temp/{fn}.markdup.bam.bai
 """)
 
     with open(f'{args.output}/shell/qsubme.sh', 'w') as f:
@@ -159,6 +156,6 @@ samples=({" ".join(fns)})
 
 for sample in ${{samples[@]}}
 do
-  qsub -V {args.qsub} -S /bin/bash -e $p/log -o $p/log $p/shell/$sample.sh
+  qsub {args.qsub} -S /bin/bash -e $p/log -o $p/log $p/shell/$sample.sh
 done
 """)
