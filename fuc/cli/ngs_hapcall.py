@@ -7,10 +7,11 @@ from .. import api
 import pandas as pd
 
 description = f"""
-This command will prepare a pipeline that performs germline short variant discovery with SGE.
+This command will prepare a pipeline that performs germline short variant discovery.
 
-Dependencies:
-  - GATK: Used for germline short variant discovery.
+External dependencies:
+  - SGE: Required for job submission (i.e. qsub) and parallelization.
+  - GATK: Required for germline short variant discovery.
 
 Manifest columns:
   - BAM: Path to recalibrated BAM file.
@@ -24,7 +25,7 @@ def create_parser(subparsers):
     parser = api.common._add_parser(
         subparsers,
         api.common._script_name(),
-        help='Perform germline short variant discovery with SGE.',
+        help='Pipeline for germline short variant discovery.',
         description=description,
     )
     parser.add_argument(
@@ -98,12 +99,12 @@ def main(args):
 
         with open(f'{args.output}/shell/S1-{basename}.sh', 'w') as f:
             command = 'gatk HaplotypeCaller'
+            command += f' --QUIET'
             command += f' --java-options "{args.java1}"'
             command += f' -R {args.fasta}'
             command += f' --emit-ref-confidence GVCF'
             command += f' -I {r.BAM}'
             command += f' -O {args.output}/temp/{basename}.g.vcf'
-            command += f' --QUIET'
 
             if args.bed is not None:
                 command += f' -L {args.bed}'
@@ -133,26 +134,26 @@ source activate {api.common.conda_env()}
         ####################
 
         command1 = 'gatk GenomicsDBImport'
+        command1 += f' --QUIET'
         command1 += f' --java-options "{args.java2}"'
         command1 += f' --genomicsdb-workspace-path {args.output}/temp/datastore'
         command1 += f' --merge-input-intervals'
-        command1 += f' --QUIET'
 
         if args.bed is not None:
             command += f' -L {args.bed}'
 
-        command1 += ' '.join([f'-V {args.output}/temp/{x}.g.vcf' for x in basenames])
+        command1 += ' ' + ' '.join([f'-V {args.output}/temp/{x}.g.vcf' for x in basenames])
 
         #################
         # GenotypeGVCFs #
         #################
 
         command2 = 'gatk GenotypeGVCFs'
+        command2 += f' --QUIET'
         command2 += f' --java-options "{args.java2}"'
         command2 += f' -R {args.fasta}'
         command2 += f' -V gendb://{args.output}/temp/datastore'
         command2 += f' -O {args.output}/temp/joint.vcf'
-        command2 += f' --QUIET'
 
         if args.dbsnp is not None:
             command2 += f' --dbsnp {args.dbsnp}'
@@ -162,13 +163,13 @@ source activate {api.common.conda_env()}
         #####################
 
         command3 = 'gatk VariantFiltration'
+        command3 += f' --QUIET'
         command3 += f' --java-options "{args.java2}"'
         command3 += f' -R {args.fasta}'
         command3 += f' -O {args.output}/joint.filtered.vcf'
         command3 += f' --variant {args.output}/temp/joint.vcf'
         command3 += f' --filter-expression "QUAL <= 50.0"'
         command3 += f' --filter-name QUALFilter'
-        command3 += f' --QUIET'
 
         f.write(
 f"""#!/bin/bash
