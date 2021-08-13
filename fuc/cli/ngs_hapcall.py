@@ -86,28 +86,27 @@ def main(args):
 
     df = pd.read_csv(args.manifest)
 
-    fns = []
-
-    if args.bed is None:
-        intervals = '# --intervals'
-    else:
-        intervals = f'--intervals {args.bed}'
-
-    if args.dbsnp is None:
-        dbsnp = '# --dbsnp'
-    else:
-        dbsnp = f'--dbsnp {args.dbsnp}'
-
-    if args.keep:
-        remove = '# rm'
-    else:
-        remove = 'rm'
+    basenames = []
 
     for i, r in df.iterrows():
-        fn = os.path.basename(r.BAM).replace('.bam', '')
-        fns.append(fn)
+        basename = os.path.basename(r.BAM)
+        basenames.append(basename)
 
-        with open(f'{args.output}/shell/{fn}.sh', 'w') as f:
+        with open(f'{args.output}/shell/S1-{basename}.sh', 'w') as f:
+            command = 'gatk HaplotypeCaller'
+            command += f' --java-options "{args.java}"'
+            command += f' -R {args.fasta}'
+            command += f' --emit-ref-confidence GVCF'
+            command += f' -I {r.BAM}'
+            command += f' -O {args.output}/temp/{basename}.g.vcf'
+            command += f' --QUIET'
+
+            if args.bed is not None:
+                command += f' -L {args.bed}'
+
+            if args.dbsnp is not None:
+                command += f' --dbsnp {args.dbsnp}'
+
             f.write(
 f"""#!/bin/bash
 
@@ -115,18 +114,57 @@ f"""#!/bin/bash
 source activate {api.common.conda_env()}
 
 # Call variants per-sample.
-gatk HaplotypeCaller \\
---java-options "{args.java}" \\
--R {args.fasta} \\
---emit-ref-confidence GVCF \\
-{intervals} \\
--I {r.BAM} \\
--O {args.output}/temp/{fn}.g.vcf \\
---QUIET
+{command}
 """)
 
-    with open(f'{args.output}/shell/jointcall.sh', 'w') as f:
-        gvcfs = ' '.join([f'-V {args.output}/temp/{x}.g.vcf' for x in fns])
+    if args.keep:
+        remove = '# rm'
+    else:
+        remove = 'rm'
+
+    with open(f'{args.output}/shell/S2.sh', 'w') as f:
+
+        ####################
+        # GenomicsDBImport #
+        ####################
+
+        command1 = 'gatk GenomicsDBImport'
+        command1 += f' --java-options "{args.java}"'
+        command1 += f' --genomicsdb-workspace-path {args.output}/temp/datastore'
+        command1 += f' --merge-input-intervals'
+        command1 += f' --QUIET'
+
+        if args.bed is not None:
+            command += f' -L {args.bed}'
+
+        command1 += ' '.join([f'-V {args.output}/temp/{x}.g.vcf' for x in basenames])
+
+        #################
+        # GenotypeGVCFs #
+        #################
+
+        command2 = 'gatk GenotypeGVCFs'
+        command2 += f' --java-options "{args.java}"'
+        command2 += f' -R {args.fasta}'
+        command2 += f' -V gendb://{args.output}/temp/datastore'
+        command2 += f' -O {args.output}/temp/joint.vcf'
+        command2 += f' --QUIET'
+
+        if args.dbsnp is not None:
+            command2 += f' --dbsnp {args.dbsnp}'
+
+        #####################
+        # VariantFiltration #
+        #####################
+
+        command3 = 'gatk VariantFiltration'
+        command3 += f' --java-options "{args.java}"'
+        command3 += f' -R {args.fasta}'
+        command3 += f' -O {args.output}/joint.filtered.vcf'
+        command3 += f' --variant {args.output}/temp/joint.vcf'
+        command3 += f' --filter-expression "QUAL <= 50.0"'
+        command3 += f' --filter-name QUALFilter'
+        command3 += f' --QUIET'
 
         f.write(
 f"""#!/bin/bash
@@ -135,32 +173,13 @@ f"""#!/bin/bash
 source activate {api.common.conda_env()}
 
 # Consolidate GVCFs.
-gatk GenomicsDBImport \\
---java-options "{args.java}" \\
-{intervals} \\
---genomicsdb-workspace-path {args.output}/temp/datastore \\
-{gvcfs} \\
---merge-input-intervals \\
---QUIET
+{command1}
 
 # Joint-call cohort.
-gatk GenotypeGVCFs \\
---java-options "{args.java}" \\
--R {args.fasta} \\
--V gendb://$p/temp/datastore \\
--O {args.output}/temp/joint.vcf \\
-{dbsnp} \\
---QUIET
+{command2}
 
 # Filter variants.
-gatk VariantFiltration \\
---java-options "{args.java}" \\
--R {args.fasta} \\
--O {args.output}/joint.filtered.vcf \\
---variant {args.output}/temp/joint.vcf \\
---filter-expression 'QUAL <= 50.0' \\
---filter-name QUALFilter \\
---QUIET
+{command3}
 
 # Remove temporary files.
 {remove} {args.output}/temp/*
@@ -172,12 +191,12 @@ f"""#!/bin/bash
 
 p={args.output}
 
-samples=({" ".join(fns)})
+samples=({" ".join(basenames)})
 
 for sample in ${{samples[@]}}
 do
-  qsub {args.qsub} -S /bin/bash -e $p/log -o $p/log -N hc $p/shell/$sample.sh
+  qsub {args.qsub} -S /bin/bash -e $p/log -o $p/log -N S1 $p/shell/S1-$sample.sh
 done
 
-qsub {args.qsub} -S /bin/bash -e $p/log -o $p/log -hold_jid hc $p/shell/jointcall.sh
+qsub {args.qsub} -S /bin/bash -e $p/log -o $p/log -hold_jid S1 $p/shell/S2.sh
 """)
