@@ -63,15 +63,15 @@ def create_parser(subparsers):
         help='BED file.'
     )
     parser.add_argument(
-        '--chr',
-        action='store_true',
-        help='Whether the contig names have "chr" string (e.g. "chr1" vs. "1").'
-    )
-    parser.add_argument(
         '--dbsnp',
         metavar='PATH',
         type=str,
         help='dbSNP file.'
+    )
+    parser.add_argument(
+        '--chr',
+        action='store_true',
+        help='Whether contig names have "chr" string (e.g. "chr1" vs. "1").'
     )
     parser.add_argument(
         '--force',
