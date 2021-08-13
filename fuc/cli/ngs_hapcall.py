@@ -176,5 +176,5 @@ do
   qsub {args.qsub} -S /bin/bash -e $p/log -o $p/log -N hc $p/shell/$sample.sh
 done
 
-qsub {args.qsub} -S /bin/bash -e $p/log -o $p/log -hold_jid hc $p/shell/$jointcall.sh
+qsub {args.qsub} -S /bin/bash -e $p/log -o $p/log -hold_jid hc $p/shell/jointcall.sh
 """)
