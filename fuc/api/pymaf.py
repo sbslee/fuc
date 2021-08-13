@@ -566,7 +566,7 @@ class MafFrame:
             if isinstance(names, str):
                 names = [names]
             for i, key in enumerate(keys):
-                temp_df = vf.extract(key)
+                temp_df = vf.extract_format(key)
                 temp_df = pd.concat([vf.df.iloc[:, :9], temp_df], axis=1)
                 temp_df = temp_df.drop(
                     columns=['ID', 'QUAL', 'FILTER', 'INFO', 'FORMAT'])

@@ -37,6 +37,7 @@ For getting help on the fuc CLI:
        maf-sumplt   Create a summary plot with a MAF file.
        maf-vcf2maf  Convert a VCF file to a MAF file.
        ngs-fq2bam   Convert FASTQ files to sorted BAM files with SGE.
+       ngs-hapcall  Perform germline short variant discovery with SGE.
        ngs-recbam   Mark duplicate reads and recalibrate BAM files with SGE.
        tbl-merge    Merge two table files.
        tbl-sum      Summarize a table file.
@@ -519,6 +520,39 @@ ngs-fq2bam
    Usage examples:
      $ fuc ngs-fq2bam manifest.csv ref.fa output_dir "-q queue_name -pe pe_name 10" --thread 10
      $ fuc ngs-fq2bam manifest.csv ref.fa output_dir "-l h='node_A|node_B' -pe pe_name 10" --thread 10
+   
+   Positional arguments:
+     manifest         Sample manifest CSV file.
+     fasta            Reference FASTA file.
+     output           Output directory.
+     qsub             Options for qsub.
+   
+   Optional arguments:
+     -h, --help       Show this help message and exit.
+     --force          Overwrite the output directory if it already exists.
+     --thread INT     Number of threads to use (default: 1).
+     --platform TEXT  Sequencing platform (default: Illumina).
+
+ngs-hapcall
+===========
+
+.. code-block:: text
+
+   $ fuc ngs-hapcall -h
+   usage: fuc ngs-hapcall [-h] [--force] [--thread INT] [--platform TEXT]
+                          manifest fasta output qsub
+   
+   This command will prepare a pipeline performs germline short variant discovery with SGE.
+   
+   Dependencies:
+     - GATK: Used for germline short variant discovery.
+   
+   Manifest columns:
+     - BAM: Path to sorted BAM file.
+   
+   Usage examples:
+     $ fuc ngs-hapcall manifest.csv ref.fa output_dir "-q queue_name -pe pe_name 10" --thread 10
+     $ fuc ngs-hapcall manifest.csv ref.fa output_dir "-l h='node_A|node_B' -pe pe_name 10" --thread 10
    
    Positional arguments:
      manifest         Sample manifest CSV file.

@@ -299,7 +299,7 @@ To create various figures for normal-tumor analysis:
     >>> fig, [[ax1, ax2], [ax3, ax4]] = plt.subplots(2, 2, figsize=(10, 10))
     >>> vf.plot_tmb(ax=ax1)
     >>> vf.plot_tmb(ax=ax2, af=af, group_col='Tissue')
-    >>> vf.plot_hist('DP', ax=ax3, af=af, group_col='Tissue')
+    >>> vf.plot_hist_format('#DP', ax=ax3, af=af, group_col='Tissue')
     >>> vf.plot_regplot(normal, tumor, ax=ax4)
     >>> plt.tight_layout()
 

@@ -18,6 +18,8 @@ Changelog
 * Add new method :meth:`common.conda_env`.
 * Add new argument ``meta_only`` to :meth:`pyvcf.VcfFrame.from_file` method.
 * Add new argument ``nrows`` to :meth:`pyvcf.VcfFrame.from_file` method.
+* Rename :meth:`pyvcf.VcfFrame.extract` method to :meth:`pyvcf.VcfFrame.extract_format`.
+* Rename :meth:`pyvcf.VcfFrame.plot_hist` method to :meth:`pyvcf.VcfFrame.plot_hist_format`.
 * Add new method :meth:`pyvcf.VcfFrame.extract_info`.
 
 0.20.0 (2021-08-07)

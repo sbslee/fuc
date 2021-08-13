@@ -105,6 +105,19 @@ CUSTOM_GENOTYPE_KEYS = {
     'AF':  {'number': 1,   'type': float},  # Allele fraction of the event in the tumor
 }
 
+INFO_SPECIAL_KEYS = {
+    '#AC': ['AC', lambda x: sum([int(x) for x in x.split(',')]), True],
+    '#AF': ['AF', lambda x: sum([float(x) for x in x.split(',')]), True],
+}
+
+FORMAT_SPECIAL_KEYS = {
+    '#DP': ['DP', lambda x: int(x), True],
+    '#AD_REF': ['AD', lambda x: float(x.split(',')[0]), True],
+    '#AD_ALT': ['AD', lambda x: sum([int(y) for y in x.split(',')[1:]]), True],
+    '#AD_FRAC_REF': ['AD', lambda x: np.nan if sum([int(y) for y in x.split(',')]) == 0 else int(x.split(',')[0]) / sum([int(y) for y in x.split(',')]), True],
+    '#AD_FRAC_ALT': ['AD', lambda x: np.nan if sum([int(y) for y in x.split(',')]) == 0 else sum([int(y) for y in x.split(',')[1:]]) / sum([int(y) for y in x.split(',')]), True],
+}
+
 def rescue_filtered_variants(vfs, format='GT'):
     """
     Rescue filtered variants if they are PASS in at least one of the input
@@ -1292,29 +1305,30 @@ class VcfFrame:
         return cls(meta, pd.DataFrame(data))
 
     @classmethod
-    def from_file(cls, fn, compression=False, meta_only=False, nrows=None):
+    def from_file(
+        cls, fn, compression=False, meta_only=False, nrows=None
+    ):
         """
         Construct VcfFrame from a VCF file.
 
-        If the file name ends with '.gz', the method will automatically
-        use the BGZF decompression when reading the file.
+        The method will automatically use BGZF decompression if the filename
+        ends with '.gz'.
 
         Parameters
         ----------
         fn : str
-            VCF file path (zipped or unzipped).
+            VCF file (zipped or unzipped).
         compression : bool, default: False
-            If True, use the BGZF decompression regardless of file name.
+            If True, use BGZF decompression regardless of filename.
         meta_only : bool, default: False
-            If True, only read the metadata.
+            If True, read metadata and header lines only.
         nrows : int, optional
-            Number of rows of file to read. Useful for reading pieces of
-            large files.
+            Number of rows to read. Useful for reading pieces of large files.
 
         Returns
         -------
         VcfFrame
-            VcfFrame.
+            VcfFrame object.
 
         See Also
         --------
@@ -1939,7 +1953,7 @@ class VcfFrame:
         else:
             vf = self.slice(region)
 
-        df = vf.extract(k)
+        df = vf.extract_format(k)
 
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
@@ -2036,17 +2050,19 @@ class VcfFrame:
         out = venn3(subsets=n[:-1], **venn_kws)
         return out
 
-    def plot_hist(
+    def plot_hist_format(
         self, k, af=None, group_col=None, group_order=None, kde=True,
         ax=None, figsize=None, **kwargs
     ):
         """
-        Create a histogram showing AD/AF/DP distribution.
+        Create a histogram showing the distribution of data for the
+        specified FORMAT key.
 
         Parameters
         ----------
-        k : {'AD', 'AF', 'DP'}
-            Genotype key.
+        k : str
+            One of the special FORMAT keys as defined in
+            :meth:`VcfFrame.extract_format`.
         af : common.AnnFrame
             AnnFrame containing sample annotation data.
         group_col : list, optional
@@ -2079,7 +2095,7 @@ class VcfFrame:
             >>> common.load_dataset('pyvcf')
             >>> vcf_file = '~/fuc-data/pyvcf/normal-tumor.vcf'
             >>> vf = pyvcf.VcfFrame.from_file(vcf_file)
-            >>> vf.plot_hist('DP')
+            >>> vf.plot_hist_format('#DP')
 
         We can draw multiple histograms with hue mapping:
 
@@ -2088,21 +2104,20 @@ class VcfFrame:
 
             >>> annot_file = '~/fuc-data/pyvcf/normal-tumor-annot.tsv'
             >>> af = common.AnnFrame.from_file(annot_file, sample_col='Sample')
-            >>> vf.plot_hist('DP', af=af, group_col='Tissue')
+            >>> vf.plot_hist_format('#DP', af=af, group_col='Tissue')
 
         We can show AF instead of DP:
 
         .. plot::
             :context: close-figs
 
-            >>> vf.plot_hist('AF')
+            >>> vf.plot_hist_format('#AD_FRAC_REF')
         """
-        d = {
-            'AD': lambda x: float(x.split(',')[1]),
-            'AF': lambda x: float(x),
-            'DP': lambda x: int(x),
-        }
-        df = self.extract(k, as_nan=True, func=d[k])
+        if k not in FORMAT_SPECIAL_KEYS:
+            raise ValueError('Incorrect FORMAT key.')
+
+        df = self.extract_format(k)
+
         df = df.T
         id_vars = ['index']
         if group_col is not None:
@@ -2127,14 +2142,14 @@ class VcfFrame:
         self, k, kde=True, ax=None, figsize=None, **kwargs
     ):
         """
-        Create a histogram showing the distribution of requested data for
-        the specified INFO key.
+        Create a histogram showing the distribution of data for the
+        specified INFO key.
 
         Parameters
         ----------
         k : str
             One of the special INFO keys as defined in
-            :meth:`pyvcf.VcfFrame.extract_info`.
+            :meth:`VcfFrame.extract_info`.
         kde : bool, default: True
             Compute a kernel density estimate to smooth the distribution.
         ax : matplotlib.axes.Axes, optional
@@ -2159,26 +2174,20 @@ class VcfFrame:
 
             >>> from fuc import common, pyvcf
             >>> common.load_dataset('pyvcf')
-            >>> vcf_file = '~/fuc-data/pyvcf/normal-tumor.vcf'
+            >>> vcf_file = '~/fuc-data/pyvcf/getrm-cyp2d6-vdr.vcf'
             >>> vf = pyvcf.VcfFrame.from_file(vcf_file)
-            >>> vf.plot_hist('DP')
+            >>> vf.plot_hist_info('#AC')
 
-        We can draw multiple histograms with hue mapping:
-
-        .. plot::
-            :context: close-figs
-
-            >>> annot_file = '~/fuc-data/pyvcf/normal-tumor-annot.tsv'
-            >>> af = common.AnnFrame.from_file(annot_file, sample_col='Sample')
-            >>> vf.plot_hist('DP', af=af, group_col='Tissue')
-
-        We can show AF instead of DP:
+        We can show AF instead of AC:
 
         .. plot::
             :context: close-figs
 
-            >>> vf.plot_hist('AF')
+            >>> vf.plot_hist_info('#AF')
         """
+        if k not in INFO_SPECIAL_KEYS:
+            raise ValueError('Incorrect INFO key.')
+
         s = self.extract_info(k)
 
         if s.isnull().all():
@@ -2190,6 +2199,8 @@ class VcfFrame:
         sns.histplot(
             data=s, kde=kde, ax=ax, **kwargs
         )
+
+        ax.set_xlabel(k)
 
         return ax
 
@@ -4019,23 +4030,29 @@ class VcfFrame:
         bf = pybed.BedFrame.from_frame([], df)
         return bf
 
-    def extract(self, k, func=None, as_nan=False):
+    def extract_format(self, k, func=None, as_nan=False):
         """
-        Extract requested data for the specified FORMAT key.
+        Extract data for the specified FORMAT key.
+
+        By default, this method will return string data. Use ``func`` and
+        ``as_nan`` to output numbers. Alternatvely, select one of the special
+        keys for ``k``, which have predetermined values of ``func`` and
+        ``as_nan`` for convenience.
 
         Parameters
         ----------
         k : str
-            Genotype key to use for extracting data. In addition to regular
-            genotype keys (e.g. 'DP', 'AD'), the method also accepts the
-            special keys listed below, which have predetermined values for
-            ``func`` and ``as_nan`` for convenience:
+            FORMAT key to use when extracting data. In addition to regular
+            FORMAT keys (e.g. 'DP', 'AD'), the method also accepts the
+            special keys listed below:
 
-            - '#DP': Return read depth.
-            - '#AD_REF': Return REF allele depth.
-            - '#AD_ALT': Return ALT allele depth.
-            - '#AD_FRAC_REF': Return REF allele fraction.
-            - '#AD_FRAC_ALT': Return ALT allele fraction.
+            - '#DP': Return numeric DP.
+            - '#AD_REF': Return numeric AD for REF.
+            - '#AD_ALT': Return numeric AD for ALT. If multiple values are
+              available (i.e. multiallelic site), return the sum.
+            - '#AD_FRAC_REF': Return allele fraction for REF.
+            - '#AD_FRAC_ALT': Return allele fraction for ALT. If multiple
+              values are available (i.e. multiallelic site), return the sum.
 
         func : function, optional
             Function to apply to each of the extracted results.
@@ -4070,50 +4087,42 @@ class VcfFrame:
         0  chr1  100  .   A    G    .      .    .  GT:AD:DP   0/1:15,13:28         ./.:.:.
         1  chr1  101  .   C    T    .      .    .        GT            0/0             1/1
         2  chr1  102  .   A  C,T    .      .    .  GT:AD:DP  0/1:9,14,0:23  1/2:0,11,15:26
-        >>> vf.extract('GT')
+        >>> vf.extract_format('GT')
              A    B
         0  0/1  ./.
         1  0/0  1/1
         2  0/1  1/2
-        >>> vf.extract('GT', as_nan=True)
+        >>> vf.extract_format('GT', as_nan=True)
              A    B
         0  0/1  NaN
         1  0/0  1/1
         2  0/1  1/2
-        >>> vf.extract('AD')
+        >>> vf.extract_format('AD')
                 A        B
         0   15,13        .
         1     NaN      NaN
         2  9,14,0  0,11,15
-        >>> vf.extract('DP', func=lambda x: int(x), as_nan=True)
+        >>> vf.extract_format('DP', func=lambda x: int(x), as_nan=True)
               A     B
         0  28.0   NaN
         1   NaN   NaN
         2  23.0  26.0
-        >>> vf.extract('#DP') # Same as above
+        >>> vf.extract_format('#DP') # Same as above
               A     B
         0  28.0   NaN
         1   NaN   NaN
         2  23.0  26.0
-        >>> vf.extract('AD', func=lambda x: float(x.split(',')[0]), as_nan=True)
+        >>> vf.extract_format('AD', func=lambda x: float(x.split(',')[0]), as_nan=True)
               A    B
         0  15.0  NaN
         1   NaN  NaN
         2   9.0  0.0
-        >>> vf.extract('#AD_REF') # Same as above
+        >>> vf.extract_format('#AD_REF') # Same as above
               A    B
         0  15.0  NaN
         1   NaN  NaN
         2   9.0  0.0
         """
-        special_keys = {
-            '#DP': ['DP', lambda x: int(x), True],
-            '#AD_REF': ['AD', lambda x: float(x.split(',')[0]), True],
-            '#AD_ALT': ['AD', lambda x: sum([int(y) for y in x.split(',')[1:]]), True],
-            '#AD_FRAC_REF': ['AD', lambda x: np.nan if sum([int(y) for y in x.split(',')]) == 0 else int(x.split(',')[0]) / sum([int(y) for y in x.split(',')]), True],
-            '#AD_FRAC_ALT': ['AD', lambda x: np.nan if sum([int(y) for y in x.split(',')]) == 0 else sum([int(y) for y in x.split(',')[1:]]) / sum([int(y) for y in x.split(',')]), True],
-        }
-
         def one_row(r, k, func, as_nan):
             try:
                 i = r.FORMAT.split(':').index(k)
@@ -4130,8 +4139,8 @@ class VcfFrame:
                 return v
             return r[9:].apply(one_gt)
 
-        if k in special_keys:
-            k, func, as_nan = special_keys[k]
+        if k in FORMAT_SPECIAL_KEYS:
+            k, func, as_nan = FORMAT_SPECIAL_KEYS[k]
 
         df = self.df.apply(one_row, args=(k, func, as_nan), axis=1)
 
@@ -4141,10 +4150,10 @@ class VcfFrame:
         """
         Extract data for the specified INFO key.
 
-        By default, this method will return an array of string. Use ``func``
-        and ``as_nan`` to output an array of numbers. Alternatvely, select
-        one of the special keys for ``k``, which have predetermined values
-        of ``func`` and ``as_nan`` for convenience.
+        By default, this method will return string data. Use ``func`` and
+        ``as_nan`` to output numbers. Alternatvely, select one of the special
+        keys for ``k``, which have predetermined values of ``func`` and
+        ``as_nan`` for convenience.
 
         Parameters
         ----------
@@ -4153,10 +4162,9 @@ class VcfFrame:
             INFO keys (e.g. 'AC', 'AF'), the method also accepts the
             special keys listed below:
 
-            - '#AC': Results will be numeric. If multiple 'AC' values are
-              available because the site is multiallelic, then their sum
-              will be returned.
-            - '#AF': Same as '#AC' except it is for 'AF' instead of 'AC'.
+            - '#AC': Return numeric AC. If multiple values are available
+              (i.e. multiallelic site), return the sum.
+            - '#AF': Similar to '#AC'.
 
         func : function, optional
             Function to apply to each of the extracted results.
@@ -4224,11 +4232,6 @@ class VcfFrame:
         3    NaN
         dtype: float64
         """
-        special_keys = {
-            '#AC': ['AC', lambda x: sum([int(x) for x in x.split(',')]), True],
-            '#AF': ['AF', lambda x: sum([float(x) for x in x.split(',')]), True],
-        }
-
         def one_row(r, k, func, as_nan):
             d = {}
 
@@ -4251,8 +4254,8 @@ class VcfFrame:
 
             return result
 
-        if k in special_keys:
-            k, func, as_nan = special_keys[k]
+        if k in INFO_SPECIAL_KEYS:
+            k, func, as_nan = INFO_SPECIAL_KEYS[k]
 
         s = vf.df.apply(one_row, args=(k, func, as_nan), axis=1)
 
