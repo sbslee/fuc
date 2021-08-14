@@ -11,14 +11,14 @@ This command will prepare a pipeline that performs germline short variant discov
 
 External dependencies:
   - SGE: Required for job submission (i.e. qsub).
-  - GATK: Required for variant discovery and filtration.
+  - GATK: Required for variant discovery (i.e. HaplotypeCaller) and filtration.
 
 Manifest columns:
   - BAM: Recalibrated BAM file.
 
 Usage examples:
-  $ fuc {api.common._script_name()} manifest.csv ref.fa output_dir "-q queue_name" "-Xmx15g -Xms15g" "-Xmx30g -Xms30g"
-  $ fuc {api.common._script_name()} manifest.csv ref.fa output_dir "-l h='node_A|node_B'" "-Xmx15g -Xms15g" "-Xmx30g -Xms30g"
+  $ fuc {api.common._script_name()} manifest.csv ref.fa output_dir "-q queue_name" "-Xmx15g -Xms15g" "-Xmx30g -Xms30g" --dbsnp dbSNP.vcf
+  $ fuc {api.common._script_name()} manifest.csv ref.fa output_dir "-l h='node_A|node_B'" "-Xmx15g -Xms15g" "-Xmx30g -Xms30g" --bed in.bed
 """
 
 def create_parser(subparsers):
@@ -66,7 +66,7 @@ def create_parser(subparsers):
         '--dbsnp',
         metavar='PATH',
         type=str,
-        help='dbSNP file.'
+        help='VCF file from dbSNP.'
     )
     parser.add_argument(
         '--chr',

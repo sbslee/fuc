@@ -1,0 +1,4 @@
+Name,Read1,Read2
+A,A_R1.fastq,A_R2.fastq
+B,B_R1.fastq,B_R2.fastq
+C,C_R1.fastq,C_R2.fastq

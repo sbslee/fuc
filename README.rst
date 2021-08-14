@@ -130,7 +130,7 @@ For getting help on the fuc CLI:
        maf-sumplt   Create a summary plot with a MAF file.
        maf-vcf2maf  Convert a VCF file to a MAF file.
        ngs-fq2bam   Pipeline for converting FASTQ files to analysis-ready BAM files.
-       ngs-hapcall  Pipeline for germline short variant discovery.
+       ngs-hc       Pipeline for germline short variant discovery.
        ngs-pon      Pipeline for creating a panel of normals (PoN).
        tbl-merge    Merge two table files.
        tbl-sum      Summarize a table file.

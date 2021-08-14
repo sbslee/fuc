@@ -37,7 +37,7 @@ For getting help on the fuc CLI:
        maf-sumplt   Create a summary plot with a MAF file.
        maf-vcf2maf  Convert a VCF file to a MAF file.
        ngs-fq2bam   Pipeline for converting FASTQ files to analysis-ready BAM files.
-       ngs-hapcall  Pipeline for germline short variant discovery.
+       ngs-hc       Pipeline for germline short variant discovery.
        ngs-pon      Pipeline for creating a panel of normals (PoN).
        tbl-merge    Merge two table files.
        tbl-sum      Summarize a table file.
@@ -503,17 +503,17 @@ ngs-fq2bam
 .. code-block:: text
 
    $ fuc ngs-fq2bam -h
-   usage: fuc ngs-fq2bam [-h] [--bed PATH] [--force] [--keep] [--thread INT]
-                         [--platform TEXT]
+   usage: fuc ngs-fq2bam [-h] [--bed PATH] [--thread INT] [--platform TEXT]
+                         [--force] [--keep]
                          manifest fasta output qsub1 qsub2 java vcf [vcf ...]
    
    This command will prepare a pipeline that converts FASTQ files to analysis-ready BAM files.
    
-   Here, "analysis-ready" means the final BAM files will be: 1) aligned to a reference genome, 2) sorted by genomic coordinate, 3) marked for duplicate reads, 4) recalibrated by BQSR model, and 5) ready for downstream analyses such as variant calling.
+   Here, "analysis-ready" means that the final BAM files are: 1) aligned to a reference genome, 2) sorted by genomic coordinate, 3) marked for duplicate reads, 4) recalibrated by BQSR model, and 5) ready for downstream analyses such as variant calling.
    
    External dependencies:
      - SGE: Required for job submission (i.e. qsub).
-     - BWA: Required for read alignment.
+     - BWA: Required for read alignment (i.e. BWA-MEM).
      - SAMtools: Required for sorting and indexing BAM files.
      - GATK: Required for marking duplicate reads and recalibrating BAM files.
    
@@ -523,48 +523,47 @@ ngs-fq2bam
      - Read2: Path to reverse FASTA file.
    
    Usage examples:
-     $ fuc ngs-fq2bam manifest.csv ref.fa output_dir "-q queue_name -pe pe_name 10" --thread 10
-     $ fuc ngs-fq2bam manifest.csv ref.fa output_dir "-l h='node_A|node_B' -pe pe_name 10" --thread 10
+     $ fuc ngs-fq2bam manifest.csv ref.fa output_dir "-q queue_name -pe pe_name 10" "-q queue_name" "-Xmx15g -Xms15g" 1.vcf 2.vcf 3.vcf --thread 10
+     $ fuc ngs-fq2bam manifest.csv ref.fa output_dir "-l h='node_A|node_B' -pe pe_name 10" "-l h='node_A|node_B'" "-Xmx15g -Xms15g" 1.vcf 2.vcf 3.vcf --thread 10
    
    Positional arguments:
      manifest         Sample manifest CSV file.
      fasta            Reference FASTA file.
      output           Output directory.
-     qsub1            Options for qsub.
-     qsub2            Options for qsub.
-     java             Options for Java.
-     vcf              VCF file containing known sites.
+     qsub1            SGE resoruce to request with qsub for read alignment and sorting. Since both tasks support multithreading, it is recommended to speicfy a parallel environment (PE) to speed up the process (also see '--thread').
+     qsub2            SGE resoruce to request with qsub for the rest of the tasks, which do not support multithreading.
+     java             Java resoruce to request for GATK.
+     vcf              One or more reference VCF files containing known variant sites (e.g. 1000 Genomes Project).
    
    Optional arguments:
      -h, --help       Show this help message and exit.
      --bed PATH       BED file.
+     --thread INT     Number of threads to use (default: 1).
+     --platform TEXT  Sequencing platform (default: 'Illumina').
      --force          Overwrite the output directory if it already exists.
      --keep           Keep temporary files.
-     --thread INT     Number of threads to use (default: 1).
-     --platform TEXT  Sequencing platform (default: Illumina).
 
-ngs-hapcall
-===========
+ngs-hc
+======
 
 .. code-block:: text
 
-   $ fuc ngs-hapcall -h
-   usage: fuc ngs-hapcall [-h] [--bed PATH] [--dbsnp PATH] [--chr] [--force]
-                          [--keep]
-                          manifest fasta output qsub java1 java2
+   $ fuc ngs-hc -h
+   usage: fuc ngs-hc [-h] [--bed PATH] [--dbsnp PATH] [--chr] [--force] [--keep]
+                     manifest fasta output qsub java1 java2
    
    This command will prepare a pipeline that performs germline short variant discovery.
    
    External dependencies:
      - SGE: Required for job submission (i.e. qsub).
-     - GATK: Required for variant discovery and filtration.
+     - GATK: Required for variant discovery (i.e. HaplotypeCaller) and filtration.
    
    Manifest columns:
      - BAM: Recalibrated BAM file.
    
    Usage examples:
-     $ fuc ngs-hapcall manifest.csv ref.fa output_dir "-q queue_name" "-Xmx15g -Xms15g" "-Xmx30g -Xms30g"
-     $ fuc ngs-hapcall manifest.csv ref.fa output_dir "-l h='node_A|node_B'" "-Xmx15g -Xms15g" "-Xmx30g -Xms30g"
+     $ fuc ngs-hc manifest.csv ref.fa output_dir "-q queue_name" "-Xmx15g -Xms15g" "-Xmx30g -Xms30g" --dbsnp dbSNP.vcf
+     $ fuc ngs-hc manifest.csv ref.fa output_dir "-l h='node_A|node_B'" "-Xmx15g -Xms15g" "-Xmx30g -Xms30g" --bed in.bed
    
    Positional arguments:
      manifest      Sample manifest CSV file.
@@ -577,7 +576,7 @@ ngs-hapcall
    Optional arguments:
      -h, --help    Show this help message and exit.
      --bed PATH    BED file.
-     --dbsnp PATH  dbSNP file.
+     --dbsnp PATH  VCF file from dbSNP.
      --chr         Whether contig names have "chr" string (e.g. "chr1" vs. "1").
      --force       Overwrite the output directory if it already exists.
      --keep        Keep temporary files.
