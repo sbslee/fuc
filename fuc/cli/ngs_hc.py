@@ -11,7 +11,7 @@ This command will prepare a pipeline that performs germline short variant discov
 
 External dependencies:
   - SGE: Required for job submission (i.e. qsub).
-  - GATK: Required for variant discovery (i.e. HaplotypeCaller) and filtration.
+  - GATK: Required for variant calling (i.e. HaplotypeCaller) and filtration.
 
 Manifest columns:
   - BAM: Recalibrated BAM file.

@@ -15,6 +15,8 @@ Changelog
 * Add new command :command:`ngs-fq2bam`.
 * Add new command :command:`ngs-hc`.
 * Add new command :command:`ngs-pon`.
+* Add new command :command:`ngs-m2`.
+* Add new command :command:`bam-sample`.
 * Add new method :meth:`common.conda_env`.
 * Add new argument ``meta_only`` to :meth:`pyvcf.VcfFrame.from_file` method.
 * Add new argument ``nrows`` to :meth:`pyvcf.VcfFrame.from_file` method.
