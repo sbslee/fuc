@@ -105,6 +105,19 @@ CUSTOM_GENOTYPE_KEYS = {
     'AF':  {'number': 1,   'type': float},  # Allele fraction of the event in the tumor
 }
 
+INFO_SPECIAL_KEYS = {
+    '#AC': ['AC', lambda x: sum([int(x) for x in x.split(',')]), True],
+    '#AF': ['AF', lambda x: sum([float(x) for x in x.split(',')]), True],
+}
+
+FORMAT_SPECIAL_KEYS = {
+    '#DP': ['DP', lambda x: int(x), True],
+    '#AD_REF': ['AD', lambda x: float(x.split(',')[0]), True],
+    '#AD_ALT': ['AD', lambda x: sum([int(y) for y in x.split(',')[1:]]), True],
+    '#AD_FRAC_REF': ['AD', lambda x: np.nan if sum([int(y) for y in x.split(',')]) == 0 else int(x.split(',')[0]) / sum([int(y) for y in x.split(',')]), True],
+    '#AD_FRAC_ALT': ['AD', lambda x: np.nan if sum([int(y) for y in x.split(',')]) == 0 else sum([int(y) for y in x.split(',')[1:]]) / sum([int(y) for y in x.split(',')]), True],
+}
+
 def rescue_filtered_variants(vfs, format='GT'):
     """
     Rescue filtered variants if they are PASS in at least one of the input
@@ -770,9 +783,15 @@ class VcfFrame:
     1  chr1  101  .   T   C    .      .    .     GT    0/1
     2  chr1  102  .   A   T    .      .    .     GT    0/1
     """
+
+    def _check_df(self, df):
+        df = df.reset_index(drop=True)
+        df.CHROM = df.CHROM.astype(str)
+        return df
+
     def __init__(self, meta, df):
         self._meta = meta
-        self._df = df.reset_index(drop=True)
+        self._df = self._check_df(df)
 
     @property
     def meta(self):
@@ -790,17 +809,22 @@ class VcfFrame:
 
     @df.setter
     def df(self, value):
-        self._df = value.reset_index(drop=True)
+        self._df = self._check_df(value)
 
     @property
     def samples(self):
-        """list : List of the sample names."""
+        """list : List of sample names."""
         return self.df.columns[9:].to_list()
 
     @property
     def shape(self):
         """tuple : Dimensionality of VcfFrame (variants, samples)."""
         return (self.df.shape[0], len(self.samples))
+
+    @property
+    def contigs(self):
+        """list : List of contig names."""
+        return list(self.df.CHROM.unique())
 
     def add_af(self, decimals=3):
         """Compute AF using AD and add it to the FORMAT field.
@@ -1281,23 +1305,30 @@ class VcfFrame:
         return cls(meta, pd.DataFrame(data))
 
     @classmethod
-    def from_file(cls, fn, compression=False):
-        """Construct VcfFrame from a VCF file.
+    def from_file(
+        cls, fn, compression=False, meta_only=False, nrows=None
+    ):
+        """
+        Construct VcfFrame from a VCF file.
 
-        If the file name ends with '.gz', the method will automatically
-        use the BGZF decompression when reading the file.
+        The method will automatically use BGZF decompression if the filename
+        ends with '.gz'.
 
         Parameters
         ----------
         fn : str
-            VCF file path (zipped or unzipped).
+            VCF file (zipped or unzipped).
         compression : bool, default: False
-            If True, use the BGZF decompression regardless of file name.
+            If True, use BGZF decompression regardless of filename.
+        meta_only : bool, default: False
+            If True, read metadata and header lines only.
+        nrows : int, optional
+            Number of rows to read. Useful for reading pieces of large files.
 
         Returns
         -------
         VcfFrame
-            VcfFrame.
+            VcfFrame object.
 
         See Also
         --------
@@ -1326,23 +1357,32 @@ class VcfFrame:
             if line.startswith('##'):
                 meta.append(line.strip())
                 skip_rows += 1
+            elif line.startswith('#CHROM'):
+                headers = line.strip().split('\t')
+                skip_rows += 1
             else:
                 break
-        df = pd.read_table(fn, skiprows=skip_rows)
+        if meta_only:
+            df = pd.DataFrame(columns=headers)
+        else:
+            df = pd.read_table(
+                fn, skiprows=skip_rows, names=headers, nrows=nrows
+            )
         df = df.rename(columns={'#CHROM': 'CHROM'})
         f.close()
         return cls(meta, df)
 
-    def compare(self, a, b, c=None, mode='all'):
+    def calculate_concordance(self, a, b, c=None, mode='all'):
         """
-        Compare genotype data between two (A, B) or three (A, B, C) samples.
+        Calculate genotype concordance between two (A, B) or three (A, B, C)
+        samples.
 
         This method will return (Ab, aB, AB, ab) for comparison between two
         samples and (Abc, aBc, ABc, abC, AbC, aBC, ABC, abc) for three
         samples. Note that the former is equivalent to (FP, FN, TP, TN) if
         we assume A is the test sample and B is the truth sample.
 
-        Only biallelic sites will be used for comparison. Additionally, the
+        Only biallelic sites will be used for calculation. Additionally, the
         method will only consider presence or absence of variant calls (i.e.
         zygosity is ignored).
 
@@ -1399,16 +1439,16 @@ class VcfFrame:
 
         We can first compare the samples A and B:
 
-        >>> vf.compare('A', 'B', mode='all')
+        >>> vf.calculate_concordance('A', 'B', mode='all')
         (0, 1, 2, 1)
-        >>> vf.compare('A', 'B', mode='snv')
+        >>> vf.calculate_concordance('A', 'B', mode='snv')
         (0, 0, 2, 1)
-        >>> vf.compare('A', 'B', mode='indel')
+        >>> vf.calculate_concordance('A', 'B', mode='indel')
         (0, 1, 0, 0)
 
         We can also compare all three samples at once:
 
-        >>> vf.compare('A', 'B', 'C')
+        >>> vf.calculate_concordance('A', 'B', 'C')
         (0, 0, 1, 1, 0, 1, 1, 0)
         """
         vf = self.filter_multialt()
@@ -1839,10 +1879,99 @@ class VcfFrame:
         df.iloc[:, 9:] = df.iloc[:, 9:].applymap(one_gt)
         return self.__class__(self.copy_meta(), df)
 
+    def plot_region(
+        self, sample, k='#DP', color=None, region=None, label=None, ax=None,
+        figsize=None, **kwargs
+    ):
+        """
+        Create a scatter plot showing read depth profile of a sample for
+        the specified region.
+
+        Parameters
+        ----------
+        sample : str or int
+            Name or index of target sample.
+        k : str, default: '#DP'
+            Genotype key to use for extracting data:
+
+            - '#DP': Return read depth.
+            - '#AD_REF': Return REF allele depth.
+            - '#AD_ALT': Return ALT allele depth.
+            - '#AD_FRAC_REF': Return REF allele fraction.
+            - '#AD_FRAC_ALT': Return ALT allele fraction.
+
+        color : str, optional
+            Marker color.
+        region : str, optional
+            Target region ('chrom:start-end').
+        label : str, optional
+            Label to use for the data points.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+        kwargs
+            Other keyword arguments will be passed down to
+            :meth:`matplotlib.axes.Axes.scatter`.
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+
+        Examples
+        --------
+        Below is a simple example:
+
+        .. plot::
+            :context: close-figs
+
+            >>> from fuc import pyvcf, common
+            >>> import matplotlib.pyplot as plt
+            >>> common.load_dataset('pyvcf')
+            >>> vcf_file = '~/fuc-data/pyvcf/getrm-cyp2d6-vdr.vcf'
+            >>> vf = pyvcf.VcfFrame.from_file(vcf_file)
+            >>> vf.plot_region('NA18973')
+            >>> plt.tight_layout()
+
+        We can display allele fraction of REF and ALT instead of DP:
+
+        .. plot::
+            :context: close-figs
+
+            >>> ax = vf.plot_region('NA18973', k='#AD_FRAC_REF', label='REF')
+            >>> vf.plot_region('NA18973', k='#AD_FRAC_ALT', label='ALT', ax=ax)
+            >>> plt.tight_layout()
+        """
+        sample = sample if isinstance(sample, str) else self.samples[sample]
+
+        if region is None:
+            if len(self.contigs) == 1:
+                vf = self.copy()
+            else:
+                raise ValueError('Multiple contigs found.')
+        else:
+            vf = self.slice(region)
+
+        df = vf.extract_format(k)
+
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
+        ax.scatter(
+            x=vf.df.POS, y=df[sample], c=color, label=label, **kwargs
+        )
+
+        ax.set_xlabel('Position')
+        ax.set_ylabel('Depth')
+
+        return ax
+
     def plot_comparison(
         self, a, b, c=None, labels=None, ax=None, figsize=None
     ):
-        """Create a Venn diagram showing genotype concordance between groups.
+        """
+        Create a Venn diagram showing genotype concordance between groups.
 
         This method supports comparison between two groups (Groups A & B)
         as well as three groups (Groups A, B, & C).
@@ -1897,7 +2026,6 @@ class VcfFrame:
             else:
                 labels = ('A', 'B', 'C')
 
-        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -1911,28 +2039,30 @@ class VcfFrame:
     def _plot_comparison_two(self, a, b, venn_kws):
         n = [0, 0, 0, 0]
         for i in range(len(a)):
-            n = [x + y for x, y in zip(n, self.compare(a[i], b[i]))]
+            n = [x + y for x, y in zip(n, self.calculate_concordance(a[i], b[i]))]
         out = venn2(subsets=n[:-1], **venn_kws)
         return out
 
     def _plot_comparison_three(self, a, b, c, venn_kws):
         n = [0, 0, 0, 0, 0, 0, 0, 0]
         for i in range(len(a)):
-            n = [x + y for x, y in zip(n, self.compare(a[i], b[i], c[i]))]
+            n = [x + y for x, y in zip(n, self.calculate_concordance(a[i], b[i], c[i]))]
         out = venn3(subsets=n[:-1], **venn_kws)
         return out
 
-    def plot_hist(
+    def plot_hist_format(
         self, k, af=None, group_col=None, group_order=None, kde=True,
         ax=None, figsize=None, **kwargs
     ):
         """
-        Create a histogram showing AD/AF/DP distribution.
+        Create a histogram showing the distribution of data for the
+        specified FORMAT key.
 
         Parameters
         ----------
-        k : {'AD', 'AF', 'DP'}
-            Genotype key.
+        k : str
+            One of the special FORMAT keys as defined in
+            :meth:`VcfFrame.extract_format`.
         af : common.AnnFrame
             AnnFrame containing sample annotation data.
         group_col : list, optional
@@ -1965,7 +2095,7 @@ class VcfFrame:
             >>> common.load_dataset('pyvcf')
             >>> vcf_file = '~/fuc-data/pyvcf/normal-tumor.vcf'
             >>> vf = pyvcf.VcfFrame.from_file(vcf_file)
-            >>> vf.plot_hist('DP')
+            >>> vf.plot_hist_format('#DP')
 
         We can draw multiple histograms with hue mapping:
 
@@ -1974,21 +2104,20 @@ class VcfFrame:
 
             >>> annot_file = '~/fuc-data/pyvcf/normal-tumor-annot.tsv'
             >>> af = common.AnnFrame.from_file(annot_file, sample_col='Sample')
-            >>> vf.plot_hist('DP', af=af, group_col='Tissue')
+            >>> vf.plot_hist_format('#DP', af=af, group_col='Tissue')
 
         We can show AF instead of DP:
 
         .. plot::
             :context: close-figs
 
-            >>> vf.plot_hist('AF')
+            >>> vf.plot_hist_format('#AD_FRAC_REF')
         """
-        d = {
-            'AD': lambda x: float(x.split(',')[1]),
-            'AF': lambda x: float(x),
-            'DP': lambda x: int(x),
-        }
-        df = self.extract(k, as_nan=True, func=d[k])
+        if k not in FORMAT_SPECIAL_KEYS:
+            raise ValueError('Incorrect FORMAT key.')
+
+        df = self.extract_format(k)
+
         df = df.T
         id_vars = ['index']
         if group_col is not None:
@@ -1999,7 +2128,6 @@ class VcfFrame:
         df = df.dropna()
         df = df.rename(columns={'value': k})
 
-        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -2010,8 +2138,75 @@ class VcfFrame:
 
         return ax
 
+    def plot_hist_info(
+        self, k, kde=True, ax=None, figsize=None, **kwargs
+    ):
+        """
+        Create a histogram showing the distribution of data for the
+        specified INFO key.
+
+        Parameters
+        ----------
+        k : str
+            One of the special INFO keys as defined in
+            :meth:`VcfFrame.extract_info`.
+        kde : bool, default: True
+            Compute a kernel density estimate to smooth the distribution.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+        kwargs
+            Other keyword arguments will be passed down to
+            :meth:`seaborn.histplot`.
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+
+        Examples
+        --------
+        Below is a simple example:
+
+        .. plot::
+            :context: close-figs
+
+            >>> from fuc import common, pyvcf
+            >>> common.load_dataset('pyvcf')
+            >>> vcf_file = '~/fuc-data/pyvcf/getrm-cyp2d6-vdr.vcf'
+            >>> vf = pyvcf.VcfFrame.from_file(vcf_file)
+            >>> vf.plot_hist_info('#AC')
+
+        We can show AF instead of AC:
+
+        .. plot::
+            :context: close-figs
+
+            >>> vf.plot_hist_info('#AF')
+        """
+        if k not in INFO_SPECIAL_KEYS:
+            raise ValueError('Incorrect INFO key.')
+
+        s = self.extract_info(k)
+
+        if s.isnull().all():
+            raise ValueError('Dataset is empty.')
+
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
+        sns.histplot(
+            data=s, kde=kde, ax=ax, **kwargs
+        )
+
+        ax.set_xlabel(k)
+
+        return ax
+
     def plot_tmb(
-        self, af=None, group_col=None, group_order=None, kde=True, ax=None, figsize=None, **kwargs
+        self, af=None, group_col=None, group_order=None, kde=True, ax=None,
+        figsize=None, **kwargs
     ):
         """
         Create a histogram showing TMB distribution.
@@ -2068,7 +2263,6 @@ class VcfFrame:
         else:
             df = pd.concat([af.df, s], axis=1, join='inner')
 
-        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -2129,7 +2323,6 @@ class VcfFrame:
         df = pd.concat([s[a].reset_index(), s[b].reset_index()], axis=1)
         df.columns = ['A_Label', 'A_TMB', 'B_Label', 'B_TMB']
 
-        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -3837,21 +4030,34 @@ class VcfFrame:
         bf = pybed.BedFrame.from_frame([], df)
         return bf
 
-    def extract(self, k, func=None, as_nan=False):
+    def extract_format(self, k, func=None, as_nan=False):
         """
-        Create a DataFrame containing analysis-ready data for the given
-        genotype key.
+        Extract data for the specified FORMAT key.
+
+        By default, this method will return string data. Use ``func`` and
+        ``as_nan`` to output numbers. Alternatvely, select one of the special
+        keys for ``k``, which have predetermined values of ``func`` and
+        ``as_nan`` for convenience.
 
         Parameters
         ----------
         k : str
-            Genotype key such as 'DP' and 'AD'.
+            FORMAT key to use when extracting data. In addition to regular
+            FORMAT keys (e.g. 'DP', 'AD'), the method also accepts the
+            special keys listed below:
+
+            - '#DP': Return numeric DP.
+            - '#AD_REF': Return numeric AD for REF.
+            - '#AD_ALT': Return numeric AD for ALT. If multiple values are
+              available (i.e. multiallelic site), return the sum.
+            - '#AD_FRAC_REF': Return allele fraction for REF.
+            - '#AD_FRAC_ALT': Return allele fraction for ALT. If multiple
+              values are available (i.e. multiallelic site), return the sum.
+
         func : function, optional
-            Function to apply to each of the returned values. For example, if
-            the goal is to extract AD only for reference alleles, one can use
-            ``func=lambda x: x.split(',')[0]``
+            Function to apply to each of the extracted results.
         as_nan : bool, default: False
-            If True, missing values will be returned as ``NaN``.
+            If True, return missing values as ``NaN``.
 
         Returns
         -------
@@ -3863,54 +4069,197 @@ class VcfFrame:
 
         >>> from fuc import pyvcf
         >>> data = {
-        ...     'CHROM': ['chr1', 'chr1'],
-        ...     'POS': [100, 101],
-        ...     'ID': ['.', '.'],
-        ...     'REF': ['A', 'T'],
-        ...     'ALT': ['A', 'T'],
-        ...     'QUAL': ['.', '.'],
-        ...     'FILTER': ['.', '.'],
-        ...     'INFO': ['.', '.'],
-        ...     'FORMAT': ['GT:AD:DP', 'GT:AD:DP'],
-        ...     'A': ['0/1:15,13:28', '0/0:28,1:29'],
-        ...     'B': ['./.:.:.', '1/1:0,26:26'],
+        ...     'CHROM': ['chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102],
+        ...     'ID': ['.', '.', '.'],
+        ...     'REF': ['A', 'C', 'A'],
+        ...     'ALT': ['G', 'T', 'C,T'],
+        ...     'QUAL': ['.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.'],
+        ...     'INFO': ['.', '.', '.'],
+        ...     'FORMAT': ['GT:AD:DP', 'GT', 'GT:AD:DP'],
+        ...     'A': ['0/1:15,13:28', '0/0', '0/1:9,14,0:23'],
+        ...     'B': ['./.:.:.', '1/1', '1/2:0,11,15:26'],
         ... }
         >>> vf = pyvcf.VcfFrame.from_dict([], data)
         >>> vf.df
-          CHROM  POS ID REF ALT QUAL FILTER INFO    FORMAT             A            B
-        0  chr1  100  .   A   A    .      .    .  GT:AD:DP  0/1:15,13:28      ./.:.:.
-        1  chr1  101  .   T   T    .      .    .  GT:AD:DP   0/0:28,1:29  1/1:0,26:26
-        >>> vf.extract('GT')
+          CHROM  POS ID REF  ALT QUAL FILTER INFO    FORMAT              A               B
+        0  chr1  100  .   A    G    .      .    .  GT:AD:DP   0/1:15,13:28         ./.:.:.
+        1  chr1  101  .   C    T    .      .    .        GT            0/0             1/1
+        2  chr1  102  .   A  C,T    .      .    .  GT:AD:DP  0/1:9,14,0:23  1/2:0,11,15:26
+        >>> vf.extract_format('GT')
              A    B
         0  0/1  ./.
         1  0/0  1/1
-        >>> vf.extract('GT', as_nan=True)
+        2  0/1  1/2
+        >>> vf.extract_format('GT', as_nan=True)
              A    B
         0  0/1  NaN
         1  0/0  1/1
-        >>> vf.extract('AD')
-               A     B
-        0  15,13     .
-        1   28,1  0,26
-        >>> vf.extract('AD', as_nan=True, func=lambda x: float(x.split(',')[1]))
+        2  0/1  1/2
+        >>> vf.extract_format('AD')
+                A        B
+        0   15,13        .
+        1     NaN      NaN
+        2  9,14,0  0,11,15
+        >>> vf.extract_format('DP', func=lambda x: int(x), as_nan=True)
               A     B
-        0  13.0   NaN
-        1   1.0  26.0
+        0  28.0   NaN
+        1   NaN   NaN
+        2  23.0  26.0
+        >>> vf.extract_format('#DP') # Same as above
+              A     B
+        0  28.0   NaN
+        1   NaN   NaN
+        2  23.0  26.0
+        >>> vf.extract_format('AD', func=lambda x: float(x.split(',')[0]), as_nan=True)
+              A    B
+        0  15.0  NaN
+        1   NaN  NaN
+        2   9.0  0.0
+        >>> vf.extract_format('#AD_REF') # Same as above
+              A    B
+        0  15.0  NaN
+        1   NaN  NaN
+        2   9.0  0.0
         """
-        def one_row(r):
-            i = r.FORMAT.split(':').index(k)
+        def one_row(r, k, func, as_nan):
+            try:
+                i = r.FORMAT.split(':').index(k)
+            except ValueError:
+                return pd.Series([np.nan] * len(self.samples), index=self.samples)
             def one_gt(g):
-                v = g.split(':')[i]
-                if as_nan and not i and gt_miss(v):
+                if k == 'GT' and gt_miss(g) and as_nan:
                     return np.nan
-                if as_nan and v == '.':
+                v = g.split(':')[i]
+                if v == '.' and as_nan:
                     return np.nan
                 if func is not None:
                     return func(v)
                 return v
             return r[9:].apply(one_gt)
-        df = self.df.apply(one_row, axis=1)
+
+        if k in FORMAT_SPECIAL_KEYS:
+            k, func, as_nan = FORMAT_SPECIAL_KEYS[k]
+
+        df = self.df.apply(one_row, args=(k, func, as_nan), axis=1)
+
         return df
+
+    def extract_info(vf, k, func=None, as_nan=False):
+        """
+        Extract data for the specified INFO key.
+
+        By default, this method will return string data. Use ``func`` and
+        ``as_nan`` to output numbers. Alternatvely, select one of the special
+        keys for ``k``, which have predetermined values of ``func`` and
+        ``as_nan`` for convenience.
+
+        Parameters
+        ----------
+        k : str
+            INFO key to use when extracting data. In addition to regular
+            INFO keys (e.g. 'AC', 'AF'), the method also accepts the
+            special keys listed below:
+
+            - '#AC': Return numeric AC. If multiple values are available
+              (i.e. multiallelic site), return the sum.
+            - '#AF': Similar to '#AC'.
+
+        func : function, optional
+            Function to apply to each of the extracted results.
+        as_nan : bool, default: False
+            If True, return missing values as ``NaN``.
+
+        Returns
+        -------
+        pandas.Series
+            Requested data.
+
+        Examples
+        --------
+
+        >>> from fuc import pyvcf
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102, 103],
+        ...     'ID': ['.', '.', '.', '.'],
+        ...     'REF': ['A', 'C', 'A', 'A'],
+        ...     'ALT': ['G', 'T', 'C,T', 'T'],
+        ...     'QUAL': ['.', '.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.', '.'],
+        ...     'INFO': ['AC=1;AF=0.167;H2', 'AC=2;AF=0.333', 'AC=1,2;AF=0.167,0.333;H2', 'AC=.;AF=.'],
+        ...     'FORMAT': ['GT', 'GT', 'GT', 'GT'],
+        ...     'A': ['0/1', '0/0', '0/1', './.'],
+        ...     'B': ['0/0', '1/1', '0/2', './.'],
+        ...     'C': ['0/0', '0/0', '0/2', './.'],
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF  ALT QUAL FILTER                      INFO FORMAT    A    B    C
+        0  chr1  100  .   A    G    .      .          AC=1;AF=0.167;H2     GT  0/1  0/0  0/0
+        1  chr1  101  .   C    T    .      .             AC=2;AF=0.333     GT  0/0  1/1  0/0
+        2  chr1  102  .   A  C,T    .      .  AC=1,2;AF=0.167,0.333;H2     GT  0/1  0/2  0/2
+        3  chr1  103  .   A    T    .      .                 AC=.;AF=.     GT  ./.  ./.  ./.
+        >>> vf.extract_info('H2')
+        0     H2
+        1    NaN
+        2     H2
+        3    NaN
+        dtype: object
+        >>> vf.extract_info('AC')
+        0      1
+        1      2
+        2    1,2
+        3      .
+        dtype: object
+        >>> vf.extract_info('AC', as_nan=True)
+        0      1
+        1      2
+        2    1,2
+        3    NaN
+        dtype: object
+        >>> vf.extract_info('AC', func=lambda x: sum([int(x) for x in x.split(',')]), as_nan=True)
+        0    1.0
+        1    2.0
+        2    3.0
+        3    NaN
+        dtype: float64
+        >>> vf.extract_info('#AC') # Same as above
+        0    1.0
+        1    2.0
+        2    3.0
+        3    NaN
+        dtype: float64
+        """
+        def one_row(r, k, func, as_nan):
+            d = {}
+
+            for field in r.INFO.split(';'):
+                if '=' not in field:
+                    d[field] = field
+                else:
+                    d[field.split('=')[0]] = field.split('=')[1]
+
+            try:
+                result = d[k]
+            except KeyError:
+                return np.nan
+
+            if result == '.' and as_nan:
+                return np.nan
+
+            if func is not None:
+                return func(result)
+
+            return result
+
+        if k in INFO_SPECIAL_KEYS:
+            k, func, as_nan = INFO_SPECIAL_KEYS[k]
+
+        s = vf.df.apply(one_row, args=(k, func, as_nan), axis=1)
+
+        return s
 
     def rename(self, names, indicies=None):
         """
@@ -4147,7 +4496,6 @@ class VcfFrame:
         """
         mf = pymaf.MafFrame.from_vcf(self)
 
-        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -4213,7 +4561,6 @@ class VcfFrame:
         """
         mf = pymaf.MafFrame.from_vcf(self)
 
-        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -4298,7 +4645,6 @@ class VcfFrame:
         """
         mf = pymaf.MafFrame.from_vcf(self)
 
-        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -4382,7 +4728,6 @@ class VcfFrame:
         """
         mf = pymaf.MafFrame.from_vcf(self)
 
-        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -4454,7 +4799,6 @@ class VcfFrame:
         """
         mf = pymaf.MafFrame.from_vcf(self)
 
-        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -4517,3 +4861,76 @@ class VcfFrame:
             raise ValueError(f'Incorrect mode: {mode}')
         df = self.df.apply(one_row, axis=1)
         return self.__class__(self.copy_meta(), df)
+
+    def compare(self, other):
+        """
+        Compare to another VcfFrame and show the differences in genotype
+        calling.
+
+        Parameters
+        ----------
+        other : VcfFrame
+            VcfFrame to compare with.
+
+        Returns
+        -------
+        pandas.DataFrame
+            DataFrame comtaining genotype differences.
+
+        Examples
+        --------
+
+        >>> from fuc import pyvcf
+        >>> data1 = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102, 103, 104],
+        ...     'ID': ['.', '.', '.', '.', '.'],
+        ...     'REF': ['G', 'CT', 'T', 'C', 'A'],
+        ...     'ALT': ['A', 'C', 'A', 'T', 'G,C'],
+        ...     'QUAL': ['.', '.', '.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.', '.', '.'],
+        ...     'INFO': ['.', '.', '.', '.', '.'],
+        ...     'FORMAT': ['GT', 'GT', 'GT', 'GT', 'GT'],
+        ...     'A': ['0/1', '0/0', '0/0', '0/1', '0/0'],
+        ...     'B': ['1/1', '0/1', './.', '0/1', '0/0'],
+        ...     'C': ['0/1', '0/1', '1/1', './.', '1/2'],
+        ... }
+        >>> data2 = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102, 103, 104],
+        ...     'ID': ['.', '.', '.', '.', '.'],
+        ...     'REF': ['G', 'CT', 'T', 'C', 'A'],
+        ...     'ALT': ['A', 'C', 'A', 'T', 'G,C'],
+        ...     'QUAL': ['.', '.', '.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.', '.', '.'],
+        ...     'INFO': ['.', '.', '.', '.', '.'],
+        ...     'FORMAT': ['GT', 'GT', 'GT', 'GT', 'GT'],
+        ...     'A': ['./.', '0/0', '0/0', '0/1', '0/0'],
+        ...     'B': ['1/1', '0/1', './.', '1/1', '0/0'],
+        ...     'C': ['0/1', '0/1', '0/1', './.', '1/2'],
+        ... }
+        >>> vf1 = pyvcf.VcfFrame.from_dict([], data1)
+        >>> vf2 = pyvcf.VcfFrame.from_dict([], data2)
+        >>> vf1.compare(vf2)
+                  Locus Sample Self Other
+        0  chr1-100-G-A      A  0/1   ./.
+        1  chr1-102-T-A      C  1/1   0/1
+        2  chr1-103-C-T      B  0/1   1/1
+        """
+        df1 = self.df.copy()
+        df2 = other.df.copy()
+        i1 = df1['CHROM'] + '-' + df1['POS'].astype(str) + '-' + df1['REF'] + '-' + df1['ALT']
+        i2 = df2['CHROM'] + '-' + df2['POS'].astype(str) + '-' + df2['REF'] + '-' + df2['ALT']
+        df1 = df1.set_index(i1)
+        df2 = df2.set_index(i2)
+        df1 = df1.iloc[:, 9:]
+        df2 = df2.iloc[:, 9:]
+        if df1.equals(df2):
+            return pd.DataFrame(columns=['Locus', 'Sample', 'Self', 'Other'])
+        df = df1.compare(df2, align_axis=0)
+        df = df.stack().to_frame().reset_index().pivot(
+            columns='level_1', index=['level_0', 'level_2'], values=0)
+        df = df.reset_index()
+        df.columns = ['Locus', 'Sample', 'Other', 'Self']
+        df = df[['Locus', 'Sample', 'Self', 'Other']]
+        return df

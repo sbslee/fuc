@@ -1,6 +1,31 @@
 Changelog
 *********
 
+0.21.0 (2021-08-16)
+-------------------
+
+* Rename :meth:`pyvcf.VcfFrame.compare` method to :meth:`pyvcf.VcfFrame.calculate_concordance`.
+* Add new method :meth:`pyvcf.VcfFrame.compare`.
+* Add new property ``contigs`` to :class:`pyvcf.VcfFrame`.
+* Add new method :meth:`pyvcf.VcfFrame.plot_region`.
+* Add special genotype keys to :meth:`pyvcf.VcfFrame.extract` method.
+* :issue:`39`: Update :meth:`pyvcf.VcfFrame.extract` method to ignore rows where the genotype key of interest is not present.
+* Rename :meth:`pyvcf.VcfFrame.extract` method to :meth:`pyvcf.VcfFrame.extract_format`.
+* Rename :meth:`pyvcf.VcfFrame.plot_hist` method to :meth:`pyvcf.VcfFrame.plot_hist_format`.
+* Add new method :meth:`pyvcf.VcfFrame.extract_info`.
+* Add new method :meth:`pyvcf.VcfFrame.plot_hist_info`.
+* Add new method :meth:`common.plot_exons`.
+* Update :meth:`pycov.CovFrame.plot_uniformity` method to accept a list of x positions.
+* Add new command :command:`ngs-fq2bam`.
+* Add new command :command:`ngs-hc`.
+* Add new command :command:`ngs-pon`.
+* Add new command :command:`ngs-m2`.
+* Add new method :meth:`common.conda_env`.
+* Add new argument ``meta_only`` to :meth:`pyvcf.VcfFrame.from_file` method.
+* Add new argument ``nrows`` to :meth:`pyvcf.VcfFrame.from_file` method.
+* Deprecate :meth:`pybam.header` method.
+* Add new method :meth:`pybam.has_chr`.
+
 0.20.0 (2021-08-07)
 -------------------
 

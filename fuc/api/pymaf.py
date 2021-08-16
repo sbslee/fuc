@@ -566,7 +566,7 @@ class MafFrame:
             if isinstance(names, str):
                 names = [names]
             for i, key in enumerate(keys):
-                temp_df = vf.extract(key)
+                temp_df = vf.extract_format(key)
                 temp_df = pd.concat([vf.df.iloc[:, :9], temp_df], axis=1)
                 temp_df = temp_df.drop(
                     columns=['ID', 'QUAL', 'FILTER', 'INFO', 'FORMAT'])
@@ -803,7 +803,6 @@ class MafFrame:
         df = self.matrix_genes(count=count, mode=mode)
         df = df.iloc[::-1]
 
-        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -1102,7 +1101,6 @@ class MafFrame:
         df[l] = df[l].div(df[l].sum(axis=1), axis=0)
         genes = self.matrix_genes(count=count).index
 
-        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -1192,7 +1190,6 @@ class MafFrame:
         df = df.iloc[:count, :].T
         df = df.loc[samples]
 
-        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -1273,7 +1270,6 @@ class MafFrame:
         if group_col is not None:
             df = df.merge(af.df[group_col], left_index=True, right_index=True)
 
-        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -1375,7 +1371,6 @@ class MafFrame:
         df3 = pd.concat([s_a, s_b], axis=1)
         df3.columns = [a, b]
 
-        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -1521,7 +1516,6 @@ class MafFrame:
         df = df[genes]
         df = df.loc[genes]
 
-        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -1602,7 +1596,6 @@ class MafFrame:
         df4 = df4.dropna(subset=['Protein_Position'])
         df4 = df4.sort_values(['Protein_Position'])
 
-        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -1703,7 +1696,6 @@ class MafFrame:
             df = df.melt(id_vars=[group_col])
             df.columns = [group_col, 'Hugo_Symbol', 'Prevalence']
 
-        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -1753,7 +1745,6 @@ class MafFrame:
         s.name = 'Count'
         df = s.to_frame().reset_index()
 
-        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -1856,7 +1847,6 @@ class MafFrame:
         df['Interevent_Distance'] = s
         df = df.reset_index(drop=True)
 
-        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -1983,7 +1973,6 @@ class MafFrame:
             df = s.to_frame().reset_index()
             df.columns = ['SNV_Class', 'Count']
 
-        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -2101,7 +2090,6 @@ class MafFrame:
             df = pd.melt(df, id_vars=[group_col], var_name='SNV_Class',
                 value_name='Proportion')
 
-        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -2230,7 +2218,6 @@ class MafFrame:
                 temp.columns = SNV_CLASS_ORDER
                 df = pd.concat([df, temp]).loc[samples]
 
-        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -2350,7 +2337,6 @@ class MafFrame:
         else:
             df = pd.melt(df, var_name='SNV_Type', value_name='Proportion')
 
-        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -2536,7 +2522,6 @@ class MafFrame:
             df = df[samples]
             df = df.T
 
-        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -2605,7 +2590,6 @@ class MafFrame:
         if patients is not None:
             df = df.loc[patients]
 
-        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -2699,7 +2683,6 @@ class MafFrame:
             df = pd.merge(df, af.df, left_on='Tumor_Sample_Barcode',
                 right_index=True)
 
-        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -2762,7 +2745,6 @@ class MafFrame:
         df = s.to_frame().reset_index()
         df.columns = ['Variant_Classification', 'Count']
 
-        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -2861,7 +2843,6 @@ class MafFrame:
         s = pd.Series([f(x) for x in l], index=l).sort_values()
         df = df[s.index]
 
-        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -2966,7 +2947,6 @@ class MafFrame:
         s = pd.Series([f(x) for x in l], index=l).sort_values()
         df = df[s.index]
 
-        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -3027,7 +3007,6 @@ class MafFrame:
         df = self.matrix_tmb()
         df = pd.melt(df, value_vars=df.columns)
 
-        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -3172,7 +3151,6 @@ class MafFrame:
         d = {k: v for v, k in enumerate(l)}
         df = df.applymap(lambda x: d[x])
 
-        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -3225,7 +3203,6 @@ class MafFrame:
 
         colors = list(reversed(NONSYN_COLORS + ['k', 'lightgray']))
 
-        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 

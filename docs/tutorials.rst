@@ -1,6 +1,13 @@
 Tutorials
 *********
 
+Visualization of structural variation with VCF
+==============================================
+
+It is possible to visualize structural variation (SV) using VCF data (:download:`vcf_sv.py <examples/vcf_sv.py>`):
+
+.. image:: https://raw.githubusercontent.com/sbslee/fuc-data/main/images/vcf_sv.png
+
 Create customized oncoplots
 ===========================
 

@@ -129,6 +129,10 @@ For getting help on the fuc CLI:
        maf-oncoplt  Create an oncoplot with a MAF file.
        maf-sumplt   Create a summary plot with a MAF file.
        maf-vcf2maf  Convert a VCF file to a MAF file.
+       ngs-fq2bam   Pipeline for converting FASTQ files to analysis-ready BAM files.
+       ngs-hc       Pipeline for germline short variant discovery.
+       ngs-m2       Pipeline for somatic short variant discovery.
+       ngs-pon      Pipeline for constructing a panel of normals (PoN).
        tbl-merge    Merge two table files.
        tbl-sum      Summarize a table file.
        vcf-filter   Filter a VCF file.
@@ -314,7 +318,7 @@ To create various figures for normal-tumor analysis:
     >>> fig, [[ax1, ax2], [ax3, ax4]] = plt.subplots(2, 2, figsize=(10, 10))
     >>> vf.plot_tmb(ax=ax1)
     >>> vf.plot_tmb(ax=ax2, af=af, group_col='Tissue')
-    >>> vf.plot_hist('DP', ax=ax3, af=af, group_col='Tissue')
+    >>> vf.plot_hist_format('#DP', ax=ax3, af=af, group_col='Tissue')
     >>> vf.plot_regplot(normal, tumor, ax=ax4)
     >>> plt.tight_layout()
 

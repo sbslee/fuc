@@ -36,6 +36,10 @@ For getting help on the fuc CLI:
        maf-oncoplt  Create an oncoplot with a MAF file.
        maf-sumplt   Create a summary plot with a MAF file.
        maf-vcf2maf  Convert a VCF file to a MAF file.
+       ngs-fq2bam   Pipeline for converting FASTQ files to analysis-ready BAM files.
+       ngs-hc       Pipeline for germline short variant discovery.
+       ngs-m2       Pipeline for somatic short variant discovery.
+       ngs-pon      Pipeline for constructing a panel of normals (PoN).
        tbl-merge    Merge two table files.
        tbl-sum      Summarize a table file.
        vcf-filter   Filter a VCF file.
@@ -494,6 +498,163 @@ maf-vcf2maf
    Optional arguments:
      -h, --help  Show this help message and exit.
 
+ngs-fq2bam
+==========
+
+.. code-block:: text
+
+   $ fuc ngs-fq2bam -h
+   usage: fuc ngs-fq2bam [-h] [--bed PATH] [--thread INT] [--platform TEXT]
+                         [--force] [--keep]
+                         manifest fasta output qsub1 qsub2 java vcf [vcf ...]
+   
+   This command will prepare a pipeline that converts FASTQ files to analysis-ready BAM files.
+   
+   Here, "analysis-ready" means that the final BAM files are: 1) aligned to a reference genome, 2) sorted by genomic coordinate, 3) marked for duplicate reads, 4) recalibrated by BQSR model, and 5) ready for downstream analyses such as variant calling.
+   
+   External dependencies:
+     - SGE: Required for job submission (i.e. qsub).
+     - BWA: Required for read alignment (i.e. BWA-MEM).
+     - SAMtools: Required for sorting and indexing BAM files.
+     - GATK: Required for marking duplicate reads and recalibrating BAM files.
+   
+   Manifest columns:
+     - Name: Sample name.
+     - Read1: Path to forward FASTA file.
+     - Read2: Path to reverse FASTA file.
+   
+   Usage examples:
+     $ fuc ngs-fq2bam manifest.csv ref.fa output_dir "-q queue_name -pe pe_name 10" "-q queue_name" "-Xmx15g -Xms15g" 1.vcf 2.vcf 3.vcf --thread 10
+     $ fuc ngs-fq2bam manifest.csv ref.fa output_dir "-l h='node_A|node_B' -pe pe_name 10" "-l h='node_A|node_B'" "-Xmx15g -Xms15g" 1.vcf 2.vcf 3.vcf --thread 10
+   
+   Positional arguments:
+     manifest         Sample manifest CSV file.
+     fasta            Reference FASTA file.
+     output           Output directory.
+     qsub1            SGE resoruce to request with qsub for read alignment and sorting. Since both tasks support multithreading, it is recommended to speicfy a parallel environment (PE) to speed up the process (also see '--thread').
+     qsub2            SGE resoruce to request with qsub for the rest of the tasks, which do not support multithreading.
+     java             Java resoruce to request for GATK.
+     vcf              One or more reference VCF files containing known variant sites (e.g. 1000 Genomes Project).
+   
+   Optional arguments:
+     -h, --help       Show this help message and exit.
+     --bed PATH       BED file.
+     --thread INT     Number of threads to use (default: 1).
+     --platform TEXT  Sequencing platform (default: 'Illumina').
+     --force          Overwrite the output directory if it already exists.
+     --keep           Keep temporary files.
+
+ngs-hc
+======
+
+.. code-block:: text
+
+   $ fuc ngs-hc -h
+   usage: fuc ngs-hc [-h] [--bed PATH] [--dbsnp PATH] [--force] [--keep]
+                     manifest fasta output qsub java1 java2
+   
+   This command will prepare a pipeline that performs germline short variant discovery.
+   
+   External dependencies:
+     - SGE: Required for job submission (i.e. qsub).
+     - GATK: Required for variant calling (i.e. HaplotypeCaller) and filtration.
+   
+   Manifest columns:
+     - BAM: Recalibrated BAM file.
+   
+   Usage examples:
+     $ fuc ngs-hc manifest.csv ref.fa output_dir "-q queue_name" "-Xmx15g -Xms15g" "-Xmx30g -Xms30g" --dbsnp dbSNP.vcf
+     $ fuc ngs-hc manifest.csv ref.fa output_dir "-l h='node_A|node_B'" "-Xmx15g -Xms15g" "-Xmx30g -Xms30g" --bed in.bed
+   
+   Positional arguments:
+     manifest      Sample manifest CSV file.
+     fasta         Reference FASTA file.
+     output        Output directory.
+     qsub          SGE resoruce to request for qsub.
+     java1         Java resoruce to request for single-sample variant calling.
+     java2         Java resoruce to request for joint variant calling.
+   
+   Optional arguments:
+     -h, --help    Show this help message and exit.
+     --bed PATH    BED file.
+     --dbsnp PATH  VCF file from dbSNP.
+     --force       Overwrite the output directory if it already exists.
+     --keep        Keep temporary files.
+
+ngs-m2
+======
+
+.. code-block:: text
+
+   $ fuc ngs-m2 -h
+   usage: fuc ngs-m2 [-h] [--bed PATH] [--force] [--keep]
+                     manifest fasta output pon germline qsub java
+   
+   This command will prepare a pipeline that performs somatic short variant discovery.
+   
+   External dependencies:
+     - SGE: Required for job submission (i.e. qsub).
+     - GATK: Required for variant calling (i.e. Mutect2) and filtration.
+   
+   Manifest columns:
+     - Tumor: Recalibrated BAM file for tumor.
+     - Normal: Recalibrated BAM file for matched normal.
+   
+   Usage examples:
+     $ fuc ngs-m2 manifest.csv ref.fa output_dir pon.vcf germline.vcf "-q queue_name" "-Xmx15g -Xms15g"
+     $ fuc ngs-m2 manifest.csv ref.fa output_dir pon.vcf germline.vcf "-l h='node_A|node_B'" "-Xmx15g -Xms15g" --bed in.bed
+   
+   Positional arguments:
+     manifest    Sample manifest CSV file.
+     fasta       Reference FASTA file.
+     output      Output directory.
+     pon         PoN VCF file.
+     germline    Germline VCF file.
+     qsub        SGE resoruce to request for qsub.
+     java        Java resoruce to request for GATK.
+   
+   Optional arguments:
+     -h, --help  Show this help message and exit.
+     --bed PATH  BED file.
+     --force     Overwrite the output directory if it already exists.
+     --keep      Keep temporary files.
+
+ngs-pon
+=======
+
+.. code-block:: text
+
+   $ fuc ngs-pon -h
+   usage: fuc ngs-pon [-h] [--bed PATH] [--force] [--keep]
+                      manifest fasta output qsub java
+   
+   This command will prepare a pipeline that constructs a panel of normals (PoN).
+   
+   The pipeline is based on GATK's tutorial "(How to) Call somatic mutations using GATK4 Mutect2" (https://gatk.broadinstitute.org/hc/en-us/articles/360035531132).
+   
+   Dependencies:
+     - GATK: Used for constructing PoN.
+   
+   Manifest columns:
+     - BAM: Path to recalibrated BAM file.
+   
+   Usage examples:
+     $ fuc ngs-pon manifest.csv ref.fa output_dir "-q queue_name -pe pe_name 10" "-Xmx15g -Xms15g"
+     $ fuc ngs-pon manifest.csv ref.fa output_dir "-l h='node_A|node_B' -pe pe_name 10" "-Xmx15g -Xms15g"
+   
+   Positional arguments:
+     manifest    Sample manifest CSV file.
+     fasta       Reference FASTA file.
+     output      Output directory.
+     qsub        Options for qsub.
+     java        Options for Java.
+   
+   Optional arguments:
+     -h, --help  Show this help message and exit.
+     --bed PATH  BED file.
+     --force     Overwrite the output directory if it already exists.
+     --keep      Remove temporary files.
+
 tbl-merge
 =========
 
@@ -536,9 +697,7 @@ tbl-sum
                       [--expr TEXT] [--columns TEXT [TEXT ...]] [--dtypes PATH]
                       table_file
    
-   This command will summarize a table file. It essentially wraps the
-   'pandas.Series.describe' and 'pandas.Series.value_counts' methods from the
-   pandas pacakge.
+   This command will summarize a table file.
    
    Usage examples:
      $ fuc tbl-sum table.tsv
@@ -634,30 +793,26 @@ vcf-rename
    
    This command will rename the samples in a VCF file.
    
-   There are three renaming modes: 'MAP', 'INDICIES', and 'RANGE'. The default
-   mode is 'MAP' in which case the 'names' file must contain two columns, one
-   for the old names and the other for the new names. If the mode is 'INDICIES'
-   the first column should be the new names and the second column must be
-   0-based indicies of the samples to be renamed. Lastly, in the 'RANGE' mode
-   only the first column is required but the 'range' argument must be specified.
-   For more details on the renaming modes, please visit the
-   'pyvcf.VcfFrame.rename' method's documentation page.
+   There are three different renaming modes using the 'names' file:
+     - 'MAP': Default mode. Requires two columns, old names in the first and new names in the second.
+     - 'INDEX': Requires two columns, new names in the first and 0-based indicies in the second.
+     - 'RANGE': Requires only one column of new names but '--range' must be specified.
    
    Usage examples:
      $ fuc vcf-rename in.vcf old_new.tsv > out.vcf
-     $ fuc vcf-rename in.vcf new_idx.tsv --mode INDICIES > out.vcf
+     $ fuc vcf-rename in.vcf new_idx.tsv --mode INDEX > out.vcf
      $ fuc vcf-rename in.vcf new_only.tsv --mode RANGE --range 2 5 > out.vcf
      $ fuc vcf-rename in.vcf old_new.csv --sep , > out.vcf
    
    Positional arguments:
-     vcf              VCF file
-     names            delimited text file
+     vcf              VCF file (zipped or unzipped).
+     names            Text file containing information for renaming the samples.
    
    Optional arguments:
      -h, --help       Show this help message and exit.
-     --mode TEXT      renaming mode (default: 'MAP') (choices: 'MAP', 'INDICIES', 'RANGE')
-     --range INT INT  specify an index range
-     --sep TEXT       delimiter to use (default: '\t')
+     --mode TEXT      Renaming mode (default: 'MAP') (choices: 'MAP', 'INDEX', 'RANGE').
+     --range INT INT  Index range to use when renaming the samples. Applicable only with the 'RANGE' mode.
+     --sep TEXT       Delimiter to use for reading the 'names' file (default: '\t').
 
 vcf-slice
 =========

@@ -203,7 +203,7 @@ class CovFrame:
         args += bam_files
         s = pysam.depth(*args)
         headers = ['Chromosome', 'Position']
-        dtype = {'Chromosome': str,'Position': np.int32}
+        dtype = {'Chromosome': str,'Position': int}
         for i, bam_file in enumerate(bam_files):
             if names:
                 name = names[i]
@@ -214,7 +214,7 @@ class CovFrame:
                     raise ValueError(m)
                 name = samples[0]
             headers.append(name)
-            dtype[name] = np.int32
+            dtype[name] = int
         df = pd.read_csv(StringIO(s), sep='\t', header=None,
                          names=headers, dtype=dtype)
         return cls(df)
@@ -346,7 +346,6 @@ class CovFrame:
         if kwargs is None:
             kwargs = {}
 
-        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -441,8 +440,10 @@ class CovFrame:
 
         frac : float, default: 0.1
             Fraction of data to be sampled (to speed up the process).
-        n : int, default: 20
-            Number of points to generate for the x-axis.
+        n : int or list, default: 20
+            Number of evenly spaced points to generate for the x-axis.
+            Alternatively, positions can be manually specified by providing
+            a list.
         m : float, optional
             Maximum point in the x-axis. By default, it will be the maximum
             depth in the entire dataset.
@@ -494,9 +495,12 @@ class CovFrame:
         df = self.df.sample(frac=frac)
 
         # Determine x-axis points.
-        if m is None:
-            m = df.iloc[:, 2:].max().max()
-        coverages = np.linspace(1, m, n, endpoint=True)
+        if isinstance(n, list):
+            coverages = n
+        else:
+            if m is None:
+                m = df.iloc[:, 2:].max().max()
+            coverages = np.linspace(1, m, n, endpoint=True)
 
         data = {'Coverage': coverages}
 
@@ -516,7 +520,6 @@ class CovFrame:
         else:
             hue = 'Sample'
 
-        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -525,8 +528,8 @@ class CovFrame:
             ax=ax, **kwargs
         )
 
-        ax.set_xlabel('Sequencing coverage')
-        ax.set_ylabel('Fraction of sampled bases')
+        ax.set_xlabel('Coverage')
+        ax.set_ylabel('Fraction of sampled bases >= coverage')
 
         return ax
 
@@ -609,7 +612,6 @@ class CovFrame:
         else:
             hue = 'Sample'
 
-        # Determine which matplotlib axes to plot on.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
@@ -617,7 +619,7 @@ class CovFrame:
             x='Coverage', y='Fraction', data=df, hue=hue, ax=ax, **kwargs
         )
 
-        ax.set_xlabel('Sequencing coverage')
+        ax.set_xlabel('Coverage')
         ax.set_ylabel('Fraction of sampled bases')
 
         return ax
