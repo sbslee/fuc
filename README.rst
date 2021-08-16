@@ -115,6 +115,7 @@ For getting help on the fuc CLI:
        bam-head     Print the header of a SAM/BAM/CRAM file.
        bam-index    Index a SAM/BAM/CRAM file.
        bam-rename   Rename the samples in a SAM/BAM/CRAM file.
+       bam-sample   Extract the sample name of SAM/BAM/CRAM file.
        bam-slice    Slice a SAM/BAM/CRAM file.
        bed-intxn    Find the intersection of two or more BED files.
        bed-sum      Summarize a BED file.
@@ -131,7 +132,8 @@ For getting help on the fuc CLI:
        maf-vcf2maf  Convert a VCF file to a MAF file.
        ngs-fq2bam   Pipeline for converting FASTQ files to analysis-ready BAM files.
        ngs-hc       Pipeline for germline short variant discovery.
-       ngs-pon      Pipeline for creating a panel of normals (PoN).
+       ngs-m2       Pipeline for somatic short variant discovery.
+       ngs-pon      Pipeline for constructing a panel of normals (PoN).
        tbl-merge    Merge two table files.
        tbl-sum      Summarize a table file.
        vcf-filter   Filter a VCF file.

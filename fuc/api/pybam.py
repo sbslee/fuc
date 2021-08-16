@@ -7,10 +7,6 @@ computation and easy manipulation.
 
 import pysam
 
-def header(fn):
-    """Return the header of a BAM file."""
-    return pysam.view('-H', fn).strip()
-
 def tag_sm(fn):
     """
     Extract the SM tags (sample names) from a BAM file.
@@ -18,7 +14,7 @@ def tag_sm(fn):
     Parameters
     ----------
     fn : str
-        Path to the BAM file.
+        BAM file.
 
     Returns
     -------
@@ -49,7 +45,7 @@ def tag_sn(fn):
     Parameters
     ----------
     fn : str
-        Path to the BAM file.
+        BAM file.
 
     Returns
     -------
@@ -72,3 +68,23 @@ def tag_sn(fn):
                 if 'SN:' in field:
                     tags.append(field.replace('SN:', ''))
     return list(set(tags))
+
+def has_chr(fn):
+    """
+    Return True if the 'chr' string is present in the contig names.
+
+    Parameters
+    ----------
+    fn : str
+        BAM file.
+
+    Returns
+    -------
+    bool
+        Whether or not the 'chr' string is present.
+    """
+    contigs = tag_sn(fn)
+    for contig in contigs:
+        if 'chr' in contig:
+            return True
+    return False

@@ -23,6 +23,8 @@ Changelog
 * Rename :meth:`pyvcf.VcfFrame.extract` method to :meth:`pyvcf.VcfFrame.extract_format`.
 * Rename :meth:`pyvcf.VcfFrame.plot_hist` method to :meth:`pyvcf.VcfFrame.plot_hist_format`.
 * Add new method :meth:`pyvcf.VcfFrame.extract_info`.
+* Deprecate :meth:`pybam.header` method.
+* Add new method :meth:`pybam.has_chr`.
 
 0.20.0 (2021-08-07)
 -------------------

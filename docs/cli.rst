@@ -22,6 +22,7 @@ For getting help on the fuc CLI:
        bam-head     Print the header of a SAM/BAM/CRAM file.
        bam-index    Index a SAM/BAM/CRAM file.
        bam-rename   Rename the samples in a SAM/BAM/CRAM file.
+       bam-sample   Extract the sample name of SAM/BAM/CRAM file.
        bam-slice    Slice a SAM/BAM/CRAM file.
        bed-intxn    Find the intersection of two or more BED files.
        bed-sum      Summarize a BED file.
@@ -38,7 +39,8 @@ For getting help on the fuc CLI:
        maf-vcf2maf  Convert a VCF file to a MAF file.
        ngs-fq2bam   Pipeline for converting FASTQ files to analysis-ready BAM files.
        ngs-hc       Pipeline for germline short variant discovery.
-       ngs-pon      Pipeline for creating a panel of normals (PoN).
+       ngs-m2       Pipeline for somatic short variant discovery.
+       ngs-pon      Pipeline for constructing a panel of normals (PoN).
        tbl-merge    Merge two table files.
        tbl-sum      Summarize a table file.
        vcf-filter   Filter a VCF file.
@@ -143,6 +145,27 @@ bam-rename
    Positional arguments:
      bam         SAM/BAM/CRAM file.
      name        New sample name.
+   
+   Optional arguments:
+     -h, --help  Show this help message and exit.
+
+bam-sample
+==========
+
+.. code-block:: text
+
+   $ fuc bam-sample -h
+   usage: fuc bam-sample [-h] bam
+   
+   This command will extract the sample name of input SAM/BAM/CRAM file.
+   
+   Usage examples:
+     $ fuc bam-sample in.sam
+     $ fuc bam-sample in.bam
+     $ fuc bam-sample in.cram
+   
+   Positional arguments:
+     bam         SAM/BAM/CRAM file.
    
    Optional arguments:
      -h, --help  Show this help message and exit.
@@ -556,7 +579,7 @@ ngs-hc
    
    External dependencies:
      - SGE: Required for job submission (i.e. qsub).
-     - GATK: Required for variant discovery (i.e. HaplotypeCaller) and filtration.
+     - GATK: Required for variant calling (i.e. HaplotypeCaller) and filtration.
    
    Manifest columns:
      - BAM: Recalibrated BAM file.
@@ -581,21 +604,59 @@ ngs-hc
      --force       Overwrite the output directory if it already exists.
      --keep        Keep temporary files.
 
+ngs-m2
+======
+
+.. code-block:: text
+
+   $ fuc ngs-m2 -h
+   usage: fuc ngs-m2 [-h] [--bed PATH] [--force] [--keep]
+                     manifest fasta output pon germline qsub java
+   
+   This command will prepare a pipeline that performs somatic short variant discovery.
+   
+   External dependencies:
+     - SGE: Required for job submission (i.e. qsub).
+     - GATK: Required for variant calling (i.e. Mutect2) and filtration.
+   
+   Manifest columns:
+     - Tumor: Recalibrated BAM file for tumor.
+     - Normal: Recalibrated BAM file for matched normal.
+   
+   Usage examples:
+     $ fuc ngs-m2 manifest.csv ref.fa output_dir pon.vcf germline.vcf "-q queue_name" "-Xmx15g -Xms15g"
+     $ fuc ngs-m2 manifest.csv ref.fa output_dir pon.vcf germline.vcf "-l h='node_A|node_B'" "-Xmx15g -Xms15g" --bed in.bed
+   
+   Positional arguments:
+     manifest    Sample manifest CSV file.
+     fasta       Reference FASTA file.
+     output      Output directory.
+     pon         PoN VCF file.
+     germline    Germline VCF file.
+     qsub        SGE resoruce to request for qsub.
+     java        Java resoruce to request for GATK.
+   
+   Optional arguments:
+     -h, --help  Show this help message and exit.
+     --bed PATH  BED file.
+     --force     Overwrite the output directory if it already exists.
+     --keep      Keep temporary files.
+
 ngs-pon
 =======
 
 .. code-block:: text
 
    $ fuc ngs-pon -h
-   usage: fuc ngs-pon [-h] [--bed PATH] [--force] [--keep]
+   usage: fuc ngs-pon [-h] [--bed PATH] [--force] [--keep] [--chr]
                       manifest fasta output qsub java
    
    This command will prepare a pipeline that constructs a panel of normals (PoN).
    
-   The pipeline is based on GATK's documentation "CreateSomaticPanelOfNormals (BETA)" (https://gatk.broadinstitute.org/hc/en-us/articles/360037058172-CreateSomaticPanelOfNormals-BETA-).
+   The pipeline is based on GATK's tutorial "(How to) Call somatic mutations using GATK4 Mutect2" (https://gatk.broadinstitute.org/hc/en-us/articles/360035531132).
    
    Dependencies:
-     - GATK: Used for germline short variant discovery.
+     - GATK: Used for constructing PoN.
    
    Manifest columns:
      - BAM: Path to recalibrated BAM file.
@@ -616,6 +677,7 @@ ngs-pon
      --bed PATH  BED file.
      --force     Overwrite the output directory if it already exists.
      --keep      Remove temporary files.
+     --chr       Whether contig names have "chr" string (e.g. "chr1" vs. "1").
 
 tbl-merge
 =========
