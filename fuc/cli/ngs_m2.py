@@ -117,7 +117,7 @@ def main(args):
             command1 += f' --f1r2-tar-gz {args.output}/temp/{basename}.f1r2.tar.gz'
             command1 += f' -I {r.Tumor}'
             command1 += f' -I {r.Normal}'
-            command1 += f' -normal $normal'
+            command1 += f' -normal {api.pybam.tag_sm(r.Normal)[0]}'
             command1 += f' -O {args.output}/temp/{basename}.raw.vcf'
 
             if args.bed is not None:
@@ -188,9 +188,6 @@ f"""#!/bin/bash
 
 ## Activate conda environment.
 source activate {api.common.conda_env()}
-
-## Get the normal sample's name.
-normal=`fuc bam-sample {r.Normal}`
 
 ## Call candidate variants.
 {command1}

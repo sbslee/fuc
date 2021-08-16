@@ -67,11 +67,6 @@ def create_parser(subparsers):
         action='store_true',
         help='Remove temporary files.'
     )
-    parser.add_argument(
-        '--chr',
-        action='store_true',
-        help='Whether contig names have "chr" string (e.g. "chr1" vs. "1").'
-    )
 
 def main(args):
     if os.path.exists(args.output) and args.force:
@@ -127,7 +122,7 @@ source activate {api.common.conda_env()}
 
     chroms = [str(i) for i in range(1, 23)] + ['X', 'Y']
 
-    if args.chr:
+    if api.pybam.has_chr(df.BAM[0]):
         chroms = ['chr' + x for x in chroms]
 
     for chrom in chroms:

@@ -69,11 +69,6 @@ def create_parser(subparsers):
         help='VCF file from dbSNP.'
     )
     parser.add_argument(
-        '--chr',
-        action='store_true',
-        help='Whether contig names have "chr" string (e.g. "chr1" vs. "1").'
-    )
-    parser.add_argument(
         '--force',
         action='store_true',
         help='Overwrite the output directory if it already exists.'
@@ -141,7 +136,7 @@ source activate {api.common.conda_env()}
 
     chroms = [str(i) for i in range(1, 23)] + ['X', 'Y']
 
-    if args.chr:
+    if api.pybam.has_chr(df.BAM[0]):
         chroms = ['chr' + x for x in chroms]
 
     for chrom in chroms:

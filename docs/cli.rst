@@ -22,7 +22,6 @@ For getting help on the fuc CLI:
        bam-head     Print the header of a SAM/BAM/CRAM file.
        bam-index    Index a SAM/BAM/CRAM file.
        bam-rename   Rename the samples in a SAM/BAM/CRAM file.
-       bam-sample   Extract the sample name of SAM/BAM/CRAM file.
        bam-slice    Slice a SAM/BAM/CRAM file.
        bed-intxn    Find the intersection of two or more BED files.
        bed-sum      Summarize a BED file.
@@ -145,27 +144,6 @@ bam-rename
    Positional arguments:
      bam         SAM/BAM/CRAM file.
      name        New sample name.
-   
-   Optional arguments:
-     -h, --help  Show this help message and exit.
-
-bam-sample
-==========
-
-.. code-block:: text
-
-   $ fuc bam-sample -h
-   usage: fuc bam-sample [-h] bam
-   
-   This command will extract the sample name of input SAM/BAM/CRAM file.
-   
-   Usage examples:
-     $ fuc bam-sample in.sam
-     $ fuc bam-sample in.bam
-     $ fuc bam-sample in.cram
-   
-   Positional arguments:
-     bam         SAM/BAM/CRAM file.
    
    Optional arguments:
      -h, --help  Show this help message and exit.
@@ -572,7 +550,7 @@ ngs-hc
 .. code-block:: text
 
    $ fuc ngs-hc -h
-   usage: fuc ngs-hc [-h] [--bed PATH] [--dbsnp PATH] [--chr] [--force] [--keep]
+   usage: fuc ngs-hc [-h] [--bed PATH] [--dbsnp PATH] [--force] [--keep]
                      manifest fasta output qsub java1 java2
    
    This command will prepare a pipeline that performs germline short variant discovery.
@@ -600,7 +578,6 @@ ngs-hc
      -h, --help    Show this help message and exit.
      --bed PATH    BED file.
      --dbsnp PATH  VCF file from dbSNP.
-     --chr         Whether contig names have "chr" string (e.g. "chr1" vs. "1").
      --force       Overwrite the output directory if it already exists.
      --keep        Keep temporary files.
 
@@ -648,7 +625,7 @@ ngs-pon
 .. code-block:: text
 
    $ fuc ngs-pon -h
-   usage: fuc ngs-pon [-h] [--bed PATH] [--force] [--keep] [--chr]
+   usage: fuc ngs-pon [-h] [--bed PATH] [--force] [--keep]
                       manifest fasta output qsub java
    
    This command will prepare a pipeline that constructs a panel of normals (PoN).
@@ -662,8 +639,8 @@ ngs-pon
      - BAM: Path to recalibrated BAM file.
    
    Usage examples:
-     $ fuc ngs-pon manifest.csv ref.fa output_dir "-q queue_name -pe pe_name 10" --thread 10
-     $ fuc ngs-pon manifest.csv ref.fa output_dir "-l h='node_A|node_B' -pe pe_name 10" --thread 10
+     $ fuc ngs-pon manifest.csv ref.fa output_dir "-q queue_name -pe pe_name 10" "-Xmx15g -Xms15g"
+     $ fuc ngs-pon manifest.csv ref.fa output_dir "-l h='node_A|node_B' -pe pe_name 10" "-Xmx15g -Xms15g"
    
    Positional arguments:
      manifest    Sample manifest CSV file.
@@ -677,7 +654,6 @@ ngs-pon
      --bed PATH  BED file.
      --force     Overwrite the output directory if it already exists.
      --keep      Remove temporary files.
-     --chr       Whether contig names have "chr" string (e.g. "chr1" vs. "1").
 
 tbl-merge
 =========

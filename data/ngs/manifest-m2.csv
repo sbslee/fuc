@@ -1,4 +1,0 @@
-Tumor,Normal
-/path/to/A.tumor.bam,/path/to/A.normal.bam
-/path/to/B.tumor.bam,/path/to/B.normal.bam
-/path/to/C.tumor.bam,/path/to/C.normal.bam

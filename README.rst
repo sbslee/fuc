@@ -115,7 +115,6 @@ For getting help on the fuc CLI:
        bam-head     Print the header of a SAM/BAM/CRAM file.
        bam-index    Index a SAM/BAM/CRAM file.
        bam-rename   Rename the samples in a SAM/BAM/CRAM file.
-       bam-sample   Extract the sample name of SAM/BAM/CRAM file.
        bam-slice    Slice a SAM/BAM/CRAM file.
        bed-intxn    Find the intersection of two or more BED files.
        bed-sum      Summarize a BED file.
