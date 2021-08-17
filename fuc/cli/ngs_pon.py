@@ -18,8 +18,8 @@ Manifest columns:
   - BAM: Path to recalibrated BAM file.
 
 Usage examples:
-  $ fuc {api.common._script_name()} manifest.csv ref.fa output_dir "-q queue_name -pe pe_name 10" "-Xmx15g -Xms15g"
-  $ fuc {api.common._script_name()} manifest.csv ref.fa output_dir "-l h='node_A|node_B' -pe pe_name 10" "-Xmx15g -Xms15g"
+  $ fuc {api.common._script_name()} manifest.csv ref.fa output_dir "-q queue_name" "-Xmx15g -Xms15g"
+  $ fuc {api.common._script_name()} manifest.csv ref.fa output_dir "-l h='node_A|node_B'" "-Xmx15g -Xms15g"
 """
 
 def create_parser(subparsers):
