@@ -208,7 +208,13 @@ source activate {api.common.conda_env()}
 {command6}
 
 # Remove temporary files.
-{remove} -r {args.output}/temp/*
+{remove} {args.output}/temp/{basename}.f1r2.tar.gz
+{remove} {args.output}/temp/{basename}.normal-pileups.table
+{remove} {args.output}/temp/{basename}.tumor-pileups.table
+{remove} {args.output}/temp/{basename}.raw.vcf
+{remove} {args.output}/temp/{basename}.contamination.table
+{remove} {args.output}/temp/{basename}.segments.tsv
+{remove} {args.output}/temp/{basename}.artifact-prior.tar.gz
 """)
 
     with open(f'{args.output}/shell/qsubme.sh', 'w') as f:
