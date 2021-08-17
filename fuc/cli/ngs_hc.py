@@ -69,6 +69,12 @@ def create_parser(subparsers):
         help='VCF file from dbSNP.'
     )
     parser.add_argument(
+        '--job',
+        metavar='TEXT',
+        type=str,
+        help='Job submission ID for SGE.'
+    )
+    parser.add_argument(
         '--force',
         action='store_true',
         help='Overwrite the output directory if it already exists.'
@@ -221,6 +227,11 @@ source activate {api.common.conda_env()}
 {remove} -r {args.output}/temp/*
 """)
 
+    if args.job is None:
+        jid = ''
+    else:
+        jid = '-' + args.job
+
     with open(f'{args.output}/shell/qsubme.sh', 'w') as f:
         f.write(
 f"""#!/bin/bash
@@ -233,13 +244,13 @@ chroms=({" ".join(chroms)})
 
 for sample in ${{samples[@]}}
 do
-  qsub {args.qsub} -S /bin/bash -e $p/log -o $p/log -N S1 $p/shell/S1-$sample.sh
+  qsub {args.qsub} -S /bin/bash -e $p/log -o $p/log -N S1{jid} $p/shell/S1-$sample.sh
 done
 
 for chrom in ${{chroms[@]}}
 do
-  qsub {args.qsub} -S /bin/bash -e $p/log -o $p/log -N S2 -hold_jid S1 $p/shell/S2-$chrom.sh
+  qsub {args.qsub} -S /bin/bash -e $p/log -o $p/log -N S2{jid} -hold_jid S1{jid} $p/shell/S2-$chrom.sh
 done
 
-qsub {args.qsub} -S /bin/bash -e $p/log -o $p/log -N S3 -hold_jid S2 $p/shell/S3.sh
+qsub {args.qsub} -S /bin/bash -e $p/log -o $p/log -N S3{jid} -hold_jid S2{jid} $p/shell/S3.sh
 """)
