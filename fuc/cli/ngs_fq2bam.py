@@ -205,6 +205,7 @@ samtools index {args.output}/temp/{r.Name}.sorted.markdup.bam
 {remove} {args.output}/temp/{r.Name}.table
 {remove} {args.output}/temp/{r.Name}.sorted.bam
 {remove} {args.output}/temp/{r.Name}.sorted.markdup.bam
+{remove} {args.output}/temp/{r.Name}.sorted.markdup.bam.bai
 """)
 
     with open(f'{args.output}/shell/qsubme.sh', 'w') as f:
@@ -218,10 +219,6 @@ samples=({" ".join(df.Name)})
 for sample in ${{samples[@]}}
 do
   qsub {args.qsub1} -S /bin/bash -e $p/log -o $p/log -N S1-$sample $p/shell/S1-$sample.sh
-done
-
-for sample in ${{samples[@]}}
-do
   qsub {args.qsub2} -S /bin/bash -e $p/log -o $p/log -N S2-$sample -hold_jid S1-$sample $p/shell/S2-$sample.sh
 done
 """)
