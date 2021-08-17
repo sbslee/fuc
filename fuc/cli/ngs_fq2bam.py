@@ -201,7 +201,10 @@ samtools index {args.output}/temp/{r.Name}.sorted.markdup.bam
 {command3}
 
 # Remove temporary files.
-{remove} -r {args.output}/temp/*
+{remove} {args.output}/temp/{r.Name}.metrics
+{remove} {args.output}/temp/{r.Name}.table
+{remove} {args.output}/temp/{r.Name}.sorted.bam
+{remove} {args.output}/temp/{r.Name}.sorted.markdup.bam
 """)
 
     with open(f'{args.output}/shell/qsubme.sh', 'w') as f:
@@ -214,11 +217,11 @@ samples=({" ".join(df.Name)})
 
 for sample in ${{samples[@]}}
 do
-  qsub {args.qsub1} -S /bin/bash -e $p/log -o $p/log -N S1 $p/shell/S1-$sample.sh
+  qsub {args.qsub1} -S /bin/bash -e $p/log -o $p/log -N S1-$sample $p/shell/S1-$sample.sh
 done
 
 for sample in ${{samples[@]}}
 do
-  qsub {args.qsub2} -S /bin/bash -e $p/log -o $p/log -N S2 -hold_jid S1 $p/shell/S2-$sample.sh
+  qsub {args.qsub2} -S /bin/bash -e $p/log -o $p/log -N S2-$sample -hold_jid S1-$sample $p/shell/S2-$sample.sh
 done
 """)
