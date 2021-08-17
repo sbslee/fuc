@@ -67,8 +67,17 @@ import matplotlib.pyplot as plt
 from matplotlib_venn import venn2, venn3
 import seaborn as sns
 
-HEADERS = ['CHROM', 'POS', 'ID', 'REF', 'ALT',
-           'QUAL', 'FILTER', 'INFO', 'FORMAT']
+HEADERS = {
+    'CHROM': str,
+    'POS': int,
+    'ID': str,
+    'REF': str,
+    'ALT': str,
+    'QUAL': str,
+    'FILTER': str,
+    'INFO': str,
+    'FORMAT': str,
+}
 
 CONTIGS = [
     '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13',
@@ -1347,29 +1356,37 @@ class VcfFrame:
         """
         meta = []
         skip_rows = 0
+
         if fn.startswith('~'):
             fn = os.path.expanduser(fn)
+
         if fn.endswith('.gz') or compression:
             f = bgzf.open(fn, 'rt')
         else:
             f = open(fn)
+
         for line in f:
             if line.startswith('##'):
                 meta.append(line.strip())
                 skip_rows += 1
             elif line.startswith('#CHROM'):
-                headers = line.strip().split('\t')
+                headers = ['CHROM'] + line.strip().split('\t')[1:]
                 skip_rows += 1
             else:
                 break
+
+        dtype = {**HEADERS, **{x: str for x in headers[9:]}}
+
         if meta_only:
             df = pd.DataFrame(columns=headers)
         else:
             df = pd.read_table(
-                fn, skiprows=skip_rows, names=headers, nrows=nrows
+                fn, skiprows=skip_rows, names=headers, nrows=nrows,
+                dtype=dtype
             )
-        df = df.rename(columns={'#CHROM': 'CHROM'})
+
         f.close()
+
         return cls(meta, df)
 
     def calculate_concordance(self, a, b, c=None, mode='all'):
