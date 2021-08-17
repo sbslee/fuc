@@ -12,7 +12,7 @@ This command will prepare a pipeline that constructs a panel of normals (PoN).
 The pipeline is based on GATK's tutorial "(How to) Call somatic mutations using GATK4 Mutect2" (https://gatk.broadinstitute.org/hc/en-us/articles/360035531132).
 
 Dependencies:
-  - GATK: Used for constructing PoN.
+  - GATK: Required for constructing PoN.
 
 Manifest columns:
   - BAM: Path to recalibrated BAM file.
@@ -45,11 +45,11 @@ def create_parser(subparsers):
     parser.add_argument(
         'qsub',
         type=str,
-        help='Options for qsub.'
+        help='SGE resoruce to request for qsub.'
     )
     parser.add_argument(
         'java',
-        help='Options for Java.'
+        help='Java resoruce to request for GATK.'
     )
     parser.add_argument(
         '--bed',
@@ -65,7 +65,7 @@ def create_parser(subparsers):
     parser.add_argument(
         '--keep',
         action='store_true',
-        help='Remove temporary files.'
+        help='Keep temporary files.'
     )
 
 def main(args):

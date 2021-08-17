@@ -4,6 +4,8 @@ Changelog
 0.22.0 (in development)
 -----------------------
 
+* Update :meth:`pyvcf.VcfFrame.from_file` method to be more memory efficient by pre-specifying data type for each VCF column.
+
 0.21.0 (2021-08-16)
 -------------------
 
