@@ -99,7 +99,7 @@ def main(args):
     basenames = []
 
     for i, r in df.iterrows():
-        basename = os.path.basename(r.Tumor)
+        basename = api.pybam.tag_sm(r.Tumor)[0]
         basenames.append(basename)
 
         with open(f'{args.output}/shell/S1-{basename}.sh', 'w') as f:
