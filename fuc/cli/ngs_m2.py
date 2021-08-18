@@ -133,7 +133,7 @@ def main(args):
             command2 += f' -I {r.Tumor}'
             command2 += f' -V {args.germline}'
             command2 += f' -L {args.output}/temp/{basename}.raw.vcf'
-            command2 += f' -O {args.output}/{basename}/temp/{basename}.tumor-pileups.table'
+            command2 += f' -O {args.output}/temp/{basename}.tumor-pileups.table'
 
             ######################
             # GetPileupSummaries #
@@ -145,7 +145,7 @@ def main(args):
             command3 += f' -I {r.Normal}'
             command3 += f' -V {args.germline}'
             command3 += f' -L {args.output}/temp/{basename}.raw.vcf'
-            command3 += f' -O {args.output}/{basename}/temp/{basename}.normal-pileups.table'
+            command3 += f' -O {args.output}/temp/{basename}.normal-pileups.table'
 
             ##########################
             # CalculateContamination #
