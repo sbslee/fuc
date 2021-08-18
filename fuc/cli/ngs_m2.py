@@ -167,7 +167,7 @@ def main(args):
             command5 += f' --QUIET'
             command5 += f' --java-options "{args.java}"'
             command5 += f' -I {args.output}/temp/{basename}.f1r2.tar.gz'
-            command5 += f' -I {args.output}/temp/{basename}.artifact-prior.tar.gz'
+            command5 += f' -O {args.output}/temp/{basename}.artifact-prior.tar.gz'
 
             #####################
             # FilterMutectCalls #
