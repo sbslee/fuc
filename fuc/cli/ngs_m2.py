@@ -182,6 +182,7 @@ def main(args):
             command6 += f' --tumor-segmentation {args.output}/temp/{basename}.segments.tsv'
             command6 += f' -ob-priors {args.output}/temp/{basename}.artifact-prior.tar.gz'
             command6 += f' -O {args.output}/{basename}.filtered.vcf'
+            command6 += f' --filtering-stats {args.output}/temp/{basename}.filtered.vcf.filteringStats.tsv'
 
             f.write(
 f"""#!/bin/bash
@@ -215,6 +216,7 @@ source activate {api.common.conda_env()}
 {remove} {args.output}/temp/{basename}.contamination.table
 {remove} {args.output}/temp/{basename}.segments.tsv
 {remove} {args.output}/temp/{basename}.artifact-prior.tar.gz
+{remove} {args.output}/temp/{basename}.filtered.vcf.filteringStats.tsv
 """)
 
     with open(f'{args.output}/shell/qsubme.sh', 'w') as f:
