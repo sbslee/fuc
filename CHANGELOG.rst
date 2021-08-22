@@ -5,7 +5,8 @@ Changelog
 -----------------------
 
 * Update :meth:`pyvcf.VcfFrame.from_file` method to be more memory efficient by pre-specifying data type for each VCF column.
-* Update :meth:`pyvcf.VcfFrame.from_file` method to automatically add missing VCF columns with warning.
+* Update :meth:`pyvcf.VcfFrame.from_file` method to raise error if one or more VCF columns are missing, except for the FORMAT column (i.e. "sites-only" VCFs).
+* Add new property ``sites_only`` to :class:`pyvcf.VcfFrame`.
 
 0.21.0 (2021-08-16)
 -------------------

@@ -841,6 +841,11 @@ class VcfFrame:
         """list : List of contig names."""
         return list(self.df.CHROM.unique())
 
+    @property
+    def sites_only(self):
+        """bool : Whether the VCF is sites-only."""
+        return not self.samples or 'FORMAT' not in self.df.columns
+
     def add_af(self, decimals=3):
         """Compute AF using AD and add it to the FORMAT field.
 
@@ -1385,6 +1390,10 @@ class VcfFrame:
         if '#CHROM' in columns:
             columns[columns.index('#CHROM')] = 'CHROM'
 
+        for header in HEADERS:
+            if header not in columns and header != 'FORMAT':
+                raise ValueError(f"Required VCF column missing: '{header}'")
+
         dtype = {**HEADERS, **{x: str for x in columns[9:]}}
 
         if meta_only:
@@ -1396,18 +1405,6 @@ class VcfFrame:
             )
 
         f.close()
-
-        missing = [x for x in HEADERS if x not in columns]
-
-        if missing:
-            for column in missing:
-                if column == 'POS':
-                    df[column] = np.nan
-                else:
-                    df[column] = '.'
-            df = df[list(HEADERS) + columns[9:]]
-            message = f'Missing VCF columns added: {missing}'
-            warnings.warn(message)
 
         return cls(meta, df)
 
