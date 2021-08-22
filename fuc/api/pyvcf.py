@@ -397,8 +397,11 @@ def gt_unphase(g):
     l[0] = '/'.join([str(b) for b in sorted([int(a) for a in gt.split('|')])])
     return ':'.join(l)
 
-def merge(vfs, how='inner', format='GT', sort=True, collapse=False):
-    """Merge VcfFrame objects.
+def merge(
+    vfs, how='inner', format='GT', sort=True, collapse=False
+):
+    """
+    Merge VcfFrame objects.
 
     Parameters
     ----------
@@ -1748,8 +1751,9 @@ class VcfFrame:
         vf = self.__class__([], df)
         return vf
 
-    def merge(self, other, how='inner', format='GT', sort=True,
-              collapse=False):
+    def merge(
+        self, other, how='inner', format='GT', sort=True, collapse=False
+    ):
         """
         Merge with the other VcfFrame.
 
@@ -1837,33 +1841,40 @@ class VcfFrame:
         1  chr1  101  .   T   C    .      .    .  GT:DP  0/1:29  1/1:30  0/0:24  0/1:31
         2  chr2  200  .   A   T    .      .    .  GT:DP   ./.:.   ./.:.  0/0:26  0/1:26
         """
-        vf1 = self.strip(format=format)
-        vf2 = other.strip(format=format)
-        dropped = ['ID', 'QUAL', 'FILTER', 'INFO', 'FORMAT']
-        shared = ['CHROM', 'POS', 'REF', 'ALT']
-        df = vf1.df.merge(vf2.df.drop(columns=dropped), on=shared, how=how)
+        if self.sites_only and other.sites_only:
+            df = pd.concat([self.df, other.df])
+            merged = self.__class__([], df)
+            merged = merged.drop_duplicates()
+        else:
+            vf1 = self.strip(format=format)
+            vf2 = other.strip(format=format)
+            dropped = ['ID', 'QUAL', 'FILTER', 'INFO', 'FORMAT']
+            shared = ['CHROM', 'POS', 'REF', 'ALT']
+            df = vf1.df.merge(vf2.df.drop(columns=dropped), on=shared, how=how)
 
-        # This ensures that the column order is intact when either of the
-        # dataframes is empty.
-        cols = vf1.df.columns.to_list() + vf2.df.columns[9:].to_list()
-        df = df[cols]
+            # This ensures that the column order is intact when either of the
+            # dataframes is empty.
+            cols = vf1.df.columns.to_list() + vf2.df.columns[9:].to_list()
+            df = df[cols]
 
-        df[dropped] = df[dropped].fillna('.')
-        df.FORMAT = format
-        def func(r):
-            n = len(r.FORMAT.split(':'))
-            x = './.'
-            for i in range(1, n):
-                x += ':.'
-            r = r.fillna(x)
-            return r
-        df = df.apply(func, axis=1)
-        vf3 = self.__class__([], df)
+            df[dropped] = df[dropped].fillna('.')
+            df.FORMAT = format
+            def func(r):
+                n = len(r.FORMAT.split(':'))
+                x = './.'
+                for i in range(1, n):
+                    x += ':.'
+                r = r.fillna(x)
+                return r
+            df = df.apply(func, axis=1)
+            merged = self.__class__([], df)
+
         if collapse:
-            vf3 = vf3.collapse()
+            merged = merged.collapse()
         if sort:
-            vf3 = vf3.sort()
-        return vf3
+            merged = merged.sort()
+
+        return merged
 
     def meta_keys(self):
         """Print metadata lines with a key."""
