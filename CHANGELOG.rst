@@ -5,6 +5,7 @@ Changelog
 -----------------------
 
 * Update :meth:`pyvcf.VcfFrame.from_file` method to be more memory efficient by pre-specifying data type for each VCF column.
+* Update :meth:`pyvcf.VcfFrame.from_file` method to automatically add missing VCF columns with warning.
 
 0.21.0 (2021-08-16)
 -------------------

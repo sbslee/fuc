@@ -55,6 +55,7 @@ import os
 import re
 import gzip
 from copy import deepcopy
+import warnings
 
 from . import pybed, common, pymaf
 
@@ -1354,7 +1355,6 @@ class VcfFrame:
         >>> vf = pyvcf.VcfFrame.from_file('zipped.vcf.gz')
         >>> vf = pyvcf.VcfFrame.from_file('zipped.vcf', compression=True)
         """
-        meta = []
         skip_rows = 0
 
         if fn.startswith('~'):
@@ -1365,27 +1365,44 @@ class VcfFrame:
         else:
             f = open(fn)
 
+        meta = []
+
         for line in f:
             if line.startswith('##'):
                 meta.append(line.strip())
                 skip_rows += 1
             elif line.startswith('#CHROM'):
-                headers = ['CHROM'] + line.strip().split('\t')[1:]
+                columns = line.strip().split('\t')
                 skip_rows += 1
             else:
                 break
 
-        dtype = {**HEADERS, **{x: str for x in headers[9:]}}
+        if '#CHROM' in columns:
+            columns[columns.index('#CHROM')] = 'CHROM'
+
+        dtype = {**HEADERS, **{x: str for x in columns[9:]}}
 
         if meta_only:
-            df = pd.DataFrame(columns=headers)
+            df = pd.DataFrame(columns=columns)
         else:
             df = pd.read_table(
-                fn, skiprows=skip_rows, names=headers, nrows=nrows,
-                dtype=dtype
+                fn, skiprows=skip_rows, names=columns,
+                nrows=nrows, dtype=dtype
             )
 
         f.close()
+
+        missing = [x for x in HEADERS if x not in columns]
+
+        if missing:
+            for column in missing:
+                if column == 'POS':
+                    df[column] = np.nan
+                else:
+                    df[column] = '.'
+            df = df[list(HEADERS) + columns[9:]]
+            message = f'Missing VCF columns added: {missing}'
+            warnings.warn(message)
 
         return cls(meta, df)
 
