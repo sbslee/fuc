@@ -39,6 +39,11 @@ The nine required fields are:
 | 9   | FORMAT | ':'-separated genotype fields      | 'GT', 'GT:AD:DP'       |
 +-----+--------+------------------------------------+------------------------+
 
+You will sometimes come across VCFs that have only 8 columns, and contain no
+FORMAT or sample-specific information. These are called "sites-only" VCFs,
+and represent variation that has been observed in a population. Generally,
+information about the population of origin should be included in the header.
+
 There are several common, reserved genotype keywords that are standards
 across the community. Currently, the pyvcf submodule is aware of the
 following:
