@@ -45,7 +45,7 @@ For getting help on the fuc CLI:
        vcf-filter   Filter a VCF file.
        vcf-merge    Merge two or more VCF files.
        vcf-rename   Rename the samples in a VCF file.
-       vcf-slice    Slice a VCF file.
+       vcf-slice    Slice a VCF file for one or more specified regions.
        vcf-vcf2bed  Convert a VCF file to a BED file.
        vcf-vep      Filter a VCF file annotated by Ensembl VEP.
    
@@ -822,23 +822,31 @@ vcf-slice
 .. code-block:: text
 
    $ fuc vcf-slice -h
-   usage: fuc vcf-slice [-h] vcf region
+   usage: fuc vcf-slice [-h] [--region TEXT] [--bed PATH] [--vcf PATH] input
    
-   This command will slice a VCF file (both zipped and unzipped).
+   This command will slice a VCF file for one or more specified regions.
+   
+   Target regions can be specified with either '--region', '--bed', or '--vcf'.
+   
+   Pay attention to the 'chr' string in contig names (e.g. 'chr1' vs. '1').
    
    Usage examples:
-     $ fuc vcf-slice in.vcf chr1 > sliced.vcf
-     $ fuc vcf-slice in.vcf chr1:100-300 > sliced.vcf
-     $ fuc vcf-slice in.vcf chr1:100 > sliced.vcf
-     $ fuc vcf-slice in.vcf chr1:100- > sliced.vcf
-     $ fuc vcf-slice in.vcf chr1:-300 > sliced.vcf
+     $ fuc vcf-slice in.vcf --region 1 > out.vcf
+     $ fuc vcf-slice in.vcf --region 1:100-300 > out.vcf
+     $ fuc vcf-slice in.vcf --region 1:100 > out.vcf
+     $ fuc vcf-slice in.vcf --region chr1:100- > out.vcf
+     $ fuc vcf-slice in.vcf --region chr1:-300 > out.vcf
+     $ fuc vcf-slice in.vcf --bed targets.bed > out.vcf
+     $ fuc vcf-slice in.vcf --vcf targets.vcf > out.vcf
    
    Positional arguments:
-     vcf         VCF file.
-     region      Region ('chrom:start-end').
+     input          Input VCF file (zipped or unzipped).
    
    Optional arguments:
-     -h, --help  Show this help message and exit.
+     -h, --help     Show this help message and exit.
+     --region TEXT  Target region to use for slicing ('chrom:start-end').
+     --bed PATH     BED file to use for slicing (zipped or unzipped).
+     --vcf PATH     VCF file to use for slicing (zipped or unzipped).
 
 vcf-vcf2bed
 ===========

@@ -9,6 +9,7 @@ Changelog
 * Add new property ``sites_only`` to :class:`pyvcf.VcfFrame`.
 * Update :meth:`pyvcf.VcfFrame.merge` method to handle sites-only VCfs.
 * Add new method :meth:`pyvcf.VcfFrame.filter_vcf`.
+* Add new arguments ``--bed`` and ``--vcf`` to :command:`vcf-slice` command.
 
 0.21.0 (2021-08-16)
 -------------------

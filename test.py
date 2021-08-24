@@ -115,7 +115,7 @@ class TestCli(unittest.TestCase):
         self.assertEqual(len(result.stdout.strip().split('\n')), 10)
 
     def test_vfslice(self):
-        result = subprocess.run(['fuc', 'vcf-slice', vcf_file1, 'chr1:-300'], capture_output=True, text=True, check=True)
+        result = subprocess.run(['fuc', 'vcf-slice', vcf_file1, '--region', 'chr1:-300'], capture_output=True, text=True, check=True)
         self.assertEqual(len(result.stdout.strip().split('\n')), 5)
 
 if __name__ == '__main__':
