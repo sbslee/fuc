@@ -29,62 +29,62 @@ For getting help on a specific submodule (e.g. pyvcf):
    from fuc import pyvcf
    help(pyvcf)
 
-fuc.api.common
-==============
+fuc.common
+==========
 
 .. automodule:: fuc.api.common
    :members:
 
-fuc.api.pybam
-=============
+fuc.pybam
+=========
 
 .. automodule:: fuc.api.pybam
    :members:
 
-fuc.api.pybed
-=============
+fuc.pybed
+=========
 
 .. automodule:: fuc.api.pybed
    :members:
 
-fuc.api.pycov
-=============
+fuc.pycov
+=========
 
 .. automodule:: fuc.api.pycov
    :members:
 
-fuc.api.pyfq
-============
+fuc.pyfq
+========
 
 .. automodule:: fuc.api.pyfq
    :members:
 
-fuc.api.pygff
-=============
+fuc.pygff
+=========
 
 .. automodule:: fuc.api.pygff
    :members:
 
-fuc.api.pymaf
-=============
+fuc.pymaf
+=========
 
 .. automodule:: fuc.api.pymaf
    :members:
 
-fuc.api.pysnpeff
-================
+fuc.pysnpeff
+============
 
 .. automodule:: fuc.api.pysnpeff
    :members:
 
-fuc.api.pyvcf
-=============
+fuc.pyvcf
+=========
 
 .. automodule:: fuc.api.pyvcf
    :members:
 
-fuc.api.pyvep
-=============
+fuc.pyvep
+=========
 
 .. automodule:: fuc.api.pyvep
    :members:
