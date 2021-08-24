@@ -37,9 +37,9 @@ class TestPyvcf(unittest.TestCase):
         vf3 = vf1.merge(vf2, how='outer', format='GT:DP')
         self.assertEqual(vf3.df.shape, (9, 15))
 
-    def test_compare(self):
+    def test_calculate_concordance(self):
         vf = pyvcf.VcfFrame.from_file(vcf_file1)
-        self.assertEqual(vf.compare('Steven', 'Sarah'), (1, 0, 0, 3))
+        self.assertEqual(vf.calculate_concordance('Steven', 'Sarah'), (1, 0, 0, 3))
 
     def test_filter_multialt(self):
         vf = pyvcf.VcfFrame.from_file(vcf_file1)
