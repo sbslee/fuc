@@ -41,7 +41,7 @@ It is also recommended to include additional custom columns such as variant
 allele frequecy (VAF) and transcript name.
 
 If sample annotation data are available for a given MAF file, use
-the :class:`fuc.api.common.AnnFrame` class to import the data.
+the :class:`common.AnnFrame` class to import the data.
 
 There are nine nonsynonymous variant classifcations that pymaf primarily
 uses: Missense_Mutation, Frame_Shift_Del, Frame_Shift_Ins, In_Frame_Del,

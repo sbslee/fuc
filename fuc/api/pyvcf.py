@@ -39,8 +39,8 @@ The nine required fields are:
 | 9   | FORMAT | ':'-separated genotype fields      | 'GT', 'GT:AD:DP'       |
 +-----+--------+------------------------------------+------------------------+
 
-You will sometimes come across VCFs that have only 8 columns, and contain no
-FORMAT or sample-specific information. These are called "sites-only" VCFs,
+You will sometimes come across VCFs that have only eight columns, and contain
+no FORMAT or sample-specific information. These are called "sites-only" VCFs,
 and represent variation that has been observed in a population. Generally,
 information about the population of origin should be included in the header.
 
@@ -53,7 +53,7 @@ following:
 * DP - Read depth (1, Integer)
 
 If sample annotation data are available for a given VCF file, use
-the :class:`AnnFrame` class to import the data.
+the :class:`common.AnnFrame` class to import the data.
 """
 
 import os
