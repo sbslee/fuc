@@ -550,7 +550,8 @@ ngs-hc
 .. code-block:: text
 
    $ fuc ngs-hc -h
-   usage: fuc ngs-hc [-h] [--bed PATH] [--dbsnp PATH] [--force] [--keep]
+   usage: fuc ngs-hc [-h] [--bed PATH] [--dbsnp PATH] [--job TEXT] [--force]
+                     [--keep]
                      manifest fasta output qsub java1 java2
    
    This command will prepare a pipeline that performs germline short variant discovery.
@@ -578,6 +579,7 @@ ngs-hc
      -h, --help    Show this help message and exit.
      --bed PATH    BED file.
      --dbsnp PATH  VCF file from dbSNP.
+     --job TEXT    Job submission ID for SGE.
      --force       Overwrite the output directory if it already exists.
      --keep        Keep temporary files.
 
@@ -633,27 +635,27 @@ ngs-pon
    The pipeline is based on GATK's tutorial "(How to) Call somatic mutations using GATK4 Mutect2" (https://gatk.broadinstitute.org/hc/en-us/articles/360035531132).
    
    Dependencies:
-     - GATK: Used for constructing PoN.
+     - GATK: Required for constructing PoN.
    
    Manifest columns:
      - BAM: Path to recalibrated BAM file.
    
    Usage examples:
-     $ fuc ngs-pon manifest.csv ref.fa output_dir "-q queue_name -pe pe_name 10" "-Xmx15g -Xms15g"
-     $ fuc ngs-pon manifest.csv ref.fa output_dir "-l h='node_A|node_B' -pe pe_name 10" "-Xmx15g -Xms15g"
+     $ fuc ngs-pon manifest.csv ref.fa output_dir "-q queue_name" "-Xmx15g -Xms15g"
+     $ fuc ngs-pon manifest.csv ref.fa output_dir "-l h='node_A|node_B'" "-Xmx15g -Xms15g"
    
    Positional arguments:
      manifest    Sample manifest CSV file.
      fasta       Reference FASTA file.
      output      Output directory.
-     qsub        Options for qsub.
-     java        Options for Java.
+     qsub        SGE resoruce to request for qsub.
+     java        Java resoruce to request for GATK.
    
    Optional arguments:
      -h, --help  Show this help message and exit.
      --bed PATH  BED file.
      --force     Overwrite the output directory if it already exists.
-     --keep      Remove temporary files.
+     --keep      Keep temporary files.
 
 tbl-merge
 =========

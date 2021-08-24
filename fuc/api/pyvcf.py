@@ -3711,6 +3711,105 @@ class VcfFrame:
         vf = self.__class__(self.copy_meta(), self.df[i])
         return vf
 
+    def filter_vcf(self, vcf, opposite=False, as_index=False):
+        """
+        Select rows that overlap with the given VCF data.
+
+        Parameters
+        ----------
+        vcf : VcfFrame or str
+            VcfFrame or VCF file.
+        opposite : bool, default: False
+            If True, return rows that don't meet the said criteria.
+        as_index : bool, default: False
+            If True, return boolean index array instead of VcfFrame.
+
+        Returns
+        -------
+        VcfFrame or pandas.Series
+            Filtered VcfFrame or boolean index array.
+
+        Examples
+        --------
+        Assume we have the following data:
+
+        >>> from fuc import pyvcf
+        >>> data1 = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr4', 'chr8', 'chr8'],
+        ...     'POS': [100, 203, 192, 52, 788],
+        ...     'ID': ['.', '.', '.', '.', '.'],
+        ...     'REF': ['A', 'C', 'T', 'T', 'GA'],
+        ...     'ALT': ['C', 'G', 'A', 'G', 'G'],
+        ...     'QUAL': ['.', '.', '.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.', '.', '.'],
+        ...     'INFO': ['.', '.', '.', '.', '.'],
+        ...     'FORMAT': ['GT', 'GT', 'GT', 'GT', 'GT'],
+        ...     'A': ['0/1', '0/1', '0/1', '0/1', '0/1'],
+        ... }
+        >>> vf1 = pyvcf.VcfFrame.from_dict([], data1)
+        >>> vf1.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A
+        0  chr1  100  .   A   C    .      .    .     GT  0/1
+        1  chr1  203  .   C   G    .      .    .     GT  0/1
+        2  chr4  192  .   T   A    .      .    .     GT  0/1
+        3  chr8   52  .   T   G    .      .    .     GT  0/1
+        4  chr8  788  .  GA   G    .      .    .     GT  0/1
+        >>> data2 = {
+        ...     'CHROM': ['chr1', 'chr8'],
+        ...     'POS': [100, 788],
+        ...     'ID': ['.', '.'],
+        ...     'REF': ['A', 'GA'],
+        ...     'ALT': ['C', 'G'],
+        ...     'QUAL': ['.', '.'],
+        ...     'FILTER': ['.', '.'],
+        ...     'INFO': ['.', '.'],
+        ... }
+        >>> vf2 = pyvcf.VcfFrame.from_dict([], data2)
+        >>> vf2.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO
+        0  chr1  100  .   A   C    .      .    .
+        1  chr8  788  .  GA   G    .      .    .
+
+        We can select rows that overlap with the VCF data:
+
+        >>> vf1.filter_vcf(vf2).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A
+        0  chr1  100  .   A   C    .      .    .     GT  0/1
+        1  chr8  788  .  GA   G    .      .    .     GT  0/1
+
+        We can also remove those rows:
+
+        >>> vf1.filter_vcf(vf2, opposite=True).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A
+        0  chr1  203  .   C   G    .      .    .     GT  0/1
+        1  chr4  192  .   T   A    .      .    .     GT  0/1
+        2  chr8   52  .   T   G    .      .    .     GT  0/1
+
+        Finally, we can return boolean index array from the filtering:
+
+        >>> vf1.filter_vcf(vf2, as_index=True)
+        0     True
+        1    False
+        2    False
+        3    False
+        4     True
+        dtype: bool
+        """
+        if isinstance(vcf, VcfFrame):
+            vf = vcf
+        else:
+            vf = VcfFrame.from_file(vcf)
+        df1 = self.df[['CHROM', 'POS']]
+        df2 = vf.df[['CHROM', 'POS', 'REF']]
+        df3 = df1.merge(df2, how='left')
+        i = ~pd.isna(df3.REF)
+        i.name = None
+        if opposite:
+            i = ~i
+        if as_index:
+            return i
+        return self.__class__(self.copy_meta(), self.df[i])
+
     def subtract(self, a, b):
         """Subtract the genotype data of Sample B from Sample A.
 

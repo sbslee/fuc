@@ -8,6 +8,7 @@ Changelog
 * Update :meth:`pyvcf.VcfFrame.from_file` method to raise error if one or more VCF columns are missing, except for the FORMAT column (i.e. "sites-only" VCFs).
 * Add new property ``sites_only`` to :class:`pyvcf.VcfFrame`.
 * Update :meth:`pyvcf.VcfFrame.merge` method to handle sites-only VCfs.
+* Add new method :meth:`pyvcf.VcfFrame.filter_vcf`.
 
 0.21.0 (2021-08-16)
 -------------------
