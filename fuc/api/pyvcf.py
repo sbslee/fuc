@@ -4106,9 +4106,9 @@ class VcfFrame:
         """
         chrom, start, end = common.parse_region(region)
         df = self.df[self.df.CHROM == chrom]
-        if start:
+        if not pd.isna(start):
             df = df[df.POS >= start]
-        if end:
+        if not pd.isna(end):
             df = df[df.POS <= end]
         return self.__class__(self.copy_meta(), df)
 

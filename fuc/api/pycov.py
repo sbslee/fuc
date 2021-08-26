@@ -334,7 +334,6 @@ class CovFrame:
             >>> cf.plot_region('chr1:1500-1800')
             >>> plt.tight_layout()
         """
-        chrom, start, end = common.parse_region(region)
         cf = self.slice(region)
         if names is None:
             names = cf.samples
@@ -405,9 +404,9 @@ class CovFrame:
         """
         chrom, start, end = common.parse_region(region)
         df = self.df[self.df.Chromosome == chrom]
-        if start:
+        if not pd.isna(start):
             df = df[df.Position >= start]
-        if end:
+        if not pd.isna(end):
             df = df[df.Position <= end]
         return self.__class__(df)
 
