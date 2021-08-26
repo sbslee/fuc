@@ -664,6 +664,44 @@ def parse_region(region):
 
     return (chrom, start, end)
 
+def parse_variant(variant):
+    """
+    Parse specified genomic variant.
+
+    The input variant string must consist of chromosome, position, reference
+    allele, and alternative allele separated by one or more supported
+    delimiters ('-', ':', '>').
+
+    The method will return parsed variant as a tuple with a shape of
+    ``(chrom, pos, ref, alt)`` which has data types of
+    ``(str, int, str, str)``.
+
+    Parameters
+    ----------
+    variant : str
+        Genomic variant.
+
+    Returns
+    -------
+    tuple
+        Parsed variant.
+
+    Examples
+    --------
+
+    >>> from fuc import common
+    >>> common.parse_variant('22-42127941-G-A')
+    ('22', 42127941, 'G', 'A')
+    >>> common.parse_variant('22:42127941-G>A')
+    ('22', 42127941, 'G', 'A')
+    """
+    l = re.split('-|:|>', variant)
+    chrom = l[0]
+    pos = int(l[1])
+    ref = l[2]
+    alt = l[3]
+    return (chrom, pos, ref, alt)
+
 def extract_sequence(fasta, region):
     """
     Extract the region's DNA sequence from the FASTA file.
