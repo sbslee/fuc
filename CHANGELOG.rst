@@ -10,7 +10,7 @@ Changelog
 * Update :meth:`pyvcf.VcfFrame.merge` method to handle sites-only VCfs.
 * Add new method :meth:`pyvcf.VcfFrame.filter_vcf`.
 * Add new arguments ``--bed`` and ``--vcf`` to :command:`vcf-slice` command.
-* Update :meth:`common.parse_region` method to output ``NaN`` instead of 0 when ``start`` and ``end`` are omitted.
+* Update :meth:`common.parse_region` method to output ``NaN`` instead of 0 when ``start`` or ``end`` is omitted.
 
 0.21.0 (2021-08-16)
 -------------------

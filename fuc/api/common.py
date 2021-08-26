@@ -608,11 +608,10 @@ def load_dataset(name, force=False):
 
 def parse_region(region):
     """
-    Parse specified region.
+    Parse specified genomic region.
 
-    The method will return parsed region in the form of a tuple with a shape
-    of ``(chrom, start, end)`` which will have the following data types:
-    ``(str, int, int)``.
+    The method will return parsed region as a tuple with a shape of
+    ``(chrom, start, end)`` which has data types of ``(str, int, int)``.
 
     Note that only ``chrom`` is required when specifing a region. If
     ``start`` and ``end`` are omitted, the method will return ``NaN`` in
