@@ -12,6 +12,10 @@ Changelog
 * Add new arguments ``--bed`` and ``--vcf`` to :command:`vcf-slice` command.
 * Update :meth:`common.parse_region` method to output ``NaN`` instead of 0.
 * Add new method :meth:`common.parse_variant`.
+* Update :meth:`pycov.CovFrame.from_file` method to be more memory efficient by pre-specifying data type for each of the columns in the input text file.
+* Update :meth:`pycov.CovFrame.from_file` method to raise error if 'Chromosome' or 'Position' column is missing.
+* Rename ``names`` argument of :meth:`pycov.CovFrame.plot_region` method to ``samples``.
+* Add new argument ``legend`` to :meth:`pycov.CovFrame.plot_region` method.
 
 0.21.0 (2021-08-16)
 -------------------

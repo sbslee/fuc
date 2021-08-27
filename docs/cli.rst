@@ -68,9 +68,11 @@ bam-depth
    usage: fuc bam-depth [-h] [--bam PATH [PATH ...]] [--fn PATH] [--bed PATH]
                         [--region TEXT]
    
-   This command will compute read depth from the input SAM/BAM/CRAM files.
+   This command will compute read depth from input SAM/BAM/CRAM files.
    
-   Either the '--bam' or '--fn' argument must be provided, but not both.
+   Input files must be specified with either '--bam' or '--fn'.
+   
+   By default, the command will count all reads within the alignment file. Use '--bed' or '--region' to specify target regions. When you do this, pay attention to the 'chr' string in contig names (e.g. 'chr1' vs. '1').
    
    Usage examples:
      $ fuc bam-depth --bam 1.bam 2.bam --bed in.bed > out.tsv

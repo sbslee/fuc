@@ -3,7 +3,9 @@ The pycov submodule is designed for working with depth of coverage data
 from sequence alingment files (SAM/BAM/CRAM). It implements
 ``pycov.CovFrame`` which stores read depth data as ``pandas.DataFrame`` via
 the `pysam <https://pysam.readthedocs.io/en/latest/api.html>`_ package to
-allow fast computation and easy manipulation.
+allow fast computation and easy manipulation. The ``pycov.CovFrame`` class
+also contains many useful plotting methods such as ``CovFrame.plot_region``
+and ``CovFrame.plot_uniformity``.
 """
 from io import StringIO
 
@@ -273,7 +275,7 @@ class CovFrame:
         Parameters
         ----------
         fn : str
-            Text file containing read depth data.
+            Tab-delimited file containing read depth data.
 
         Returns
         -------
@@ -289,20 +291,45 @@ class CovFrame:
         CovFrame.from_dict
             Construct CovFrame from dict of array-like or dicts.
         """
-        return cls(pd.read_table(fn))
+        with open(fn) as f:
+            headers = f.readline().strip().split('\t')
+
+        if 'Chromosome' not in headers:
+            raise ValueError("Input file is missing 'Chromosome' column")
+
+        if 'Position' not in headers:
+            raise ValueError("Input file is missing 'Position' column")
+
+        dtype = {}
+
+        for header in headers:
+            if header == 'Chromosome':
+                dtype[header] = str
+            elif header == 'Position':
+                dtype[header] = float
+            else:
+                dtype[header] = float
+
+        return cls(pd.read_table(fn, dtype=dtype))
 
     def plot_region(
-        self, region, names=None, ax=None, figsize=None, **kwargs
+        self, region, samples=None, legend='auto', ax=None, figsize=None,
+        **kwargs
     ):
         """
-        Create a read depth profile for the region.
+        Create read depth profile for specified region.
+
+        By default, the method will create a profile for every sample in the
+        CovFrame. Use ``samples`` to specify which samples to plot.
 
         Parameters
         ----------
         region : str
-            Region (‘chrom:start-end’).
-        names : str or list, optional
-            Sample name or list of sample names.
+            Target region ('chrom:start-end').
+        samples : str or list, optional
+            Sample name or list of names to plot.
+        legend : {'auto', 'brief', 'full', or False}, default: 'auto'
+            How to draw the legend according to :meth:`seaborn.lineplot`.
         ax : matplotlib.axes.Axes, optional
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
@@ -335,20 +362,21 @@ class CovFrame:
             >>> plt.tight_layout()
         """
         cf = self.slice(region)
-        if names is None:
-            names = cf.samples
-        if isinstance(names, str):
-            names = [names]
-        headers = ['Position'] + names
+
+        if samples is None:
+            samples = cf.samples
+
+        if isinstance(samples, str):
+            samples = [samples]
+
+        headers = ['Position'] + samples
         df = cf.df[headers]
         df = df.set_index('Position')
-        if kwargs is None:
-            kwargs = {}
 
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
-        sns.lineplot(data=df, ax=ax, **kwargs)
+        sns.lineplot(data=df, ax=ax, legend=legend, **kwargs)
 
         ax.set_ylabel('Depth')
 
