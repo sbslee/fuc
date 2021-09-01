@@ -1727,26 +1727,65 @@ class VcfFrame:
         return s
 
     def strip(self, format='GT'):
-        """Remove unnecessary data from the VcfFrame.
+        """
+        Remove any unnecessary data.
 
         Parameters
         ----------
         format : str, default: 'GT'
-            FORMAT subfields to be retained (e.g. 'GT:AD:DP').
+            FORMAT keys to retain (e.g. 'GT:AD:DP').
 
         Returns
         -------
         VcfFrame
             Stripped VcfFrame.
+
+        Examples
+        --------
+
+        >>> from fuc import pyvcf
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102],
+        ...     'ID': ['.', '.', '.'],
+        ...     'REF': ['G', 'T', 'A'],
+        ...     'ALT': ['A', 'C', 'T'],
+        ...     'QUAL': ['.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.'],
+        ...     'INFO': ['.', '.', '.'],
+        ...     'FORMAT': ['GT:DP:AD', 'GT:DP:AD', 'GT'],
+        ...     'A': ['0/1:30:15,15', '1/1:28:0,28', '0/1']
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO    FORMAT             A
+        0  chr1  100  .   G   A    .      .    .  GT:DP:AD  0/1:30:15,15
+        1  chr1  101  .   T   C    .      .    .  GT:DP:AD   1/1:28:0,28
+        2  chr1  102  .   A   T    .      .    .        GT           0/1
+        >>> vf.strip('GT:DP').df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT       A
+        0  chr1  100  .   G   A    .      .    .  GT:DP  0/1:30
+        1  chr1  101  .   T   C    .      .    .  GT:DP  1/1:28
+        2  chr1  102  .   A   T    .      .    .  GT:DP   0/1:.
         """
-        def outfunc(r):
-            idx = [r.FORMAT.split(':').index(x) for x in format.split(':')]
-            infunc = lambda x: ':'.join([x.split(':')[i] for i in idx])
-            r.iloc[9:] = r.iloc[9:].apply(infunc)
+        new_keys = format.split(':')
+
+        def one_row(r):
+            old_keys = r.FORMAT.split(':')
+            indicies = [old_keys.index(x) if x in old_keys else None for x in new_keys]
+
+            def one_gt(g):
+                old_fields = g.split(':')
+                new_fields = ['.' if x is None else old_fields[x] for x in indicies]
+                return ':'.join(new_fields)
+
+            r.iloc[9:] = r.iloc[9:].apply(one_gt)
+
             return r
+
         df = self.df.copy()
         df[['ID', 'QUAL', 'FILTER', 'INFO']] = '.'
-        df = df.apply(outfunc, axis=1)
+        df = df.apply(one_row, axis=1)
         df.FORMAT = format
         vf = self.__class__([], df)
         return vf
@@ -5080,3 +5119,52 @@ class VcfFrame:
         df.columns = ['Locus', 'Sample', 'Other', 'Self']
         df = df[['Locus', 'Sample', 'Self', 'Other']]
         return df
+
+    def fetch(self, variant):
+        """
+        Fetch the VCF row that matches specified variant.
+
+        Parameters
+        ----------
+        variant : str
+            Target variant.
+
+        Returns
+        -------
+        pandas.Series
+            VCF row.
+
+        Examples
+        --------
+
+        >>> from fuc import pyvcf
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr2'],
+        ...     'POS': [100, 101],
+        ...     'ID': ['.', '.'],
+        ...     'REF': ['G', 'T'],
+        ...     'ALT': ['A', 'C'],
+        ...     'QUAL': ['.', '.'],
+        ...     'FILTER': ['.', '.'],
+        ...     'INFO': ['.', '.'],
+        ...     'FORMAT': ['GT', 'GT'],
+        ...     'A': ['0/1', '1/1']
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.fetch('chr1-100-G-A')
+        CHROM     chr1
+        POS        100
+        ID           .
+        REF          G
+        ALT          A
+        QUAL         .
+        FILTER       .
+        INFO         .
+        FORMAT      GT
+        A          0/1
+        Name: 0, dtype: object
+        """
+        def one_row(r):
+            return f'{r.CHROM}-{r.POS}-{r.REF}-{r.ALT}' == variant
+        i = self.df.apply(one_row, axis=1)
+        return self.df[i].squeeze()

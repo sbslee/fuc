@@ -16,6 +16,8 @@ Changelog
 * Update :meth:`pycov.CovFrame.from_file` method to raise error if 'Chromosome' or 'Position' column is missing.
 * Rename ``names`` argument of :meth:`pycov.CovFrame.plot_region` method to ``samples``.
 * Add new argument ``legend`` to :meth:`pycov.CovFrame.plot_region` method.
+* Add new method :meth:`pyvcf.VcfFrame.fetch`.
+* Update :meth:`pyvcf.VcfFrame.strip` method to handle cases where one or more specified FORMAT keys are missing in a row.
 
 0.21.0 (2021-08-16)
 -------------------
