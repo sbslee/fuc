@@ -5168,3 +5168,51 @@ class VcfFrame:
             return f'{r.CHROM}-{r.POS}-{r.REF}-{r.ALT}' == variant
         i = self.df.apply(one_row, axis=1)
         return self.df[i].squeeze()
+
+    def pseudophase(self):
+        """
+        Perform pseudo haplotype phase.
+
+        Returns
+        -------
+        VcfFrame
+            Phased VcfFrame.
+
+        Examples
+        --------
+
+        >>> from fuc import pyvcf
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr2'],
+        ...     'POS': [100, 101],
+        ...     'ID': ['.', '.'],
+        ...     'REF': ['G', 'T'],
+        ...     'ALT': ['A', 'C'],
+        ...     'QUAL': ['.', '.'],
+        ...     'FILTER': ['.', '.'],
+        ...     'INFO': ['.', '.'],
+        ...     'FORMAT': ['GT', 'GT'],
+        ...     'A': ['0/1', '1/1']
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A
+        0  chr1  100  .   G   A    .      .    .     GT  0/1
+        1  chr2  101  .   T   C    .      .    .     GT  1/1
+        >>> vf.pseudophase().df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A
+        0  chr1  100  .   G   A    .      .    .     GT  0|1
+        1  chr2  101  .   T   C    .      .    .     GT  1|1
+        """
+        def one_row(r):
+
+            def one_gt(g):
+                l = g.split(':')
+                l[0] = l[0].replace('/', '|')
+                return ':'.join(l)
+
+            r[9:] = r[9:].apply(one_gt)
+
+            return r
+
+        return self.__class__(self.copy_meta(), self.df.apply(one_row, axis=1))
