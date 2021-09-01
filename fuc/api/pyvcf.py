@@ -5171,7 +5171,7 @@ class VcfFrame:
 
     def pseudophase(self):
         """
-        Perform pseudo haplotype phase.
+        Perform the pseudo haplotype phasing.
 
         Returns
         -------
