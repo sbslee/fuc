@@ -7,7 +7,7 @@ Changelog
 * Update :meth:`pyvcf.VcfFrame.from_file` method to be more memory efficient by pre-specifying data type for each VCF column.
 * Update :meth:`pyvcf.VcfFrame.from_file` method to raise error if one or more VCF columns are missing, except for the FORMAT column (i.e. "sites-only" VCFs).
 * Add new property ``sites_only`` to :class:`pyvcf.VcfFrame`.
-* Update :meth:`pyvcf.VcfFrame.merge` method to handle sites-only VCfs.
+* Update :meth:`pyvcf.VcfFrame.merge` method to handle sites-only VCFs.
 * Add new method :meth:`pyvcf.VcfFrame.filter_vcf`.
 * Add new arguments ``--bed`` and ``--vcf`` to :command:`vcf-slice` command.
 * Update :meth:`common.parse_region` method to output ``NaN`` instead of 0.
