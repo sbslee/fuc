@@ -19,6 +19,7 @@ Changelog
 * Add new method :meth:`pyvcf.VcfFrame.fetch`.
 * Update :meth:`pyvcf.VcfFrame.strip` method to handle cases where one or more specified FORMAT keys are missing in a row.
 * Add new method :meth:`pyvcf.VcfFrame.pseudophase`.
+* Update :meth:`pyvcf.VcfFrame.filter_vcf` method to also use REF and ALT (previously it only used CHROM and POS).
 
 0.21.0 (2021-08-16)
 -------------------

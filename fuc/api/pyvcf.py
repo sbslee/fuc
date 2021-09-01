@@ -3752,7 +3752,7 @@ class VcfFrame:
 
     def filter_vcf(self, vcf, opposite=False, as_index=False):
         """
-        Select rows that overlap with the given VCF data.
+        Select rows that overlap with the other VCF.
 
         Parameters
         ----------
@@ -3838,10 +3838,10 @@ class VcfFrame:
             vf = vcf
         else:
             vf = VcfFrame.from_file(vcf)
-        df1 = self.df[['CHROM', 'POS']]
-        df2 = vf.df[['CHROM', 'POS', 'REF']]
+        df1 = self.df[['CHROM', 'POS', 'REF', 'ALT']]
+        df2 = vf.df[['CHROM', 'POS', 'REF', 'ALT', 'ID']]
         df3 = df1.merge(df2, how='left')
-        i = ~pd.isna(df3.REF)
+        i = ~pd.isna(df3.ID)
         i.name = None
         if opposite:
             i = ~i
