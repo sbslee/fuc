@@ -20,6 +20,7 @@ Changelog
 * Update :meth:`pyvcf.VcfFrame.strip` method to handle cases where one or more specified FORMAT keys are missing in a row.
 * Add new method :meth:`pyvcf.VcfFrame.pseudophase`.
 * Update :meth:`pyvcf.VcfFrame.filter_vcf` method to also use REF and ALT (previously it only used CHROM and POS).
+* Add new argument ``--zero`` to :command:`bam-depth` command.
 
 0.21.0 (2021-08-16)
 -------------------

@@ -44,9 +44,15 @@ def create_parser(subparsers):
         metavar='TEXT',
         help="Only report depth in specified region ('chrom:start-end')."
     )
+    parser.add_argument(
+        '--zero',
+        action='store_true',
+        help='Output all positions including those with zero depth.'
+    )
 
 def main(args):
     cf = api.pycov.CovFrame.from_bam(
-        bam=args.bam, fn=args.fn, bed=args.bed, region=args.region
+        bam=args.bam, fn=args.fn, bed=args.bed, region=args.region,
+        zero=args.zero
     )
     sys.stdout.write(cf.to_string())
