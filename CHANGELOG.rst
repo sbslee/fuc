@@ -15,12 +15,12 @@ Changelog
 * Update :meth:`pycov.CovFrame.from_file` method to be more memory efficient by pre-specifying data type for each of the columns in the input text file.
 * Update :meth:`pycov.CovFrame.from_file` method to raise error if 'Chromosome' or 'Position' column is missing.
 * Rename ``names`` argument of :meth:`pycov.CovFrame.plot_region` method to ``samples``.
-* Add new argument ``legend`` to :meth:`pycov.CovFrame.plot_region` method.
 * Add new method :meth:`pyvcf.VcfFrame.fetch`.
 * Update :meth:`pyvcf.VcfFrame.strip` method to handle cases where one or more specified FORMAT keys are missing in a row.
 * Add new method :meth:`pyvcf.VcfFrame.pseudophase`.
 * Update :meth:`pyvcf.VcfFrame.filter_vcf` method to also use REF and ALT (previously it only used CHROM and POS).
 * Add new argument ``--zero`` to :command:`bam-depth` command.
+* Update :meth:`pycov.CovFrame.plot_region` method: 1) New argument ``label`` has been added. 2) Argument ``samples`` has been deprecated. 3) New argument ``sample`` has been added. 4) From now on, the method will plot profile for single sample. 5) From now on, argument ``region`` can be omitted if there is only one contig.
 
 0.21.0 (2021-08-16)
 -------------------

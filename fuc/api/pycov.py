@@ -110,6 +110,11 @@ class CovFrame:
         self._df = value.reset_index(drop=True)
 
     @property
+    def contigs(self):
+        """list : List of contig names."""
+        return list(self.df.Chromosome.unique())
+
+    @property
     def samples(self):
         """list : List of the sample names."""
         return self.df.columns[2:].to_list()
@@ -313,23 +318,20 @@ class CovFrame:
         return cls(pd.read_table(fn, dtype=dtype))
 
     def plot_region(
-        self, region, samples=None, legend='auto', ax=None, figsize=None,
+        self, sample, region=None, samples=None, label=None, ax=None, figsize=None,
         **kwargs
     ):
         """
         Create read depth profile for specified region.
 
-        By default, the method will create a profile for every sample in the
-        CovFrame. Use ``samples`` to specify which samples to plot.
+        Region can be omitted if there is only one contig in the CovFrame.
 
         Parameters
         ----------
-        region : str
+        region : str, optional
             Target region ('chrom:start-end').
-        samples : str or list, optional
-            Sample name or list of names to plot.
-        legend : {'auto', 'brief', 'full', or False}, default: 'auto'
-            How to draw the legend according to :meth:`seaborn.lineplot`.
+        label : str, optional
+            Label to use for the data points.
         ax : matplotlib.axes.Axes, optional
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
@@ -345,8 +347,10 @@ class CovFrame:
 
         Examples
         --------
+        Below is a simple example:
 
         .. plot::
+            :context: close-figs
 
             >>> import matplotlib.pyplot as plt
             >>> import numpy as np
@@ -358,25 +362,33 @@ class CovFrame:
             ...     'B': pycov.simulate(loc=25, scale=7),
             ... }
             >>> cf = pycov.CovFrame.from_dict(data)
-            >>> cf.plot_region('chr1:1500-1800')
+            >>> ax = cf.plot_region('A')
+            >>> plt.tight_layout()
+
+        We can draw multiple profiles in one plot:
+
+        .. plot::
+            :context: close-figs
+
+            >>> ax = cf.plot_region('A', label='A')
+            >>> cf.plot_region('B', label='B', ax=ax)
+            >>> ax.legend()
             >>> plt.tight_layout()
         """
-        cf = self.slice(region)
-
-        if samples is None:
-            samples = cf.samples
-
-        if isinstance(samples, str):
-            samples = [samples]
-
-        headers = ['Position'] + samples
-        df = cf.df[headers]
-        df = df.set_index('Position')
+        if region is None:
+            if len(self.contigs) == 1:
+                cf = self.copy()
+            else:
+                raise ValueError('Multiple contigs found')
+        else:
+            cf = self.slice(region)
 
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
-        sns.lineplot(data=df, ax=ax, legend=legend, **kwargs)
+        sns.lineplot(
+            data=cf.df, x='Position', y=sample, ax=ax, label=label, **kwargs
+        )
 
         ax.set_ylabel('Depth')
 
@@ -650,3 +662,11 @@ class CovFrame:
         ax.set_ylabel('Fraction of sampled bases')
 
         return ax
+
+    def copy_df(self):
+        """Return a copy of the dataframe."""
+        return self.df.copy()
+
+    def copy(self):
+        """Return a copy of the CovFrame."""
+        return self.__class__(self.copy_df())
