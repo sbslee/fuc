@@ -8,6 +8,7 @@ also contains many useful plotting methods such as ``CovFrame.plot_region``
 and ``CovFrame.plot_uniformity``.
 """
 from io import StringIO
+import gzip
 
 from . import common, pybam
 
@@ -273,14 +274,16 @@ class CovFrame:
         return cls(pd.DataFrame(data))
 
     @classmethod
-    def from_file(cls, fn):
+    def from_file(cls, fn, compression=False):
         """
         Construct CovFrame from a text file containing read depth data.
 
         Parameters
         ----------
         fn : str
-            Tab-delimited file containing read depth data.
+            TSV file containing read depth data (zipped or unzipped).
+        compression : bool, default: False
+            If True, use GZIP decompression regardless of filename.
 
         Returns
         -------
@@ -296,8 +299,14 @@ class CovFrame:
         CovFrame.from_dict
             Construct CovFrame from dict of array-like or dicts.
         """
-        with open(fn) as f:
-            headers = f.readline().strip().split('\t')
+        if fn.endswith('.gz') or compression:
+            f = gzip.open(fn, 'rt')
+        else:
+            f = open(fn)
+
+        headers = f.readline().strip().split('\t')
+
+        f.close()
 
         if 'Chromosome' not in headers:
             raise ValueError("Input file is missing 'Chromosome' column")

@@ -23,6 +23,7 @@ Changelog
 * Update :meth:`pycov.CovFrame.plot_region` method: 1) New argument ``label`` has been added. 2) Argument ``samples`` has been deprecated. 3) New argument ``sample`` has been added. 4) From now on, the method will plot profile for single sample. 5) From now on, argument ``region`` can be omitted if there is only one contig.
 * Add new property ``contigs`` to :class:`pyvcf.CovFrame`.
 * Add new methods :meth:`pyvcf.CovFrame.copy` and :meth:`pyvcf.CovFrame.copy_df`.
+* Update :meth:`pyvcf.CovFrame.from_file` method to accept GZIP compressed files. Also add new argument ``compression``.
 
 0.21.0 (2021-08-16)
 -------------------
