@@ -1647,7 +1647,8 @@ class VcfFrame:
         return self.__class__(self.copy_meta(), self.copy_df())
 
     def to_file(self, fn, compression=False):
-        """Write the VcfFrame to a VCF file.
+        """
+        Write the VcfFrame to a VCF file.
 
         If the file name ends with '.gz', the method will automatically
         use the BGZF compression when writing the file.

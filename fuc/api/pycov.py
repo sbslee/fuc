@@ -281,7 +281,7 @@ class CovFrame:
         Parameters
         ----------
         fn : str
-            TSV file containing read depth data (zipped or unzipped).
+            TSV file (zipped or unzipped).
         compression : bool, default: False
             If True, use GZIP decompression regardless of filename.
 
@@ -679,3 +679,35 @@ class CovFrame:
     def copy(self):
         """Return a copy of the CovFrame."""
         return self.__class__(self.copy_df())
+
+    def to_string(self):
+        """
+        Render the CovFrame to a console-friendly tabular output.
+
+        Returns
+        -------
+        str
+            String representation of the CovFrame.
+        """
+        return self.df.to_csv(index=False, sep='\t')
+
+    def to_file(self, fn, compression=False):
+        """
+        Write the CovFrame to a TSV file.
+
+        If the file name ends with '.gz', the method will automatically
+        use the GZIP compression when writing the file.
+
+        Parameters
+        ----------
+        fn : str
+            TSV file (zipped or unzipped).
+        compression : bool, default: False
+            If True, use the GZIP compression.
+        """
+        if fn.endswith('.gz') or compression:
+            f = gzip.open(fn, 'wt')
+        else:
+            f = open(fn, 'w')
+        f.write(self.to_string())
+        f.close()

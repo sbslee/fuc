@@ -24,6 +24,7 @@ Changelog
 * Add new property ``contigs`` to :class:`pyvcf.CovFrame`.
 * Add new methods :meth:`pyvcf.CovFrame.copy` and :meth:`pyvcf.CovFrame.copy_df`.
 * Update :meth:`pyvcf.CovFrame.from_file` method to accept GZIP compressed files. Also add new argument ``compression``.
+* Add new methods :meth:`pyvcf.CovFrame.to_string` and :meth:`pyvcf.CovFrame.to_file`.
 
 0.21.0 (2021-08-16)
 -------------------
