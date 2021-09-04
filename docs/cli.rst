@@ -66,7 +66,7 @@ bam-depth
 
    $ fuc bam-depth -h
    usage: fuc bam-depth [-h] [--bam PATH [PATH ...]] [--fn PATH] [--bed PATH]
-                        [--region TEXT]
+                        [--region TEXT] [--zero]
    
    This command will compute read depth from input SAM/BAM/CRAM files.
    
@@ -85,6 +85,7 @@ bam-depth
      --fn PATH             File containing one input filename per line.
      --bed PATH            BED file.
      --region TEXT         Only report depth in specified region ('chrom:start-end').
+     --zero                Output all positions including those with zero depth.
 
 bam-head
 ========
@@ -311,13 +312,15 @@ fuc-demux
    $ fuc fuc-demux -h
    usage: fuc fuc-demux [-h] [--sheet PATH] reports output
    
-   This command will parse the Reports directory from the bcl2fastq or bcl2fastq2 prograrm.
+   This command will parse, and extract various statistics from, HTML files in the Reports directory created by the bcl2fastq or bcl2fastq2 prograrm.
    
-   After creating the output directory, the command will write the following files:
-     - flowcell_summary.csv
-     - lane_summary.csv
-     - top_unknown_barcodes.csv
+   After creating an output directory, the command will write the following files:
+     - flowcell-summary.csv
+     - lane-summary.csv
+     - top-unknown-barcodes.csv
      - reports.pdf
+   
+   Use '--sheet' to sort samples in the lane-summary.csv file in the same order as your SampleSheet.csv file. You can also provide a modified version of your SampleSheet.csv file to subset samples for the lane-summary.csv and reports.pdf files.
    
    Usage examples:
      $ fuc fuc-demux Reports output
@@ -329,7 +332,7 @@ fuc-demux
    
    Optional arguments:
      -h, --help    Show this help message and exit.
-     --sheet PATH  SampleSheet.csv file. When provided, samples in the lane_summary.csv file will be sorted in the same order as in the SampleSheet.csv file.
+     --sheet PATH  SampleSheet.csv file. Used for sorting and/or subsetting samples.
 
 fuc-exist
 =========
