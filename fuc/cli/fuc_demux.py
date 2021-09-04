@@ -8,13 +8,15 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 description = f"""
-This command will parse the Reports directory from the bcl2fastq or bcl2fastq2 prograrm.
+This command will parse, and extract various statistics from, HTML files in the Reports directory created by the bcl2fastq or bcl2fastq2 prograrm.
 
-After creating the output directory, the command will write the following files:
-  - flowcell_summary.csv
-  - lane_summary.csv
-  - top_unknown_barcodes.csv
+After creating an output directory, the command will write the following files:
+  - flowcell-summary.csv
+  - lane-summary.csv
+  - top-unknown-barcodes.csv
   - reports.pdf
+
+Use '--sheet' to sort samples in the lane-summary.csv file in the same order as your SampleSheet.csv file. You can also provide a modified version of your SampleSheet.csv file to subset samples for the lane-summary.csv and reports.pdf files.
 
 Usage examples:
   $ fuc {api.common._script_name()} Reports output
@@ -39,7 +41,7 @@ def create_parser(subparsers):
     parser.add_argument(
         '--sheet',
         metavar='PATH',
-        help='SampleSheet.csv file. When provided, samples in the lane_summary.csv file will be sorted in the same order as in the SampleSheet.csv file.'
+        help='SampleSheet.csv file. Used for sorting and/or subsetting samples.'
     )
 
 def main(args):
@@ -96,9 +98,9 @@ def main(args):
     df2_string = df2.to_csv(index=False, na_rep='NaN')
     df3_string = df3.to_csv(index=False)
 
-    with open(f'{args.output}/flowcell_summary.csv', 'w') as f:
+    with open(f'{args.output}/flowcell-summary.csv', 'w') as f:
         f.write(df1_string)
-    with open(f'{args.output}/lane_summary.csv', 'w') as f:
+    with open(f'{args.output}/lane-summary.csv', 'w') as f:
         f.write(df2_string)
-    with open(f'{args.output}/top_unknown_barcodes.csv', 'w') as f:
+    with open(f'{args.output}/top-unknown-barcodes.csv', 'w') as f:
         f.write(df3_string)
