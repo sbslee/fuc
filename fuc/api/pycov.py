@@ -3,9 +3,12 @@ The pycov submodule is designed for working with depth of coverage data
 from sequence alingment files (SAM/BAM/CRAM). It implements
 ``pycov.CovFrame`` which stores read depth data as ``pandas.DataFrame`` via
 the `pysam <https://pysam.readthedocs.io/en/latest/api.html>`_ package to
-allow fast computation and easy manipulation.
+allow fast computation and easy manipulation. The ``pycov.CovFrame`` class
+also contains many useful plotting methods such as ``CovFrame.plot_region``
+and ``CovFrame.plot_uniformity``.
 """
 from io import StringIO
+import gzip
 
 from . import common, pybam
 
@@ -106,6 +109,11 @@ class CovFrame:
     @df.setter
     def df(self, value):
         self._df = value.reset_index(drop=True)
+
+    @property
+    def contigs(self):
+        """list : List of contig names."""
+        return list(self.df.Chromosome.unique())
 
     @property
     def samples(self):
@@ -266,14 +274,16 @@ class CovFrame:
         return cls(pd.DataFrame(data))
 
     @classmethod
-    def from_file(cls, fn):
+    def from_file(cls, fn, compression=False):
         """
         Construct CovFrame from a text file containing read depth data.
 
         Parameters
         ----------
         fn : str
-            Text file containing read depth data.
+            TSV file (zipped or unzipped).
+        compression : bool, default: False
+            If True, use GZIP decompression regardless of filename.
 
         Returns
         -------
@@ -289,20 +299,48 @@ class CovFrame:
         CovFrame.from_dict
             Construct CovFrame from dict of array-like or dicts.
         """
-        return cls(pd.read_table(fn))
+        if fn.endswith('.gz') or compression:
+            f = gzip.open(fn, 'rt')
+        else:
+            f = open(fn)
+
+        headers = f.readline().strip().split('\t')
+
+        f.close()
+
+        if 'Chromosome' not in headers:
+            raise ValueError("Input file is missing 'Chromosome' column")
+
+        if 'Position' not in headers:
+            raise ValueError("Input file is missing 'Position' column")
+
+        dtype = {}
+
+        for header in headers:
+            if header == 'Chromosome':
+                dtype[header] = str
+            elif header == 'Position':
+                dtype[header] = float
+            else:
+                dtype[header] = float
+
+        return cls(pd.read_table(fn, dtype=dtype))
 
     def plot_region(
-        self, region, names=None, ax=None, figsize=None, **kwargs
+        self, sample, region=None, samples=None, label=None, ax=None, figsize=None,
+        **kwargs
     ):
         """
-        Create a read depth profile for the region.
+        Create read depth profile for specified region.
+
+        Region can be omitted if there is only one contig in the CovFrame.
 
         Parameters
         ----------
-        region : str
-            Region (‘chrom:start-end’).
-        names : str or list, optional
-            Sample name or list of sample names.
+        region : str, optional
+            Target region ('chrom:start-end').
+        label : str, optional
+            Label to use for the data points.
         ax : matplotlib.axes.Axes, optional
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
@@ -318,8 +356,10 @@ class CovFrame:
 
         Examples
         --------
+        Below is a simple example:
 
         .. plot::
+            :context: close-figs
 
             >>> import matplotlib.pyplot as plt
             >>> import numpy as np
@@ -331,25 +371,33 @@ class CovFrame:
             ...     'B': pycov.simulate(loc=25, scale=7),
             ... }
             >>> cf = pycov.CovFrame.from_dict(data)
-            >>> cf.plot_region('chr1:1500-1800')
+            >>> ax = cf.plot_region('A')
+            >>> plt.tight_layout()
+
+        We can draw multiple profiles in one plot:
+
+        .. plot::
+            :context: close-figs
+
+            >>> ax = cf.plot_region('A', label='A')
+            >>> cf.plot_region('B', label='B', ax=ax)
+            >>> ax.legend()
             >>> plt.tight_layout()
         """
-        chrom, start, end = common.parse_region(region)
-        cf = self.slice(region)
-        if names is None:
-            names = cf.samples
-        if isinstance(names, str):
-            names = [names]
-        headers = ['Position'] + names
-        df = cf.df[headers]
-        df = df.set_index('Position')
-        if kwargs is None:
-            kwargs = {}
+        if region is None:
+            if len(self.contigs) == 1:
+                cf = self.copy()
+            else:
+                raise ValueError('Multiple contigs found')
+        else:
+            cf = self.slice(region)
 
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
 
-        sns.lineplot(data=df, ax=ax, **kwargs)
+        sns.lineplot(
+            data=cf.df, x='Position', y=sample, ax=ax, label=label, **kwargs
+        )
 
         ax.set_ylabel('Depth')
 
@@ -405,9 +453,9 @@ class CovFrame:
         """
         chrom, start, end = common.parse_region(region)
         df = self.df[self.df.Chromosome == chrom]
-        if start:
+        if not pd.isna(start):
             df = df[df.Position >= start]
-        if end:
+        if not pd.isna(end):
             df = df[df.Position <= end]
         return self.__class__(df)
 
@@ -623,3 +671,43 @@ class CovFrame:
         ax.set_ylabel('Fraction of sampled bases')
 
         return ax
+
+    def copy_df(self):
+        """Return a copy of the dataframe."""
+        return self.df.copy()
+
+    def copy(self):
+        """Return a copy of the CovFrame."""
+        return self.__class__(self.copy_df())
+
+    def to_string(self):
+        """
+        Render the CovFrame to a console-friendly tabular output.
+
+        Returns
+        -------
+        str
+            String representation of the CovFrame.
+        """
+        return self.df.to_csv(index=False, sep='\t')
+
+    def to_file(self, fn, compression=False):
+        """
+        Write the CovFrame to a TSV file.
+
+        If the file name ends with '.gz', the method will automatically
+        use the GZIP compression when writing the file.
+
+        Parameters
+        ----------
+        fn : str
+            TSV file (zipped or unzipped).
+        compression : bool, default: False
+            If True, use the GZIP compression.
+        """
+        if fn.endswith('.gz') or compression:
+            f = gzip.open(fn, 'wt')
+        else:
+            f = open(fn, 'w')
+        f.write(self.to_string())
+        f.close()

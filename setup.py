@@ -12,7 +12,7 @@ setup(
     version=__version__,
     author='Seung-been "Steven" Lee',
     author_email='sbstevenlee@gmail.com',
-    description=('Frequently used commands in bioinformatics'),
+    description='Frequently used commands in bioinformatics',
     long_description=open('README.rst').read(),
     long_description_content_type='text/x-rst',
     url='https://github.com/sbslee/fuc',

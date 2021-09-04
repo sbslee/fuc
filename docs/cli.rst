@@ -45,7 +45,7 @@ For getting help on the fuc CLI:
        vcf-filter   Filter a VCF file.
        vcf-merge    Merge two or more VCF files.
        vcf-rename   Rename the samples in a VCF file.
-       vcf-slice    Slice a VCF file.
+       vcf-slice    Slice a VCF file for one or more specified regions.
        vcf-vcf2bed  Convert a VCF file to a BED file.
        vcf-vep      Filter a VCF file annotated by Ensembl VEP.
    
@@ -66,11 +66,13 @@ bam-depth
 
    $ fuc bam-depth -h
    usage: fuc bam-depth [-h] [--bam PATH [PATH ...]] [--fn PATH] [--bed PATH]
-                        [--region TEXT]
+                        [--region TEXT] [--zero]
    
-   This command will compute read depth from the input SAM/BAM/CRAM files.
+   This command will compute read depth from input SAM/BAM/CRAM files.
    
-   Either the '--bam' or '--fn' argument must be provided, but not both.
+   Input files must be specified with either '--bam' or '--fn'.
+   
+   By default, the command will count all reads within the alignment file. Use '--bed' or '--region' to specify target regions. When you do this, pay attention to the 'chr' string in contig names (e.g. 'chr1' vs. '1').
    
    Usage examples:
      $ fuc bam-depth --bam 1.bam 2.bam --bed in.bed > out.tsv
@@ -83,6 +85,7 @@ bam-depth
      --fn PATH             File containing one input filename per line.
      --bed PATH            BED file.
      --region TEXT         Only report depth in specified region ('chrom:start-end').
+     --zero                Output all positions including those with zero depth.
 
 bam-head
 ========
@@ -309,13 +312,15 @@ fuc-demux
    $ fuc fuc-demux -h
    usage: fuc fuc-demux [-h] [--sheet PATH] reports output
    
-   This command will parse the Reports directory from the bcl2fastq or bcl2fastq2 prograrm.
+   This command will parse, and extract various statistics from, HTML files in the Reports directory created by the bcl2fastq or bcl2fastq2 prograrm.
    
-   After creating the output directory, the command will write the following files:
-     - flowcell_summary.csv
-     - lane_summary.csv
-     - top_unknown_barcodes.csv
+   After creating an output directory, the command will write the following files:
+     - flowcell-summary.csv
+     - lane-summary.csv
+     - top-unknown-barcodes.csv
      - reports.pdf
+   
+   Use '--sheet' to sort samples in the lane-summary.csv file in the same order as your SampleSheet.csv file. You can also provide a modified version of your SampleSheet.csv file to subset samples for the lane-summary.csv and reports.pdf files.
    
    Usage examples:
      $ fuc fuc-demux Reports output
@@ -327,7 +332,7 @@ fuc-demux
    
    Optional arguments:
      -h, --help    Show this help message and exit.
-     --sheet PATH  SampleSheet.csv file. When provided, samples in the lane_summary.csv file will be sorted in the same order as in the SampleSheet.csv file.
+     --sheet PATH  SampleSheet.csv file. Used for sorting and/or subsetting samples.
 
 fuc-exist
 =========
@@ -550,7 +555,8 @@ ngs-hc
 .. code-block:: text
 
    $ fuc ngs-hc -h
-   usage: fuc ngs-hc [-h] [--bed PATH] [--dbsnp PATH] [--force] [--keep]
+   usage: fuc ngs-hc [-h] [--bed PATH] [--dbsnp PATH] [--job TEXT] [--force]
+                     [--keep]
                      manifest fasta output qsub java1 java2
    
    This command will prepare a pipeline that performs germline short variant discovery.
@@ -578,6 +584,7 @@ ngs-hc
      -h, --help    Show this help message and exit.
      --bed PATH    BED file.
      --dbsnp PATH  VCF file from dbSNP.
+     --job TEXT    Job submission ID for SGE.
      --force       Overwrite the output directory if it already exists.
      --keep        Keep temporary files.
 
@@ -633,27 +640,27 @@ ngs-pon
    The pipeline is based on GATK's tutorial "(How to) Call somatic mutations using GATK4 Mutect2" (https://gatk.broadinstitute.org/hc/en-us/articles/360035531132).
    
    Dependencies:
-     - GATK: Used for constructing PoN.
+     - GATK: Required for constructing PoN.
    
    Manifest columns:
      - BAM: Path to recalibrated BAM file.
    
    Usage examples:
-     $ fuc ngs-pon manifest.csv ref.fa output_dir "-q queue_name -pe pe_name 10" "-Xmx15g -Xms15g"
-     $ fuc ngs-pon manifest.csv ref.fa output_dir "-l h='node_A|node_B' -pe pe_name 10" "-Xmx15g -Xms15g"
+     $ fuc ngs-pon manifest.csv ref.fa output_dir "-q queue_name" "-Xmx15g -Xms15g"
+     $ fuc ngs-pon manifest.csv ref.fa output_dir "-l h='node_A|node_B'" "-Xmx15g -Xms15g"
    
    Positional arguments:
      manifest    Sample manifest CSV file.
      fasta       Reference FASTA file.
      output      Output directory.
-     qsub        Options for qsub.
-     java        Options for Java.
+     qsub        SGE resoruce to request for qsub.
+     java        Java resoruce to request for GATK.
    
    Optional arguments:
      -h, --help  Show this help message and exit.
      --bed PATH  BED file.
      --force     Overwrite the output directory if it already exists.
-     --keep      Remove temporary files.
+     --keep      Keep temporary files.
 
 tbl-merge
 =========
@@ -820,23 +827,31 @@ vcf-slice
 .. code-block:: text
 
    $ fuc vcf-slice -h
-   usage: fuc vcf-slice [-h] vcf region
+   usage: fuc vcf-slice [-h] [--region TEXT] [--bed PATH] [--vcf PATH] input
    
-   This command will slice a VCF file (both zipped and unzipped).
+   This command will slice a VCF file for one or more specified regions.
+   
+   Target regions can be specified with either '--region', '--bed', or '--vcf'.
+   
+   Pay attention to the 'chr' string in contig names (e.g. 'chr1' vs. '1').
    
    Usage examples:
-     $ fuc vcf-slice in.vcf chr1 > sliced.vcf
-     $ fuc vcf-slice in.vcf chr1:100-300 > sliced.vcf
-     $ fuc vcf-slice in.vcf chr1:100 > sliced.vcf
-     $ fuc vcf-slice in.vcf chr1:100- > sliced.vcf
-     $ fuc vcf-slice in.vcf chr1:-300 > sliced.vcf
+     $ fuc vcf-slice in.vcf --region 1 > out.vcf
+     $ fuc vcf-slice in.vcf --region 1:100-300 > out.vcf
+     $ fuc vcf-slice in.vcf --region 1:100 > out.vcf
+     $ fuc vcf-slice in.vcf --region chr1:100- > out.vcf
+     $ fuc vcf-slice in.vcf --region chr1:-300 > out.vcf
+     $ fuc vcf-slice in.vcf --bed targets.bed > out.vcf
+     $ fuc vcf-slice in.vcf --vcf targets.vcf > out.vcf
    
    Positional arguments:
-     vcf         VCF file.
-     region      Region ('chrom:start-end').
+     input          Input VCF file (zipped or unzipped).
    
    Optional arguments:
-     -h, --help  Show this help message and exit.
+     -h, --help     Show this help message and exit.
+     --region TEXT  Target region to use for slicing ('chrom:start-end').
+     --bed PATH     BED file to use for slicing (zipped or unzipped).
+     --vcf PATH     VCF file to use for slicing (zipped or unzipped).
 
 vcf-vcf2bed
 ===========

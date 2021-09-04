@@ -14,7 +14,7 @@ Below is the list of submodules available in the fuc API:
 - **common** : The common submodule is used by other fuc submodules such as pyvcf and pybed. It also provides many day-to-day actions used in the field of bioinformatics.
 - **pybam** : The pybam submodule is designed for working with sequence alignment files (SAM/BAM/CRAM). It essentially wraps the `pysam <https://pysam.readthedocs.io/en/latest/api.html>`_ package to allow fast computation and easy manipulation.
 - **pybed** : The pybed submodule is designed for working with BED files. It implements ``pybed.BedFrame`` which stores BED data as ``pandas.DataFrame`` via the `pyranges <https://github.com/biocore-ntnu/pyranges>`_ package to allow fast computation and easy manipulation. The submodule strictly adheres to the standard `BED specification <https://genome.ucsc.edu/FAQ/FAQformat.html>`_.
-- **pycov** : The pycov submodule is designed for working with depth of coverage data from sequence alingment files (SAM/BAM/CRAM). It implements ``pycov.CovFrame`` which stores read depth data as ``pandas.DataFrame`` via the `pysam <https://pysam.readthedocs.io/en/latest/api.html>`_ package to allow fast computation and easy manipulation.
+- **pycov** : The pycov submodule is designed for working with depth of coverage data from sequence alingment files (SAM/BAM/CRAM). It implements ``pycov.CovFrame`` which stores read depth data as ``pandas.DataFrame`` via the `pysam <https://pysam.readthedocs.io/en/latest/api.html>`_ package to allow fast computation and easy manipulation. The ``pycov.CovFrame`` class also contains many useful plotting methods such as ``CovFrame.plot_region`` and ``CovFrame.plot_uniformity``.
 - **pyfq** : The pyfq submodule is designed for working with FASTQ files. It implements ``pyfq.FqFrame`` which stores FASTQ data as ``pandas.DataFrame`` to allow fast computation and easy manipulation.
 - **pygff** : The pygff submodule is designed for working with GFF/GTF files. It implements ``pygff.GffFrame`` which stores GFF/GTF data as ``pandas.DataFrame`` to allow fast computation and easy manipulation. The submodule strictly adheres to the standard `GFF specification <https://github.com/The-Sequence-Ontology/Specifications/blob/master/gff3.md>`_.
 - **pymaf** : The pymaf submodule is designed for working with MAF files. It implements ``pymaf.MafFrame`` which stores MAF data as ``pandas.DataFrame`` to allow fast computation and easy manipulation. The ``pymaf.MafFrame`` class also contains many useful plotting methods such as ``MafFrame.plot_oncoplot`` and ``MafFrame.plot_summary``. The submodule strictly adheres to the standard `MAF specification <https://docs.gdc.cancer.gov/Data/File_Formats/MAF_Format/>`_.
@@ -29,62 +29,62 @@ For getting help on a specific submodule (e.g. pyvcf):
    from fuc import pyvcf
    help(pyvcf)
 
-fuc.api.common
-==============
+fuc.common
+==========
 
 .. automodule:: fuc.api.common
    :members:
 
-fuc.api.pybam
-=============
+fuc.pybam
+=========
 
 .. automodule:: fuc.api.pybam
    :members:
 
-fuc.api.pybed
-=============
+fuc.pybed
+=========
 
 .. automodule:: fuc.api.pybed
    :members:
 
-fuc.api.pycov
-=============
+fuc.pycov
+=========
 
 .. automodule:: fuc.api.pycov
    :members:
 
-fuc.api.pyfq
-============
+fuc.pyfq
+========
 
 .. automodule:: fuc.api.pyfq
    :members:
 
-fuc.api.pygff
-=============
+fuc.pygff
+=========
 
 .. automodule:: fuc.api.pygff
    :members:
 
-fuc.api.pymaf
-=============
+fuc.pymaf
+=========
 
 .. automodule:: fuc.api.pymaf
    :members:
 
-fuc.api.pysnpeff
-================
+fuc.pysnpeff
+============
 
 .. automodule:: fuc.api.pysnpeff
    :members:
 
-fuc.api.pyvcf
-=============
+fuc.pyvcf
+=========
 
 .. automodule:: fuc.api.pyvcf
    :members:
 
-fuc.api.pyvep
-=============
+fuc.pyvep
+=========
 
 .. automodule:: fuc.api.pyvep
    :members:

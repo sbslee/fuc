@@ -412,7 +412,7 @@ For getting help on a specific submodule (e.g. pyvcf):
 """.format(**d)
 
 for module in modules:
-    s = f'fuc.api.{module}\n'
+    s = f'fuc.{module}\n'
     s += '=' * (len(s)-1) + '\n'
     s += '\n'
     s += f'.. automodule:: fuc.api.{module}\n'

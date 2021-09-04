@@ -5,9 +5,11 @@ from .. import api
 import pysam
 
 description = f"""
-This command will compute read depth from the input SAM/BAM/CRAM files.
+This command will compute read depth from input SAM/BAM/CRAM files.
 
-Either the '--bam' or '--fn' argument must be provided, but not both.
+Input files must be specified with either '--bam' or '--fn'.
+
+By default, the command will count all reads within the alignment file. Use '--bed' or '--region' to specify target regions. When you do this, pay attention to the 'chr' string in contig names (e.g. 'chr1' vs. '1').
 
 Usage examples:
   $ fuc {api.common._script_name()} --bam 1.bam 2.bam --bed in.bed > out.tsv
@@ -42,9 +44,15 @@ def create_parser(subparsers):
         metavar='TEXT',
         help="Only report depth in specified region ('chrom:start-end')."
     )
+    parser.add_argument(
+        '--zero',
+        action='store_true',
+        help='Output all positions including those with zero depth.'
+    )
 
 def main(args):
     cf = api.pycov.CovFrame.from_bam(
-        bam=args.bam, fn=args.fn, bed=args.bed, region=args.region
+        bam=args.bam, fn=args.fn, bed=args.bed, region=args.region,
+        zero=args.zero
     )
     sys.stdout.write(cf.to_string())

@@ -99,7 +99,7 @@ def main(args):
     basenames = []
 
     for i, r in df.iterrows():
-        basename = os.path.basename(r.Tumor)
+        basename = api.pybam.tag_sm(r.Tumor)[0]
         basenames.append(basename)
 
         with open(f'{args.output}/shell/S1-{basename}.sh', 'w') as f:
@@ -133,7 +133,7 @@ def main(args):
             command2 += f' -I {r.Tumor}'
             command2 += f' -V {args.germline}'
             command2 += f' -L {args.output}/temp/{basename}.raw.vcf'
-            command2 += f' -O {args.output}/{basename}/temp/{basename}.tumor-pileups.table'
+            command2 += f' -O {args.output}/temp/{basename}.tumor-pileups.table'
 
             ######################
             # GetPileupSummaries #
@@ -145,7 +145,7 @@ def main(args):
             command3 += f' -I {r.Normal}'
             command3 += f' -V {args.germline}'
             command3 += f' -L {args.output}/temp/{basename}.raw.vcf'
-            command3 += f' -O {args.output}/{basename}/temp/{basename}.normal-pileups.table'
+            command3 += f' -O {args.output}/temp/{basename}.normal-pileups.table'
 
             ##########################
             # CalculateContamination #
@@ -167,7 +167,7 @@ def main(args):
             command5 += f' --QUIET'
             command5 += f' --java-options "{args.java}"'
             command5 += f' -I {args.output}/temp/{basename}.f1r2.tar.gz'
-            command5 += f' -I {args.output}/temp/{basename}.artifact-prior.tar.gz'
+            command5 += f' -O {args.output}/temp/{basename}.artifact-prior.tar.gz'
 
             #####################
             # FilterMutectCalls #
@@ -182,6 +182,7 @@ def main(args):
             command6 += f' --tumor-segmentation {args.output}/temp/{basename}.segments.tsv'
             command6 += f' -ob-priors {args.output}/temp/{basename}.artifact-prior.tar.gz'
             command6 += f' -O {args.output}/{basename}.filtered.vcf'
+            command6 += f' --filtering-stats {args.output}/temp/{basename}.filtered.vcf.filteringStats.tsv'
 
             f.write(
 f"""#!/bin/bash
@@ -208,7 +209,14 @@ source activate {api.common.conda_env()}
 {command6}
 
 # Remove temporary files.
-{remove} -r {args.output}/temp/*
+{remove} {args.output}/temp/{basename}.f1r2.tar.gz
+{remove} {args.output}/temp/{basename}.normal-pileups.table
+{remove} {args.output}/temp/{basename}.tumor-pileups.table
+{remove} {args.output}/temp/{basename}.raw.vcf
+{remove} {args.output}/temp/{basename}.contamination.table
+{remove} {args.output}/temp/{basename}.segments.tsv
+{remove} {args.output}/temp/{basename}.artifact-prior.tar.gz
+{remove} {args.output}/temp/{basename}.filtered.vcf.filteringStats.tsv
 """)
 
     with open(f'{args.output}/shell/qsubme.sh', 'w') as f:

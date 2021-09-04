@@ -37,9 +37,9 @@ class TestPyvcf(unittest.TestCase):
         vf3 = vf1.merge(vf2, how='outer', format='GT:DP')
         self.assertEqual(vf3.df.shape, (9, 15))
 
-    def test_compare(self):
+    def test_calculate_concordance(self):
         vf = pyvcf.VcfFrame.from_file(vcf_file1)
-        self.assertEqual(vf.compare('Steven', 'Sarah'), (1, 0, 0, 3))
+        self.assertEqual(vf.calculate_concordance('Steven', 'Sarah'), (1, 0, 0, 3))
 
     def test_filter_multialt(self):
         vf = pyvcf.VcfFrame.from_file(vcf_file1)
@@ -115,7 +115,7 @@ class TestCli(unittest.TestCase):
         self.assertEqual(len(result.stdout.strip().split('\n')), 10)
 
     def test_vfslice(self):
-        result = subprocess.run(['fuc', 'vcf-slice', vcf_file1, 'chr1:-300'], capture_output=True, text=True, check=True)
+        result = subprocess.run(['fuc', 'vcf-slice', vcf_file1, '--region', 'chr1:-300'], capture_output=True, text=True, check=True)
         self.assertEqual(len(result.stdout.strip().split('\n')), 5)
 
 if __name__ == '__main__':

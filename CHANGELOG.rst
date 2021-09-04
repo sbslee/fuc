@@ -1,6 +1,30 @@
 Changelog
 *********
 
+0.22.0 (2021-09-04)
+-------------------
+
+* Update :meth:`pyvcf.VcfFrame.from_file` method to be more memory efficient by pre-specifying data type for each VCF column.
+* Update :meth:`pyvcf.VcfFrame.from_file` method to raise error if one or more VCF columns are missing, except for the FORMAT column (i.e. "sites-only" VCFs).
+* Add new property ``sites_only`` to :class:`pyvcf.VcfFrame`.
+* Update :meth:`pyvcf.VcfFrame.merge` method to handle sites-only VCFs.
+* Add new method :meth:`pyvcf.VcfFrame.filter_vcf`.
+* Add new arguments ``--bed`` and ``--vcf`` to :command:`vcf-slice` command.
+* Update :meth:`common.parse_region` method to output ``NaN`` instead of 0.
+* Add new method :meth:`common.parse_variant`.
+* Update :meth:`pycov.CovFrame.from_file` method to be more memory efficient by pre-specifying data type for each of the columns in the input text file.
+* Update :meth:`pycov.CovFrame.from_file` method to raise error if 'Chromosome' or 'Position' column is missing.
+* Add new method :meth:`pyvcf.VcfFrame.fetch`.
+* Update :meth:`pyvcf.VcfFrame.strip` method to handle cases where one or more specified FORMAT keys are missing in a row.
+* Add new method :meth:`pyvcf.VcfFrame.pseudophase`.
+* Update :meth:`pyvcf.VcfFrame.filter_vcf` method to also use REF and ALT (previously it only used CHROM and POS).
+* Add new argument ``--zero`` to :command:`bam-depth` command.
+* Update :meth:`pycov.CovFrame.plot_region` method: 1) New argument ``label`` has been added. 2) Argument ``names`` has been deprecated. 3) New argument ``sample`` has been added. 4) From now on, by default the method will plot profile for single sample specified by ``sample`` as opposed to all samples at once. 5) From now on, argument ``region`` can be omitted if there is only one contig.
+* Add new property ``contigs`` to :class:`pyvcf.CovFrame`.
+* Add new methods :meth:`pyvcf.CovFrame.copy` and :meth:`pyvcf.CovFrame.copy_df`.
+* Update :meth:`pyvcf.CovFrame.from_file` method to accept GZIP compressed files. Also add new argument ``compression``.
+* Add new methods :meth:`pyvcf.CovFrame.to_string` and :meth:`pyvcf.CovFrame.to_file`.
+
 0.21.0 (2021-08-16)
 -------------------
 

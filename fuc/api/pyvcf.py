@@ -39,6 +39,11 @@ The nine required fields are:
 | 9   | FORMAT | ':'-separated genotype fields      | 'GT', 'GT:AD:DP'       |
 +-----+--------+------------------------------------+------------------------+
 
+You will sometimes come across VCFs that have only eight columns, and contain
+no FORMAT or sample-specific information. These are called "sites-only" VCFs,
+and represent variation that has been observed in a population. Generally,
+information about the population of origin should be included in the header.
+
 There are several common, reserved genotype keywords that are standards
 across the community. Currently, the pyvcf submodule is aware of the
 following:
@@ -48,13 +53,14 @@ following:
 * DP - Read depth (1, Integer)
 
 If sample annotation data are available for a given VCF file, use
-the :class:`AnnFrame` class to import the data.
+the :class:`common.AnnFrame` class to import the data.
 """
 
 import os
 import re
 import gzip
 from copy import deepcopy
+import warnings
 
 from . import pybed, common, pymaf
 
@@ -67,8 +73,17 @@ import matplotlib.pyplot as plt
 from matplotlib_venn import venn2, venn3
 import seaborn as sns
 
-HEADERS = ['CHROM', 'POS', 'ID', 'REF', 'ALT',
-           'QUAL', 'FILTER', 'INFO', 'FORMAT']
+HEADERS = {
+    'CHROM': str,
+    'POS': int,
+    'ID': str,
+    'REF': str,
+    'ALT': str,
+    'QUAL': str,
+    'FILTER': str,
+    'INFO': str,
+    'FORMAT': str,
+}
 
 CONTIGS = [
     '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13',
@@ -382,8 +397,11 @@ def gt_unphase(g):
     l[0] = '/'.join([str(b) for b in sorted([int(a) for a in gt.split('|')])])
     return ':'.join(l)
 
-def merge(vfs, how='inner', format='GT', sort=True, collapse=False):
-    """Merge VcfFrame objects.
+def merge(
+    vfs, how='inner', format='GT', sort=True, collapse=False
+):
+    """
+    Merge VcfFrame objects.
 
     Parameters
     ----------
@@ -825,6 +843,11 @@ class VcfFrame:
     def contigs(self):
         """list : List of contig names."""
         return list(self.df.CHROM.unique())
+
+    @property
+    def sites_only(self):
+        """bool : Whether the VCF is sites-only."""
+        return not self.samples or 'FORMAT' not in self.df.columns
 
     def add_af(self, decimals=3):
         """Compute AF using AD and add it to the FORMAT field.
@@ -1345,31 +1368,47 @@ class VcfFrame:
         >>> vf = pyvcf.VcfFrame.from_file('zipped.vcf.gz')
         >>> vf = pyvcf.VcfFrame.from_file('zipped.vcf', compression=True)
         """
-        meta = []
         skip_rows = 0
+
         if fn.startswith('~'):
             fn = os.path.expanduser(fn)
+
         if fn.endswith('.gz') or compression:
             f = bgzf.open(fn, 'rt')
         else:
             f = open(fn)
+
+        meta = []
+
         for line in f:
             if line.startswith('##'):
                 meta.append(line.strip())
                 skip_rows += 1
             elif line.startswith('#CHROM'):
-                headers = line.strip().split('\t')
+                columns = line.strip().split('\t')
                 skip_rows += 1
             else:
                 break
+
+        if '#CHROM' in columns:
+            columns[columns.index('#CHROM')] = 'CHROM'
+
+        for header in HEADERS:
+            if header not in columns and header != 'FORMAT':
+                raise ValueError(f"Required VCF column missing: '{header}'")
+
+        dtype = {**HEADERS, **{x: str for x in columns[9:]}}
+
         if meta_only:
-            df = pd.DataFrame(columns=headers)
+            df = pd.DataFrame(columns=columns)
         else:
             df = pd.read_table(
-                fn, skiprows=skip_rows, names=headers, nrows=nrows
+                fn, skiprows=skip_rows, names=columns,
+                nrows=nrows, dtype=dtype
             )
-        df = df.rename(columns={'#CHROM': 'CHROM'})
+
         f.close()
+
         return cls(meta, df)
 
     def calculate_concordance(self, a, b, c=None, mode='all'):
@@ -1608,7 +1647,8 @@ class VcfFrame:
         return self.__class__(self.copy_meta(), self.copy_df())
 
     def to_file(self, fn, compression=False):
-        """Write the VcfFrame to a VCF file.
+        """
+        Write the VcfFrame to a VCF file.
 
         If the file name ends with '.gz', the method will automatically
         use the BGZF compression when writing the file.
@@ -1688,32 +1728,72 @@ class VcfFrame:
         return s
 
     def strip(self, format='GT'):
-        """Remove unnecessary data from the VcfFrame.
+        """
+        Remove any unnecessary data.
 
         Parameters
         ----------
         format : str, default: 'GT'
-            FORMAT subfields to be retained (e.g. 'GT:AD:DP').
+            FORMAT keys to retain (e.g. 'GT:AD:DP').
 
         Returns
         -------
         VcfFrame
             Stripped VcfFrame.
+
+        Examples
+        --------
+
+        >>> from fuc import pyvcf
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102],
+        ...     'ID': ['.', '.', '.'],
+        ...     'REF': ['G', 'T', 'A'],
+        ...     'ALT': ['A', 'C', 'T'],
+        ...     'QUAL': ['.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.'],
+        ...     'INFO': ['.', '.', '.'],
+        ...     'FORMAT': ['GT:DP:AD', 'GT:DP:AD', 'GT'],
+        ...     'A': ['0/1:30:15,15', '1/1:28:0,28', '0/1']
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO    FORMAT             A
+        0  chr1  100  .   G   A    .      .    .  GT:DP:AD  0/1:30:15,15
+        1  chr1  101  .   T   C    .      .    .  GT:DP:AD   1/1:28:0,28
+        2  chr1  102  .   A   T    .      .    .        GT           0/1
+        >>> vf.strip('GT:DP').df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT       A
+        0  chr1  100  .   G   A    .      .    .  GT:DP  0/1:30
+        1  chr1  101  .   T   C    .      .    .  GT:DP  1/1:28
+        2  chr1  102  .   A   T    .      .    .  GT:DP   0/1:.
         """
-        def outfunc(r):
-            idx = [r.FORMAT.split(':').index(x) for x in format.split(':')]
-            infunc = lambda x: ':'.join([x.split(':')[i] for i in idx])
-            r.iloc[9:] = r.iloc[9:].apply(infunc)
+        new_keys = format.split(':')
+
+        def one_row(r):
+            old_keys = r.FORMAT.split(':')
+            indicies = [old_keys.index(x) if x in old_keys else None for x in new_keys]
+
+            def one_gt(g):
+                old_fields = g.split(':')
+                new_fields = ['.' if x is None else old_fields[x] for x in indicies]
+                return ':'.join(new_fields)
+
+            r.iloc[9:] = r.iloc[9:].apply(one_gt)
+
             return r
+
         df = self.df.copy()
         df[['ID', 'QUAL', 'FILTER', 'INFO']] = '.'
-        df = df.apply(outfunc, axis=1)
+        df = df.apply(one_row, axis=1)
         df.FORMAT = format
         vf = self.__class__([], df)
         return vf
 
-    def merge(self, other, how='inner', format='GT', sort=True,
-              collapse=False):
+    def merge(
+        self, other, how='inner', format='GT', sort=True, collapse=False
+    ):
         """
         Merge with the other VcfFrame.
 
@@ -1801,33 +1881,40 @@ class VcfFrame:
         1  chr1  101  .   T   C    .      .    .  GT:DP  0/1:29  1/1:30  0/0:24  0/1:31
         2  chr2  200  .   A   T    .      .    .  GT:DP   ./.:.   ./.:.  0/0:26  0/1:26
         """
-        vf1 = self.strip(format=format)
-        vf2 = other.strip(format=format)
-        dropped = ['ID', 'QUAL', 'FILTER', 'INFO', 'FORMAT']
-        shared = ['CHROM', 'POS', 'REF', 'ALT']
-        df = vf1.df.merge(vf2.df.drop(columns=dropped), on=shared, how=how)
+        if self.sites_only and other.sites_only:
+            df = pd.concat([self.df, other.df])
+            merged = self.__class__([], df)
+            merged = merged.drop_duplicates()
+        else:
+            vf1 = self.strip(format=format)
+            vf2 = other.strip(format=format)
+            dropped = ['ID', 'QUAL', 'FILTER', 'INFO', 'FORMAT']
+            shared = ['CHROM', 'POS', 'REF', 'ALT']
+            df = vf1.df.merge(vf2.df.drop(columns=dropped), on=shared, how=how)
 
-        # This ensures that the column order is intact when either of the
-        # dataframes is empty.
-        cols = vf1.df.columns.to_list() + vf2.df.columns[9:].to_list()
-        df = df[cols]
+            # This ensures that the column order is intact when either of the
+            # dataframes is empty.
+            cols = vf1.df.columns.to_list() + vf2.df.columns[9:].to_list()
+            df = df[cols]
 
-        df[dropped] = df[dropped].fillna('.')
-        df.FORMAT = format
-        def func(r):
-            n = len(r.FORMAT.split(':'))
-            x = './.'
-            for i in range(1, n):
-                x += ':.'
-            r = r.fillna(x)
-            return r
-        df = df.apply(func, axis=1)
-        vf3 = self.__class__([], df)
+            df[dropped] = df[dropped].fillna('.')
+            df.FORMAT = format
+            def func(r):
+                n = len(r.FORMAT.split(':'))
+                x = './.'
+                for i in range(1, n):
+                    x += ':.'
+                r = r.fillna(x)
+                return r
+            df = df.apply(func, axis=1)
+            merged = self.__class__([], df)
+
         if collapse:
-            vf3 = vf3.collapse()
+            merged = merged.collapse()
         if sort:
-            vf3 = vf3.sort()
-        return vf3
+            merged = merged.sort()
+
+        return merged
 
     def meta_keys(self):
         """Print metadata lines with a key."""
@@ -3664,6 +3751,105 @@ class VcfFrame:
         vf = self.__class__(self.copy_meta(), self.df[i])
         return vf
 
+    def filter_vcf(self, vcf, opposite=False, as_index=False):
+        """
+        Select rows that overlap with the other VCF.
+
+        Parameters
+        ----------
+        vcf : VcfFrame or str
+            VcfFrame or VCF file.
+        opposite : bool, default: False
+            If True, return rows that don't meet the said criteria.
+        as_index : bool, default: False
+            If True, return boolean index array instead of VcfFrame.
+
+        Returns
+        -------
+        VcfFrame or pandas.Series
+            Filtered VcfFrame or boolean index array.
+
+        Examples
+        --------
+        Assume we have the following data:
+
+        >>> from fuc import pyvcf
+        >>> data1 = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr4', 'chr8', 'chr8'],
+        ...     'POS': [100, 203, 192, 52, 788],
+        ...     'ID': ['.', '.', '.', '.', '.'],
+        ...     'REF': ['A', 'C', 'T', 'T', 'GA'],
+        ...     'ALT': ['C', 'G', 'A', 'G', 'G'],
+        ...     'QUAL': ['.', '.', '.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.', '.', '.'],
+        ...     'INFO': ['.', '.', '.', '.', '.'],
+        ...     'FORMAT': ['GT', 'GT', 'GT', 'GT', 'GT'],
+        ...     'A': ['0/1', '0/1', '0/1', '0/1', '0/1'],
+        ... }
+        >>> vf1 = pyvcf.VcfFrame.from_dict([], data1)
+        >>> vf1.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A
+        0  chr1  100  .   A   C    .      .    .     GT  0/1
+        1  chr1  203  .   C   G    .      .    .     GT  0/1
+        2  chr4  192  .   T   A    .      .    .     GT  0/1
+        3  chr8   52  .   T   G    .      .    .     GT  0/1
+        4  chr8  788  .  GA   G    .      .    .     GT  0/1
+        >>> data2 = {
+        ...     'CHROM': ['chr1', 'chr8'],
+        ...     'POS': [100, 788],
+        ...     'ID': ['.', '.'],
+        ...     'REF': ['A', 'GA'],
+        ...     'ALT': ['C', 'G'],
+        ...     'QUAL': ['.', '.'],
+        ...     'FILTER': ['.', '.'],
+        ...     'INFO': ['.', '.'],
+        ... }
+        >>> vf2 = pyvcf.VcfFrame.from_dict([], data2)
+        >>> vf2.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO
+        0  chr1  100  .   A   C    .      .    .
+        1  chr8  788  .  GA   G    .      .    .
+
+        We can select rows that overlap with the VCF data:
+
+        >>> vf1.filter_vcf(vf2).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A
+        0  chr1  100  .   A   C    .      .    .     GT  0/1
+        1  chr8  788  .  GA   G    .      .    .     GT  0/1
+
+        We can also remove those rows:
+
+        >>> vf1.filter_vcf(vf2, opposite=True).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A
+        0  chr1  203  .   C   G    .      .    .     GT  0/1
+        1  chr4  192  .   T   A    .      .    .     GT  0/1
+        2  chr8   52  .   T   G    .      .    .     GT  0/1
+
+        Finally, we can return boolean index array from the filtering:
+
+        >>> vf1.filter_vcf(vf2, as_index=True)
+        0     True
+        1    False
+        2    False
+        3    False
+        4     True
+        dtype: bool
+        """
+        if isinstance(vcf, VcfFrame):
+            vf = vcf
+        else:
+            vf = VcfFrame.from_file(vcf)
+        df1 = self.df[['CHROM', 'POS', 'REF', 'ALT']]
+        df2 = vf.df[['CHROM', 'POS', 'REF', 'ALT', 'ID']]
+        df3 = df1.merge(df2, how='left')
+        i = ~pd.isna(df3.ID)
+        i.name = None
+        if opposite:
+            i = ~i
+        if as_index:
+            return i
+        return self.__class__(self.copy_meta(), self.df[i])
+
     def subtract(self, a, b):
         """Subtract the genotype data of Sample B from Sample A.
 
@@ -3960,9 +4146,9 @@ class VcfFrame:
         """
         chrom, start, end = common.parse_region(region)
         df = self.df[self.df.CHROM == chrom]
-        if start:
+        if not pd.isna(start):
             df = df[df.POS >= start]
-        if end:
+        if not pd.isna(end):
             df = df[df.POS <= end]
         return self.__class__(self.copy_meta(), df)
 
@@ -4934,3 +5120,100 @@ class VcfFrame:
         df.columns = ['Locus', 'Sample', 'Other', 'Self']
         df = df[['Locus', 'Sample', 'Self', 'Other']]
         return df
+
+    def fetch(self, variant):
+        """
+        Fetch the VCF row that matches specified variant.
+
+        Parameters
+        ----------
+        variant : str
+            Target variant.
+
+        Returns
+        -------
+        pandas.Series
+            VCF row.
+
+        Examples
+        --------
+
+        >>> from fuc import pyvcf
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr2'],
+        ...     'POS': [100, 101],
+        ...     'ID': ['.', '.'],
+        ...     'REF': ['G', 'T'],
+        ...     'ALT': ['A', 'C'],
+        ...     'QUAL': ['.', '.'],
+        ...     'FILTER': ['.', '.'],
+        ...     'INFO': ['.', '.'],
+        ...     'FORMAT': ['GT', 'GT'],
+        ...     'A': ['0/1', '1/1']
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.fetch('chr1-100-G-A')
+        CHROM     chr1
+        POS        100
+        ID           .
+        REF          G
+        ALT          A
+        QUAL         .
+        FILTER       .
+        INFO         .
+        FORMAT      GT
+        A          0/1
+        Name: 0, dtype: object
+        """
+        def one_row(r):
+            return f'{r.CHROM}-{r.POS}-{r.REF}-{r.ALT}' == variant
+        i = self.df.apply(one_row, axis=1)
+        return self.df[i].squeeze()
+
+    def pseudophase(self):
+        """
+        Perform the pseudo haplotype phasing.
+
+        Returns
+        -------
+        VcfFrame
+            Phased VcfFrame.
+
+        Examples
+        --------
+
+        >>> from fuc import pyvcf
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr2'],
+        ...     'POS': [100, 101],
+        ...     'ID': ['.', '.'],
+        ...     'REF': ['G', 'T'],
+        ...     'ALT': ['A', 'C'],
+        ...     'QUAL': ['.', '.'],
+        ...     'FILTER': ['.', '.'],
+        ...     'INFO': ['.', '.'],
+        ...     'FORMAT': ['GT', 'GT'],
+        ...     'A': ['0/1', '1/1']
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A
+        0  chr1  100  .   G   A    .      .    .     GT  0/1
+        1  chr2  101  .   T   C    .      .    .     GT  1/1
+        >>> vf.pseudophase().df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A
+        0  chr1  100  .   G   A    .      .    .     GT  0|1
+        1  chr2  101  .   T   C    .      .    .     GT  1|1
+        """
+        def one_row(r):
+
+            def one_gt(g):
+                l = g.split(':')
+                l[0] = l[0].replace('/', '|')
+                return ':'.join(l)
+
+            r[9:] = r[9:].apply(one_gt)
+
+            return r
+
+        return self.__class__(self.copy_meta(), self.df.apply(one_row, axis=1))

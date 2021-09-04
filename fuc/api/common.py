@@ -608,7 +608,14 @@ def load_dataset(name, force=False):
 
 def parse_region(region):
     """
-    Parse the region.
+    Parse specified genomic region.
+
+    The method will return parsed region as a tuple with a shape of
+    ``(chrom, start, end)`` which has data types of ``(str, int, int)``.
+
+    Note that only ``chrom`` is required when specifing a region. If
+    ``start`` and ``end`` are omitted, the method will return ``NaN`` in
+    their respective positions in the output tuple.
 
     Parameters
     ----------
@@ -618,8 +625,7 @@ def parse_region(region):
     Returns
     -------
     tuple
-        The output tuple will always have a shape of (chrom, start, end) with
-        the following data types: (str, int, int).
+        Parsed region.
 
     Examples
     --------
@@ -628,35 +634,73 @@ def parse_region(region):
     >>> common.parse_region('chr1:100-150')
     ('chr1', 100, 150)
     >>> common.parse_region('chr1')
-    ('chr1', 0, 0)
+    ('chr1', nan, nan)
     >>> common.parse_region('chr1:100')
-    ('chr1', 100, 0)
+    ('chr1', 100, nan)
     >>> common.parse_region('chr1:100-')
-    ('chr1', 100, 0)
+    ('chr1', 100, nan)
     >>> common.parse_region('chr1:-100')
-    ('chr1', 0, 100)
+    ('chr1', nan, 100)
     """
     chrom = region.split(':')[0]
 
     try:
         start = region.split(':')[1].split('-')[0]
         if not start:
-            start = 0
+            start = np.nan
         else:
             start = int(start)
     except IndexError:
-        start = 0
+        start = np.nan
 
     try:
         end = region.split(':')[1].split('-')[1]
         if not end:
-            end = 0
+            end = np.nan
         else:
             end = int(end)
     except IndexError:
-        end = 0
+        end = np.nan
 
     return (chrom, start, end)
+
+def parse_variant(variant):
+    """
+    Parse specified genomic variant.
+
+    The input variant string must consist of chromosome, position, reference
+    allele, and alternative allele separated by one or more supported
+    delimiters ('-', ':', '>').
+
+    The method will return parsed variant as a tuple with a shape of
+    ``(chrom, pos, ref, alt)`` which has data types of
+    ``(str, int, str, str)``.
+
+    Parameters
+    ----------
+    variant : str
+        Genomic variant.
+
+    Returns
+    -------
+    tuple
+        Parsed variant.
+
+    Examples
+    --------
+
+    >>> from fuc import common
+    >>> common.parse_variant('22-42127941-G-A')
+    ('22', 42127941, 'G', 'A')
+    >>> common.parse_variant('22:42127941-G>A')
+    ('22', 42127941, 'G', 'A')
+    """
+    l = re.split('-|:|>', variant)
+    chrom = l[0]
+    pos = int(l[1])
+    ref = l[2]
+    alt = l[3]
+    return (chrom, pos, ref, alt)
 
 def extract_sequence(fasta, region):
     """
