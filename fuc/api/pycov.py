@@ -98,8 +98,13 @@ class CovFrame:
     3       chr1      1003  32  21
     4       chr1      1004  32  15
     """
+    def _check_df(self, df):
+        df = df.reset_index(drop=True)
+        df.Chromosome = df.Chromosome.astype(str)
+        return df
+
     def __init__(self, df):
-        self._df = df.reset_index(drop=True)
+        self._df = self._check_df(df)
 
     @property
     def df(self):
@@ -108,7 +113,7 @@ class CovFrame:
 
     @df.setter
     def df(self, value):
-        self._df = value.reset_index(drop=True)
+        self._df = self._check_df(value)
 
     @property
     def contigs(self):

@@ -4,6 +4,8 @@ Changelog
 0.23.0 (in development)
 -----------------------
 
+* Update :class:`pycov.CovFrame` to ensure that the ``Chromosome`` column is always string.
+
 0.22.0 (2021-09-04)
 -------------------
 
