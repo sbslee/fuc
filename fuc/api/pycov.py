@@ -7,7 +7,7 @@ allow fast computation and easy manipulation. The ``pycov.CovFrame`` class
 also contains many useful plotting methods such as ``CovFrame.plot_region``
 and ``CovFrame.plot_uniformity``.
 """
-from io import StringIO
+from io import StringIO, IOBase
 import gzip
 
 from . import common, pybam
@@ -281,11 +281,11 @@ class CovFrame:
     @classmethod
     def from_file(cls, fn, compression=False):
         """
-        Construct CovFrame from a text file containing read depth data.
+        Construct CovFrame from a TSV file containing read depth data.
 
         Parameters
         ----------
-        fn : str
+        fn : str or file-like object
             TSV file (zipped or unzipped).
         compression : bool, default: False
             If True, use GZIP decompression regardless of filename.
@@ -304,6 +304,9 @@ class CovFrame:
         CovFrame.from_dict
             Construct CovFrame from dict of array-like or dicts.
         """
+        if isinstance(fn, IOBase):
+            return cls(pd.read_table(fn))
+
         if fn.endswith('.gz') or compression:
             f = gzip.open(fn, 'rt')
         else:

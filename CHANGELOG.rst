@@ -5,6 +5,7 @@ Changelog
 -----------------------
 
 * Update :class:`pycov.CovFrame` class to ensure that the ``Chromosome`` column is always string.
+* Update :meth:`pycov.CovFrame.from_file` method to accept file-like object as input as well.
 
 0.22.0 (2021-09-04)
 -------------------
