@@ -1327,47 +1327,7 @@ class VcfFrame:
         """
         return cls(meta, pd.DataFrame(data))
 
-    @classmethod
-    def from_file(
-        cls, fn, compression=False, meta_only=False, nrows=None
-    ):
-        """
-        Construct VcfFrame from a VCF file.
-
-        The method will automatically use BGZF decompression if the filename
-        ends with '.gz'.
-
-        Parameters
-        ----------
-        fn : str
-            VCF file (zipped or unzipped).
-        compression : bool, default: False
-            If True, use BGZF decompression regardless of filename.
-        meta_only : bool, default: False
-            If True, read metadata and header lines only.
-        nrows : int, optional
-            Number of rows to read. Useful for reading pieces of large files.
-
-        Returns
-        -------
-        VcfFrame
-            VcfFrame object.
-
-        See Also
-        --------
-        VcfFrame
-            VcfFrame object creation using constructor.
-        VcfFrame.from_dict
-            Construct VcfFrame from dict of array-like or dicts.
-
-        Examples
-        --------
-
-        >>> from fuc import pyvcf
-        >>> vf = pyvcf.VcfFrame.from_file('unzipped.vcf')
-        >>> vf = pyvcf.VcfFrame.from_file('zipped.vcf.gz')
-        >>> vf = pyvcf.VcfFrame.from_file('zipped.vcf', compression=True)
-        """
+    def _from_file1(cls, fn, compression, meta_only, nrows):
         skip_rows = 0
 
         if fn.startswith('~'):
@@ -1410,6 +1370,83 @@ class VcfFrame:
         f.close()
 
         return cls(meta, df)
+
+    def _from_file2(cls, fn, compression, meta_only, nrows):
+        skip_rows = 0
+        meta = []
+
+        for line in fn:
+            if line.startswith(b'##'):
+                meta.append(line.decode('utf-8').strip())
+                skip_rows += 1
+            elif line.startswith(b'#CHROM'):
+                columns = line.decode('utf-8').strip().split('\t')
+            else:
+                break
+
+        if '#CHROM' in columns:
+            columns[columns.index('#CHROM')] = 'CHROM'
+
+        for header in HEADERS:
+            if header not in columns and header != 'FORMAT':
+                raise ValueError(f"Required VCF column missing: '{header}'")
+
+        dtype = {**HEADERS, **{x: str for x in columns[9:]}}
+
+        if meta_only:
+            df = pd.DataFrame(columns=columns)
+        else:
+            df = pd.read_table(fn, names=columns, nrows=nrows, dtype=dtype)
+
+        return cls(meta, df)
+
+    @classmethod
+    def from_file(
+        cls, fn, compression=False, meta_only=False, nrows=None
+    ):
+        """
+        Construct VcfFrame from a VCF file.
+
+        The method will automatically use BGZF decompression if the filename
+        ends with '.gz'.
+
+        Parameters
+        ----------
+        fn : str or file-like object.
+            VCF file (zipped or unzipped).
+        compression : bool, default: False
+            If True, use BGZF decompression regardless of filename.
+        meta_only : bool, default: False
+            If True, read metadata and header lines only.
+        nrows : int, optional
+            Number of rows to read. Useful for reading pieces of large files.
+
+        Returns
+        -------
+        VcfFrame
+            VcfFrame object.
+
+        See Also
+        --------
+        VcfFrame
+            VcfFrame object creation using constructor.
+        VcfFrame.from_dict
+            Construct VcfFrame from dict of array-like or dicts.
+
+        Examples
+        --------
+
+        >>> from fuc import pyvcf
+        >>> vf = pyvcf.VcfFrame.from_file('unzipped.vcf')
+        >>> vf = pyvcf.VcfFrame.from_file('zipped.vcf.gz')
+        >>> vf = pyvcf.VcfFrame.from_file('zipped.vcf', compression=True)
+        """
+        args = [cls, fn, compression, meta_only, nrows]
+        if isinstance(fn, str):
+            vf = cls._from_file1(*args)
+        elif hasattr(fn, 'read'):
+            vf = cls._from_file2(*args)
+        return vf
 
     def calculate_concordance(self, a, b, c=None, mode='all'):
         """
@@ -1727,7 +1764,7 @@ class VcfFrame:
             ).to_csv(index=False, sep='\t')
         return s
 
-    def strip(self, format='GT'):
+    def strip(self, format='GT', metadata=False):
         """
         Remove any unnecessary data.
 
@@ -1735,6 +1772,8 @@ class VcfFrame:
         ----------
         format : str, default: 'GT'
             FORMAT keys to retain (e.g. 'GT:AD:DP').
+        metadata : bool, default: False
+            If True, keep the metadata.
 
         Returns
         -------
@@ -1788,7 +1827,12 @@ class VcfFrame:
         df[['ID', 'QUAL', 'FILTER', 'INFO']] = '.'
         df = df.apply(one_row, axis=1)
         df.FORMAT = format
-        vf = self.__class__([], df)
+
+        if metadata:
+            meta = self.copy_meta()
+        else:
+            meta = []
+        vf = self.__class__(meta, df)
         return vf
 
     def merge(
