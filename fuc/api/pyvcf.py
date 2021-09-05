@@ -1412,8 +1412,9 @@ class VcfFrame:
 
         Parameters
         ----------
-        fn : str or file-like object.
-            VCF file (zipped or unzipped).
+        fn : str or file-like object
+            VCF file (zipped or unzipped). By file-like object, we refer to
+            objects with a :meth:`read()` method, such as a file handle.
         compression : bool, default: False
             If True, use BGZF decompression regardless of filename.
         meta_only : bool, default: False

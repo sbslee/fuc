@@ -286,7 +286,8 @@ class CovFrame:
         Parameters
         ----------
         fn : str or file-like object
-            TSV file (zipped or unzipped).
+            TSV file (zipped or unzipped). By file-like object, we refer to
+            objects with a :meth:`read()` method, such as a file handle.
         compression : bool, default: False
             If True, use GZIP decompression regardless of filename.
 
