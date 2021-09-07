@@ -8,6 +8,7 @@ Changelog
 * Update :meth:`pycov.CovFrame.from_file` method to accept file-like object as input as well.
 * Add new argument ``metadata`` to :meth:`pyvcf.VcfFrame.strip` method.
 * Update :meth:`pyvcf.VcfFrame.from_file` method to accept file-like object as input as well.
+* Add new method :meth:`pycov.CovFrame.mask_bed`.
 
 0.22.0 (2021-09-04)
 -------------------

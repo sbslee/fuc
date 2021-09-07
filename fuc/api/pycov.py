@@ -10,7 +10,7 @@ and ``CovFrame.plot_uniformity``.
 from io import StringIO, IOBase
 import gzip
 
-from . import common, pybam
+from . import common, pybam, pybed
 
 import pysam
 import numpy as np
@@ -304,6 +304,14 @@ class CovFrame:
             Construct CovFrame from one or more SAM/BAM/CRAM files.
         CovFrame.from_dict
             Construct CovFrame from dict of array-like or dicts.
+
+        Examples
+        --------
+
+        >>> from fuc import pycov
+        >>> cf = pycov.CovFrame.from_file('unzipped.tsv')
+        >>> cf = pycov.CovFrame.from_file('zipped.tsv.gz')
+        >>> cf = pycov.CovFrame.from_file('zipped.tsv', compression=True)
         """
         if isinstance(fn, IOBase):
             return cls(pd.read_table(fn))
@@ -720,3 +728,85 @@ class CovFrame:
             f = open(fn, 'w')
         f.write(self.to_string())
         f.close()
+
+    def mask_bed(self, bed, opposite=False):
+        """
+        Mask rows that overlap with BED data.
+
+        Parameters
+        ----------
+        bed : pybed.BedFrame or str
+            BedFrame object or BED file.
+        opposite : bool, default: False
+            If True, mask rows that don't overlap with BED data.
+
+        Returns
+        -------
+        CovFrame
+            Masked CovFrame.
+
+        Examples
+        --------
+        Assume we have the following data:
+
+        >>> import numpy as np
+        >>> from fuc import pycov, pybed
+        >>> data = {
+        ...     'Chromosome': ['chr1'] * 1000,
+        ...     'Position': np.arange(1000, 2000),
+        ...     'A': pycov.simulate(loc=35, scale=5),
+        ...     'B': pycov.simulate(loc=25, scale=7),
+        ... }
+        >>> cf = pycov.CovFrame.from_dict(data)
+        >>> cf.df.head()
+          Chromosome  Position   A   B
+        0       chr1      1000  34  31
+        1       chr1      1001  31  20
+        2       chr1      1002  41  22
+        3       chr1      1003  28  41
+        4       chr1      1004  34  23
+        >>> data = {
+        ...     'Chromosome': ['chr1', 'chr1'],
+        ...     'Start': [1000, 1003],
+        ...     'End': [1002, 1004]
+        ... }
+        >>> bf = pybed.BedFrame.from_dict([], data)
+        >>> bf.gr.df
+          Chromosome  Start   End
+        0       chr1   1000  1002
+        1       chr1   1003  1004
+
+        We can mask rows that overlap with the BED data:
+
+        >>> cf.mask_bed(bf).df.head()
+          Chromosome  Position     A     B
+        0       chr1      1000   NaN   NaN
+        1       chr1      1001   NaN   NaN
+        2       chr1      1002  41.0  22.0
+        3       chr1      1003   NaN   NaN
+        4       chr1      1004  34.0  23.0
+
+        We can also do the opposite:
+
+        >>> cf.mask_bed(bf, opposite=True).df.head()
+          Chromosome  Position     A     B
+        0       chr1      1000  34.0  31.0
+        1       chr1      1001  31.0  20.0
+        2       chr1      1002   NaN   NaN
+        3       chr1      1003  28.0  41.0
+        4       chr1      1004   NaN   NaN
+        """
+        if isinstance(bed, pybed.BedFrame):
+            bf = bed
+        else:
+            bf = pybed.BedFrame.from_file(bed)
+        def one_row(r):
+            if opposite:
+                if bf.gr[r.Chromosome, r.Position:r.Position+1].empty:
+                    r[2:] = r[2:].apply(lambda x: np.nan)
+            else:
+                if not bf.gr[r.Chromosome, r.Position:r.Position+1].empty:
+                    r[2:] = r[2:].apply(lambda x: np.nan)
+            return r
+        df = self.df.apply(one_row, axis=1)
+        return self.__class__(df)
