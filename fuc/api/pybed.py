@@ -262,3 +262,57 @@ class BedFrame:
         2       chr3    100  200
         """
         return cls(meta, pr.PyRanges(data))
+
+    def chr_prefix(self, mode='remove'):
+        """
+        Add or remove the (annoying) 'chr' string from the Chromosome column.
+
+        Parameters
+        ----------
+        mode : {'add', 'remove'}, default: 'remove'
+            Whether to add or remove the 'chr' string.
+
+        Returns
+        -------
+        BedFrame
+            Updated BedFrame.
+
+        Examples
+        --------
+
+        >>> import numpy as np
+        >>> from fuc import pycov
+        >>> data = {
+        ...     'Chromosome': ['chr1'] * 1000,
+        ...     'Position': np.arange(1000, 2000),
+        ...     'A': pycov.simulate(loc=35, scale=5),
+        ...     'B': pycov.simulate(loc=25, scale=7),
+        ... }
+        >>> cf = pycov.CovFrame.from_dict(data)
+        >>> cf.df.head()
+          Chromosome  Position   A   B
+        0       chr1      1000  28  17
+        1       chr1      1001  35  28
+        2       chr1      1002  38  12
+        3       chr1      1003  33  20
+        4       chr1      1004  33  31
+        >>> cf.chr_prefix().df.head()
+          Chromosome  Position   A   B
+        0          1      1000  28  17
+        1          1      1001  35  28
+        2          1      1002  38  12
+        3          1      1003  33  20
+        4          1      1004  33  31
+        """
+        if mode == 'remove':
+            def one_row(r):
+                r.Chromosome = r.Chromosome.replace('chr', '')
+                return r
+        elif mode == 'add':
+            def one_row(r):
+                r.Chromosome = 'chr' + r.Chromosome
+                return r
+        else:
+            raise ValueError(f'Incorrect mode: {mode}')
+        df = self.gr.df.apply(one_row, axis=1)
+        return self.__class__([], pr.PyRanges(df))
