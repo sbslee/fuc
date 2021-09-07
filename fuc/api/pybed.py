@@ -108,6 +108,11 @@ class BedFrame:
     def gr(self, value):
         self._gr = value
 
+    @property
+    def contigs(self):
+        """list : List of contig names."""
+        return self.gr.chromosomes
+
     def to_file(self, fn):
         """Write the BedFrame to a BED file."""
         with open(fn, 'w') as f:
@@ -155,8 +160,8 @@ class BedFrame:
 
         Examples
         --------
-        Below is a simple example:
 
+        >>> from fuc import pybed
         >>> data = {
         ...     'Chromosome': ['chr1', 'chr2', 'chr3'],
         ...     'Start': [100, 400, 100],

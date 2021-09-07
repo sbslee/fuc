@@ -10,6 +10,7 @@ Changelog
 * Update :meth:`pyvcf.VcfFrame.from_file` method to accept file-like object as input as well.
 * Add new method :meth:`pycov.CovFrame.mask_bed`.
 * Add new method :meth:`pycov.CovFrame.chr_prefix`.
+* Add new property ``contigs`` to :class:`pybed.BedFrame`.
 
 0.22.0 (2021-09-04)
 -------------------
