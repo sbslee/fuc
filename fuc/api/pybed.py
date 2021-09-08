@@ -113,6 +113,10 @@ class BedFrame:
         """list : List of contig names."""
         return self.gr.chromosomes
 
+    def copy_meta(self):
+        """Return a copy of the metadata."""
+        return deepcopy(self.meta)
+
     def to_file(self, fn):
         """Write the BedFrame to a BED file."""
         with open(fn, 'w') as f:
@@ -280,29 +284,23 @@ class BedFrame:
         Examples
         --------
 
-        >>> import numpy as np
-        >>> from fuc import pycov
+        >>> from fuc import pybed
         >>> data = {
-        ...     'Chromosome': ['chr1'] * 1000,
-        ...     'Position': np.arange(1000, 2000),
-        ...     'A': pycov.simulate(loc=35, scale=5),
-        ...     'B': pycov.simulate(loc=25, scale=7),
+        ...     'Chromosome': ['chr1', 'chr2', 'chr3'],
+        ...     'Start': [100, 400, 100],
+        ...     'End': [200, 500, 200]
         ... }
-        >>> cf = pycov.CovFrame.from_dict(data)
-        >>> cf.df.head()
-          Chromosome  Position   A   B
-        0       chr1      1000  28  17
-        1       chr1      1001  35  28
-        2       chr1      1002  38  12
-        3       chr1      1003  33  20
-        4       chr1      1004  33  31
-        >>> cf.chr_prefix().df.head()
-          Chromosome  Position   A   B
-        0          1      1000  28  17
-        1          1      1001  35  28
-        2          1      1002  38  12
-        3          1      1003  33  20
-        4          1      1004  33  31
+        >>> bf = pybed.BedFrame.from_dict([], data)
+        >>> bf.gr.df
+          Chromosome  Start  End
+        0       chr1    100  200
+        1       chr2    400  500
+        2       chr3    100  200
+        >>> bf.chr_prefix().gr.df
+          Chromosome  Start  End
+        0          1    100  200
+        1          2    400  500
+        2          3    100  200
         """
         if mode == 'remove':
             def one_row(r):
@@ -316,3 +314,35 @@ class BedFrame:
             raise ValueError(f'Incorrect mode: {mode}')
         df = self.gr.df.apply(one_row, axis=1)
         return self.__class__([], pr.PyRanges(df))
+
+    def sort(self):
+        """
+        Sort the BedFrame by chromosome and position.
+
+        Returns
+        -------
+        BedFrame
+            Sorted BedFrame.
+
+        Examples
+        --------
+
+        >>> from fuc import pybed
+        >>> data = {
+        ...     'Chromosome': ['chr1', 'chr3', 'chr1'],
+        ...     'Start': [400, 100, 100],
+        ...     'End': [500, 200, 200]
+        ... }
+        >>> bf = pybed.BedFrame.from_dict([], data)
+        >>> bf.gr.df
+          Chromosome  Start  End
+        0       chr1    400  500
+        1       chr1    100  200
+        2       chr3    100  200
+        >>> bf.sort().gr.df
+          Chromosome  Start  End
+        0       chr1    100  200
+        1       chr1    400  500
+        2       chr3    100  200
+        """
+        return self.__class__(self.copy_meta(), self.gr.sort())

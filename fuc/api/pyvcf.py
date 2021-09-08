@@ -3967,7 +3967,8 @@ class VcfFrame:
         return s
 
     def sort(self):
-        """Sort the VcfFrame by chromosome and position.
+        """
+        Sort the VcfFrame by chromosome and position.
 
         Returns
         -------
