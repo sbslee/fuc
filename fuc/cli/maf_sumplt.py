@@ -3,7 +3,9 @@ from .. import api
 import matplotlib.pyplot as plt
 
 description = f"""
-This command will create a summary plot with a MAF file.
+##########################################
+# Create a summary plot with a MAF file. #
+##########################################
 
 The format of output image (PDF/PNG/JPEG/SVG) will be automatically determined by the output file's extension.
 

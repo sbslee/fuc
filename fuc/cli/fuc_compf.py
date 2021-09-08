@@ -3,6 +3,10 @@ import filecmp
 from .. import api
 
 description = f"""
+######################################
+# Compare the contents of two files. #
+######################################
+
 This command will compare the contents of two files, returning 'True' if they are identical and 'False' otherwise.
 
 Usage examples:

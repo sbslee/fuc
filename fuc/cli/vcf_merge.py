@@ -3,7 +3,9 @@ import sys
 from .. import api
 
 description = f"""
-This command will merge multiple VCF files.
+################################
+# Merge two or more VCF files. #
+################################
 
 Usage examples:
   $ fuc {api.common._script_name()} 1.vcf 2.vcf 3.vcf > merged.vcf

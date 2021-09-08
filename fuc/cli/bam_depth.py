@@ -5,11 +5,13 @@ from .. import api
 import pysam
 
 description = f"""
-This command will compute read depth from input SAM/BAM/CRAM files.
+###############################################
+# Compute read depth from SAM/BAM/CRAM files. #
+###############################################
 
-Input files must be specified with either '--bam' or '--fn'.
+Input alignment files must be specified with either '--bam' or '--fn', but it's an error to use both.
 
-By default, the command will count all reads within the alignment file. Use '--bed' or '--region' to specify target regions. When you do this, pay attention to the 'chr' string in contig names (e.g. 'chr1' vs. '1').
+By default, the command will count all reads within the alignment file. You can specify target region(s) with either '--bed' or '--region', but not both. When you do this, pay close attention to the 'chr' string in contig names (e.g. 'chr1' vs. '1').
 
 Usage examples:
   $ fuc {api.common._script_name()} --bam 1.bam 2.bam --bed in.bed > out.tsv
@@ -27,12 +29,12 @@ def create_parser(subparsers):
         '--bam',
         metavar='PATH',
         nargs='+',
-        help='One or more input files.'
+        help='One or more alignment files.'
     )
     parser.add_argument(
         '--fn',
         metavar='PATH',
-        help='File containing one input filename per line.'
+        help='File containing one alignment file per line.'
     )
     parser.add_argument(
         '--bed',

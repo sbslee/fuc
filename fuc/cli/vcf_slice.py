@@ -3,7 +3,9 @@ import sys
 from .. import api
 
 description = f"""
-This command will slice a VCF file for one or more specified regions.
+###########################################
+# Slice a VCF file for specified regions. #
+###########################################
 
 Target regions can be specified with either '--region', '--bed', or '--vcf'.
 
@@ -23,7 +25,7 @@ def create_parser(subparsers):
     parser = api.common._add_parser(
         subparsers,
         api.common._script_name(),
-        help='Slice a VCF file for one or more specified regions.',
+        help='Slice a VCF file for specified regions.',
         description=description,
     )
     parser.add_argument(

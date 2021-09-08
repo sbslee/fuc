@@ -3,7 +3,9 @@ import sys
 from .. import api
 
 description = f"""
-This command will filter a VCF file annotated by Ensembl VEP.
+###############################################
+# Filter a VCF file annotated by Ensembl VEP. #
+###############################################
 
 Usage examples:
   $ fuc {api.common._script_name()} in.vcf "SYMBOL == 'TP53'" > out.vcf

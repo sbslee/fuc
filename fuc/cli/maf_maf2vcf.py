@@ -3,7 +3,9 @@ import sys
 from .. import api
 
 description = f"""
-This command will convert a MAF file to a sorted VCF file.
+#####################################
+# Convert a MAF file to a VCF file. #
+#####################################
 
 In order to handle INDELs the command makes use of a reference assembly (i.e. FASTA file). If SNVs are your only concern, then you do not need a FASTA file and can just use the '--ignore_indels' flag.
 

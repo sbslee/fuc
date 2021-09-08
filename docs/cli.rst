@@ -68,7 +68,9 @@ bam-depth
    usage: fuc bam-depth [-h] [--bam PATH [PATH ...]] [--fn PATH] [--bed PATH]
                         [--region TEXT] [--zero]
    
-   This command will compute read depth from input SAM/BAM/CRAM files.
+   ###############################################
+   # Compute read depth from SAM/BAM/CRAM files. #
+   ###############################################
    
    Input files must be specified with either '--bam' or '--fn'.
    
@@ -95,7 +97,9 @@ bam-head
    $ fuc bam-head -h
    usage: fuc bam-head [-h] bam
    
-   This command will print the header of the input SAM/BAM/CRAM file.
+   ############################################
+   # Print the header of a SAM/BAM/CRAM file. #
+   ############################################
    
    Usage examples:
      $ fuc bam-head in.sam

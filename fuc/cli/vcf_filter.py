@@ -5,7 +5,9 @@ from .. import api
 import pandas as pd
 
 description = f"""
-This command will filter a VCF file (both zipped and unzipped).
+######################################
+# Filter a VCF file with annotation. #
+######################################
 
 Usage examples:
   $ fuc {api.common._script_name()} in.vcf --expr 'GT == "0/0"' > out.vcf
@@ -25,10 +27,13 @@ def create_parser(subparsers):
     parser = api.common._add_parser(
         subparsers,
         api.common._script_name(),
-        help='Filter a VCF file.',
+        help='Filter a VCF file with annotation.',
         description=description,
     )
-    parser.add_argument('vcf', help='VCF file')
+    parser.add_argument(
+        'vcf',
+        help='VCF file (zipped or unzipped).'
+    )
     parser.add_argument(
         '--expr',
         metavar='TEXT',

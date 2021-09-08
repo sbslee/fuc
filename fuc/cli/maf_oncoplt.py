@@ -3,7 +3,9 @@ from .. import api
 import matplotlib.pyplot as plt
 
 description = f"""
-This command will create an oncoplot with a MAF file.
+#######################################
+# Create an oncoplot with a MAF file. #
+#######################################
 
 The format of output image (PDF/PNG/JPEG/SVG) will be automatically determined by the output file's extension.
 

@@ -4,7 +4,9 @@ import pandas as pd
 from pandas.api.types import is_numeric_dtype
 
 description = f"""
-This command will summarize a table file.
+###########################
+# Summarize a table file. #
+###########################
 
 Usage examples:
   $ fuc {api.common._script_name()} table.tsv
