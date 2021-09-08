@@ -5,9 +5,9 @@ from .. import api
 import pandas as pd
 
 description = f"""
-######################################
-# Filter a VCF file with annotation. #
-######################################
+######################
+# Filter a VCF file. #
+######################
 
 Usage examples:
   $ fuc {api.common._script_name()} in.vcf --expr 'GT == "0/0"' > out.vcf
@@ -27,7 +27,7 @@ def create_parser(subparsers):
     parser = api.common._add_parser(
         subparsers,
         api.common._script_name(),
-        help='Filter a VCF file with annotation.',
+        help='Filter a VCF file.',
         description=description,
     )
     parser.add_argument(
