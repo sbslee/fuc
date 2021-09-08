@@ -13,6 +13,7 @@ Changelog
 * Add new property ``contigs`` to :class:`pybed.BedFrame`.
 * Add new method :meth:`pybed.BedFrame.chr_prefix`.
 * Add new methods :meth:`pybed.BedFrame.copy_meta` and :meth:`pybed.BedFrame.sort`.
+* Add new method :meth:`pybed.BedFrame.merge`.
 
 0.22.0 (2021-09-04)
 -------------------

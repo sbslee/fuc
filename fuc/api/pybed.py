@@ -346,3 +346,39 @@ class BedFrame:
         2       chr3    100  200
         """
         return self.__class__(self.copy_meta(), self.gr.sort())
+
+    def merge(self):
+        """
+        Merge overlapping intervals within the BedFrame.
+
+        Returns
+        -------
+        BedFrame
+            Merged BedFrame.
+
+        Examples
+        --------
+
+        >>> from fuc import pybed
+        >>> data = {
+        ...     'Chromosome': ['chr1', 'chr1', 'chr2', 'chr2', 'chr3', 'chr3'],
+        ...     'Start': [10, 30, 15, 25, 50, 70],
+        ...     'End': [40, 50, 25, 35, 60, 80]
+        ... }
+        >>> bf = pybed.BedFrame.from_dict([], data)
+        >>> bf.gr.df
+          Chromosome  Start  End
+        0       chr1     10   40
+        1       chr1     30   50
+        2       chr2     15   25
+        3       chr2     25   35
+        4       chr3     50   60
+        5       chr3     70   80
+        >>> bf.merge().gr.df
+          Chromosome  Start  End
+        0       chr1     10   50
+        1       chr2     15   35
+        2       chr3     50   60
+        3       chr3     70   80
+        """
+        return self.__class__(self.copy_meta(), self.gr.merge())
