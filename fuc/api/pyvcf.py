@@ -1849,11 +1849,18 @@ class VcfFrame:
 
         def one_row(r):
             old_keys = r.FORMAT.split(':')
-            indicies = [old_keys.index(x) if x in old_keys else None for x in new_keys]
+            indicies = [
+                old_keys.index(x) if x in old_keys else None for x in new_keys
+            ]
 
             def one_gt(g):
                 old_fields = g.split(':')
-                new_fields = ['.' if x is None else old_fields[x] for x in indicies]
+                new_fields = [
+                    '.' if x is None
+                    else '.' if x >= len(old_fields)
+                    else old_fields[x]
+                    for x in indicies
+                ]
                 return ':'.join(new_fields)
 
             r.iloc[9:] = r.iloc[9:].apply(one_gt)
