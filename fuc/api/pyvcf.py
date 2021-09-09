@@ -849,6 +849,42 @@ class VcfFrame:
         """bool : Whether the VCF is sites-only."""
         return not self.samples or 'FORMAT' not in self.df.columns
 
+    @property
+    def empty(self):
+        """
+        Indicator whether VcfFrame is empty.
+
+        Examples
+        --------
+
+        >>> from fuc import pyvcf
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr2'],
+        ...     'POS': [100, 101],
+        ...     'ID': ['.', '.'],
+        ...     'REF': ['G', 'T'],
+        ...     'ALT': ['A', 'C'],
+        ...     'QUAL': ['.', '.'],
+        ...     'FILTER': ['.', '.'],
+        ...     'INFO': ['.', '.'],
+        ...     'FORMAT': ['GT', 'GT'],
+        ...     'A': ['0/1', '1/1']
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A
+        0  chr1  100  .   G   A    .      .    .     GT  0/1
+        1  chr2  101  .   T   C    .      .    .     GT  1/1
+        >>> vf.df = vf.df[0:0]
+        >>> vf.df
+        Empty DataFrame
+        Columns: [CHROM, POS, ID, REF, ALT, QUAL, FILTER, INFO, FORMAT, A]
+        Index: []
+        >>> vf.empty
+        True
+        """
+        return self.df.empty
+
     def add_af(self, decimals=3):
         """Compute AF using AD and add it to the FORMAT field.
 
