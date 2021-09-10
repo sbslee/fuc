@@ -16,6 +16,7 @@ Changelog
 * Add new method :meth:`pybed.BedFrame.merge`.
 * Add new property ``empty`` to :class:`pyvcf.VcfFrame` class.
 * Fix minor bug in :meth:`pyvcf.VcfFrame.strip` method when sample genotypes don't have the same number of fields as FORMAT.
+* Add new method :meth:`pycov.CovFrame.subset` method.
 
 0.22.0 (2021-09-04)
 -------------------

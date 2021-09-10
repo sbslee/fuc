@@ -864,3 +864,69 @@ class CovFrame:
             raise ValueError(f'Incorrect mode: {mode}')
         df = self.df.apply(one_row, axis=1)
         return self.__class__(df)
+
+    def subset(self, samples, exclude=False):
+        """
+        Subset CovFrame for specified samples.
+
+        Parameters
+        ----------
+        samples : str or list
+            Sample name or list of names (the order matters).
+        exclude : bool, default: False
+            If True, exclude specified samples.
+
+        Returns
+        -------
+        CovFrame
+            Subsetted CovFrame.
+
+        Examples
+        --------
+        Assume we have the following data:
+
+        >>> import numpy as np
+        >>> from fuc import pycov
+        >>> data = {
+        ...     'Chromosome': ['chr1'] * 1000,
+        ...     'Position': np.arange(1000, 2000),
+        ...     'A': pycov.simulate(loc=35, scale=5),
+        ...     'B': pycov.simulate(loc=25, scale=7),
+        ...     'C': pycov.simulate(loc=15, scale=2),
+        ...     'D': pycov.simulate(loc=45, scale=8),
+        ... }
+        >>> cf = pycov.CovFrame.from_dict(data)
+        >>> cf.df.head()
+          Chromosome  Position   A   B   C   D
+        0       chr1      1000  30  30  15  37
+        1       chr1      1001  25  24  11  43
+        2       chr1      1002  33  24  16  50
+        3       chr1      1003  29  22  15  46
+        4       chr1      1004  34  30  11  32
+
+        We can subset the CovFrame for the samples A and B:
+
+        >>> cf.subset(['A', 'B']).df.head()
+          Chromosome  Position   A   B
+        0       chr1      1000  30  30
+        1       chr1      1001  25  24
+        2       chr1      1002  33  24
+        3       chr1      1003  29  22
+        4       chr1      1004  34  30
+
+        Alternatively, we can exclude those samples:
+
+        >>> cf.subset(['A', 'B'], exclude=True).df.head()
+          Chromosome  Position   C   D
+        0       chr1      1000  15  37
+        1       chr1      1001  11  43
+        2       chr1      1002  16  50
+        3       chr1      1003  15  46
+        4       chr1      1004  11  32
+        """
+        if isinstance(samples, str):
+            samples = [samples]
+        if exclude:
+            samples = [x for x in self.samples if x not in samples]
+        cols = self.df.columns[:2].to_list() + samples
+        return self.__class__(self.df[cols])

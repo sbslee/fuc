@@ -4060,16 +4060,14 @@ class VcfFrame:
 
     def subset(self, samples, exclude=False):
         """
-        Subset the VcfFrame for specified samples.
-
-        The order of input samples matters.
+        Subset VcfFrame for specified samples.
 
         Parameters
         ----------
         samples : str or list
-            Name or list of sample names.
+            Sample name or list of names (the order matters).
         exclude : bool, default: False
-            If True, exclude the selected samples.
+            If True, exclude specified samples.
 
         Returns
         -------
@@ -4090,30 +4088,31 @@ class VcfFrame:
         ...     'QUAL': ['.', '.'],
         ...     'FILTER': ['.', '.'],
         ...     'INFO': ['.', '.'],
-        ...     'FORMAT': ['GT:DP', 'GT:DP'],
-        ...     'Steven': ['0/1:30', '0/1:29'],
-        ...     'Sara': ['0/1:24', '0/1:30'],
-        ...     'James': ['0/1:18', '0/1:24'],
+        ...     'FORMAT': ['GT', 'GT'],
+        ...     'A': ['0/1', '0/1'],
+        ...     'B': ['0/0', '0/1'],
+        ...     'C': ['0/0', '0/0'],
+        ...     'D': ['0/1', '0/0'],
         ... }
         >>> vf = pyvcf.VcfFrame.from_dict([], data)
         >>> vf.df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT  Steven    Sara   James
-        0  chr1  100  .   G   A    .      .    .  GT:DP  0/1:30  0/1:24  0/1:18
-        1  chr1  101  .   T   C    .      .    .  GT:DP  0/1:29  0/1:30  0/1:24
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    B    C    D
+        0  chr1  100  .   G   A    .      .    .     GT  0/1  0/0  0/0  0/1
+        1  chr1  101  .   T   C    .      .    .     GT  0/1  0/1  0/0  0/0
 
-        We can subset the VcfFrame for James and Steven (in that order too):
+        We can subset the VcfFrame for the samples A and B:
 
-        >>> vf.subset(['James', 'Steven']).df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT   James  Steven
-        0  chr1  100  .   G   A    .      .    .  GT:DP  0/1:18  0/1:30
-        1  chr1  101  .   T   C    .      .    .  GT:DP  0/1:24  0/1:29
+        >>> vf.subset(['A', 'B']).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    B
+        0  chr1  100  .   G   A    .      .    .     GT  0/1  0/0
+        1  chr1  101  .   T   C    .      .    .     GT  0/1  0/1
 
-        Alternatively, we can exclude James and Steven:
+        Alternatively, we can exclude those samples:
 
-        >>> vf.subset(['James', 'Steven'], exclude=True).df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    Sara
-        0  chr1  100  .   G   A    .      .    .  GT:DP  0/1:24
-        1  chr1  101  .   T   C    .      .    .  GT:DP  0/1:30
+        >>> vf.subset(['A', 'B'], exclude=True).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    C    D
+        0  chr1  100  .   G   A    .      .    .     GT  0/0  0/1
+        1  chr1  101  .   T   C    .      .    .     GT  0/0  0/0
         """
         if isinstance(samples, str):
             samples = [samples]
