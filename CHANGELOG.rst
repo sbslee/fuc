@@ -20,6 +20,7 @@ Changelog
 * Add new method :meth:`common.color_print`.
 * Add new method :meth:`pycov.concat`.
 * Add new command :command:`cov-concat`.
+* Update :class:`pyvcf.VcfFrame` to enforce the dtypes.
 
 0.22.0 (2021-09-04)
 -------------------

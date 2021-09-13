@@ -804,7 +804,7 @@ class VcfFrame:
 
     def _check_df(self, df):
         df = df.reset_index(drop=True)
-        df.CHROM = df.CHROM.astype(str)
+        df = df.astype(HEADERS)
         return df
 
     def __init__(self, meta, df):
