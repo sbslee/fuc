@@ -18,6 +18,29 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
+def concat(cfs, axis=0):
+    """
+    Concatenate CovFrame objects along a particular axis.
+
+    Parameters
+    ----------
+    cfs : list
+        List of CovFrame objects.
+    axis : {0/'index', 1/'columns'}, default: 0
+        The axis to concatenate along.
+
+    Returns
+    -------
+    CovFrame
+        Concatenated CovFrame.
+    """
+    if axis:
+        df = pd.concat([x.df.set_index(['Chromosome', 'Position'])
+            for x in cfs], axis=axis).reset_index()
+    else:
+        df = pd.concat([x.df for x in cfs], axis=axis)
+    return CovFrame(df)
+
 def simulate(mode='wgs', loc=30, scale=5, size=1000):
     """
     Simulate read depth data for single sample.

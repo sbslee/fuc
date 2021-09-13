@@ -17,7 +17,9 @@ Changelog
 * Add new property ``empty`` to :class:`pyvcf.VcfFrame` class.
 * Fix minor bug in :meth:`pyvcf.VcfFrame.strip` method when sample genotypes don't have the same number of fields as FORMAT.
 * Add new method :meth:`pycov.CovFrame.subset` method.
-* Add new method :meth:`common.color_print` method.
+* Add new method :meth:`common.color_print`.
+* Add new method :meth:`pycov.concat`.
+* Add new command :command:`cov-concat`.
 
 0.22.0 (2021-09-04)
 -------------------
