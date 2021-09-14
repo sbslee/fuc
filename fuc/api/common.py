@@ -1075,10 +1075,18 @@ def conda_env():
     """str : Name of the current conda environment."""
     return sys.executable.split('/')[-3]
 
-def color_print(s, c='green'):
+def color_print(s, color='green', bold=False):
     """Print colored text."""
     colors = {
-        'green': '\x1b[1;32;32m',
-        'red' :  '\x1b[1;31;31m',
+        'red' :  '31',
+        'green': '32',
     }
-    print(colors[c] + s + '\x1b[0m')
+
+    c = colors[color]
+
+    if bold:
+        b = 1
+    else:
+        b = 0
+
+    print(f'\x1b[{b};{c};{c}m' + s + '\x1b[0m')
