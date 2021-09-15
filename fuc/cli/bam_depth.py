@@ -9,9 +9,11 @@ description = f"""
 # Compute read depth from SAM/BAM/CRAM files. #
 ###############################################
 
-Input alignment files must be specified with either '--bam' or '--fn', but it's an error to use both.
+Alignment files must be specified with either '--bam' or '--fn', but it's an error to use both.
 
-By default, the command will count all reads within the alignment file. You can specify target region(s) with either '--bed' or '--region', but not both. When you do this, pay close attention to the 'chr' string in contig names (e.g. 'chr1' vs. '1').
+By default, the command will count all reads within the alignment files. You can specify target regions with either '--bed' or '--region', but not both. When you do this, pay close attention to the 'chr' string in contig names (e.g. 'chr1' vs. '1'). Note also that '--region' requires the input files be indexed.
+
+Under the hood, the command computes read depth using the 'samtools depth' command.
 
 Usage examples:
   $ fuc {api.common._script_name()} --bam 1.bam 2.bam --bed in.bed > out.tsv
@@ -44,7 +46,7 @@ def create_parser(subparsers):
     parser.add_argument(
         '--region',
         metavar='TEXT',
-        help="Only report depth in specified region ('chrom:start-end')."
+        help="Target region ('chrom:start-end')."
     )
     parser.add_argument(
         '--zero',

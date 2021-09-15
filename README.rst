@@ -118,13 +118,14 @@ For getting help on the fuc CLI:
        bam-slice    Slice a SAM/BAM/CRAM file.
        bed-intxn    Find the intersection of two or more BED files.
        bed-sum      Summarize a BED file.
+       cov-concat   Concatenate TSV files containing depth of coverage data.
        fq-count     Count sequence reads in FASTQ files.
        fq-sum       Summarize a FASTQ file.
-       fuc-undetm   Compute top unknown barcodes using undertermined FASTQ from bcl2fastq.
        fuc-compf    Compare the contents of two files.
        fuc-demux    Parse the Reports directory from bcl2fastq.
        fuc-exist    Check whether certain files exist.
        fuc-find     Find all filenames matching a specified pattern recursively.
+       fuc-undetm   Compute top unknown barcodes using undertermined FASTQ from bcl2fastq.
        maf-maf2vcf  Convert a MAF file to a VCF file.
        maf-oncoplt  Create an oncoplot with a MAF file.
        maf-sumplt   Create a summary plot with a MAF file.

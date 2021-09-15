@@ -155,32 +155,36 @@ class CovFrame:
 
     @classmethod
     def from_bam(
-        cls, bam=None, fn=None, bed=None, zero=False, region=None,
+        cls, bam=None, fn=None, bed=None, region=None, zero=False,
         map_qual=None, names=None
     ):
         """
         Construct CovFrame from one or more SAM/BAM/CRAM files.
 
-        Either the 'bam' or 'fn' parameter must be provided, but not both.
+        Alignment files must be specified with either ``bam`` or ``fn``, but
+        it's an error to use both.
 
-        Under the hood, this method computes read depth from the input files
-        using the :command:`samtools depth` command.
+        By default, the method will count all reads within the alignment
+        files. You can specify target regions with either ``bed`` or
+        ``region``, but not both. When you do this, pay close attention to
+        the 'chr' string in contig names (e.g. 'chr1' vs. '1'). Note also
+        that ``region`` requires the input files be indexed.
 
-        Some parameters such as 'bed' and 'region' require that the input
-        files be indexed.
+        Under the hood, the method computes read depth using the
+        :command:`samtools depth` command.
 
         Parameters
         ----------
         bam : str or list, optional
-            One or more input files.
+            One or more alignment files.
         fn : str, optional
-            File containing one input filename per line.
+            File containing one alignment file per line.
         bed : str, optional
             BED file.
+        region : str, optional
+            Target region ('chrom:start-end').
         zero : bool, default: False
             If True, output all positions (including those with zero depth).
-        region : str, optional
-            Only report depth in the specified region ('chrom:start-end').
         map_qual: int, optional
             Only count reads with mapping quality greater than orequal to
             this number.

@@ -25,13 +25,14 @@ For getting help on the fuc CLI:
        bam-slice    Slice a SAM/BAM/CRAM file.
        bed-intxn    Find the intersection of two or more BED files.
        bed-sum      Summarize a BED file.
+       cov-concat   Concatenate TSV files containing depth of coverage data.
        fq-count     Count sequence reads in FASTQ files.
        fq-sum       Summarize a FASTQ file.
-       fuc-undetm   Compute top unknown barcodes using undertermined FASTQ from bcl2fastq.
        fuc-compf    Compare the contents of two files.
        fuc-demux    Parse the Reports directory from bcl2fastq.
        fuc-exist    Check whether certain files exist.
        fuc-find     Find all filenames matching a specified pattern recursively.
+       fuc-undetm   Compute top unknown barcodes using undertermined FASTQ from bcl2fastq.
        maf-maf2vcf  Convert a MAF file to a VCF file.
        maf-oncoplt  Create an oncoplot with a MAF file.
        maf-sumplt   Create a summary plot with a MAF file.
@@ -72,9 +73,11 @@ bam-depth
    # Compute read depth from SAM/BAM/CRAM files. #
    ###############################################
    
-   Input alignment files must be specified with either '--bam' or '--fn', but it's an error to use both.
+   Alignment files must be specified with either '--bam' or '--fn', but it's an error to use both.
    
-   By default, the command will count all reads within the alignment file. You can specify target region(s) with either '--bed' or '--region', but not both. When you do this, pay close attention to the 'chr' string in contig names (e.g. 'chr1' vs. '1').
+   By default, the command will count all reads within the alignment files. You can specify target regions with either '--bed' or '--region', but not both. When you do this, pay close attention to the 'chr' string in contig names (e.g. 'chr1' vs. '1'). Note also that '--region' requires the input files be indexed.
+   
+   Under the hood, the command computes read depth using the 'samtools depth' command.
    
    Usage examples:
      $ fuc bam-depth --bam 1.bam 2.bam --bed in.bed > out.tsv
@@ -86,7 +89,7 @@ bam-depth
                            One or more alignment files.
      --fn PATH             File containing one alignment file per line.
      --bed PATH            BED file.
-     --region TEXT         Only report depth in specified region ('chrom:start-end').
+     --region TEXT         Target region ('chrom:start-end').
      --zero                Output all positions including those with zero depth.
 
 bam-head
@@ -233,6 +236,29 @@ bed-sum
      --bases INT     Number to divide covered base pairs (default: 1).
      --decimals INT  Number of decimals (default: 0).
 
+cov-concat
+==========
+
+.. code-block:: text
+
+   $ fuc cov-concat -h
+   usage: fuc cov-concat [-h] [--axis INT] PATH [PATH ...]
+   
+   ############################################################
+   # Concatenate TSV files containing depth of coverage data. #
+   ############################################################
+   
+   Usage examples:
+     $ fuc cov-concat 1.tsv 2.tsv > rows.tsv
+     $ fuc cov-concat 1.tsv 2.tsv --axis 1 > cols.tsv
+   
+   Positional arguments:
+     PATH        One or more TSV files.
+   
+   Optional arguments:
+     -h, --help  Show this help message and exit.
+     --axis INT  The axis to concatenate along (default: 0) (chocies: 0, 1 where 0 is index and 1 is columns).
+
 fq-count
 ========
 
@@ -279,30 +305,6 @@ fq-sum
    
    Optional arguments:
      -h, --help  Show this help message and exit.
-
-fuc-undetm
-==========
-
-.. code-block:: text
-
-   $ fuc fuc-undetm -h
-   usage: fuc fuc-undetm [-h] [--count INT] fastq
-   
-   ##########################################################################
-   # Compute top unknown barcodes using undertermined FASTQ from bcl2fastq. #
-   ##########################################################################
-   
-   This command will compute top unknown barcodes using undertermined FASTQ from the bcl2fastq or bcl2fastq2 prograrm.
-   
-   Usage examples:
-     $ fuc fuc-undetm Undetermined_S0_R1_001.fastq.gz
-   
-   Positional arguments:
-     fastq        Undertermined FASTQ (zipped or unzipped).
-   
-   Optional arguments:
-     -h, --help   Show this help message and exit.
-     --count INT  Number of top unknown barcodes to return (default: 30).
 
 fuc-compf
 =========
@@ -414,6 +416,30 @@ fuc-find
    Optional arguments:
      -h, --help  Show this help message and exit.
      --dir PATH  Directory to search in (default: current directory).
+
+fuc-undetm
+==========
+
+.. code-block:: text
+
+   $ fuc fuc-undetm -h
+   usage: fuc fuc-undetm [-h] [--count INT] fastq
+   
+   ##########################################################################
+   # Compute top unknown barcodes using undertermined FASTQ from bcl2fastq. #
+   ##########################################################################
+   
+   This command will compute top unknown barcodes using undertermined FASTQ from the bcl2fastq or bcl2fastq2 prograrm.
+   
+   Usage examples:
+     $ fuc fuc-undetm Undetermined_S0_R1_001.fastq.gz
+   
+   Positional arguments:
+     fastq        Undertermined FASTQ (zipped or unzipped).
+   
+   Optional arguments:
+     -h, --help   Show this help message and exit.
+     --count INT  Number of top unknown barcodes to return (default: 30).
 
 maf-maf2vcf
 ===========
