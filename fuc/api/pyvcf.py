@@ -5359,13 +5359,11 @@ class VcfFrame:
         ... }
         >>> vf = pyvcf.VcfFrame.from_dict([], data)
         >>> vf.df
-          CHROM  POS ID REF  ALT  ... FILTER INFO    FORMAT                      A                              B
-        0  chr1  100  .   A    C  ...      .    .  GT:AD:AF  0/1:12,15:0.444,0.556          0/1:13,17:0.433,0.567
-        1  chr1  101  .   G    T  ...      .    .  GT:AD:AF   0/0:32,1:0.970,0.030          0/1:14,15:0.483,0.517
-        2  chr1  102  .   A    G  ...      .    .     GT:AF                  0/1:.                          ./.:.
-        3  chr1  103  .   C  G,A  ...      .    .  GT:AD:AF                ./.:.:.  1/2:0,11,17:0.000,0.393,0.607
-
-        [4 rows x 11 columns]
+          CHROM  POS ID REF  ALT QUAL FILTER INFO    FORMAT                      A                              B
+        0  chr1  100  .   A    C    .      .    .  GT:AD:AF  0/1:12,15:0.444,0.556          0/1:13,17:0.433,0.567
+        1  chr1  101  .   G    T    .      .    .  GT:AD:AF   0/0:32,1:0.970,0.030          0/1:14,15:0.483,0.517
+        2  chr1  102  .   A    G    .      .    .     GT:AF                  0/1:.                          ./.:.
+        3  chr1  103  .   C  G,A    .      .    .  GT:AD:AF                ./.:.:.  1/2:0,11,17:0.000,0.393,0.607
         >>> vf.get_af('A', 'chr1-100-A-C')
         0.556
         >>> vf.get_af('B', 'chr1-102-A-G')
