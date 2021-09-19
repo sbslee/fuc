@@ -22,6 +22,7 @@ Changelog
 * Add new command :command:`cov-concat`.
 * Update :class:`pyvcf.VcfFrame` to enforce the dtypes.
 * Update :meth:`pyvcf.VcfFrame.add_af` method to output allele fraction for each ALT allele.
+* Fix bug in :meth:`pyvcf.VcfFrame.add_af` method when the sum of allelic depths is 0.
 
 0.22.0 (2021-09-04)
 -------------------

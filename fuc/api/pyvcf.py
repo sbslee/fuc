@@ -950,13 +950,16 @@ class VcfFrame:
                 else:
                     depths = [int(x) for x in ad.split(',')]
                     total = sum(depths)
-                    af = ','.join([f'{x/total:.{decimals}f}' for x in depths])
+                    if total == 0:
+                        af = '.'
+                    else:
+                        af = ','.join([f'{x/total:.{decimals}f}' for x in depths])
 
                 return f'{g}:{af}'
 
             r.iloc[9:] = r.iloc[9:].apply(one_gt)
             r.FORMAT += ':AF'
-            
+
             return r
 
         df = self.df.apply(one_row, axis=1)
