@@ -21,6 +21,7 @@ Changelog
 * Add new method :meth:`pycov.concat`.
 * Add new command :command:`cov-concat`.
 * Update :class:`pyvcf.VcfFrame` to enforce the dtypes.
+* Update :meth:`pyvcf.VcfFrame.add_af` method to output allele fraction for each ALT allele.
 
 0.22.0 (2021-09-04)
 -------------------

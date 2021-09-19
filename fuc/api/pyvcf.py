@@ -886,7 +886,11 @@ class VcfFrame:
         return self.df.empty
 
     def add_af(self, decimals=3):
-        """Compute AF using AD and add it to the FORMAT field.
+        """
+        Compute AF from AD and then add it to the FORMAT field.
+
+        This method will compute allele fraction for each ALT allele in the
+        same order as listed.
 
         Parameters
         ----------
@@ -896,59 +900,68 @@ class VcfFrame:
         Returns
         -------
         VcfFrame
-            Updated VcfFrame.
+            Updated VcfFrame object.
 
         Examples
         --------
-        Assume we have the following data:
 
         >>> from fuc import pyvcf
         >>> data = {
-        ...     'CHROM': ['chr1', 'chr1', 'chr2', 'chr2'],
-        ...     'POS': [100, 100, 200, 200],
+        ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102, 103],
         ...     'ID': ['.', '.', '.', '.'],
-        ...     'REF': ['A', 'A', 'C', 'C'],
+        ...     'REF': ['A', 'G', 'A', 'C'],
         ...     'ALT': ['C', 'T', 'G', 'G,A'],
         ...     'QUAL': ['.', '.', '.', '.'],
         ...     'FILTER': ['.', '.', '.', '.'],
         ...     'INFO': ['.', '.', '.', '.'],
-        ...     'FORMAT': ['GT:AD', 'GT:AD', 'GT:AD', 'GT:AD'],
-        ...     'Steven': ['0/1:12,15', '0/0:32,1', '0/1:16,12', './.:.'],
-        ...     'Sara': ['0/1:13,17', '0/1:14,15', './.:.', '1/2:0,11,17'],
+        ...     'FORMAT': ['GT:AD', 'GT:AD', 'GT', 'GT:AD'],
+        ...     'A': ['0/1:12,15', '0/0:32,1', '0/1', './.:.'],
+        ...     'B': ['0/1:13,17', '0/1:14,15', './.', '1/2:0,11,17'],
         ... }
         >>> vf = pyvcf.VcfFrame.from_dict([], data)
         >>> vf.df
-          CHROM  POS ID REF  ALT QUAL FILTER INFO FORMAT     Steven         Sara
+          CHROM  POS ID REF  ALT QUAL FILTER INFO FORMAT          A            B
         0  chr1  100  .   A    C    .      .    .  GT:AD  0/1:12,15    0/1:13,17
-        1  chr1  100  .   A    T    .      .    .  GT:AD   0/0:32,1    0/1:14,15
-        2  chr2  200  .   C    G    .      .    .  GT:AD  0/1:16,12        ./.:.
-        3  chr2  200  .   C  G,A    .      .    .  GT:AD      ./.:.  1/2:0,11,17
-
-        We can add the AF subfield to our genotype data:
-
+        1  chr1  101  .   G    T    .      .    .  GT:AD   0/0:32,1    0/1:14,15
+        2  chr1  102  .   A    G    .      .    .     GT        0/1          ./.
+        3  chr1  103  .   C  G,A    .      .    .  GT:AD      ./.:.  1/2:0,11,17
         >>> vf.add_af().df
-          CHROM  POS ID REF  ... INFO    FORMAT           Steven               Sara
-        0  chr1  100  .   A  ...    .  GT:AD:AF  0/1:12,15:0.556    0/1:13,17:0.567
-        1  chr1  100  .   A  ...    .  GT:AD:AF   0/0:32,1:0.030    0/1:14,15:0.517
-        2  chr2  200  .   C  ...    .  GT:AD:AF  0/1:16,12:0.429            ./.:.:.
-        3  chr2  200  .   C  ...    .  GT:AD:AF          ./.:.:.  1/2:0,11,17:0.607
+          CHROM  POS ID REF  ALT QUAL FILTER INFO    FORMAT                      A                              B
+        0  chr1  100  .   A    C    .      .    .  GT:AD:AF  0/1:12,15:0.444,0.556          0/1:13,17:0.433,0.567
+        1  chr1  101  .   G    T    .      .    .  GT:AD:AF   0/0:32,1:0.970,0.030          0/1:14,15:0.483,0.517
+        2  chr1  102  .   A    G    .      .    .     GT:AF                  0/1:.                          ./.:.
+        3  chr1  103  .   C  G,A    .      .    .  GT:AD:AF                ./.:.:.  1/2:0,11,17:0.000,0.393,0.607
         """
         def one_row(r):
-            i = r.FORMAT.split(':').index('AD')
+            try:
+                i = r.FORMAT.split(':').index('AD')
+            except ValueError:
+                i = None
+
             def one_gt(g):
-                ad = g.split(':')[i]
-                if ad == '.':
-                    return f'{g}:.'
-                depths = [int(x) for x in ad.split(',')]
-                total = sum(depths)
-                af = max(depths[1:]) / total
-                return f'{g}:{af:.{decimals}f}'
+                if i is None:
+                    ad = None
+                else:
+                    ad = g.split(':')[i]
+
+                if ad is None or ad == '.':
+                    af = '.'
+                else:
+                    depths = [int(x) for x in ad.split(',')]
+                    total = sum(depths)
+                    af = ','.join([f'{x/total:.{decimals}f}' for x in depths])
+
+                return f'{g}:{af}'
+
             r.iloc[9:] = r.iloc[9:].apply(one_gt)
             r.FORMAT += ':AF'
+            
             return r
+
         df = self.df.apply(one_row, axis=1)
-        vf = self.__class__(self.copy_meta(), df)
-        return vf
+
+        return self.__class__(self.copy_meta(), df)
 
     def add_dp(self):
         """Compute DP using AD and add it to the FORMAT field.
