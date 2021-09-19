@@ -5321,3 +5321,45 @@ class VcfFrame:
             return r
 
         return self.__class__(self.copy_meta(), self.df.apply(one_row, axis=1))
+
+    def get_af(self, sample, variant):
+        """
+        Get allele fraction for a pair of sample and variant.
+
+        The method will return ``numpy.nan`` if the value is missing.
+
+        Parameters
+        ----------
+        sample : str
+            Sample name.
+        variant : str
+            Variant name.
+
+        Returns
+        -------
+        float
+            Allele fraction.
+        """
+        chrom, pos, ref, alt = common.parse_variant(variant)
+        r = self.df[(self.df.CHROM == chrom) & (self.df.POS == pos) & (self.df.REF == ref)]
+
+        try:
+            i = r.FORMAT.values[0].split(':').index('AF')
+        except ValueError:
+            i = None
+
+        alts = r.ALT.values[0].split(',')
+
+        if alt in alts:
+            j = r.ALT.values[0].split(',').index(alt)
+        else:
+            raise ValueError(f'ALT allele not found, possible choices: {alts}')
+
+        field = r[sample].values[0].split(':')[i]
+
+        if field == '.' or i is None:
+            af = np.nan
+        else:
+            af = float(field.split(',')[j+1])
+
+        return af
