@@ -7,7 +7,9 @@ from .. import api
 import pandas as pd
 
 description = f"""
-This command will prepare a pipeline that constructs a panel of normals (PoN).
+#######################################################
+# Pipeline for constructing a panel of normals (PoN). #
+#######################################################
 
 The pipeline is based on GATK's tutorial "(How to) Call somatic mutations using GATK4 Mutect2" (https://gatk.broadinstitute.org/hc/en-us/articles/360035531132).
 

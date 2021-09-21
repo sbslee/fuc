@@ -7,7 +7,9 @@ from .. import api
 import pandas as pd
 
 description = f"""
-This command will prepare a pipeline that converts FASTQ files to analysis-ready BAM files.
+####################################################################
+# Pipeline for converting FASTQ files to analysis-ready BAM files. #
+####################################################################
 
 Here, "analysis-ready" means that the final BAM files are: 1) aligned to a reference genome, 2) sorted by genomic coordinate, 3) marked for duplicate reads, 4) recalibrated by BQSR model, and 5) ready for downstream analyses such as variant calling.
 

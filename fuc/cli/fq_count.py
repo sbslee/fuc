@@ -4,7 +4,9 @@ import subprocess
 from .. import api
 
 description = f"""
-This command will count sequence reads in FASTQ files.
+########################################
+# Count sequence reads in FASTQ files. #
+########################################
 
 It will look for stdin if there are no arguments.
 

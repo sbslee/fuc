@@ -3,7 +3,9 @@ import sys
 from .. import api
 
 description = f"""
-This command will convert a VCF file to a BED file.
+#####################################
+# Convert a VCF file to a BED file. #
+#####################################
 
 Usage examples:
   $ fuc {api.common._script_name()} in.vcf > out.bed

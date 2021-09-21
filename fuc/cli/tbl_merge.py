@@ -5,9 +5,11 @@ from .. import api
 import pandas as pd
 
 description = f"""
-This command will merge two table files using one or more shared columns.
+##########################
+# Merge two table files. #
+##########################
 
-The command essentially wraps the 'pandas.DataFrame.merge' method from the pandas package. For details on the merging algorithms, please visit the method's documentation page.
+This command will merge two table files using one or more shared columns. The command essentially wraps the 'pandas.DataFrame.merge' method from the pandas package. For details on the merging algorithms, please visit the method's documentation page.
 
 Usage examples:
   $ fuc {api.common._script_name()} left.tsv right.tsv > merged.tsv

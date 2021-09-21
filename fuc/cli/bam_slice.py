@@ -5,7 +5,11 @@ from .. import api
 import pysam
 
 description = f"""
-This command will slice the input SAM/BAM/CRAM file for the specified region(s).
+##############################
+# Slice a SAM/BAM/CRAM file. #
+##############################
+
+This command will slice the input alignment file for specified region(s).
 
 Usage examples:
   $ fuc {api.common._script_name()} in.bam chr1:100-200 > out.bam
@@ -23,7 +27,7 @@ def create_parser(subparsers):
     )
     parser.add_argument(
         'bam',
-        help='SAM/BAM/CRAM file.'
+        help='Alignment file.'
     )
     parser.add_argument(
         'region',

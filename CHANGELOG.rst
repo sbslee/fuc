@@ -1,6 +1,30 @@
 Changelog
 *********
 
+0.23.0 (2021-09-21)
+-------------------
+
+* Update :class:`pycov.CovFrame` class to ensure that the ``Chromosome`` column is always string.
+* Update :meth:`pycov.CovFrame.from_file` method to accept file-like object as input as well.
+* Add new argument ``metadata`` to :meth:`pyvcf.VcfFrame.strip` method.
+* Update :meth:`pyvcf.VcfFrame.from_file` method to accept file-like object as input as well.
+* Add new method :meth:`pycov.CovFrame.mask_bed`.
+* Add new method :meth:`pycov.CovFrame.chr_prefix`.
+* Add new property ``contigs`` to :class:`pybed.BedFrame` class.
+* Add new method :meth:`pybed.BedFrame.chr_prefix`.
+* Add new methods :meth:`pybed.BedFrame.copy_meta` and :meth:`pybed.BedFrame.sort`.
+* Add new method :meth:`pybed.BedFrame.merge`.
+* Add new property ``empty`` to :class:`pyvcf.VcfFrame` class.
+* Fix minor bug in :meth:`pyvcf.VcfFrame.strip` method when sample genotypes don't have the same number of fields as FORMAT.
+* Add new method :meth:`pycov.CovFrame.subset` method.
+* Add new method :meth:`common.color_print`.
+* Add new method :meth:`pycov.concat`.
+* Add new command :command:`cov-concat`.
+* Update :class:`pyvcf.VcfFrame` to enforce the dtypes.
+* Update :meth:`pyvcf.VcfFrame.add_af` method to output allele fraction for each ALT allele.
+* Fix bug in :meth:`pyvcf.VcfFrame.add_af` method when the sum of allelic depths is 0.
+* Add new method :meth:`pyvcf.VcfFrame.get_af`.
+
 0.22.0 (2021-09-04)
 -------------------
 

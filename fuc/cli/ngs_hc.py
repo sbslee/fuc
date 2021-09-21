@@ -7,7 +7,9 @@ from .. import api
 import pandas as pd
 
 description = f"""
-This command will prepare a pipeline that performs germline short variant discovery.
+##################################################
+# Pipeline for germline short variant discovery. #
+##################################################
 
 External dependencies:
   - SGE: Required for job submission (i.e. qsub).

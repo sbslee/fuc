@@ -5,7 +5,9 @@ from .. import api
 import pandas as pd
 
 description = f"""
-This command will rename the samples in a VCF file.
+#####################################
+# Rename the samples in a VCF file. #
+#####################################
 
 There are three different renaming modes using the 'names' file:
   - 'MAP': Default mode. Requires two columns, old names in the first and new names in the second.

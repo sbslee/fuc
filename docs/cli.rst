@@ -21,17 +21,18 @@ For getting help on the fuc CLI:
        bam-depth    Compute read depth from SAM/BAM/CRAM files.
        bam-head     Print the header of a SAM/BAM/CRAM file.
        bam-index    Index a SAM/BAM/CRAM file.
-       bam-rename   Rename the samples in a SAM/BAM/CRAM file.
+       bam-rename   Rename the sample in a SAM/BAM/CRAM file.
        bam-slice    Slice a SAM/BAM/CRAM file.
        bed-intxn    Find the intersection of two or more BED files.
        bed-sum      Summarize a BED file.
+       cov-concat   Concatenate TSV files containing depth of coverage data.
        fq-count     Count sequence reads in FASTQ files.
        fq-sum       Summarize a FASTQ file.
-       fuc-undetm   Compute top unknown barcodes using undertermined FASTQ from bcl2fastq.
        fuc-compf    Compare the contents of two files.
        fuc-demux    Parse the Reports directory from bcl2fastq.
        fuc-exist    Check whether certain files exist.
        fuc-find     Find all filenames matching a specified pattern recursively.
+       fuc-undetm   Compute top unknown barcodes using undertermined FASTQ from bcl2fastq.
        maf-maf2vcf  Convert a MAF file to a VCF file.
        maf-oncoplt  Create an oncoplot with a MAF file.
        maf-sumplt   Create a summary plot with a MAF file.
@@ -45,7 +46,7 @@ For getting help on the fuc CLI:
        vcf-filter   Filter a VCF file.
        vcf-merge    Merge two or more VCF files.
        vcf-rename   Rename the samples in a VCF file.
-       vcf-slice    Slice a VCF file for one or more specified regions.
+       vcf-slice    Slice a VCF file for specified regions.
        vcf-vcf2bed  Convert a VCF file to a BED file.
        vcf-vep      Filter a VCF file annotated by Ensembl VEP.
    
@@ -68,11 +69,15 @@ bam-depth
    usage: fuc bam-depth [-h] [--bam PATH [PATH ...]] [--fn PATH] [--bed PATH]
                         [--region TEXT] [--zero]
    
-   This command will compute read depth from input SAM/BAM/CRAM files.
+   ###############################################
+   # Compute read depth from SAM/BAM/CRAM files. #
+   ###############################################
    
-   Input files must be specified with either '--bam' or '--fn'.
+   Alignment files must be specified with either '--bam' or '--fn', but it's an error to use both.
    
-   By default, the command will count all reads within the alignment file. Use '--bed' or '--region' to specify target regions. When you do this, pay attention to the 'chr' string in contig names (e.g. 'chr1' vs. '1').
+   By default, the command will count all reads within the alignment files. You can specify target regions with either '--bed' or '--region', but not both. When you do this, pay close attention to the 'chr' string in contig names (e.g. 'chr1' vs. '1'). Note also that '--region' requires the input files be indexed.
+   
+   Under the hood, the command computes read depth using the 'samtools depth' command.
    
    Usage examples:
      $ fuc bam-depth --bam 1.bam 2.bam --bed in.bed > out.tsv
@@ -81,10 +86,10 @@ bam-depth
    Optional arguments:
      -h, --help            Show this help message and exit.
      --bam PATH [PATH ...]
-                           One or more input files.
-     --fn PATH             File containing one input filename per line.
+                           One or more alignment files.
+     --fn PATH             File containing one alignment file per line.
      --bed PATH            BED file.
-     --region TEXT         Only report depth in specified region ('chrom:start-end').
+     --region TEXT         Target region ('chrom:start-end').
      --zero                Output all positions including those with zero depth.
 
 bam-head
@@ -95,7 +100,9 @@ bam-head
    $ fuc bam-head -h
    usage: fuc bam-head [-h] bam
    
-   This command will print the header of the input SAM/BAM/CRAM file.
+   ############################################
+   # Print the header of a SAM/BAM/CRAM file. #
+   ############################################
    
    Usage examples:
      $ fuc bam-head in.sam
@@ -103,7 +110,7 @@ bam-head
      $ fuc bam-head in.cram
    
    Positional arguments:
-     bam         SAM/BAM/CRAM file.
+     bam         Alignment file.
    
    Optional arguments:
      -h, --help  Show this help message and exit.
@@ -116,15 +123,15 @@ bam-index
    $ fuc bam-index -h
    usage: fuc bam-index [-h] bam
    
-   This command will index the input SAM/BAM/CRAM file.
+   ##############################
+   # Index a SAM/BAM/CRAM file. #
+   ##############################
    
    Usage examples:
-     $ fuc bam-index in.sam
      $ fuc bam-index in.bam
-     $ fuc bam-index in.cram
    
    Positional arguments:
-     bam         SAM/BAM/CRAM file.
+     bam         Alignment file.
    
    Optional arguments:
      -h, --help  Show this help message and exit.
@@ -137,15 +144,15 @@ bam-rename
    $ fuc bam-rename -h
    usage: fuc bam-rename [-h] bam name
    
-   This command will rename the sample(s) in the input SAM/BAM/CRAM file.
+   ##############################################
+   # Rename the sample in a SAM/BAM/CRAM file. #
+   ##############################################
    
    Usage examples:
-     $ fuc bam-rename in.sam NA12878 > out.sam
      $ fuc bam-rename in.bam NA12878 > out.bam
-     $ fuc bam-rename in.cram NA12878 > out.cram
    
    Positional arguments:
-     bam         SAM/BAM/CRAM file.
+     bam         Alignment file.
      name        New sample name.
    
    Optional arguments:
@@ -160,7 +167,11 @@ bam-slice
    usage: fuc bam-slice [-h] [--format TEXT] [--fasta PATH]
                         bam region [region ...]
    
-   This command will slice the input SAM/BAM/CRAM file for the specified region(s).
+   ##############################
+   # Slice a SAM/BAM/CRAM file. #
+   ##############################
+   
+   This command will slice the input alignment file for specified region(s).
    
    Usage examples:
      $ fuc bam-slice in.bam chr1:100-200 > out.bam
@@ -169,7 +180,7 @@ bam-slice
      $ fuc bam-slice in.bam chr1:100-200 --format CRAM --fasta ref.fa > out.cram
    
    Positional arguments:
-     bam            SAM/BAM/CRAM file.
+     bam            Alignment file.
      region         Space-separated regions ('chrom:start-end').
    
    Optional arguments:
@@ -185,7 +196,9 @@ bed-intxn
    $ fuc bed-intxn -h
    usage: fuc bed-intxn [-h] bed [bed ...]
    
-   This command will compute the intersection beween multiple BED files.
+   ###################################################
+   # Find the intersection of two or more BED files. #
+   ###################################################
    
    Usage examples:
      $ fuc bed-intxn 1.bed 2.bed 3.bed > intersect.bed
@@ -204,9 +217,11 @@ bed-sum
    $ fuc bed-sum -h
    usage: fuc bed-sum [-h] [--bases INT] [--decimals INT] bed
    
-   This command will compute various summary statstics for a BED file.
+   #########################
+   # Summarize a BED file. #
+   #########################
    
-   The returned statistics include the total numbers of probes and covered base pairs for each chromosome.
+   This command will compute various summary statstics for a BED file. The returned statistics include the total numbers of probes and covered base pairs for each chromosome.
    
    By default, covered base paris are displayed in bp, but if you prefer you can, for example, use '--bases 1000' to display in kb.
    
@@ -221,6 +236,29 @@ bed-sum
      --bases INT     Number to divide covered base pairs (default: 1).
      --decimals INT  Number of decimals (default: 0).
 
+cov-concat
+==========
+
+.. code-block:: text
+
+   $ fuc cov-concat -h
+   usage: fuc cov-concat [-h] [--axis INT] PATH [PATH ...]
+   
+   ############################################################
+   # Concatenate TSV files containing depth of coverage data. #
+   ############################################################
+   
+   Usage examples:
+     $ fuc cov-concat 1.tsv 2.tsv > rows.tsv
+     $ fuc cov-concat 1.tsv 2.tsv --axis 1 > cols.tsv
+   
+   Positional arguments:
+     PATH        One or more TSV files.
+   
+   Optional arguments:
+     -h, --help  Show this help message and exit.
+     --axis INT  The axis to concatenate along (default: 0) (chocies: 0, 1 where 0 is index and 1 is columns).
+
 fq-count
 ========
 
@@ -229,7 +267,9 @@ fq-count
    $ fuc fq-count -h
    usage: fuc fq-count [-h] [fastq ...]
    
-   This command will count sequence reads in FASTQ files.
+   ########################################
+   # Count sequence reads in FASTQ files. #
+   ########################################
    
    It will look for stdin if there are no arguments.
    
@@ -251,38 +291,20 @@ fq-sum
    $ fuc fq-sum -h
    usage: fuc fq-sum [-h] fastq
    
-   This command will output a summary of the input FASTQ file (both zipped and unqzipped).
+   ###########################
+   # Summarize a FASTQ file. #
+   ###########################
    
-   The summary includes the total number of sequence reads, the distribution of read lengths, and the numbers of unique and duplicate sequences.
+   This command will output a summary of the input FASTQ file. The summary includes the total number of sequence reads, the distribution of read lengths, and the numbers of unique and duplicate sequences.
    
    Usage examples:
      $ fuc fq-sum in.fastq
    
    Positional arguments:
-     fastq       FASTQ file.
+     fastq       FASTQ file (zipped or unqzipped).
    
    Optional arguments:
      -h, --help  Show this help message and exit.
-
-fuc-undetm
-==========
-
-.. code-block:: text
-
-   $ fuc fuc-undetm -h
-   usage: fuc fuc-undetm [-h] [--count INT] fastq
-   
-   This command will compute top unknown barcodes using undertermined FASTQ from the bcl2fastq or bcl2fastq2 prograrm.
-   
-   Usage examples:
-     $ fuc fuc-undetm Undetermined_S0_R1_001.fastq.gz
-   
-   Positional arguments:
-     fastq        Undertermined FASTQ (zipped or unzipped).
-   
-   Optional arguments:
-     -h, --help   Show this help message and exit.
-     --count INT  Number of top unknown barcodes to return (default: 30).
 
 fuc-compf
 =========
@@ -291,6 +313,10 @@ fuc-compf
 
    $ fuc fuc-compf -h
    usage: fuc fuc-compf [-h] left right
+   
+   ######################################
+   # Compare the contents of two files. #
+   ######################################
    
    This command will compare the contents of two files, returning 'True' if they are identical and 'False' otherwise.
    
@@ -311,6 +337,10 @@ fuc-demux
 
    $ fuc fuc-demux -h
    usage: fuc fuc-demux [-h] [--sheet PATH] reports output
+   
+   ###############################################
+   # Parse the Reports directory from bcl2fastq. #
+   ###############################################
    
    This command will parse, and extract various statistics from, HTML files in the Reports directory created by the bcl2fastq or bcl2fastq2 prograrm.
    
@@ -342,6 +372,10 @@ fuc-exist
    $ fuc fuc-exist -h
    usage: fuc fuc-exist [-h] [files ...]
    
+   ######################################
+   # Check whether certain files exist. #
+   ######################################
+   
    This command will check whether or not specified files including directoires exist, returning 'True' if they exist and 'False' otherwise.
    
    The command will look for stdin if there are no arguments.
@@ -365,6 +399,10 @@ fuc-find
    $ fuc fuc-find -h
    usage: fuc fuc-find [-h] [--dir PATH] pattern
    
+   ################################################################
+   # Find all filenames matching a specified pattern recursively. #
+   ################################################################
+   
    This command will recursively find all the filenames matching a specified pattern and then return their absolute paths.
    
    Usage examples:
@@ -379,6 +417,30 @@ fuc-find
      -h, --help  Show this help message and exit.
      --dir PATH  Directory to search in (default: current directory).
 
+fuc-undetm
+==========
+
+.. code-block:: text
+
+   $ fuc fuc-undetm -h
+   usage: fuc fuc-undetm [-h] [--count INT] fastq
+   
+   ##########################################################################
+   # Compute top unknown barcodes using undertermined FASTQ from bcl2fastq. #
+   ##########################################################################
+   
+   This command will compute top unknown barcodes using undertermined FASTQ from the bcl2fastq or bcl2fastq2 prograrm.
+   
+   Usage examples:
+     $ fuc fuc-undetm Undetermined_S0_R1_001.fastq.gz
+   
+   Positional arguments:
+     fastq        Undertermined FASTQ (zipped or unzipped).
+   
+   Optional arguments:
+     -h, --help   Show this help message and exit.
+     --count INT  Number of top unknown barcodes to return (default: 30).
+
 maf-maf2vcf
 ===========
 
@@ -389,7 +451,9 @@ maf-maf2vcf
                           [--cols TEXT [TEXT ...]] [--names TEXT [TEXT ...]]
                           maf
    
-   This command will convert a MAF file to a sorted VCF file.
+   #####################################
+   # Convert a MAF file to a VCF file. #
+   #####################################
    
    In order to handle INDELs the command makes use of a reference assembly (i.e. FASTA file). If SNVs are your only concern, then you do not need a FASTA file and can just use the '--ignore_indels' flag.
    
@@ -427,7 +491,9 @@ maf-oncoplt
                           [--legend_fontsize FLOAT]
                           maf out
    
-   This command will create an oncoplot with a MAF file.
+   #######################################
+   # Create an oncoplot with a MAF file. #
+   #######################################
    
    The format of output image (PDF/PNG/JPEG/SVG) will be automatically determined by the output file's extension.
    
@@ -461,7 +527,9 @@ maf-sumplt
                          [--ticklabels_fontsize FLOAT] [--legend_fontsize FLOAT]
                          maf out
    
-   This command will create a summary plot with a MAF file.
+   ##########################################
+   # Create a summary plot with a MAF file. #
+   ##########################################
    
    The format of output image (PDF/PNG/JPEG/SVG) will be automatically determined by the output file's extension.
    
@@ -492,13 +560,15 @@ maf-vcf2maf
    $ fuc maf-vcf2maf -h
    usage: fuc maf-vcf2maf [-h] vcf
    
-   This command will convert an annotated VCF file to a MAF file.
+   #####################################
+   # Convert a VCF file to a MAF file. #
+   #####################################
    
    Usage examples:
      $ fuc maf-vcf2maf in.vcf > out.maf
    
    Positional arguments:
-     vcf         VCF file.
+     vcf         Annotated VCF file.
    
    Optional arguments:
      -h, --help  Show this help message and exit.
@@ -513,7 +583,9 @@ ngs-fq2bam
                          [--force] [--keep]
                          manifest fasta output qsub1 qsub2 java vcf [vcf ...]
    
-   This command will prepare a pipeline that converts FASTQ files to analysis-ready BAM files.
+   ####################################################################
+   # Pipeline for converting FASTQ files to analysis-ready BAM files. #
+   ####################################################################
    
    Here, "analysis-ready" means that the final BAM files are: 1) aligned to a reference genome, 2) sorted by genomic coordinate, 3) marked for duplicate reads, 4) recalibrated by BQSR model, and 5) ready for downstream analyses such as variant calling.
    
@@ -559,7 +631,9 @@ ngs-hc
                      [--keep]
                      manifest fasta output qsub java1 java2
    
-   This command will prepare a pipeline that performs germline short variant discovery.
+   ##################################################
+   # Pipeline for germline short variant discovery. #
+   ##################################################
    
    External dependencies:
      - SGE: Required for job submission (i.e. qsub).
@@ -597,7 +671,9 @@ ngs-m2
    usage: fuc ngs-m2 [-h] [--bed PATH] [--force] [--keep]
                      manifest fasta output pon germline qsub java
    
-   This command will prepare a pipeline that performs somatic short variant discovery.
+   #################################################
+   # Pipeline for somatic short variant discovery. #
+   #################################################
    
    External dependencies:
      - SGE: Required for job submission (i.e. qsub).
@@ -635,7 +711,9 @@ ngs-pon
    usage: fuc ngs-pon [-h] [--bed PATH] [--force] [--keep]
                       manifest fasta output qsub java
    
-   This command will prepare a pipeline that constructs a panel of normals (PoN).
+   #######################################################
+   # Pipeline for constructing a panel of normals (PoN). #
+   #######################################################
    
    The pipeline is based on GATK's tutorial "(How to) Call somatic mutations using GATK4 Mutect2" (https://gatk.broadinstitute.org/hc/en-us/articles/360035531132).
    
@@ -672,9 +750,11 @@ tbl-merge
                         [--rsep TEXT] [--osep TEXT]
                         left right
    
-   This command will merge two table files using one or more shared columns.
+   ##########################
+   # Merge two table files. #
+   ##########################
    
-   The command essentially wraps the 'pandas.DataFrame.merge' method from the pandas package. For details on the merging algorithms, please visit the method's documentation page.
+   This command will merge two table files using one or more shared columns. The command essentially wraps the 'pandas.DataFrame.merge' method from the pandas package. For details on the merging algorithms, please visit the method's documentation page.
    
    Usage examples:
      $ fuc tbl-merge left.tsv right.tsv > merged.tsv
@@ -704,7 +784,9 @@ tbl-sum
                       [--expr TEXT] [--columns TEXT [TEXT ...]] [--dtypes PATH]
                       table_file
    
-   This command will summarize a table file.
+   ###########################
+   # Summarize a table file. #
+   ###########################
    
    Usage examples:
      $ fuc tbl-sum table.tsv
@@ -736,7 +818,9 @@ vcf-filter
                          [--filter_empty]
                          vcf
    
-   This command will filter a VCF file (both zipped and unzipped).
+   ######################
+   # Filter a VCF file. #
+   ######################
    
    Usage examples:
      $ fuc vcf-filter in.vcf --expr 'GT == "0/0"' > out.vcf
@@ -752,7 +836,7 @@ vcf-filter
      $ fuc vcf-filter in.vcf --filter_empty > out.vcf
    
    Positional arguments:
-     vcf                   VCF file
+     vcf                   VCF file (zipped or unzipped).
    
    Optional arguments:
      -h, --help            Show this help message and exit.
@@ -773,7 +857,9 @@ vcf-merge
    usage: fuc vcf-merge [-h] [--how TEXT] [--format TEXT] [--sort] [--collapse]
                         vcf_files [vcf_files ...]
    
-   This command will merge multiple VCF files.
+   ################################
+   # Merge two or more VCF files. #
+   ################################
    
    Usage examples:
      $ fuc vcf-merge 1.vcf 2.vcf 3.vcf > merged.vcf
@@ -798,7 +884,9 @@ vcf-rename
    usage: fuc vcf-rename [-h] [--mode TEXT] [--range INT INT] [--sep TEXT]
                          vcf names
    
-   This command will rename the samples in a VCF file.
+   #####################################
+   # Rename the samples in a VCF file. #
+   #####################################
    
    There are three different renaming modes using the 'names' file:
      - 'MAP': Default mode. Requires two columns, old names in the first and new names in the second.
@@ -829,7 +917,9 @@ vcf-slice
    $ fuc vcf-slice -h
    usage: fuc vcf-slice [-h] [--region TEXT] [--bed PATH] [--vcf PATH] input
    
-   This command will slice a VCF file for one or more specified regions.
+   ###########################################
+   # Slice a VCF file for specified regions. #
+   ###########################################
    
    Target regions can be specified with either '--region', '--bed', or '--vcf'.
    
@@ -861,7 +951,9 @@ vcf-vcf2bed
    $ fuc vcf-vcf2bed -h
    usage: fuc vcf-vcf2bed [-h] vcf
    
-   This command will convert a VCF file to a BED file.
+   #####################################
+   # Convert a VCF file to a BED file. #
+   #####################################
    
    Usage examples:
      $ fuc vcf-vcf2bed in.vcf > out.bed
@@ -880,7 +972,9 @@ vcf-vep
    $ fuc vcf-vep -h
    usage: fuc vcf-vep [-h] [--opposite] [--as_zero] vcf expr
    
-   This command will filter a VCF file annotated by Ensembl VEP.
+   ###############################################
+   # Filter a VCF file annotated by Ensembl VEP. #
+   ###############################################
    
    Usage examples:
      $ fuc vcf-vep in.vcf "SYMBOL == 'TP53'" > out.vcf

@@ -8,6 +8,10 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 description = f"""
+###############################################
+# Parse the Reports directory from bcl2fastq. #
+###############################################
+
 This command will parse, and extract various statistics from, HTML files in the Reports directory created by the bcl2fastq or bcl2fastq2 prograrm.
 
 After creating an output directory, the command will write the following files:

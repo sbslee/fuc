@@ -804,7 +804,7 @@ class VcfFrame:
 
     def _check_df(self, df):
         df = df.reset_index(drop=True)
-        df.CHROM = df.CHROM.astype(str)
+        df = df.astype(HEADERS)
         return df
 
     def __init__(self, meta, df):
@@ -849,8 +849,48 @@ class VcfFrame:
         """bool : Whether the VCF is sites-only."""
         return not self.samples or 'FORMAT' not in self.df.columns
 
+    @property
+    def empty(self):
+        """
+        Indicator whether VcfFrame is empty.
+
+        Examples
+        --------
+
+        >>> from fuc import pyvcf
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr2'],
+        ...     'POS': [100, 101],
+        ...     'ID': ['.', '.'],
+        ...     'REF': ['G', 'T'],
+        ...     'ALT': ['A', 'C'],
+        ...     'QUAL': ['.', '.'],
+        ...     'FILTER': ['.', '.'],
+        ...     'INFO': ['.', '.'],
+        ...     'FORMAT': ['GT', 'GT'],
+        ...     'A': ['0/1', '1/1']
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A
+        0  chr1  100  .   G   A    .      .    .     GT  0/1
+        1  chr2  101  .   T   C    .      .    .     GT  1/1
+        >>> vf.df = vf.df[0:0]
+        >>> vf.df
+        Empty DataFrame
+        Columns: [CHROM, POS, ID, REF, ALT, QUAL, FILTER, INFO, FORMAT, A]
+        Index: []
+        >>> vf.empty
+        True
+        """
+        return self.df.empty
+
     def add_af(self, decimals=3):
-        """Compute AF using AD and add it to the FORMAT field.
+        """
+        Compute AF from AD and then add it to the FORMAT field.
+
+        This method will compute allele fraction for each ALT allele in the
+        same order as listed.
 
         Parameters
         ----------
@@ -860,59 +900,71 @@ class VcfFrame:
         Returns
         -------
         VcfFrame
-            Updated VcfFrame.
+            Updated VcfFrame object.
 
         Examples
         --------
-        Assume we have the following data:
 
         >>> from fuc import pyvcf
         >>> data = {
-        ...     'CHROM': ['chr1', 'chr1', 'chr2', 'chr2'],
-        ...     'POS': [100, 100, 200, 200],
+        ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102, 103],
         ...     'ID': ['.', '.', '.', '.'],
-        ...     'REF': ['A', 'A', 'C', 'C'],
+        ...     'REF': ['A', 'G', 'A', 'C'],
         ...     'ALT': ['C', 'T', 'G', 'G,A'],
         ...     'QUAL': ['.', '.', '.', '.'],
         ...     'FILTER': ['.', '.', '.', '.'],
         ...     'INFO': ['.', '.', '.', '.'],
-        ...     'FORMAT': ['GT:AD', 'GT:AD', 'GT:AD', 'GT:AD'],
-        ...     'Steven': ['0/1:12,15', '0/0:32,1', '0/1:16,12', './.:.'],
-        ...     'Sara': ['0/1:13,17', '0/1:14,15', './.:.', '1/2:0,11,17'],
+        ...     'FORMAT': ['GT:AD', 'GT:AD', 'GT', 'GT:AD'],
+        ...     'A': ['0/1:12,15', '0/0:32,1', '0/1', './.:.'],
+        ...     'B': ['0/1:13,17', '0/1:14,15', './.', '1/2:0,11,17'],
         ... }
         >>> vf = pyvcf.VcfFrame.from_dict([], data)
         >>> vf.df
-          CHROM  POS ID REF  ALT QUAL FILTER INFO FORMAT     Steven         Sara
+          CHROM  POS ID REF  ALT QUAL FILTER INFO FORMAT          A            B
         0  chr1  100  .   A    C    .      .    .  GT:AD  0/1:12,15    0/1:13,17
-        1  chr1  100  .   A    T    .      .    .  GT:AD   0/0:32,1    0/1:14,15
-        2  chr2  200  .   C    G    .      .    .  GT:AD  0/1:16,12        ./.:.
-        3  chr2  200  .   C  G,A    .      .    .  GT:AD      ./.:.  1/2:0,11,17
-
-        We can add the AF subfield to our genotype data:
-
+        1  chr1  101  .   G    T    .      .    .  GT:AD   0/0:32,1    0/1:14,15
+        2  chr1  102  .   A    G    .      .    .     GT        0/1          ./.
+        3  chr1  103  .   C  G,A    .      .    .  GT:AD      ./.:.  1/2:0,11,17
         >>> vf.add_af().df
-          CHROM  POS ID REF  ... INFO    FORMAT           Steven               Sara
-        0  chr1  100  .   A  ...    .  GT:AD:AF  0/1:12,15:0.556    0/1:13,17:0.567
-        1  chr1  100  .   A  ...    .  GT:AD:AF   0/0:32,1:0.030    0/1:14,15:0.517
-        2  chr2  200  .   C  ...    .  GT:AD:AF  0/1:16,12:0.429            ./.:.:.
-        3  chr2  200  .   C  ...    .  GT:AD:AF          ./.:.:.  1/2:0,11,17:0.607
+          CHROM  POS ID REF  ALT QUAL FILTER INFO    FORMAT                      A                              B
+        0  chr1  100  .   A    C    .      .    .  GT:AD:AF  0/1:12,15:0.444,0.556          0/1:13,17:0.433,0.567
+        1  chr1  101  .   G    T    .      .    .  GT:AD:AF   0/0:32,1:0.970,0.030          0/1:14,15:0.483,0.517
+        2  chr1  102  .   A    G    .      .    .     GT:AF                  0/1:.                          ./.:.
+        3  chr1  103  .   C  G,A    .      .    .  GT:AD:AF                ./.:.:.  1/2:0,11,17:0.000,0.393,0.607
         """
         def one_row(r):
-            i = r.FORMAT.split(':').index('AD')
+            try:
+                i = r.FORMAT.split(':').index('AD')
+            except ValueError:
+                i = None
+
             def one_gt(g):
-                ad = g.split(':')[i]
-                if ad == '.':
-                    return f'{g}:.'
-                depths = [int(x) for x in ad.split(',')]
-                total = sum(depths)
-                af = max(depths[1:]) / total
-                return f'{g}:{af:.{decimals}f}'
+                if i is None:
+                    ad = None
+                else:
+                    ad = g.split(':')[i]
+
+                if ad is None or ad == '.':
+                    af = '.'
+                else:
+                    depths = [int(x) for x in ad.split(',')]
+                    total = sum(depths)
+                    if total == 0:
+                        af = '.'
+                    else:
+                        af = ','.join([f'{x/total:.{decimals}f}' for x in depths])
+
+                return f'{g}:{af}'
+
             r.iloc[9:] = r.iloc[9:].apply(one_gt)
             r.FORMAT += ':AF'
+
             return r
+
         df = self.df.apply(one_row, axis=1)
-        vf = self.__class__(self.copy_meta(), df)
-        return vf
+
+        return self.__class__(self.copy_meta(), df)
 
     def add_dp(self):
         """Compute DP using AD and add it to the FORMAT field.
@@ -1327,47 +1379,7 @@ class VcfFrame:
         """
         return cls(meta, pd.DataFrame(data))
 
-    @classmethod
-    def from_file(
-        cls, fn, compression=False, meta_only=False, nrows=None
-    ):
-        """
-        Construct VcfFrame from a VCF file.
-
-        The method will automatically use BGZF decompression if the filename
-        ends with '.gz'.
-
-        Parameters
-        ----------
-        fn : str
-            VCF file (zipped or unzipped).
-        compression : bool, default: False
-            If True, use BGZF decompression regardless of filename.
-        meta_only : bool, default: False
-            If True, read metadata and header lines only.
-        nrows : int, optional
-            Number of rows to read. Useful for reading pieces of large files.
-
-        Returns
-        -------
-        VcfFrame
-            VcfFrame object.
-
-        See Also
-        --------
-        VcfFrame
-            VcfFrame object creation using constructor.
-        VcfFrame.from_dict
-            Construct VcfFrame from dict of array-like or dicts.
-
-        Examples
-        --------
-
-        >>> from fuc import pyvcf
-        >>> vf = pyvcf.VcfFrame.from_file('unzipped.vcf')
-        >>> vf = pyvcf.VcfFrame.from_file('zipped.vcf.gz')
-        >>> vf = pyvcf.VcfFrame.from_file('zipped.vcf', compression=True)
-        """
+    def _from_file1(cls, fn, compression, meta_only, nrows):
         skip_rows = 0
 
         if fn.startswith('~'):
@@ -1410,6 +1422,84 @@ class VcfFrame:
         f.close()
 
         return cls(meta, df)
+
+    def _from_file2(cls, fn, compression, meta_only, nrows):
+        skip_rows = 0
+        meta = []
+
+        for line in fn:
+            if line.startswith(b'##'):
+                meta.append(line.decode('utf-8').strip())
+                skip_rows += 1
+            elif line.startswith(b'#CHROM'):
+                columns = line.decode('utf-8').strip().split('\t')
+            else:
+                break
+
+        if '#CHROM' in columns:
+            columns[columns.index('#CHROM')] = 'CHROM'
+
+        for header in HEADERS:
+            if header not in columns and header != 'FORMAT':
+                raise ValueError(f"Required VCF column missing: '{header}'")
+
+        dtype = {**HEADERS, **{x: str for x in columns[9:]}}
+
+        if meta_only:
+            df = pd.DataFrame(columns=columns)
+        else:
+            df = pd.read_table(fn, names=columns, nrows=nrows, dtype=dtype)
+
+        return cls(meta, df)
+
+    @classmethod
+    def from_file(
+        cls, fn, compression=False, meta_only=False, nrows=None
+    ):
+        """
+        Construct VcfFrame from a VCF file.
+
+        The method will automatically use BGZF decompression if the filename
+        ends with '.gz'.
+
+        Parameters
+        ----------
+        fn : str or file-like object
+            VCF file (zipped or unzipped). By file-like object, we refer to
+            objects with a :meth:`read()` method, such as a file handle.
+        compression : bool, default: False
+            If True, use BGZF decompression regardless of filename.
+        meta_only : bool, default: False
+            If True, read metadata and header lines only.
+        nrows : int, optional
+            Number of rows to read. Useful for reading pieces of large files.
+
+        Returns
+        -------
+        VcfFrame
+            VcfFrame object.
+
+        See Also
+        --------
+        VcfFrame
+            VcfFrame object creation using constructor.
+        VcfFrame.from_dict
+            Construct VcfFrame from dict of array-like or dicts.
+
+        Examples
+        --------
+
+        >>> from fuc import pyvcf
+        >>> vf = pyvcf.VcfFrame.from_file('unzipped.vcf')
+        >>> vf = pyvcf.VcfFrame.from_file('zipped.vcf.gz')
+        >>> vf = pyvcf.VcfFrame.from_file('zipped.vcf', compression=True)
+        """
+        args = [cls, fn, compression, meta_only, nrows]
+        if isinstance(fn, str):
+            vf = cls._from_file1(*args)
+        elif hasattr(fn, 'read'):
+            vf = cls._from_file2(*args)
+        return vf
 
     def calculate_concordance(self, a, b, c=None, mode='all'):
         """
@@ -1727,7 +1817,7 @@ class VcfFrame:
             ).to_csv(index=False, sep='\t')
         return s
 
-    def strip(self, format='GT'):
+    def strip(self, format='GT', metadata=False):
         """
         Remove any unnecessary data.
 
@@ -1735,6 +1825,8 @@ class VcfFrame:
         ----------
         format : str, default: 'GT'
             FORMAT keys to retain (e.g. 'GT:AD:DP').
+        metadata : bool, default: False
+            If True, keep the metadata.
 
         Returns
         -------
@@ -1773,11 +1865,18 @@ class VcfFrame:
 
         def one_row(r):
             old_keys = r.FORMAT.split(':')
-            indicies = [old_keys.index(x) if x in old_keys else None for x in new_keys]
+            indicies = [
+                old_keys.index(x) if x in old_keys else None for x in new_keys
+            ]
 
             def one_gt(g):
                 old_fields = g.split(':')
-                new_fields = ['.' if x is None else old_fields[x] for x in indicies]
+                new_fields = [
+                    '.' if x is None
+                    else '.' if x >= len(old_fields)
+                    else old_fields[x]
+                    for x in indicies
+                ]
                 return ':'.join(new_fields)
 
             r.iloc[9:] = r.iloc[9:].apply(one_gt)
@@ -1788,7 +1887,12 @@ class VcfFrame:
         df[['ID', 'QUAL', 'FILTER', 'INFO']] = '.'
         df = df.apply(one_row, axis=1)
         df.FORMAT = format
-        vf = self.__class__([], df)
+
+        if metadata:
+            meta = self.copy_meta()
+        else:
+            meta = []
+        vf = self.__class__(meta, df)
         return vf
 
     def merge(
@@ -3922,7 +4026,8 @@ class VcfFrame:
         return s
 
     def sort(self):
-        """Sort the VcfFrame by chromosome and position.
+        """
+        Sort the VcfFrame by chromosome and position.
 
         Returns
         -------
@@ -3971,16 +4076,14 @@ class VcfFrame:
 
     def subset(self, samples, exclude=False):
         """
-        Subset the VcfFrame for specified samples.
-
-        The order of input samples matters.
+        Subset VcfFrame for specified samples.
 
         Parameters
         ----------
         samples : str or list
-            Name or list of sample names.
+            Sample name or list of names (the order matters).
         exclude : bool, default: False
-            If True, exclude the selected samples.
+            If True, exclude specified samples.
 
         Returns
         -------
@@ -4001,30 +4104,31 @@ class VcfFrame:
         ...     'QUAL': ['.', '.'],
         ...     'FILTER': ['.', '.'],
         ...     'INFO': ['.', '.'],
-        ...     'FORMAT': ['GT:DP', 'GT:DP'],
-        ...     'Steven': ['0/1:30', '0/1:29'],
-        ...     'Sara': ['0/1:24', '0/1:30'],
-        ...     'James': ['0/1:18', '0/1:24'],
+        ...     'FORMAT': ['GT', 'GT'],
+        ...     'A': ['0/1', '0/1'],
+        ...     'B': ['0/0', '0/1'],
+        ...     'C': ['0/0', '0/0'],
+        ...     'D': ['0/1', '0/0'],
         ... }
         >>> vf = pyvcf.VcfFrame.from_dict([], data)
         >>> vf.df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT  Steven    Sara   James
-        0  chr1  100  .   G   A    .      .    .  GT:DP  0/1:30  0/1:24  0/1:18
-        1  chr1  101  .   T   C    .      .    .  GT:DP  0/1:29  0/1:30  0/1:24
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    B    C    D
+        0  chr1  100  .   G   A    .      .    .     GT  0/1  0/0  0/0  0/1
+        1  chr1  101  .   T   C    .      .    .     GT  0/1  0/1  0/0  0/0
 
-        We can subset the VcfFrame for James and Steven (in that order too):
+        We can subset the VcfFrame for the samples A and B:
 
-        >>> vf.subset(['James', 'Steven']).df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT   James  Steven
-        0  chr1  100  .   G   A    .      .    .  GT:DP  0/1:18  0/1:30
-        1  chr1  101  .   T   C    .      .    .  GT:DP  0/1:24  0/1:29
+        >>> vf.subset(['A', 'B']).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    B
+        0  chr1  100  .   G   A    .      .    .     GT  0/1  0/0
+        1  chr1  101  .   T   C    .      .    .     GT  0/1  0/1
 
-        Alternatively, we can exclude James and Steven:
+        Alternatively, we can exclude those samples:
 
-        >>> vf.subset(['James', 'Steven'], exclude=True).df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    Sara
-        0  chr1  100  .   G   A    .      .    .  GT:DP  0/1:24
-        1  chr1  101  .   T   C    .      .    .  GT:DP  0/1:30
+        >>> vf.subset(['A', 'B'], exclude=True).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    C    D
+        0  chr1  100  .   G   A    .      .    .     GT  0/0  0/1
+        1  chr1  101  .   T   C    .      .    .     GT  0/0  0/0
         """
         if isinstance(samples, str):
             samples = [samples]
@@ -5217,3 +5321,74 @@ class VcfFrame:
             return r
 
         return self.__class__(self.copy_meta(), self.df.apply(one_row, axis=1))
+
+    def get_af(self, sample, variant):
+        """
+        Get allele fraction for a pair of sample and variant.
+
+        The method will return ``numpy.nan`` if the value is missing.
+
+        Parameters
+        ----------
+        sample : str
+            Sample name.
+        variant : str
+            Variant name.
+
+        Returns
+        -------
+        float
+            Allele fraction.
+
+        Examples
+        --------
+
+        >>> from fuc import pyvcf, common
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102, 103],
+        ...     'ID': ['.', '.', '.', '.'],
+        ...     'REF': ['A', 'G', 'A', 'C'],
+        ...     'ALT': ['C', 'T', 'G', 'G,A'],
+        ...     'QUAL': ['.', '.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.', '.'],
+        ...     'INFO': ['.', '.', '.', '.'],
+        ...     'FORMAT': ['GT:AD:AF', 'GT:AD:AF', 'GT:AF', 'GT:AD:AF'],
+        ...     'A': ['0/1:12,15:0.444,0.556', '0/0:32,1:0.970,0.030', '0/1:.', './.:.:.'],
+        ...     'B': ['0/1:13,17:0.433,0.567', '0/1:14,15:0.483,0.517', './.:.', '1/2:0,11,17:0.000,0.393,0.607'],
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF  ALT QUAL FILTER INFO    FORMAT                      A                              B
+        0  chr1  100  .   A    C    .      .    .  GT:AD:AF  0/1:12,15:0.444,0.556          0/1:13,17:0.433,0.567
+        1  chr1  101  .   G    T    .      .    .  GT:AD:AF   0/0:32,1:0.970,0.030          0/1:14,15:0.483,0.517
+        2  chr1  102  .   A    G    .      .    .     GT:AF                  0/1:.                          ./.:.
+        3  chr1  103  .   C  G,A    .      .    .  GT:AD:AF                ./.:.:.  1/2:0,11,17:0.000,0.393,0.607
+        >>> vf.get_af('A', 'chr1-100-A-C')
+        0.556
+        >>> vf.get_af('B', 'chr1-102-A-G')
+        nan
+        """
+        chrom, pos, ref, alt = common.parse_variant(variant)
+        r = self.df[(self.df.CHROM == chrom) & (self.df.POS == pos) & (self.df.REF == ref)]
+
+        try:
+            i = r.FORMAT.values[0].split(':').index('AF')
+        except ValueError:
+            i = None
+
+        alts = r.ALT.values[0].split(',')
+
+        if alt in alts:
+            j = r.ALT.values[0].split(',').index(alt)
+        else:
+            raise ValueError(f'ALT allele not found, possible choices: {alts}')
+
+        field = r[sample].values[0].split(':')[i]
+
+        if field == '.' or i is None:
+            af = np.nan
+        else:
+            af = float(field.split(',')[j+1])
+
+        return af

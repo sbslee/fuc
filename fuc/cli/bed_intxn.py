@@ -3,7 +3,9 @@ import sys
 from .. import api
 
 description = f"""
-This command will compute the intersection beween multiple BED files.
+###################################################
+# Find the intersection of two or more BED files. #
+###################################################
 
 Usage examples:
   $ fuc {api.common._script_name()} 1.bed 2.bed 3.bed > intersect.bed

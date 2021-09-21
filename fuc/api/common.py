@@ -1074,3 +1074,19 @@ def plot_exons(
 def conda_env():
     """str : Name of the current conda environment."""
     return sys.executable.split('/')[-3]
+
+def color_print(s, color='green', bold=False):
+    """Print colored text."""
+    colors = {
+        'red' :  '31',
+        'green': '32',
+    }
+
+    c = colors[color]
+
+    if bold:
+        b = 1
+    else:
+        b = 0
+
+    print(f'\x1b[{b};{c};{c}m' + s + '\x1b[0m')

@@ -114,17 +114,18 @@ For getting help on the fuc CLI:
        bam-depth    Compute read depth from SAM/BAM/CRAM files.
        bam-head     Print the header of a SAM/BAM/CRAM file.
        bam-index    Index a SAM/BAM/CRAM file.
-       bam-rename   Rename the samples in a SAM/BAM/CRAM file.
+       bam-rename   Rename the sample in a SAM/BAM/CRAM file.
        bam-slice    Slice a SAM/BAM/CRAM file.
        bed-intxn    Find the intersection of two or more BED files.
        bed-sum      Summarize a BED file.
+       cov-concat   Concatenate TSV files containing depth of coverage data.
        fq-count     Count sequence reads in FASTQ files.
        fq-sum       Summarize a FASTQ file.
-       fuc-undetm   Compute top unknown barcodes using undertermined FASTQ from bcl2fastq.
        fuc-compf    Compare the contents of two files.
        fuc-demux    Parse the Reports directory from bcl2fastq.
        fuc-exist    Check whether certain files exist.
        fuc-find     Find all filenames matching a specified pattern recursively.
+       fuc-undetm   Compute top unknown barcodes using undertermined FASTQ from bcl2fastq.
        maf-maf2vcf  Convert a MAF file to a VCF file.
        maf-oncoplt  Create an oncoplot with a MAF file.
        maf-sumplt   Create a summary plot with a MAF file.
@@ -138,7 +139,7 @@ For getting help on the fuc CLI:
        vcf-filter   Filter a VCF file.
        vcf-merge    Merge two or more VCF files.
        vcf-rename   Rename the samples in a VCF file.
-       vcf-slice    Slice a VCF file for one or more specified regions.
+       vcf-slice    Slice a VCF file for specified regions.
        vcf-vcf2bed  Convert a VCF file to a BED file.
        vcf-vep      Filter a VCF file annotated by Ensembl VEP.
    

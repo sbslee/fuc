@@ -7,16 +7,39 @@ allow fast computation and easy manipulation. The ``pycov.CovFrame`` class
 also contains many useful plotting methods such as ``CovFrame.plot_region``
 and ``CovFrame.plot_uniformity``.
 """
-from io import StringIO
+from io import StringIO, IOBase
 import gzip
 
-from . import common, pybam
+from . import common, pybam, pybed
 
 import pysam
 import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+
+def concat(cfs, axis=0):
+    """
+    Concatenate CovFrame objects along a particular axis.
+
+    Parameters
+    ----------
+    cfs : list
+        List of CovFrame objects.
+    axis : {0/'index', 1/'columns'}, default: 0
+        The axis to concatenate along.
+
+    Returns
+    -------
+    CovFrame
+        Concatenated CovFrame.
+    """
+    if axis:
+        df = pd.concat([x.df.set_index(['Chromosome', 'Position'])
+            for x in cfs], axis=axis).reset_index()
+    else:
+        df = pd.concat([x.df for x in cfs], axis=axis)
+    return CovFrame(df)
 
 def simulate(mode='wgs', loc=30, scale=5, size=1000):
     """
@@ -98,8 +121,13 @@ class CovFrame:
     3       chr1      1003  32  21
     4       chr1      1004  32  15
     """
+    def _check_df(self, df):
+        df = df.reset_index(drop=True)
+        df.Chromosome = df.Chromosome.astype(str)
+        return df
+
     def __init__(self, df):
-        self._df = df.reset_index(drop=True)
+        self._df = self._check_df(df)
 
     @property
     def df(self):
@@ -108,7 +136,7 @@ class CovFrame:
 
     @df.setter
     def df(self, value):
-        self._df = value.reset_index(drop=True)
+        self._df = self._check_df(value)
 
     @property
     def contigs(self):
@@ -127,32 +155,36 @@ class CovFrame:
 
     @classmethod
     def from_bam(
-        cls, bam=None, fn=None, bed=None, zero=False, region=None,
+        cls, bam=None, fn=None, bed=None, region=None, zero=False,
         map_qual=None, names=None
     ):
         """
         Construct CovFrame from one or more SAM/BAM/CRAM files.
 
-        Either the 'bam' or 'fn' parameter must be provided, but not both.
+        Alignment files must be specified with either ``bam`` or ``fn``, but
+        it's an error to use both.
 
-        Under the hood, this method computes read depth from the input files
-        using the :command:`samtools depth` command.
+        By default, the method will count all reads within the alignment
+        files. You can specify target regions with either ``bed`` or
+        ``region``, but not both. When you do this, pay close attention to
+        the 'chr' string in contig names (e.g. 'chr1' vs. '1'). Note also
+        that ``region`` requires the input files be indexed.
 
-        Some parameters such as 'bed' and 'region' require that the input
-        files be indexed.
+        Under the hood, the method computes read depth using the
+        :command:`samtools depth` command.
 
         Parameters
         ----------
         bam : str or list, optional
-            One or more input files.
+            One or more alignment files.
         fn : str, optional
-            File containing one input filename per line.
+            File containing one alignment file per line.
         bed : str, optional
             BED file.
+        region : str, optional
+            Target region ('chrom:start-end').
         zero : bool, default: False
             If True, output all positions (including those with zero depth).
-        region : str, optional
-            Only report depth in the specified region ('chrom:start-end').
         map_qual: int, optional
             Only count reads with mapping quality greater than orequal to
             this number.
@@ -276,12 +308,13 @@ class CovFrame:
     @classmethod
     def from_file(cls, fn, compression=False):
         """
-        Construct CovFrame from a text file containing read depth data.
+        Construct CovFrame from a TSV file containing read depth data.
 
         Parameters
         ----------
-        fn : str
-            TSV file (zipped or unzipped).
+        fn : str or file-like object
+            TSV file (zipped or unzipped). By file-like object, we refer to
+            objects with a :meth:`read()` method, such as a file handle.
         compression : bool, default: False
             If True, use GZIP decompression regardless of filename.
 
@@ -298,7 +331,18 @@ class CovFrame:
             Construct CovFrame from one or more SAM/BAM/CRAM files.
         CovFrame.from_dict
             Construct CovFrame from dict of array-like or dicts.
+
+        Examples
+        --------
+
+        >>> from fuc import pycov
+        >>> cf = pycov.CovFrame.from_file('unzipped.tsv')
+        >>> cf = pycov.CovFrame.from_file('zipped.tsv.gz')
+        >>> cf = pycov.CovFrame.from_file('zipped.tsv', compression=True)
         """
+        if isinstance(fn, IOBase):
+            return cls(pd.read_table(fn))
+
         if fn.endswith('.gz') or compression:
             f = gzip.open(fn, 'rt')
         else:
@@ -711,3 +755,205 @@ class CovFrame:
             f = open(fn, 'w')
         f.write(self.to_string())
         f.close()
+
+    def mask_bed(self, bed, opposite=False):
+        """
+        Mask rows that overlap with BED data.
+
+        Parameters
+        ----------
+        bed : pybed.BedFrame or str
+            BedFrame object or BED file.
+        opposite : bool, default: False
+            If True, mask rows that don't overlap with BED data.
+
+        Returns
+        -------
+        CovFrame
+            Masked CovFrame.
+
+        Examples
+        --------
+        Assume we have the following data:
+
+        >>> import numpy as np
+        >>> from fuc import pycov, pybed
+        >>> data = {
+        ...     'Chromosome': ['chr1'] * 1000,
+        ...     'Position': np.arange(1000, 2000),
+        ...     'A': pycov.simulate(loc=35, scale=5),
+        ...     'B': pycov.simulate(loc=25, scale=7),
+        ... }
+        >>> cf = pycov.CovFrame.from_dict(data)
+        >>> cf.df.head()
+          Chromosome  Position   A   B
+        0       chr1      1000  34  31
+        1       chr1      1001  31  20
+        2       chr1      1002  41  22
+        3       chr1      1003  28  41
+        4       chr1      1004  34  23
+        >>> data = {
+        ...     'Chromosome': ['chr1', 'chr1'],
+        ...     'Start': [1000, 1003],
+        ...     'End': [1002, 1004]
+        ... }
+        >>> bf = pybed.BedFrame.from_dict([], data)
+        >>> bf.gr.df
+          Chromosome  Start   End
+        0       chr1   1000  1002
+        1       chr1   1003  1004
+
+        We can mask rows that overlap with the BED data:
+
+        >>> cf.mask_bed(bf).df.head()
+          Chromosome  Position     A     B
+        0       chr1      1000   NaN   NaN
+        1       chr1      1001   NaN   NaN
+        2       chr1      1002  41.0  22.0
+        3       chr1      1003   NaN   NaN
+        4       chr1      1004  34.0  23.0
+
+        We can also do the opposite:
+
+        >>> cf.mask_bed(bf, opposite=True).df.head()
+          Chromosome  Position     A     B
+        0       chr1      1000  34.0  31.0
+        1       chr1      1001  31.0  20.0
+        2       chr1      1002   NaN   NaN
+        3       chr1      1003  28.0  41.0
+        4       chr1      1004   NaN   NaN
+        """
+        if isinstance(bed, pybed.BedFrame):
+            bf = bed
+        else:
+            bf = pybed.BedFrame.from_file(bed)
+        def one_row(r):
+            if opposite:
+                if bf.gr[r.Chromosome, r.Position:r.Position+1].empty:
+                    r[2:] = r[2:].apply(lambda x: np.nan)
+            else:
+                if not bf.gr[r.Chromosome, r.Position:r.Position+1].empty:
+                    r[2:] = r[2:].apply(lambda x: np.nan)
+            return r
+        df = self.df.apply(one_row, axis=1)
+        return self.__class__(df)
+
+    def chr_prefix(self, mode='remove'):
+        """
+        Add or remove the (annoying) 'chr' string from the Chromosome column.
+
+        Parameters
+        ----------
+        mode : {'add', 'remove'}, default: 'remove'
+            Whether to add or remove the 'chr' string.
+
+        Returns
+        -------
+        CovFrame
+            Updated CovFrame.
+
+        Examples
+        --------
+
+        >>> import numpy as np
+        >>> from fuc import pycov
+        >>> data = {
+        ...     'Chromosome': ['chr1'] * 1000,
+        ...     'Position': np.arange(1000, 2000),
+        ...     'A': pycov.simulate(loc=35, scale=5),
+        ...     'B': pycov.simulate(loc=25, scale=7),
+        ... }
+        >>> cf = pycov.CovFrame.from_dict(data)
+        >>> cf.df.head()
+          Chromosome  Position   A   B
+        0       chr1      1000  28  17
+        1       chr1      1001  35  28
+        2       chr1      1002  38  12
+        3       chr1      1003  33  20
+        4       chr1      1004  33  31
+        >>> cf.chr_prefix().df.head()
+          Chromosome  Position   A   B
+        0          1      1000  28  17
+        1          1      1001  35  28
+        2          1      1002  38  12
+        3          1      1003  33  20
+        4          1      1004  33  31
+        """
+        if mode == 'remove':
+            def one_row(r):
+                r.Chromosome = r.Chromosome.replace('chr', '')
+                return r
+        elif mode == 'add':
+            def one_row(r):
+                r.Chromosome = 'chr' + r.Chromosome
+                return r
+        else:
+            raise ValueError(f'Incorrect mode: {mode}')
+        df = self.df.apply(one_row, axis=1)
+        return self.__class__(df)
+
+    def subset(self, samples, exclude=False):
+        """
+        Subset CovFrame for specified samples.
+
+        Parameters
+        ----------
+        samples : str or list
+            Sample name or list of names (the order matters).
+        exclude : bool, default: False
+            If True, exclude specified samples.
+
+        Returns
+        -------
+        CovFrame
+            Subsetted CovFrame.
+
+        Examples
+        --------
+        Assume we have the following data:
+
+        >>> import numpy as np
+        >>> from fuc import pycov
+        >>> data = {
+        ...     'Chromosome': ['chr1'] * 1000,
+        ...     'Position': np.arange(1000, 2000),
+        ...     'A': pycov.simulate(loc=35, scale=5),
+        ...     'B': pycov.simulate(loc=25, scale=7),
+        ...     'C': pycov.simulate(loc=15, scale=2),
+        ...     'D': pycov.simulate(loc=45, scale=8),
+        ... }
+        >>> cf = pycov.CovFrame.from_dict(data)
+        >>> cf.df.head()
+          Chromosome  Position   A   B   C   D
+        0       chr1      1000  30  30  15  37
+        1       chr1      1001  25  24  11  43
+        2       chr1      1002  33  24  16  50
+        3       chr1      1003  29  22  15  46
+        4       chr1      1004  34  30  11  32
+
+        We can subset the CovFrame for the samples A and B:
+
+        >>> cf.subset(['A', 'B']).df.head()
+          Chromosome  Position   A   B
+        0       chr1      1000  30  30
+        1       chr1      1001  25  24
+        2       chr1      1002  33  24
+        3       chr1      1003  29  22
+        4       chr1      1004  34  30
+
+        Alternatively, we can exclude those samples:
+
+        >>> cf.subset(['A', 'B'], exclude=True).df.head()
+          Chromosome  Position   C   D
+        0       chr1      1000  15  37
+        1       chr1      1001  11  43
+        2       chr1      1002  16  50
+        3       chr1      1003  15  46
+        4       chr1      1004  11  32
+        """
+        if isinstance(samples, str):
+            samples = [samples]
+        if exclude:
+            samples = [x for x in self.samples if x not in samples]
+        cols = self.df.columns[:2].to_list() + samples
+        return self.__class__(self.df[cols])

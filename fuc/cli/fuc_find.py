@@ -4,6 +4,10 @@ from pathlib import Path
 from .. import api
 
 description = f"""
+################################################################
+# Find all filenames matching a specified pattern recursively. #
+################################################################
+
 This command will recursively find all the filenames matching a specified pattern and then return their absolute paths.
 
 Usage examples:

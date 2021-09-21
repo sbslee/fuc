@@ -6,22 +6,22 @@ from .. import api
 import pysam
 
 description = f"""
-This command will rename the sample(s) in the input SAM/BAM/CRAM file.
+##############################################
+# Rename the sample in a SAM/BAM/CRAM file. #
+##############################################
 
 Usage examples:
-  $ fuc {api.common._script_name()} in.sam NA12878 > out.sam
   $ fuc {api.common._script_name()} in.bam NA12878 > out.bam
-  $ fuc {api.common._script_name()} in.cram NA12878 > out.cram
 """
 
 def create_parser(subparsers):
     parser = api.common._add_parser(
         subparsers,
         api.common._script_name(),
-        help='Rename the samples in a SAM/BAM/CRAM file.',
+        help='Rename the sample in a SAM/BAM/CRAM file.',
         description=description,
     )
-    parser.add_argument('bam', help='SAM/BAM/CRAM file.')
+    parser.add_argument('bam', help='Alignment file.')
     parser.add_argument('name', help='New sample name.')
 
 def main(args):

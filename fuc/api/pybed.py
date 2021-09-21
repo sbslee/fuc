@@ -108,6 +108,15 @@ class BedFrame:
     def gr(self, value):
         self._gr = value
 
+    @property
+    def contigs(self):
+        """list : List of contig names."""
+        return self.gr.chromosomes
+
+    def copy_meta(self):
+        """Return a copy of the metadata."""
+        return deepcopy(self.meta)
+
     def to_file(self, fn):
         """Write the BedFrame to a BED file."""
         with open(fn, 'w') as f:
@@ -155,8 +164,8 @@ class BedFrame:
 
         Examples
         --------
-        Below is a simple example:
 
+        >>> from fuc import pybed
         >>> data = {
         ...     'Chromosome': ['chr1', 'chr2', 'chr3'],
         ...     'Start': [100, 400, 100],
@@ -257,3 +266,119 @@ class BedFrame:
         2       chr3    100  200
         """
         return cls(meta, pr.PyRanges(data))
+
+    def chr_prefix(self, mode='remove'):
+        """
+        Add or remove the (annoying) 'chr' string from the Chromosome column.
+
+        Parameters
+        ----------
+        mode : {'add', 'remove'}, default: 'remove'
+            Whether to add or remove the 'chr' string.
+
+        Returns
+        -------
+        BedFrame
+            Updated BedFrame.
+
+        Examples
+        --------
+
+        >>> from fuc import pybed
+        >>> data = {
+        ...     'Chromosome': ['chr1', 'chr2', 'chr3'],
+        ...     'Start': [100, 400, 100],
+        ...     'End': [200, 500, 200]
+        ... }
+        >>> bf = pybed.BedFrame.from_dict([], data)
+        >>> bf.gr.df
+          Chromosome  Start  End
+        0       chr1    100  200
+        1       chr2    400  500
+        2       chr3    100  200
+        >>> bf.chr_prefix().gr.df
+          Chromosome  Start  End
+        0          1    100  200
+        1          2    400  500
+        2          3    100  200
+        """
+        if mode == 'remove':
+            def one_row(r):
+                r.Chromosome = r.Chromosome.replace('chr', '')
+                return r
+        elif mode == 'add':
+            def one_row(r):
+                r.Chromosome = 'chr' + r.Chromosome
+                return r
+        else:
+            raise ValueError(f'Incorrect mode: {mode}')
+        df = self.gr.df.apply(one_row, axis=1)
+        return self.__class__([], pr.PyRanges(df))
+
+    def sort(self):
+        """
+        Sort the BedFrame by chromosome and position.
+
+        Returns
+        -------
+        BedFrame
+            Sorted BedFrame.
+
+        Examples
+        --------
+
+        >>> from fuc import pybed
+        >>> data = {
+        ...     'Chromosome': ['chr1', 'chr3', 'chr1'],
+        ...     'Start': [400, 100, 100],
+        ...     'End': [500, 200, 200]
+        ... }
+        >>> bf = pybed.BedFrame.from_dict([], data)
+        >>> bf.gr.df
+          Chromosome  Start  End
+        0       chr1    400  500
+        1       chr1    100  200
+        2       chr3    100  200
+        >>> bf.sort().gr.df
+          Chromosome  Start  End
+        0       chr1    100  200
+        1       chr1    400  500
+        2       chr3    100  200
+        """
+        return self.__class__(self.copy_meta(), self.gr.sort())
+
+    def merge(self):
+        """
+        Merge overlapping intervals within the BedFrame.
+
+        Returns
+        -------
+        BedFrame
+            Merged BedFrame.
+
+        Examples
+        --------
+
+        >>> from fuc import pybed
+        >>> data = {
+        ...     'Chromosome': ['chr1', 'chr1', 'chr2', 'chr2', 'chr3', 'chr3'],
+        ...     'Start': [10, 30, 15, 25, 50, 70],
+        ...     'End': [40, 50, 25, 35, 60, 80]
+        ... }
+        >>> bf = pybed.BedFrame.from_dict([], data)
+        >>> bf.gr.df
+          Chromosome  Start  End
+        0       chr1     10   40
+        1       chr1     30   50
+        2       chr2     15   25
+        3       chr2     25   35
+        4       chr3     50   60
+        5       chr3     70   80
+        >>> bf.merge().gr.df
+          Chromosome  Start  End
+        0       chr1     10   50
+        1       chr2     15   35
+        2       chr3     50   60
+        3       chr3     70   80
+        """
+        return self.__class__(self.copy_meta(), self.gr.merge())

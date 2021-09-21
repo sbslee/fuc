@@ -1,9 +1,11 @@
 from .. import api
 
 description = f"""
-This command will compute various summary statstics for a BED file.
+#########################
+# Summarize a BED file. #
+#########################
 
-The returned statistics include the total numbers of probes and covered base pairs for each chromosome.
+This command will compute various summary statstics for a BED file. The returned statistics include the total numbers of probes and covered base pairs for each chromosome.
 
 By default, covered base paris are displayed in bp, but if you prefer you can, for example, use '--bases 1000' to display in kb.
 
