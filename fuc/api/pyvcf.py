@@ -3955,17 +3955,17 @@ class VcfFrame:
         return self.__class__(self.copy_meta(), self.df[i])
 
     def subtract(self, a, b):
-        """Subtract the genotype data of Sample B from Sample A.
+        """
+        Subtract genotype data between two samples (A, B).
 
-        This method is useful when, for example, you want to distinguish
-        between somatic mutations and germline variants from an individual.
+        This method can be especially useful when you want to distinguish
+        between somatic and germline variants for an individual. See examples
+        below for more details.
 
         Parameters
         ----------
-        a : str or int
-            Name or index of Sample A (e.g. somatic).
-        b : str or int
-            Name or index of Sample B (e.g. germline).
+        a, b : str or int
+            Name or index of Samples A and B.
 
         Returns
         -------
@@ -3974,39 +3974,42 @@ class VcfFrame:
 
         Examples
         --------
-        Assume we have the following data:
+        Assume we have following data for a cancer patient:
 
         >>> from fuc import pyvcf
         >>> data = {
-        ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1'],
-        ...     'POS': [100, 101, 102, 103],
-        ...     'ID': ['.', '.', '.', '.'],
-        ...     'REF': ['G', 'T', 'T', 'A'],
-        ...     'ALT': ['A', 'C', 'A', 'C'],
-        ...     'QUAL': ['.', '.', '.', '.'],
-        ...     'FILTER': ['.', '.', '.', '.'],
-        ...     'INFO': ['.', '.', '.', '.'],
-        ...     'FORMAT': ['GT', 'GT', 'GT', 'GT'],
-        ...     'Somatic': ['./.', '0/1', '0/1', '0/0'],
-        ...     'Germline': ['0/1', '0/1', './.', '0/1'],
+        ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102, 103, 104],
+        ...     'ID': ['rs1', 'rs2', 'rs3', 'rs4', 'rs5'],
+        ...     'REF': ['G', 'T', 'C', 'A', 'G'],
+        ...     'ALT': ['A', 'G', 'T', 'C', 'C'],
+        ...     'QUAL': ['.', '.', '.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.', '.', '.'],
+        ...     'INFO': ['.', '.', '.', '.', '.'],
+        ...     'FORMAT': ['GT', 'GT', 'GT', 'GT', 'GT'],
+        ...     'Tissue': ['./.', '0/1', '0/1', '0/0', '0/1'],
+        ...     'Blood': ['0/1', '0/1', './.', '0/1', '0/0'],
         ... }
         >>> vf = pyvcf.VcfFrame.from_dict([], data)
         >>> vf.df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Somatic Germline
-        0  chr1  100  .   G   A    .      .    .     GT     ./.      0/1
-        1  chr1  101  .   T   C    .      .    .     GT     0/1      0/1
-        2  chr1  102  .   T   A    .      .    .     GT     0/1      ./.
-        3  chr1  103  .   A   C    .      .    .     GT     0/0      0/1
+          CHROM  POS   ID REF ALT QUAL FILTER INFO FORMAT Tissue Blood
+        0  chr1  100  rs1   G   A    .      .    .     GT    ./.   0/1
+        1  chr1  101  rs2   T   G    .      .    .     GT    0/1   0/1
+        2  chr1  102  rs3   C   T    .      .    .     GT    0/1   ./.
+        3  chr1  103  rs4   A   C    .      .    .     GT    0/0   0/1
+        4  chr1  104  rs5   G   C    .      .    .     GT    0/1   0/0
 
-        We subtract the two samples to get the true somatic mutations:
+        We can compare genotype data between 'Tissue' and 'Blood' to identify
+        somatic variants (i.e. rs3 and rs5; rs2 is most likely germline):
 
-        >>> vf.df['TruelySomatic'] = vf.subtract('Somatic', 'Germline')
+        >>> vf.df['Somatic'] = vf.subtract('Tissue', 'Blood')
         >>> vf.df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Somatic Germline TruelySomatic
-        0  chr1  100  .   G   A    .      .    .     GT     ./.      0/1           ./.
-        1  chr1  101  .   T   C    .      .    .     GT     0/1      0/1           ./.
-        2  chr1  102  .   T   A    .      .    .     GT     0/1      ./.           0/1
-        3  chr1  103  .   A   C    .      .    .     GT     0/0      0/1           0/0
+          CHROM  POS   ID REF ALT QUAL FILTER INFO FORMAT Tissue Blood Somatic
+        0  chr1  100  rs1   G   A    .      .    .     GT    ./.   0/1     ./.
+        1  chr1  101  rs2   T   G    .      .    .     GT    0/1   0/1     ./.
+        2  chr1  102  rs3   C   T    .      .    .     GT    0/1   ./.     0/1
+        3  chr1  103  rs4   A   C    .      .    .     GT    0/0   0/1     0/0
+        4  chr1  104  rs5   G   C    .      .    .     GT    0/1   0/0     0/1
         """
         a = a if isinstance(a, str) else self.samples[a]
         b = b if isinstance(b, str) else self.samples[b]
