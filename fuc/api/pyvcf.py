@@ -1512,13 +1512,13 @@ class VcfFrame:
         we assume A is the test sample and B is the truth sample.
 
         Only biallelic sites will be used for calculation. Additionally, the
-        method will only consider presence or absence of variant calls (i.e.
-        zygosity is ignored).
+        method will ignore zygosity and only consider presence or absence of
+        variant calls (e.g. ``0/1`` and ``1/1`` will be treated the same).
 
         Parameters
         ----------
         a, b : str or int
-            Name or index of Sample A or B (test or truth).
+            Name or index of Samples A and B.
         c : str or int, optional
             Name or index of Sample C.
         mode : {'all', 'snv', 'indel'}, default: 'all'
