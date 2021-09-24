@@ -1655,19 +1655,17 @@ class VcfFrame:
         return (Abc, aBc, ABc, abC, AbC, aBC, ABC, abc)
 
     def combine(self, a, b):
-        """Combine the genotype data of Sample A and Sample B.
+        """
+        Combine genotype data from two samples (A, B).
 
-        This method is useful when, for example, you are trying to
-        consolidate data from multiple replicate samples. When the same
-        variant is found (or not found) in both samples, the method will
-        use the genotype data of the first sample.
+        This method can be especially useful when you want to consolidate
+        genotype data from replicate samples. See examples below for more
+        details.
 
         Parameters
         ----------
-        a : str or int
-            Name or index of the first sample (or original).
-        b : str or int
-            Name or index of the second sample (or replicate).
+        a, b : str or int
+            Name or index of Samples A and B.
 
         Returns
         -------
@@ -1676,37 +1674,43 @@ class VcfFrame:
 
         Examples
         --------
-        Assume we have the following data:
+        Assume we have following data where a cancer patient's tissue sample
+        has been sequenced twice:
 
         >>> from fuc import pyvcf
         >>> data = {
-        ...     'CHROM': ['chr1', 'chr1', 'chr1'],
-        ...     'POS': [100, 101, 102],
-        ...     'ID': ['.', '.', '.'],
-        ...     'REF': ['G', 'T', 'T'],
-        ...     'ALT': ['A', 'C', 'A'],
-        ...     'QUAL': ['.', '.', '.'],
-        ...     'FILTER': ['.', '.', '.'],
-        ...     'INFO': ['.', '.', '.'],
-        ...     'FORMAT': ['GT:DP', 'GT:DP', 'GT:DP'],
-        ...     'Original': ['./.:.', '0/0:29', '0/1:28'],
-        ...     'Replicate': ['0/1:24', '0/1:30', './.:.'],
+        ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102, 103, 104],
+        ...     'ID': ['.', '.', '.', '.', '.'],
+        ...     'REF': ['G', 'T', 'T', 'A', 'C'],
+        ...     'ALT': ['A', 'C', 'A', 'C', 'G'],
+        ...     'QUAL': ['.', '.', '.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.', '.', '.'],
+        ...     'INFO': ['.', '.', '.', '.', '.'],
+        ...     'FORMAT': ['GT:DP', 'GT:DP', 'GT:DP', 'GT:DP', 'GT:DP'],
+        ...     'Tissue1': ['./.:.', '0/0:7', '0/1:28', '0/1:4', '0/1:32'],
+        ...     'Tissue2': ['0/1:24', '0/1:42', './.:.', './.:.', '0/1:19'],
         ... }
         >>> vf = pyvcf.VcfFrame.from_dict([], data)
         >>> vf.df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Original Replicate
-        0  chr1  100  .   G   A    .      .    .  GT:DP    ./.:.    0/1:24
-        1  chr1  101  .   T   C    .      .    .  GT:DP   0/0:29    0/1:30
-        2  chr1  102  .   T   A    .      .    .  GT:DP   0/1:28     ./.:.
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Tissue1 Tissue2
+        0  chr1  100  .   G   A    .      .    .  GT:DP   ./.:.  0/1:24
+        1  chr1  101  .   T   C    .      .    .  GT:DP   0/0:7  0/1:42
+        2  chr1  102  .   T   A    .      .    .  GT:DP  0/1:28   ./.:.
+        3  chr1  103  .   A   C    .      .    .  GT:DP   0/1:4   ./.:.
+        4  chr1  104  .   C   G    .      .    .  GT:DP  0/1:32  0/1:19
 
-        We combine the two samples to get consolidated genotype data:
+        We can combine genotype data from 'Tissue1' and 'Tissue2' to get a
+        more comprehensive variant profile:
 
-        >>> vf.df['Combined'] = vf.combine('Original', 'Replicate')
+        >>> vf.df['Combined'] = vf.combine('Tissue1', 'Tissue2')
         >>> vf.df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Original Replicate Combined
-        0  chr1  100  .   G   A    .      .    .  GT:DP    ./.:.    0/1:24   0/1:24
-        1  chr1  101  .   T   C    .      .    .  GT:DP   0/0:29    0/1:30   0/1:30
-        2  chr1  102  .   T   A    .      .    .  GT:DP   0/1:28     ./.:.   0/1:28
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Tissue1 Tissue2 Combined
+        0  chr1  100  .   G   A    .      .    .  GT:DP   ./.:.  0/1:24   0/1:24
+        1  chr1  101  .   T   C    .      .    .  GT:DP   0/0:7  0/1:42   0/1:42
+        2  chr1  102  .   T   A    .      .    .  GT:DP  0/1:28   ./.:.   0/1:28
+        3  chr1  103  .   A   C    .      .    .  GT:DP   0/1:4   ./.:.    0/1:4
+        4  chr1  104  .   C   G    .      .    .  GT:DP  0/1:32  0/1:19   0/1:32
         """
         a = a if isinstance(a, str) else self.samples[a]
         b = b if isinstance(b, str) else self.samples[b]
