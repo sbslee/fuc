@@ -1672,6 +1672,11 @@ class VcfFrame:
         pandas.Series
             Resulting VCF column.
 
+        See Also
+        --------
+        VcfFrame.subtract
+            Subtract genotype data between two samples (A, B).
+
         Examples
         --------
         Assume we have following data where a cancer patient's tissue sample
@@ -3975,6 +3980,11 @@ class VcfFrame:
         -------
         pandas.Series
             Resulting VCF column.
+
+        See Also
+        --------
+        VcfFrame.combine
+            Combine genotype data from two samples (A, B).
 
         Examples
         --------
