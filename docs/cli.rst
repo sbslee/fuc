@@ -28,6 +28,7 @@ For getting help on the fuc CLI:
        cov-concat   Concatenate TSV files containing depth of coverage data.
        fq-count     Count sequence reads in FASTQ files.
        fq-sum       Summarize a FASTQ file.
+       fuc-bgzip    Write a BGZF compressed file.
        fuc-compf    Compare the contents of two files.
        fuc-demux    Parse the Reports directory from bcl2fastq.
        fuc-exist    Check whether certain files exist.
@@ -43,7 +44,6 @@ For getting help on the fuc CLI:
        ngs-pon      Pipeline for constructing a panel of normals (PoN).
        tbl-merge    Merge two table files.
        tbl-sum      Summarize a table file.
-       vcf-bgzip    Compress a VCF file using bgzip.
        vcf-filter   Filter a VCF file.
        vcf-merge    Merge two or more VCF files.
        vcf-rename   Rename the samples in a VCF file.
@@ -303,6 +303,31 @@ fq-sum
    
    Positional arguments:
      fastq       FASTQ file (zipped or unqzipped).
+   
+   Optional arguments:
+     -h, --help  Show this help message and exit.
+
+fuc-bgzip
+=========
+
+.. code-block:: text
+
+   $ fuc fuc-bgzip -h
+   usage: fuc fuc-bgzip [-h] file
+   
+   #################################
+   # Write a BGZF compressed file. #
+   #################################
+   
+   BGZF (Blocked GNU Zip Format) is a modified form of gzip compression which can be applied to any file format to provide compression with efficient random access.
+   
+   In addition to being required for random access to and writing of BAM files, the BGZF format can also be used for most of the sequence data formats (e.g. FASTA, FASTQ, GenBank, VCF, MAF).
+   
+   Usage examples:
+     $ fuc fuc-bgzip in.vcf > in.vcf.gz
+   
+   Positional arguments:
+     file        File to be compressed.
    
    Optional arguments:
      -h, --help  Show this help message and exit.
@@ -807,28 +832,6 @@ tbl-sum
      --columns TEXT [TEXT ...]
                            Columns to be summarized (by default, all columns will be included).
      --dtypes PATH         File of column names and their data types (etheir 'categorical' or 'numeric'); one tab-delimited pair of column name and data type per line.
-
-vcf-bgzip
-=========
-
-.. code-block:: text
-
-   $ fuc vcf-bgzip -h
-   usage: fuc vcf-bgzip [-h] input output
-   
-   #####################################
-   # Compress a VCF file using bgzip.  #
-   #####################################
-   
-   Usage examples:
-     $ fuc vcf-bgzip in.vcf out.vcf.gz
-   
-   Positional arguments:
-     input       VCF file.
-     output      Compressed VCF file.
-   
-   Optional arguments:
-     -h, --help  Show this help message and exit.
 
 vcf-filter
 ==========
