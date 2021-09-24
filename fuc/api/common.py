@@ -522,21 +522,22 @@ def sumstat(fp, fn, tp, tn):
     Examples
     --------
 
-    This example is taken from the Wiki page `Sensitivity and specificity <https://en.wikipedia.org/wiki/Sensitivity_and_specificity>`__.
+    This example is directly taken from the Wiki page `Sensitivity and specificity <https://en.wikipedia.org/wiki/Sensitivity_and_specificity>`__.
 
+    >>> from fuc import common
     >>> results = common.sumstat(180, 10, 20, 1820)
     >>> for k, v in results.items():
-    ...     print(k, v)
+    ...     print(k, f'{v:.3f}')
     ...
-    tpr 0.6666666666666666
-    tnr 0.91
-    ppv 0.1
-    npv 0.994535519125683
-    fnr 0.3333333333333333
-    fpr 0.09
-    fdr 0.9
-    for 0.00546448087431694
-    acc 0.9064039408866995
+    tpr 0.667
+    tnr 0.910
+    ppv 0.100
+    npv 0.995
+    fnr 0.333
+    fpr 0.090
+    fdr 0.900
+    for 0.005
+    acc 0.906
     """
     data = {
         'tpr': tp / (tp + fn), # sensitivity, recall, hit rate
