@@ -136,6 +136,7 @@ For getting help on the fuc CLI:
        ngs-pon      Pipeline for constructing a panel of normals (PoN).
        tbl-merge    Merge two table files.
        tbl-sum      Summarize a table file.
+       vcf-bgzip    Compress a VCF file using bgzip.
        vcf-filter   Filter a VCF file.
        vcf-merge    Merge two or more VCF files.
        vcf-rename   Rename the samples in a VCF file.

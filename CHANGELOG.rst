@@ -4,6 +4,8 @@ Changelog
 0.24.0 (in development)
 -----------------------
 
+* Add new command :command:`vcf-bgzip`.
+
 0.23.0 (2021-09-21)
 -------------------
 

@@ -1495,10 +1495,10 @@ class VcfFrame:
         >>> vf = pyvcf.VcfFrame.from_file('zipped.vcf', compression=True)
         """
         args = [cls, fn, compression, meta_only, nrows]
-        if isinstance(fn, str):
-            vf = cls._from_file1(*args)
-        elif hasattr(fn, 'read'):
+        if hasattr(fn, 'read'):
             vf = cls._from_file2(*args)
+        else:
+            vf = cls._from_file1(*args)
         return vf
 
     def calculate_concordance(self, a, b, c=None, mode='all'):
@@ -1747,9 +1747,9 @@ class VcfFrame:
 
     def to_file(self, fn, compression=False):
         """
-        Write the VcfFrame to a VCF file.
+        Write VcfFrame to a VCF file.
 
-        If the file name ends with '.gz', the method will automatically
+        If the filename ends with '.gz', the method will automatically
         use the BGZF compression when writing the file.
 
         Parameters

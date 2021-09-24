@@ -43,6 +43,7 @@ For getting help on the fuc CLI:
        ngs-pon      Pipeline for constructing a panel of normals (PoN).
        tbl-merge    Merge two table files.
        tbl-sum      Summarize a table file.
+       vcf-bgzip    Compress a VCF file using bgzip.
        vcf-filter   Filter a VCF file.
        vcf-merge    Merge two or more VCF files.
        vcf-rename   Rename the samples in a VCF file.
@@ -806,6 +807,28 @@ tbl-sum
      --columns TEXT [TEXT ...]
                            Columns to be summarized (by default, all columns will be included).
      --dtypes PATH         File of column names and their data types (etheir 'categorical' or 'numeric'); one tab-delimited pair of column name and data type per line.
+
+vcf-bgzip
+=========
+
+.. code-block:: text
+
+   $ fuc vcf-bgzip -h
+   usage: fuc vcf-bgzip [-h] input output
+   
+   #####################################
+   # Compress a VCF file using bgzip.  #
+   #####################################
+   
+   Usage examples:
+     $ fuc vcf-bgzip in.vcf out.vcf.gz
+   
+   Positional arguments:
+     input       VCF file.
+     output      Compressed VCF file.
+   
+   Optional arguments:
+     -h, --help  Show this help message and exit.
 
 vcf-filter
 ==========
