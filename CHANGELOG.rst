@@ -5,6 +5,7 @@ Changelog
 -----------------------
 
 * Add new command :command:`fuc-bgzip`.
+* Add new command :command:`tabix-index`.
 
 0.23.0 (2021-09-21)
 -------------------

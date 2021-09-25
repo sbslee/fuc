@@ -42,6 +42,7 @@ For getting help on the fuc CLI:
        ngs-hc       Pipeline for germline short variant discovery.
        ngs-m2       Pipeline for somatic short variant discovery.
        ngs-pon      Pipeline for constructing a panel of normals (PoN).
+       tabix-index  Index a GFF/BED/SAM/VCF file.
        tbl-merge    Merge two table files.
        tbl-sum      Summarize a table file.
        vcf-filter   Filter a VCF file.
@@ -765,6 +766,33 @@ ngs-pon
      --bed PATH  BED file.
      --force     Overwrite the output directory if it already exists.
      --keep      Keep temporary files.
+
+tabix-index
+===========
+
+.. code-block:: text
+
+   $ fuc tabix-index -h
+   usage: fuc tabix-index [-h] [--force] file
+   
+   #################################
+   # Index a GFF/BED/SAM/VCF file. #
+   #################################
+   
+   The Tabix program is used to index a TAB-delimited genome position file (GFF/BED/SAM/VCF) and create an index file (.tbi). The input data file must be position sorted and compressed by bgzip.
+   
+   Usage examples:
+     $ fuc tabix-index in.gff.gz
+     $ fuc tabix-index in.bed.gz
+     $ fuc tabix-index in.sam.gz
+     $ fuc tabix-index in.vcf.gz
+   
+   Positional arguments:
+     file        File to be indexed.
+   
+   Optional arguments:
+     -h, --help  Show this help message and exit.
+     --force     Force to overwrite the index file if it is present.
 
 tbl-merge
 =========

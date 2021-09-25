@@ -135,6 +135,7 @@ For getting help on the fuc CLI:
        ngs-hc       Pipeline for germline short variant discovery.
        ngs-m2       Pipeline for somatic short variant discovery.
        ngs-pon      Pipeline for constructing a panel of normals (PoN).
+       tabix-index  Index a GFF/BED/SAM/VCF file.
        tbl-merge    Merge two table files.
        tbl-sum      Summarize a table file.
        vcf-filter   Filter a VCF file.
