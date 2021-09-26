@@ -6,7 +6,8 @@ Changelog
 
 * Add new command :command:`fuc-bgzip`.
 * Add new command :command:`tabix-index`.
-* Fix bug in :meth:`pyvcf.VcfFrame.from_file` method when ``meta_only`` is ``True``. 
+* Fix bug in :meth:`pyvcf.VcfFrame.from_file` method when ``meta_only`` is ``True``.
+* Update :meth:`pyvcf.VcfFrame.from_file` method to extract VCF headers as well when ``meta_only`` is ``True``.
 
 0.23.0 (2021-09-21)
 -------------------

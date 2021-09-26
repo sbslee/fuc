@@ -1391,22 +1391,19 @@ class VcfFrame:
             f = open(fn)
 
         meta = []
+        columns = []
 
         for line in f:
             if line.startswith('##'):
                 meta.append(line.strip())
                 skip_rows += 1
             elif line.startswith('#CHROM'):
-                columns = line.strip().split('\t')
+                columns += line.strip().split('\t')
                 skip_rows += 1
             else:
                 break
 
         f.close()
-
-        if meta_only:
-            df = pd.DataFrame(columns=list(HEADERS))
-            return cls(meta, df)
 
         if '#CHROM' in columns:
             columns[columns.index('#CHROM')] = 'CHROM'
@@ -1415,12 +1412,14 @@ class VcfFrame:
             if header not in columns and header != 'FORMAT':
                 raise ValueError(f"Required VCF column missing: '{header}'")
 
-        dtype = {**HEADERS, **{x: str for x in columns[9:]}}
-
-        df = pd.read_table(
-            fn, skiprows=skip_rows, names=columns,
-            nrows=nrows, dtype=dtype
-        )
+        if meta_only:
+            df = pd.DataFrame(columns=columns)
+        else:
+            dtype = {**HEADERS, **{x: str for x in columns[9:]}}
+            df = pd.read_table(
+                fn, skiprows=skip_rows, names=columns,
+                nrows=nrows, dtype=dtype
+            )
 
         return cls(meta, df)
 
