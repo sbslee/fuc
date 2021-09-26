@@ -858,26 +858,36 @@ class CovFrame:
         >>> import numpy as np
         >>> from fuc import pycov
         >>> data = {
-        ...     'Chromosome': ['chr1'] * 1000,
-        ...     'Position': np.arange(1000, 2000),
-        ...     'A': pycov.simulate(loc=35, scale=5),
-        ...     'B': pycov.simulate(loc=25, scale=7),
+        ...     'Chromosome': ['chr1'] * 3 + ['2'] * 3,
+        ...     'Position': np.arange(1, 7),
+        ...     'A': pycov.simulate(loc=35, scale=5, size=6),
+        ...     'B': pycov.simulate(loc=25, scale=7, size=6),
         ... }
         >>> cf = pycov.CovFrame.from_dict(data)
-        >>> cf.df.head()
+        >>> cf.df
           Chromosome  Position   A   B
-        0       chr1      1000  28  17
-        1       chr1      1001  35  28
-        2       chr1      1002  38  12
-        3       chr1      1003  33  20
-        4       chr1      1004  33  31
-        >>> cf.chr_prefix().df.head()
+        0       chr1         1  35  25
+        1       chr1         2  23  14
+        2       chr1         3  32  23
+        3          2         4  38  25
+        4          2         5  33   8
+        5          2         6  21  22
+        >>> cf.chr_prefix(mode='remove').df
           Chromosome  Position   A   B
-        0          1      1000  28  17
-        1          1      1001  35  28
-        2          1      1002  38  12
-        3          1      1003  33  20
-        4          1      1004  33  31
+        0          1         1  35  25
+        1          1         2  23  14
+        2          1         3  32  23
+        3          2         4  38  25
+        4          2         5  33   8
+        5          2         6  21  22
+        >>> cf.chr_prefix(mode='add').df
+          Chromosome  Position   A   B
+        0       chr1         1  35  25
+        1       chr1         2  23  14
+        2       chr1         3  32  23
+        3       chr2         4  38  25
+        4       chr2         5  33   8
+        5       chr2         6  21  22
         """
         if mode == 'remove':
             def one_row(r):
@@ -885,7 +895,8 @@ class CovFrame:
                 return r
         elif mode == 'add':
             def one_row(r):
-                r.Chromosome = 'chr' + r.Chromosome
+                if 'chr' not in r.Chromosome:
+                    r.Chromosome = 'chr' + r.Chromosome
                 return r
         else:
             raise ValueError(f'Incorrect mode: {mode}')

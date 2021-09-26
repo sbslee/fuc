@@ -286,21 +286,29 @@ class BedFrame:
 
         >>> from fuc import pybed
         >>> data = {
-        ...     'Chromosome': ['chr1', 'chr2', 'chr3'],
-        ...     'Start': [100, 400, 100],
-        ...     'End': [200, 500, 200]
+        ...     'Chromosome': ['1', '1', 'chr2', 'chr2'],
+        ...     'Start': [100, 400, 100, 200],
+        ...     'End': [200, 500, 200, 300]
         ... }
         >>> bf = pybed.BedFrame.from_dict([], data)
         >>> bf.gr.df
           Chromosome  Start  End
-        0       chr1    100  200
-        1       chr2    400  500
-        2       chr3    100  200
-        >>> bf.chr_prefix().gr.df
+        0          1    100  200
+        1          1    400  500
+        2       chr2    100  200
+        3       chr2    200  300
+        >>> bf.chr_prefix(mode='remove').gr.df
           Chromosome  Start  End
         0          1    100  200
-        1          2    400  500
-        2          3    100  200
+        1          1    400  500
+        2          2    100  200
+        3          2    200  300
+        >>> bf.chr_prefix(mode='add').gr.df
+          Chromosome  Start  End
+        0       chr1    100  200
+        1       chr1    400  500
+        2       chr2    100  200
+        3       chr2    200  300
         """
         if mode == 'remove':
             def one_row(r):
@@ -308,7 +316,8 @@ class BedFrame:
                 return r
         elif mode == 'add':
             def one_row(r):
-                r.Chromosome = 'chr' + r.Chromosome
+                if 'chr' not in r.Chromosome:
+                    r.Chromosome = 'chr' + r.Chromosome
                 return r
         else:
             raise ValueError(f'Incorrect mode: {mode}')

@@ -5135,26 +5135,36 @@ class VcfFrame:
 
         >>> from fuc import pyvcf
         >>> data = {
-        ...     'CHROM': ['chr1', 'chr2'],
-        ...     'POS': [100, 101],
-        ...     'ID': ['.', '.'],
-        ...     'REF': ['G', 'T'],
-        ...     'ALT': ['A', 'C'],
-        ...     'QUAL': ['.', '.'],
-        ...     'FILTER': ['.', '.'],
-        ...     'INFO': ['.', '.'],
-        ...     'FORMAT': ['GT', 'GT'],
-        ...     'A': ['0/1', '1/1']
+        ...     'CHROM': ['chr1', 'chr1', '2', '2'],
+        ...     'POS': [100, 101, 100, 101],
+        ...     'ID': ['.', '.', '.', '.'],
+        ...     'REF': ['G', 'T', 'T', 'C'],
+        ...     'ALT': ['A', 'C', 'C', 'G'],
+        ...     'QUAL': ['.', '.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.', '.'],
+        ...     'INFO': ['.', '.', '.', '.'],
+        ...     'FORMAT': ['GT', 'GT', 'GT', 'GT'],
+        ...     'A': ['0/1', '0/1', '0/1', '0/1']
         ... }
         >>> vf = pyvcf.VcfFrame.from_dict([], data)
         >>> vf.df
           CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A
         0  chr1  100  .   G   A    .      .    .     GT  0/1
-        1  chr2  101  .   T   C    .      .    .     GT  1/1
-        >>> vf.chr_prefix().df
+        1  chr1  101  .   T   C    .      .    .     GT  0/1
+        2     2  100  .   T   C    .      .    .     GT  0/1
+        3     2  101  .   C   G    .      .    .     GT  0/1
+        >>> vf.chr_prefix(mode='remove').df
           CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A
         0     1  100  .   G   A    .      .    .     GT  0/1
-        1     2  101  .   T   C    .      .    .     GT  1/1
+        1     1  101  .   T   C    .      .    .     GT  0/1
+        2     2  100  .   T   C    .      .    .     GT  0/1
+        3     2  101  .   C   G    .      .    .     GT  0/1
+        >>> vf.chr_prefix(mode='add').df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A
+        0  chr1  100  .   G   A    .      .    .     GT  0/1
+        1  chr1  101  .   T   C    .      .    .     GT  0/1
+        2  chr2  100  .   T   C    .      .    .     GT  0/1
+        3  chr2  101  .   C   G    .      .    .     GT  0/1
         """
         if mode == 'remove':
             def one_row(r):
@@ -5162,7 +5172,8 @@ class VcfFrame:
                 return r
         elif mode == 'add':
             def one_row(r):
-                r.CHROM = 'chr' + r.CHROM
+                if 'chr' not in r.CHROM:
+                    r.CHROM = 'chr' + r.CHROM
                 return r
         else:
             raise ValueError(f'Incorrect mode: {mode}')
