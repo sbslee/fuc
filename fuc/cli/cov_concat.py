@@ -5,9 +5,9 @@ from .. import api
 import pysam
 
 description = f"""
-############################################################
-# Concatenate TSV files containing depth of coverage data. #
-############################################################
+#######################################
+# Concatenate depth of coverage files #
+#######################################
 
 Usage examples:
   $ fuc {api.common._script_name()} 1.tsv 2.tsv > rows.tsv
@@ -18,7 +18,7 @@ def create_parser(subparsers):
     parser = api.common._add_parser(
         subparsers,
         api.common._script_name(),
-        help='Concatenate TSV files containing depth of coverage data.',
+        help='Concatenate depth of coverage files.',
         description=description,
     )
     parser.add_argument(

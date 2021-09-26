@@ -11,6 +11,7 @@ Changelog
 * Add new command :command:`tabix-slice`.
 * Update :meth:`pyvcf.VcfFrame.chr_prefix`, :meth:`pybed.BedFrame.chr_prefix`, and :meth:`pycov.CovFrame.chr_prefix` methods to skip lines that already have ``chr`` string when ``mode='add'``.
 * Add new methods :meth:`common.rename` and :meth:`pycov.CovFrame.rename`.
+* Add new command :command:`cov-rename`.
 
 0.23.0 (2021-09-21)
 -------------------
