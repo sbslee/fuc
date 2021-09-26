@@ -10,10 +10,10 @@ description = f"""
 # Slice a GFF/BED/SAM/VCF file. #
 #################################
 
-The Tabix program is used to index a TAB-delimited genome position file (GFF/BED/SAM/VCF) and create an index file (.tbi). The input data file must be position sorted and compressed by bgzip.
+After creating an index file (.tbi), the Tabix program is able to quickly retrieve data lines overlapping regions specified in the format "chr:start-end". Coordinates specified in this region format are 1-based and inclusive.
 
 Usage examples:
-  $ fuc {api.common._script_name()} in.vcf.gz
+  $ fuc {api.common._script_name()} in.vcf.gz chr1:100-200 > out.vcf
 """
 
 def create_parser(subparsers):
@@ -34,12 +34,19 @@ def create_parser(subparsers):
     )
 
 def main(args):
-    vf = pyvcf.VcfFrame.from_file(args.file, meta_only=True)
-
-    for line in vf.meta:
-        sys.stdout.write(line + '\n')
-
-    sys.stdout.write('\t'.join(vf.df.columns) + '\n')
+    if '.vcf' in args.file:
+        vf = pyvcf.VcfFrame.from_file(args.file, meta_only=True)
+        for line in vf.meta:
+            sys.stdout.write(line + '\n')
+        sys.stdout.write('\t'.join(vf.df.columns) + '\n')
+    elif '.sam' in args.file:
+        pass
+    elif '.gff' in args.file:
+        pass
+    elif '.bed' in args.file:
+        pass
+    else:
+        raise ValueError('Unsupported file format')
 
     tbx = pysam.TabixFile(args.file)
 

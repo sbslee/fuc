@@ -43,6 +43,7 @@ For getting help on the fuc CLI:
        ngs-m2       Pipeline for somatic short variant discovery.
        ngs-pon      Pipeline for constructing a panel of normals (PoN).
        tabix-index  Index a GFF/BED/SAM/VCF file.
+       tabix-slice  Slice a GFF/BED/SAM/VCF file.
        tbl-merge    Merge two table files.
        tbl-sum      Summarize a table file.
        vcf-filter   Filter a VCF file.
@@ -793,6 +794,30 @@ tabix-index
    Optional arguments:
      -h, --help  Show this help message and exit.
      --force     Force to overwrite the index file if it is present.
+
+tabix-slice
+===========
+
+.. code-block:: text
+
+   $ fuc tabix-slice -h
+   usage: fuc tabix-slice [-h] file regions [regions ...]
+   
+   #################################
+   # Slice a GFF/BED/SAM/VCF file. #
+   #################################
+   
+   After creating an index file (.tbi), the Tabix program is able to quickly retrieve data lines overlapping regions specified in the format "chr:start-end". Coordinates specified in this region format are 1-based and inclusive.
+   
+   Usage examples:
+     $ fuc tabix-slice in.vcf.gz chr1:100-200 > out.vcf
+   
+   Positional arguments:
+     file        File to be sliced.
+     regions     One or more regions.
+   
+   Optional arguments:
+     -h, --help  Show this help message and exit.
 
 tbl-merge
 =========
