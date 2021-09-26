@@ -968,3 +968,61 @@ class CovFrame:
             samples = [x for x in self.samples if x not in samples]
         cols = self.df.columns[:2].to_list() + samples
         return self.__class__(self.df[cols])
+
+    def rename(self, names, indicies=None):
+        """
+        Rename the samples.
+
+        Parameters
+        ----------
+        names : dict or list
+            Dict of old names to new names or list of new names.
+        indicies : list or tuple, optional
+            List of 0-based sample indicies. Alternatively, a tuple
+            (int, int) can be used to specify an index range.
+
+        Returns
+        -------
+        CovFrame
+            Updated CovFrame.
+
+        Examples
+        --------
+
+        >>> import numpy as np
+        >>> from fuc import pycov
+        >>> data = {
+        ...     'Chromosome': ['chr1'] * 2,
+        ...     'Position': np.arange(1, 3),
+        ...     'A': pycov.simulate(loc=35, scale=5, size=2),
+        ...     'B': pycov.simulate(loc=25, scale=7, size=2),
+        ...     'C': pycov.simulate(loc=25, scale=7, size=2),
+        ...     'D': pycov.simulate(loc=25, scale=7, size=2),
+        ... }
+        >>> cf = pycov.CovFrame.from_dict(data)
+        >>> cf.df
+          Chromosome  Position   A   B   C   D
+        0       chr1         1  31  19  28  15
+        1       chr1         2  35  24  22  17
+        >>> cf.rename(['1', '2', '3', '4']).df
+          Chromosome  Position   1   2   3   4
+        0       chr1         1  31  19  28  15
+        1       chr1         2  35  24  22  17
+        >>> cf.rename({'B': '2', 'C': '3'}).df
+          Chromosome  Position   A   2   3   D
+        0       chr1         1  31  19  28  15
+        1       chr1         2  35  24  22  17
+        >>> cf.rename(['2', '4'], indicies=[1, 3]).df
+          Chromosome  Position   A   2   C   4
+        0       chr1         1  31  19  28  15
+        1       chr1         2  35  24  22  17
+        >>> cf.rename(['2', '3'], indicies=(1, 3)).df
+          Chromosome  Position   A   2   3   D
+        0       chr1         1  31  19  28  15
+        1       chr1         2  35  24  22  17
+        """
+        samples = common.rename(self.samples, names, indicies=indicies)
+        columns = self.df.columns[:2].to_list() + samples
+        cf = self.copy()
+        cf.df.columns = columns
+        return cf
