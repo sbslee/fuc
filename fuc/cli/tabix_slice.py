@@ -38,7 +38,7 @@ def main(args):
         vf = pyvcf.VcfFrame.from_file(args.file, meta_only=True)
         for line in vf.meta:
             sys.stdout.write(line + '\n')
-        sys.stdout.write('\t'.join(vf.df.columns) + '\n')
+        sys.stdout.write('#' + '\t'.join(vf.df.columns) + '\n')
     elif '.sam' in args.file:
         pass
     elif '.gff' in args.file:
