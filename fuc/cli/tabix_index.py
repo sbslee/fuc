@@ -5,9 +5,9 @@ from .. import api
 import pysam
 
 description = f"""
-#################################
-# Index a GFF/BED/SAM/VCF file. #
-#################################
+############################################
+# Index a GFF/BED/SAM/VCF file with Tabix. #
+############################################
 
 The Tabix program is used to index a TAB-delimited genome position file (GFF/BED/SAM/VCF) and create an index file (.tbi). The input data file must be position sorted and compressed by bgzip.
 
@@ -22,7 +22,7 @@ def create_parser(subparsers):
     parser = api.common._add_parser(
         subparsers,
         api.common._script_name(),
-        help='Index a GFF/BED/SAM/VCF file.',
+        help='Index a GFF/BED/SAM/VCF file with Tabix.',
         description=description,
     )
     parser.add_argument(

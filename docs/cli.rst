@@ -42,8 +42,8 @@ For getting help on the fuc CLI:
        ngs-hc       Pipeline for germline short variant discovery.
        ngs-m2       Pipeline for somatic short variant discovery.
        ngs-pon      Pipeline for constructing a panel of normals (PoN).
-       tabix-index  Index a GFF/BED/SAM/VCF file.
-       tabix-slice  Slice a GFF/BED/SAM/VCF file.
+       tabix-index  Index a GFF/BED/SAM/VCF file with Tabix.
+       tabix-slice  Slice a GFF/BED/SAM/VCF file with Tabix.
        tbl-merge    Merge two table files.
        tbl-sum      Summarize a table file.
        vcf-filter   Filter a VCF file.
@@ -315,7 +315,7 @@ fuc-bgzip
 .. code-block:: text
 
    $ fuc fuc-bgzip -h
-   usage: fuc fuc-bgzip [-h] file
+   usage: fuc fuc-bgzip [-h] [file ...]
    
    #################################
    # Write a BGZF compressed file. #
@@ -325,11 +325,14 @@ fuc-bgzip
    
    In addition to being required for random access to and writing of BAM files, the BGZF format can also be used for most of the sequence data formats (e.g. FASTA, FASTQ, GenBank, VCF, MAF).
    
+   The command will look for stdin if there are no arguments.
+   
    Usage examples:
-     $ fuc fuc-bgzip in.vcf > in.vcf.gz
+     $ fuc fuc-bgzip in.vcf > out.vcf.gz
+     $ cat in.vcf | fuc fuc-bgzip > out.vcf.gz
    
    Positional arguments:
-     file        File to be compressed.
+     file        File to be compressed (default: stdin).
    
    Optional arguments:
      -h, --help  Show this help message and exit.
@@ -776,9 +779,9 @@ tabix-index
    $ fuc tabix-index -h
    usage: fuc tabix-index [-h] [--force] file
    
-   #################################
-   # Index a GFF/BED/SAM/VCF file. #
-   #################################
+   ############################################
+   # Index a GFF/BED/SAM/VCF file with Tabix. #
+   ############################################
    
    The Tabix program is used to index a TAB-delimited genome position file (GFF/BED/SAM/VCF) and create an index file (.tbi). The input data file must be position sorted and compressed by bgzip.
    
@@ -803,9 +806,9 @@ tabix-slice
    $ fuc tabix-slice -h
    usage: fuc tabix-slice [-h] file regions [regions ...]
    
-   #################################
-   # Slice a GFF/BED/SAM/VCF file. #
-   #################################
+   ############################################
+   # Slice a GFF/BED/SAM/VCF file with Tabix. #
+   ############################################
    
    After creating an index file (.tbi), the Tabix program is able to quickly retrieve data lines overlapping regions specified in the format "chr:start-end". Coordinates specified in this region format are 1-based and inclusive.
    
