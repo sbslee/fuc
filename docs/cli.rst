@@ -25,7 +25,8 @@ For getting help on the fuc CLI:
        bam-slice    Slice a SAM/BAM/CRAM file.
        bed-intxn    Find the intersection of two or more BED files.
        bed-sum      Summarize a BED file.
-       cov-concat   Concatenate TSV files containing depth of coverage data.
+       cov-concat   Concatenate depth of coverage files.
+       cov-rename   Rename the samples in a depth of coverage file.
        fq-count     Count sequence reads in FASTQ files.
        fq-sum       Summarize a FASTQ file.
        fuc-bgzip    Write a BGZF compressed file.
@@ -247,9 +248,9 @@ cov-concat
    $ fuc cov-concat -h
    usage: fuc cov-concat [-h] [--axis INT] PATH [PATH ...]
    
-   ############################################################
-   # Concatenate TSV files containing depth of coverage data. #
-   ############################################################
+   #######################################
+   # Concatenate depth of coverage files #
+   #######################################
    
    Usage examples:
      $ fuc cov-concat 1.tsv 2.tsv > rows.tsv
@@ -261,6 +262,40 @@ cov-concat
    Optional arguments:
      -h, --help  Show this help message and exit.
      --axis INT  The axis to concatenate along (default: 0) (chocies: 0, 1 where 0 is index and 1 is columns).
+
+cov-rename
+==========
+
+.. code-block:: text
+
+   $ fuc cov-rename -h
+   usage: fuc cov-rename [-h] [--mode TEXT] [--range INT INT] [--sep TEXT]
+                         tsv names
+   
+   ###################################################
+   # Rename the samples in a depth of coverage file. #
+   ###################################################
+   
+   There are three different renaming modes using the 'names' file:
+     - 'MAP': Default mode. Requires two columns, old names in the first and new names in the second.
+     - 'INDEX': Requires two columns, new names in the first and 0-based indicies in the second.
+     - 'RANGE': Requires only one column of new names but '--range' must be specified.
+   
+   Usage examples:
+     $ fuc cov-rename in.tsv old_new.tsv > out.tsv
+     $ fuc cov-rename in.tsv new_idx.tsv --mode INDEX > out.tsv
+     $ fuc cov-rename in.tsv new_only.tsv --mode RANGE --range 2 5 > out.tsv
+     $ fuc cov-rename in.tsv old_new.csv --sep , > out.tsv
+   
+   Positional arguments:
+     tsv              TSV file (zipped or unzipped).
+     names            Text file containing information for renaming the samples.
+   
+   Optional arguments:
+     -h, --help       Show this help message and exit.
+     --mode TEXT      Renaming mode (default: 'MAP') (choices: 'MAP', 'INDEX', 'RANGE').
+     --range INT INT  Index range to use when renaming the samples. Applicable only with the 'RANGE' mode.
+     --sep TEXT       Delimiter to use for reading the 'names' file (default: '\t').
 
 fq-count
 ========

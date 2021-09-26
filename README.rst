@@ -118,7 +118,8 @@ For getting help on the fuc CLI:
        bam-slice    Slice a SAM/BAM/CRAM file.
        bed-intxn    Find the intersection of two or more BED files.
        bed-sum      Summarize a BED file.
-       cov-concat   Concatenate TSV files containing depth of coverage data.
+       cov-concat   Concatenate depth of coverage files.
+       cov-rename   Rename the samples in a depth of coverage file.
        fq-count     Count sequence reads in FASTQ files.
        fq-sum       Summarize a FASTQ file.
        fuc-bgzip    Write a BGZF compressed file.
