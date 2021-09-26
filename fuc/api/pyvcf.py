@@ -4602,74 +4602,34 @@ class VcfFrame:
         ...     'A': ['0/1', '0/1'],
         ...     'B': ['0/1', '0/1'],
         ...     'C': ['0/1', '0/1'],
+        ...     'D': ['0/1', '0/1'],
         ... }
         >>> vf = pyvcf.VcfFrame.from_dict([], data)
         >>> vf.df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    B    C
-        0  chr1  100  .   G   A    .      .    .     GT  0/1  0/1  0/1
-        1  chr2  101  .   T   C    .      .    .     GT  0/1  0/1  0/1
-        >>> vf.rename(['X', 'Y', 'Z']).df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    X    Y    Z
-        0  chr1  100  .   G   A    .      .    .     GT  0/1  0/1  0/1
-        1  chr2  101  .   T   C    .      .    .     GT  0/1  0/1  0/1
-        >>> vf.rename({'B': 'X', 'C': 'Y'}).df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    X    Y
-        0  chr1  100  .   G   A    .      .    .     GT  0/1  0/1  0/1
-        1  chr2  101  .   T   C    .      .    .     GT  0/1  0/1  0/1
-        >>> vf.rename(['X'], indicies=[1]).df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    X    C
-        0  chr1  100  .   G   A    .      .    .     GT  0/1  0/1  0/1
-        1  chr2  101  .   T   C    .      .    .     GT  0/1  0/1  0/1
-        >>> vf.rename(['X', 'Y'], indicies=(1, 3)).df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    X    Y
-        0  chr1  100  .   G   A    .      .    .     GT  0/1  0/1  0/1
-        1  chr2  101  .   T   C    .      .    .     GT  0/1  0/1  0/1
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    B    C    D
+        0  chr1  100  .   G   A    .      .    .     GT  0/1  0/1  0/1  0/1
+        1  chr2  101  .   T   C    .      .    .     GT  0/1  0/1  0/1  0/1
+        >>> vf.rename(['1', '2', '3', '4']).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    1    2    3    4
+        0  chr1  100  .   G   A    .      .    .     GT  0/1  0/1  0/1  0/1
+        1  chr2  101  .   T   C    .      .    .     GT  0/1  0/1  0/1  0/1
+        >>> vf.rename({'B': '2', 'C': '3'}).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    2    3    D
+        0  chr1  100  .   G   A    .      .    .     GT  0/1  0/1  0/1  0/1
+        1  chr2  101  .   T   C    .      .    .     GT  0/1  0/1  0/1  0/1
+        >>> vf.rename(['2', '4'], indicies=[1, 3]).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    2    C    4
+        0  chr1  100  .   G   A    .      .    .     GT  0/1  0/1  0/1  0/1
+        1  chr2  101  .   T   C    .      .    .     GT  0/1  0/1  0/1  0/1
+        >>> vf.rename(['2', '3'], indicies=(1, 3)).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    2    3    D
+        0  chr1  100  .   G   A    .      .    .     GT  0/1  0/1  0/1  0/1
+        1  chr2  101  .   T   C    .      .    .     GT  0/1  0/1  0/1  0/1
         """
-        samples = self.samples
-
-        if not isinstance(names, list) and not isinstance(names, dict):
-            raise TypeError("Argument 'names' must be dict or list.")
-
-        if len(names) > len(samples):
-            raise ValueError("There are too many names.")
-
-        if isinstance(names, list) and indicies is not None:
-            if isinstance(indicies, tuple):
-                if len(indicies) != 2:
-                    raise ValueError("Index range must be two integers.")
-                l = len(range(indicies[0], indicies[1]))
-            elif isinstance(indicies, list):
-                l = len(indicies)
-            else:
-                raise TypeError("Argument 'indicies' must be list or tuple.")
-
-            if len(names) != l:
-                raise ValueError("Names and indicies have different lengths.")
-
-        if isinstance(names, list):
-            if len(names) == len(samples):
-                names = dict(zip(samples, names))
-            else:
-                if indicies is None:
-                    message = ("There are too few names. If this was "
-                        "intended, use the 'indicies' argument.")
-                    raise ValueError(message)
-                elif isinstance(indicies, tuple):
-                    names = dict(zip(samples[indicies[0]:indicies[1]], names))
-                else:
-                    names = dict(zip([samples[i] for i in indicies], names))
-
-        for old, new in names.items():
-            i = samples.index(old)
-            samples[i] = new
-
-        if len(samples) > len(set(samples)):
-            raise ValueError('There are more than one duplicate names.')
-
+        samples = common.rename(self.samples, names, indicies=indicies)
         columns = self.df.columns[:9].to_list() + samples
         vf = self.copy()
         vf.df.columns = columns
-
         return vf
 
     def drop_duplicates(self, subset=None, keep='first'):

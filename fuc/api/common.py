@@ -1117,13 +1117,13 @@ def rename(original, names, indicies=None):
 
     >>> from fuc import common
     >>> original = ['A', 'B', 'C', 'D']
-    >>> common.rename(original, names=['1', '2', '3', '4'])
+    >>> common.rename(original, ['1', '2', '3', '4'])
     ['1', '2', '3', '4']
-    >>> common.rename(original, names={'B': '2', 'C': '3'})
+    >>> common.rename(original, {'B': '2', 'C': '3'})
     ['A', '2', '3', 'D']
-    >>> common.rename(original, names=['2', '4'], indicies=[1, 3])
+    >>> common.rename(original, ['2', '4'], indicies=[1, 3])
     ['A', '2', 'C', '4']
-    >>> common.rename(original, names=['2', '3'], indicies=(1, 3))
+    >>> common.rename(original, ['2', '3'], indicies=(1, 3))
     ['A', '2', '3', 'D']
     """
     samples = copy.deepcopy(original)
