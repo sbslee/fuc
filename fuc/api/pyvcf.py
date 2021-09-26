@@ -1402,6 +1402,12 @@ class VcfFrame:
             else:
                 break
 
+        f.close()
+
+        if meta_only:
+            df = pd.DataFrame(columns=list(HEADERS))
+            return cls(meta, df)
+
         if '#CHROM' in columns:
             columns[columns.index('#CHROM')] = 'CHROM'
 
@@ -1411,15 +1417,10 @@ class VcfFrame:
 
         dtype = {**HEADERS, **{x: str for x in columns[9:]}}
 
-        if meta_only:
-            df = pd.DataFrame(columns=columns)
-        else:
-            df = pd.read_table(
-                fn, skiprows=skip_rows, names=columns,
-                nrows=nrows, dtype=dtype
-            )
-
-        f.close()
+        df = pd.read_table(
+            fn, skiprows=skip_rows, names=columns,
+            nrows=nrows, dtype=dtype
+        )
 
         return cls(meta, df)
 
