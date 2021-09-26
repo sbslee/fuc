@@ -10,6 +10,7 @@ Changelog
 * Update :meth:`pyvcf.VcfFrame.from_file` method to extract VCF headers as well when ``meta_only`` is ``True``.
 * Add new command :command:`tabix-slice`.
 * Update :meth:`pyvcf.VcfFrame.chr_prefix`, :meth:`pybed.BedFrame.chr_prefix`, and :meth:`pycov.CovFrame.chr_prefix` methods to skip lines that already have ``chr`` string when ``mode='add'``.
+* Add new method :meth:`common.rename`.
 
 0.23.0 (2021-09-21)
 -------------------
