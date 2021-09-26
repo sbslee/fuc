@@ -8,6 +8,7 @@ Changelog
 * Add new command :command:`tabix-index`.
 * Fix bug in :meth:`pyvcf.VcfFrame.from_file` method when ``meta_only`` is ``True``.
 * Update :meth:`pyvcf.VcfFrame.from_file` method to extract VCF headers as well when ``meta_only`` is ``True``.
+* Add new command :command:`tabix-slice`.
 
 0.23.0 (2021-09-21)
 -------------------
