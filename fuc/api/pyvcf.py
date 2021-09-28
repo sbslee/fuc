@@ -397,6 +397,43 @@ def gt_unphase(g):
     l[0] = '/'.join([str(b) for b in sorted([int(a) for a in gt.split('|')])])
     return ':'.join(l)
 
+def gt_het(g):
+    """
+    Return True if genotype call is heterozygous.
+
+    Parameters
+    ----------
+    g : str
+        Genotype call.
+
+    Returns
+    -------
+    bool
+        True if genotype call is heterozygous.
+
+    Examples
+    --------
+
+    >>> from fuc import pyvcf
+    >>> pyvcf.gt_het('0/1')
+    True
+    >>> pyvcf.gt_het('0/0')
+    False
+    >>> pyvcf.gt_het('0|0')
+    False
+    >>> pyvcf.gt_het('1|0')
+    True
+    """
+    l = g.split(':')
+    gt = l[0]
+    if '/' in gt:
+        gt = gt.split('/')
+    elif '|' in gt:
+        gt = gt.split('|')
+    else:
+        return False
+    return gt[0] != gt[1]
+
 def merge(
     vfs, how='inner', format='GT', sort=True, collapse=False
 ):
