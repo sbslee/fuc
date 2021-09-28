@@ -434,6 +434,33 @@ def gt_het(g):
         return False
     return gt[0] != gt[1]
 
+def pseudophase(g):
+    """
+    Return pseudophased genotype call.
+
+    Parameters
+    ----------
+    g : str
+        Genotype call.
+
+    Returns
+    -------
+    str
+        Pseudophased genotype call.
+
+    Examples
+    --------
+
+    >>> from fuc import pyvcf
+    >>> pyvcf.pseudophase('0/1')
+    '0|1'
+    >>> pyvcf.pseudophase('0/0:34:10,24')
+    '0|0:34:10,24'
+    """
+    l = g.split(':')
+    l[0] = l[0].replace('/', '|')
+    return ':'.join(l)
+
 def merge(
     vfs, how='inner', format='GT', sort=True, collapse=False
 ):

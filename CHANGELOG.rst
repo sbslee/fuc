@@ -13,6 +13,7 @@ Changelog
 * Add new methods :meth:`common.rename` and :meth:`pycov.CovFrame.rename`.
 * Add new command :command:`cov-rename`.
 * Add new method :meth:`pyvcf.gt_het`.
+* Add new method :meth:`pyvcf.pseudophase`.
 
 0.23.0 (2021-09-21)
 -------------------
