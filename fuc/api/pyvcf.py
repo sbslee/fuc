@@ -434,7 +434,7 @@ def gt_het(g):
         return False
     return gt[0] != gt[1]
 
-def pseudophase(g):
+def gt_pseudophase(g):
     """
     Return pseudophased genotype call.
 
