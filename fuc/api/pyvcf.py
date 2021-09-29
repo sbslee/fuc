@@ -5328,12 +5328,12 @@ class VcfFrame:
 
     def pseudophase(self):
         """
-        Perform the pseudo haplotype phasing.
+        Pseudophase VcfFrame.
 
         Returns
         -------
         VcfFrame
-            Phased VcfFrame.
+            Pseudophased VcfFrame.
 
         Examples
         --------
@@ -5362,17 +5362,10 @@ class VcfFrame:
         1  chr2  101  .   T   C    .      .    .     GT  1|1
         """
         def one_row(r):
-
-            def one_gt(g):
-                l = g.split(':')
-                l[0] = l[0].replace('/', '|')
-                return ':'.join(l)
-
-            r[9:] = r[9:].apply(one_gt)
-
+            r[9:] = r[9:].apply(pseudophase)
             return r
-
-        return self.__class__(self.copy_meta(), self.df.apply(one_row, axis=1))
+        df = self.df.apply(one_row, axis=1)
+        return self.__class__(self.copy_meta(), df)
 
     def get_af(self, sample, variant):
         """
