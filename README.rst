@@ -118,9 +118,11 @@ For getting help on the fuc CLI:
        bam-slice    Slice a SAM/BAM/CRAM file.
        bed-intxn    Find the intersection of two or more BED files.
        bed-sum      Summarize a BED file.
-       cov-concat   Concatenate TSV files containing depth of coverage data.
+       cov-concat   Concatenate depth of coverage files.
+       cov-rename   Rename the samples in a depth of coverage file.
        fq-count     Count sequence reads in FASTQ files.
        fq-sum       Summarize a FASTQ file.
+       fuc-bgzip    Write a BGZF compressed file.
        fuc-compf    Compare the contents of two files.
        fuc-demux    Parse the Reports directory from bcl2fastq.
        fuc-exist    Check whether certain files exist.
@@ -134,6 +136,8 @@ For getting help on the fuc CLI:
        ngs-hc       Pipeline for germline short variant discovery.
        ngs-m2       Pipeline for somatic short variant discovery.
        ngs-pon      Pipeline for constructing a panel of normals (PoN).
+       tabix-index  Index a GFF/BED/SAM/VCF file with Tabix.
+       tabix-slice  Slice a GFF/BED/SAM/VCF file with Tabix.
        tbl-merge    Merge two table files.
        tbl-sum      Summarize a table file.
        vcf-filter   Filter a VCF file.

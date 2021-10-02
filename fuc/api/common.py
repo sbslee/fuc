@@ -10,6 +10,7 @@ import os
 import sys
 import warnings
 import inspect
+import copy
 from argparse import RawTextHelpFormatter, SUPPRESS
 from pathlib import Path
 from difflib import SequenceMatcher
@@ -522,21 +523,22 @@ def sumstat(fp, fn, tp, tn):
     Examples
     --------
 
-    This example is taken from the Wiki page `Sensitivity and specificity <https://en.wikipedia.org/wiki/Sensitivity_and_specificity>`__.
+    This example is directly taken from the Wiki page `Sensitivity and specificity <https://en.wikipedia.org/wiki/Sensitivity_and_specificity>`__.
 
+    >>> from fuc import common
     >>> results = common.sumstat(180, 10, 20, 1820)
     >>> for k, v in results.items():
-    ...     print(k, v)
+    ...     print(k, f'{v:.3f}')
     ...
-    tpr 0.6666666666666666
-    tnr 0.91
-    ppv 0.1
-    npv 0.994535519125683
-    fnr 0.3333333333333333
-    fpr 0.09
-    fdr 0.9
-    for 0.00546448087431694
-    acc 0.9064039408866995
+    tpr 0.667
+    tnr 0.910
+    ppv 0.100
+    npv 0.995
+    fnr 0.333
+    fpr 0.090
+    fdr 0.900
+    for 0.005
+    acc 0.906
     """
     data = {
         'tpr': tp / (tp + fn), # sensitivity, recall, hit rate
@@ -1090,3 +1092,79 @@ def color_print(s, color='green', bold=False):
         b = 0
 
     print(f'\x1b[{b};{c};{c}m' + s + '\x1b[0m')
+
+def rename(original, names, indicies=None):
+    """
+    Rename sample names flexibly.
+
+    Parameters
+    ----------
+    original : list
+        List of original names.
+    names : dict or list
+        Dict of old names to new names or list of new names.
+    indicies : list or tuple, optional
+        List of 0-based sample indicies. Alternatively, a tuple
+        (int, int) can be used to specify an index range.
+
+    Returns
+    -------
+    list
+        List of updated names.
+
+    Examples
+    --------
+
+    >>> from fuc import common
+    >>> original = ['A', 'B', 'C', 'D']
+    >>> common.rename(original, ['1', '2', '3', '4'])
+    ['1', '2', '3', '4']
+    >>> common.rename(original, {'B': '2', 'C': '3'})
+    ['A', '2', '3', 'D']
+    >>> common.rename(original, ['2', '4'], indicies=[1, 3])
+    ['A', '2', 'C', '4']
+    >>> common.rename(original, ['2', '3'], indicies=(1, 3))
+    ['A', '2', '3', 'D']
+    """
+    samples = copy.deepcopy(original)
+
+    if not isinstance(names, list) and not isinstance(names, dict):
+        raise TypeError("Argument 'names' must be dict or list.")
+
+    if len(names) > len(samples):
+        raise ValueError("There are too many names.")
+
+    if isinstance(names, list) and indicies is not None:
+        if isinstance(indicies, tuple):
+            if len(indicies) != 2:
+                raise ValueError("Index range must be two integers.")
+            l = len(range(indicies[0], indicies[1]))
+        elif isinstance(indicies, list):
+            l = len(indicies)
+        else:
+            raise TypeError("Argument 'indicies' must be list or tuple.")
+
+        if len(names) != l:
+            raise ValueError("Names and indicies have different lengths.")
+
+    if isinstance(names, list):
+        if len(names) == len(samples):
+            names = dict(zip(samples, names))
+        else:
+            if indicies is None:
+                message = ("There are too few names. If this was "
+                    "intended, use the 'indicies' argument.")
+                raise ValueError(message)
+            elif isinstance(indicies, tuple):
+                names = dict(zip(samples[indicies[0]:indicies[1]], names))
+            else:
+                names = dict(zip([samples[i] for i in indicies], names))
+
+    for old, new in names.items():
+        i = samples.index(old)
+        samples[i] = new
+
+    if len(samples) > len(set(samples)):
+        raise ValueError('There are more than one duplicate names.')
+
+    return samples

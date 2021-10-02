@@ -1,6 +1,20 @@
 Changelog
 *********
 
+0.24.0 (2021-10-02)
+-------------------
+
+* Add new command :command:`fuc-bgzip`.
+* Add new command :command:`tabix-index`.
+* Fix bug in :meth:`pyvcf.VcfFrame.from_file` method when ``meta_only`` is ``True``.
+* Update :meth:`pyvcf.VcfFrame.from_file` method to extract VCF headers as well when ``meta_only`` is ``True``.
+* Add new command :command:`tabix-slice`.
+* Update :meth:`pyvcf.VcfFrame.chr_prefix`, :meth:`pybed.BedFrame.chr_prefix`, and :meth:`pycov.CovFrame.chr_prefix` methods to skip lines that already have ``chr`` string when ``mode='add'``.
+* Add new methods :meth:`common.rename` and :meth:`pycov.CovFrame.rename`.
+* Add new command :command:`cov-rename`.
+* Add new method :meth:`pyvcf.gt_het`.
+* Add new method :meth:`pyvcf.gt_pseudophase`.
+
 0.23.0 (2021-09-21)
 -------------------
 
