@@ -5,6 +5,7 @@ Changelog
 -----------------------
 
 * Add new method :meth:`common.sort_variants`.
+* Add new property ``variants`` to :class:`pyvcf.VcfFrame` class.
 
 0.24.0 (2021-10-02)
 -------------------

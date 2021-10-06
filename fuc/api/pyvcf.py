@@ -909,6 +909,18 @@ class VcfFrame:
         return list(self.df.CHROM.unique())
 
     @property
+    def variants(self):
+        """list : List of variants."""
+        def one_row(r):
+            result = []
+            for alt in r.ALT.split(','):
+                result.append(f'{r.CHROM}-{r.POS}-{r.REF}-{alt}')
+            return ','.join(result)
+        s = self.df.apply(one_row, axis=1)
+        s = ','.join(s)
+        return s.split(',')
+
+    @property
     def sites_only(self):
         """bool : Whether the VCF is sites-only."""
         return not self.samples or 'FORMAT' not in self.df.columns
