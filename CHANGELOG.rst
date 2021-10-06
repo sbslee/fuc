@@ -4,6 +4,8 @@ Changelog
 0.25.0 (in development)
 -----------------------
 
+* Add new method :meth:`common.sort_variants`.
+
 0.24.0 (2021-10-02)
 -------------------
 
