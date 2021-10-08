@@ -59,6 +59,7 @@ from . import pyvcf, common
 import numpy as np
 import pandas as pd
 import statsmodels.formula.api as smf
+from matplotlib_venn import venn2, venn3
 from scipy.stats import fisher_exact
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -3587,7 +3588,7 @@ class MafFrame:
 
         Parameters
         ----------
-        samples : str or list
+        samples : str, list, or pandas.Series
             Sample name or list of names (the order does not matters).
         exclude : bool, default: False
             If True, exclude specified samples.
@@ -3613,6 +3614,12 @@ class MafFrame:
         """
         if isinstance(samples, str):
             samples = [samples]
+        elif isinstance(samples, pd.Series):
+            samples = samples.to_list()
+        elif isinstance(samples, list):
+            pass
+        else:
+            raise TypeError(f'Incorrect input type: {type(samples)}')
 
         if exclude:
             samples = [x for x in self.samples if x not in samples]
