@@ -3526,8 +3526,14 @@ class MafFrame:
 
         Examples
         --------
-        Assume we have the following data:
-
+        >>> from fuc import common, pymaf
+        >>> common.load_dataset('tcga-laml')
+        >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+        >>> mf = pymaf.MafFrame.from_file(maf_file)
+        >>> mf.filter_indel().df.Variant_Type.unique()
+        array(['SNP'], dtype=object)
+        >>> mf.filter_indel(opposite=True).df.Variant_Type.unique()
+        array(['DEL', 'INS'], dtype=object)
         """
         def one_row(r):
             if (len(r.Reference_Allele) == 1 and
@@ -3722,3 +3728,66 @@ class MafFrame:
                 abc += 1
 
         return (Abc, aBc, ABc, abC, AbC, aBC, ABC, abc)
+
+    def plot_comparison(
+        self, a, b, c=None, labels=None, ax=None, figsize=None
+    ):
+        """
+        Create a Venn diagram showing genotype concordance between groups.
+
+        This method supports comparison between two groups (Groups A & B)
+        as well as three groups (Groups A, B, & C).
+
+        Parameters
+        ----------
+        a, b : list
+            Sample names. The lists must have the same shape.
+        c : list, optional
+            Same as above.
+        labels : list, optional
+            List of labels to be displayed.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+        matplotlib_venn._common.VennDiagram
+            VennDiagram object.
+        """
+        if len(a) != len(b):
+            raise ValueError('Groups A and B have different length.')
+        if c is not None and len(a) != len(c):
+            raise ValueError('Group C has unmatched length.')
+        if labels is None:
+            if c is None:
+                labels = ('A', 'B')
+            else:
+                labels = ('A', 'B', 'C')
+
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
+        venn_kws = dict(ax=ax, alpha=0.5, set_labels=labels)
+        if c is None:
+            out = self._plot_comparison_two(a, b, venn_kws)
+        else:
+            out = self._plot_comparison_three(a, b, c, venn_kws)
+        return ax, out
+
+    def _plot_comparison_two(self, a, b, venn_kws):
+        n = [0, 0, 0, 0]
+        for i in range(len(a)):
+            n = [x + y for x, y in zip(n, self.calculate_concordance(a[i], b[i]))]
+        out = venn2(subsets=n[:-1], **venn_kws)
+        return out
+
+    def _plot_comparison_three(self, a, b, c, venn_kws):
+        n = [0, 0, 0, 0, 0, 0, 0, 0]
+        for i in range(len(a)):
+            n = [x + y for x, y in zip(n, self.calculate_concordance(a[i], b[i], c[i]))]
+        out = venn3(subsets=n[:-1], **venn_kws)
+        return out
