@@ -5440,12 +5440,12 @@ class VcfFrame:
 
     def variants(self):
         """
-        List variants in VcfFrame.
+        List unique variants in VcfFrame.
 
         Returns
         -------
         list
-            List of variants.
+            List of unique variants.
 
         Examples
         --------

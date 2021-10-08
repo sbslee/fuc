@@ -5,7 +5,8 @@ Changelog
 -----------------------
 
 * Add new method :meth:`common.sort_variants`.
-* Add new method :meth:`pyvcf.VcfFrame.variants()`.
+* Add new method :meth:`pyvcf.VcfFrame.variants`.
+* Add new method :meth:`pymaf.MafFrame.variants`.
 
 0.24.0 (2021-10-02)
 -------------------

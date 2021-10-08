@@ -3503,3 +3503,30 @@ class MafFrame:
         df = self.df[i]
         mf = self.__class__(df)
         return mf
+
+    def variants(self):
+        """
+        List unique variants in MafFrame.
+
+        Returns
+        -------
+        list
+            List of unique variants.
+
+        Examples
+        --------
+
+        >>> from fuc import common, pymaf
+        >>> common.load_dataset('tcga-laml')
+        >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+        >>> mf = pymaf.MafFrame.from_file(maf_file)
+        >>> mf.variants()[:5]
+        ['1:1571791:1571791:G:A', '1:1747228:1747228:T:G', '1:2418350:2418350:C:T', '1:3328523:3328523:G:A', '1:3638739:3638739:C:T']
+        """
+        cols = ['Chromosome', 'Start_Position', 'End_Position', 'Reference_Allele', 'Tumor_Seq_Allele2']
+        df = self.df.drop_duplicates(cols)
+        df = df[cols]
+        df = df.sort_values(cols)
+        df = df.applymap(str)
+        s = df.apply(lambda r: r.str.cat(sep=':'), axis=1)
+        return s.to_list()
