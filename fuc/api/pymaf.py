@@ -3530,3 +3530,43 @@ class MafFrame:
         df = df.applymap(str)
         s = df.apply(lambda r: r.str.cat(sep=':'), axis=1)
         return s.to_list()
+
+    def subset(self, samples, exclude=False):
+        """
+        Subset MafFrame for specified samples.
+
+        Parameters
+        ----------
+        samples : str or list
+            Sample name or list of names (the order does not matters).
+        exclude : bool, default: False
+            If True, exclude specified samples.
+
+        Returns
+        -------
+        MafFrame
+            Subsetted MafFrame.
+
+        Examples
+        --------
+
+        >>> from fuc import common, pymaf
+        >>> common.load_dataset('tcga-laml')
+        >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+        >>> mf = pymaf.MafFrame.from_file(maf_file)
+        >>> mf.shape
+        (2207, 193)
+        >>> mf.subset(['TCGA-AB-2988', 'TCGA-AB-2869']).shape
+        (27, 2)
+        >>> mf.subset(['TCGA-AB-2988', 'TCGA-AB-2869'], exclude=True).shape
+        (2180, 191)
+        """
+        if isinstance(samples, str):
+            samples = [samples]
+
+        if exclude:
+            samples = [x for x in self.samples if x not in samples]
+
+        df = self.df[self.df.Tumor_Sample_Barcode.isin(samples)]
+
+        return self.__class__(df)
