@@ -8,6 +8,9 @@ Changelog
 * Add new method :meth:`pyvcf.VcfFrame.variants`.
 * Add new method :meth:`pymaf.MafFrame.variants`.
 * Add new method :meth:`pymaf.MafFrame.subset`.
+* Add new method :meth:`pymaf.MafFrame.calculate_concordance`.
+* Add new method :meth:`pymaf.MafFrame.copy`.
+* Add new method :meth:`pymaf.MafFrame.filter_indel`.
 
 0.24.0 (2021-10-02)
 -------------------

@@ -3056,7 +3056,8 @@ class VcfFrame:
         return self.__class__(self.copy_meta(), self.df[i])
 
     def filter_indel(self, opposite=False, as_index=False):
-        """Remove rows with an indel.
+        """
+        Remove rows with an indel.
 
         Parameters
         ----------
