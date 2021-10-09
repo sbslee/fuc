@@ -16,6 +16,8 @@ from pathlib import Path
 from difflib import SequenceMatcher
 from urllib.request import urlretrieve
 
+from . import pyvcf
+
 import pysam
 import pandas as pd
 import numpy as np
@@ -1168,3 +1170,34 @@ def rename(original, names, indicies=None):
         raise ValueError('There are more than one duplicate names.')
 
     return samples
+
+def sort_variants(variants):
+    """
+    Return sorted list of variants.
+
+    Parameters
+    ----------
+    variants : list
+        List of variants.
+
+    Returns
+    -------
+    list
+        Sorted list.
+
+    Examples
+    --------
+
+    >>> from fuc import common
+    >>> variants = ['5-200-G-T', '5:100:T:C', '1:100:A>C', '10-100-G-C']
+    >>> sorted(variants) # Lexicographic order (not what we want)
+    ['10-100-G-C', '1:100:A>C', '5-200-G-T', '5:100:T:C']
+    >>> common.sort_variants(variants)
+    ['1:100:A>C', '5:100:T:C', '5-200-G-T', '10-100-G-C']
+    """
+    def func(x):
+        chrom, pos, ref, alt = parse_variant(x)
+        if chrom in pyvcf.CONTIGS:
+            chrom = pyvcf.CONTIGS.index(chrom)
+        return (chrom, pos, ref, alt)
+    return sorted(variants, key=func)

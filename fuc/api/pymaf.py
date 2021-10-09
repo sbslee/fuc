@@ -59,6 +59,7 @@ from . import pyvcf, common
 import numpy as np
 import pandas as pd
 import statsmodels.formula.api as smf
+from matplotlib_venn import venn2, venn3
 from scipy.stats import fisher_exact
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -226,6 +227,10 @@ class MafFrame:
     def genes(self):
         """list : List of the genes."""
         return list(self.df.Hugo_Symbol.unique())
+
+    def copy(self):
+        """Return a copy of the MafFrame."""
+        return self.__class__(self.df.copy())
 
     def compute_clonality(self, vaf_col, threshold=0.25):
         """
@@ -3503,3 +3508,293 @@ class MafFrame:
         df = self.df[i]
         mf = self.__class__(df)
         return mf
+
+    def filter_indel(self, opposite=False, as_index=False):
+        """
+        Remove rows with an indel.
+
+        Parameters
+        ----------
+        opposite : bool, default: False
+            If True, return rows that don't meet the said criteria.
+        as_index : bool, default: False
+            If True, return boolean index array instead of MafFrame.
+
+        Returns
+        -------
+        MafFrame or pandas.Series
+            Filtered MafFrame or boolean index array.
+
+        Examples
+        --------
+        >>> from fuc import common, pymaf
+        >>> common.load_dataset('tcga-laml')
+        >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+        >>> mf = pymaf.MafFrame.from_file(maf_file)
+        >>> mf.filter_indel().df.Variant_Type.unique()
+        array(['SNP'], dtype=object)
+        >>> mf.filter_indel(opposite=True).df.Variant_Type.unique()
+        array(['DEL', 'INS'], dtype=object)
+        """
+        def one_row(r):
+            if (len(r.Reference_Allele) == 1 and
+                len(r.Tumor_Seq_Allele1) == 1 and
+                len(r.Tumor_Seq_Allele2) == 1 and
+                '-' not in r.Reference_Allele and
+                '-' not in r.Tumor_Seq_Allele1 and
+                '-' not in r.Tumor_Seq_Allele2):
+                return False
+            else:
+                return True
+        i = ~self.df.apply(one_row, axis=1)
+        if opposite:
+            i = ~i
+        if as_index:
+            return i
+        return self.__class__(self.df[i])
+
+    def variants(self):
+        """
+        List unique variants in MafFrame.
+
+        Returns
+        -------
+        list
+            List of unique variants.
+
+        Examples
+        --------
+
+        >>> from fuc import common, pymaf
+        >>> common.load_dataset('tcga-laml')
+        >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+        >>> mf = pymaf.MafFrame.from_file(maf_file)
+        >>> mf.variants()[:5]
+        ['1:1571791:1571791:G:A', '1:1747228:1747228:T:G', '1:2418350:2418350:C:T', '1:3328523:3328523:G:A', '1:3638739:3638739:C:T']
+        """
+        if self.df.empty:
+            return []
+        cols = ['Chromosome', 'Start_Position', 'End_Position', 'Reference_Allele', 'Tumor_Seq_Allele2']
+        df = self.df.drop_duplicates(cols)
+        df = df[cols]
+        df = df.sort_values(cols)
+        df = df.applymap(str)
+        s = df.apply(lambda r: r.str.cat(sep=':'), axis=1)
+        return s.to_list()
+
+    def subset(self, samples, exclude=False):
+        """
+        Subset MafFrame for specified samples.
+
+        Parameters
+        ----------
+        samples : str, list, or pandas.Series
+            Sample name or list of names (the order does not matters).
+        exclude : bool, default: False
+            If True, exclude specified samples.
+
+        Returns
+        -------
+        MafFrame
+            Subsetted MafFrame.
+
+        Examples
+        --------
+
+        >>> from fuc import common, pymaf
+        >>> common.load_dataset('tcga-laml')
+        >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+        >>> mf = pymaf.MafFrame.from_file(maf_file)
+        >>> mf.shape
+        (2207, 193)
+        >>> mf.subset(['TCGA-AB-2988', 'TCGA-AB-2869']).shape
+        (27, 2)
+        >>> mf.subset(['TCGA-AB-2988', 'TCGA-AB-2869'], exclude=True).shape
+        (2180, 191)
+        """
+        if isinstance(samples, str):
+            samples = [samples]
+        elif isinstance(samples, pd.Series):
+            samples = samples.to_list()
+        elif isinstance(samples, list):
+            pass
+        else:
+            raise TypeError(f'Incorrect input type: {type(samples)}')
+
+        if exclude:
+            samples = [x for x in self.samples if x not in samples]
+
+        df = self.df[self.df.Tumor_Sample_Barcode.isin(samples)]
+
+        return self.__class__(df)
+
+    def calculate_concordance(self, a, b, c=None, mode='all'):
+        """
+        Calculate genotype concordance between two (A, B) or three (A, B, C)
+        samples.
+
+        This method will return (Ab, aB, AB, ab) for comparison between two
+        samples and (Abc, aBc, ABc, abC, AbC, aBC, ABC, abc) for three
+        samples. Note that the former is equivalent to (FP, FN, TP, TN) if
+        we assume A is the test sample and B is the truth sample.
+
+        Parameters
+        ----------
+        a, b : str or int
+            Name or index of Samples A and B.
+        c : str or int, optional
+            Name or index of Sample C.
+        mode : {'all', 'snv', 'indel'}, default: 'all'
+            Determines which variant types should be analyzed:
+
+            - 'all': Include both SNVs and INDELs.
+            - 'snv': Include SNVs only.
+            - 'indel': Include INDELs only.
+
+        Returns
+        -------
+        tuple
+            Four- or eight-element tuple depending on the number of samples.
+
+        See Also
+        --------
+        fuc.api.common.sumstat
+            Return various summary statistics from (FP, FN, TP, TN).
+
+        Examples
+        --------
+
+        >>> from fuc import common, pymaf
+        >>> common.load_dataset('tcga-laml')
+        >>> maf_file = '~/fuc-data/tcga-laml/tcga_laml.maf.gz'
+        >>> mf = pymaf.MafFrame.from_file(maf_file)
+        >>> mf.calculate_concordance('TCGA-AB-2988', 'TCGA-AB-2869')
+        (15, 12, 0, 2064)
+        >>> mf.calculate_concordance('TCGA-AB-2988', 'TCGA-AB-2869', 'TCGA-AB-3009')
+        (15, 12, 0, 42, 0, 0, 0, 2022)
+        """
+        if mode == 'all':
+            mf = self.copy()
+        elif mode == 'snv':
+            mf = self.filter_indel()
+        elif mode == 'indel':
+            mf = self.filter_indel(opposite=True)
+        else:
+            raise ValueError(f'Incorrect mode: {mode}.')
+
+        if c is None:
+            result = self._compare_two(mf, a, b)
+        else:
+            result = self._compare_three(mf, a, b, c)
+
+        return result
+
+    def _compare_two(self, mf, a, b):
+        l = mf.variants()
+        A = mf.subset(a).variants()
+        B = mf.subset(b).variants()
+
+        Ab = aB = AB = ab = 0
+
+        for x in l:
+            if x in A and x in B:
+                AB += 1
+            elif x in A and x not in B:
+                Ab += 1
+            elif x not in A and x in B:
+                aB += 1
+            else:
+                ab += 1
+
+        return (Ab, aB, AB, ab)
+
+    def _compare_three(self, mf, a, b, c):
+        l = mf.variants()
+        A = mf.subset(a).variants()
+        B = mf.subset(b).variants()
+        C = mf.subset(c).variants()
+
+        Abc = aBc = ABc = abC = AbC = aBC = ABC = abc = 0
+
+        for x in l:
+            if (x in A) and (x not in B) and (x not in C):
+                Abc += 1
+            elif (x not in A) and (x in B) and (x not in C):
+                aBc += 1
+            elif (x in A) and (x in B) and (x not in C):
+                ABc += 1
+            elif (x not in A) and (x not in B) and (x in C):
+                abC += 1
+            elif (x in A) and (x not in B) and (x in C):
+                AbC += 1
+            elif (x not in A) and (x in B) and (x in C):
+                aBC += 1
+            elif (x in A) and (x in B) and (x in C):
+                ABC += 1
+            else:
+                abc += 1
+
+        return (Abc, aBc, ABc, abC, AbC, aBC, ABC, abc)
+
+    def plot_comparison(
+        self, a, b, c=None, labels=None, ax=None, figsize=None
+    ):
+        """
+        Create a Venn diagram showing genotype concordance between groups.
+
+        This method supports comparison between two groups (Groups A & B)
+        as well as three groups (Groups A, B, & C).
+
+        Parameters
+        ----------
+        a, b : list
+            Sample names. The lists must have the same shape.
+        c : list, optional
+            Same as above.
+        labels : list, optional
+            List of labels to be displayed.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+        matplotlib_venn._common.VennDiagram
+            VennDiagram object.
+        """
+        if len(a) != len(b):
+            raise ValueError('Groups A and B have different length.')
+        if c is not None and len(a) != len(c):
+            raise ValueError('Group C has unmatched length.')
+        if labels is None:
+            if c is None:
+                labels = ('A', 'B')
+            else:
+                labels = ('A', 'B', 'C')
+
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
+        venn_kws = dict(ax=ax, alpha=0.5, set_labels=labels)
+        if c is None:
+            out = self._plot_comparison_two(a, b, venn_kws)
+        else:
+            out = self._plot_comparison_three(a, b, c, venn_kws)
+        return ax, out
+
+    def _plot_comparison_two(self, a, b, venn_kws):
+        n = [0, 0, 0, 0]
+        for i in range(len(a)):
+            n = [x + y for x, y in zip(n, self.calculate_concordance(a[i], b[i]))]
+        out = venn2(subsets=n[:-1], **venn_kws)
+        return out
+
+    def _plot_comparison_three(self, a, b, c, venn_kws):
+        n = [0, 0, 0, 0, 0, 0, 0, 0]
+        for i in range(len(a)):
+            n = [x + y for x, y in zip(n, self.calculate_concordance(a[i], b[i], c[i]))]
+        out = venn3(subsets=n[:-1], **venn_kws)
+        return out

@@ -1,6 +1,18 @@
 Changelog
 *********
 
+0.25.0 (2021-10-09)
+-------------------
+
+* Add new method :meth:`common.sort_variants`.
+* Add new method :meth:`pyvcf.VcfFrame.variants`.
+* Add new method :meth:`pymaf.MafFrame.variants`.
+* Add new method :meth:`pymaf.MafFrame.subset`.
+* Add new method :meth:`pymaf.MafFrame.calculate_concordance`.
+* Add new method :meth:`pymaf.MafFrame.copy`.
+* Add new method :meth:`pymaf.MafFrame.filter_indel`.
+* Add new method :meth:`pymaf.MafFrame.plot_comparison`.
+
 0.24.0 (2021-10-02)
 -------------------
 

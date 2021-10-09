@@ -3056,7 +3056,8 @@ class VcfFrame:
         return self.__class__(self.copy_meta(), self.df[i])
 
     def filter_indel(self, opposite=False, as_index=False):
-        """Remove rows with an indel.
+        """
+        Remove rows with an indel.
 
         Parameters
         ----------
@@ -5437,3 +5438,41 @@ class VcfFrame:
             af = float(field.split(',')[j+1])
 
         return af
+
+    def variants(self):
+        """
+        List unique variants in VcfFrame.
+
+        Returns
+        -------
+        list
+            List of unique variants.
+
+        Examples
+        --------
+
+        >>> from fuc import pyvcf
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr2'],
+        ...     'POS': [100, 101],
+        ...     'ID': ['.', '.'],
+        ...     'REF': ['G', 'T'],
+        ...     'ALT': ['A', 'A,C'],
+        ...     'QUAL': ['.', '.'],
+        ...     'FILTER': ['.', '.'],
+        ...     'INFO': ['.', '.'],
+        ...     'FORMAT': ['GT', 'GT'],
+        ...     'A': ['0/1', '1/2']
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.variants()
+        ['chr1-100-G-A', 'chr2-101-T-A', 'chr2-101-T-C']
+        """
+        def one_row(r):
+            result = []
+            for alt in r.ALT.split(','):
+                result.append(f'{r.CHROM}-{r.POS}-{r.REF}-{alt}')
+            return ','.join(result)
+        s = self.df.apply(one_row, axis=1)
+        s = ','.join(s)
+        return s.split(',')
