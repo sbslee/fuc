@@ -1,8 +1,8 @@
 Changelog
 *********
 
-0.25.0 (in development)
------------------------
+0.25.0 (2021-10-09)
+-------------------
 
 * Add new method :meth:`common.sort_variants`.
 * Add new method :meth:`pyvcf.VcfFrame.variants`.
