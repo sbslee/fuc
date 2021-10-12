@@ -89,7 +89,7 @@ def has_chr(fn):
             return True
     return False
 
-def count_allelic_depth(bam, chrom, pos):
+def count_allelic_depth(bam, sites):
     """
     Count depth of coverage for every possible allele.
 
@@ -97,10 +97,9 @@ def count_allelic_depth(bam, chrom, pos):
     ----------
     bam : str
         BAM file.
-    chrom : str
-        Contig name.
-    pos : int
-        Genomic position (1-based).
+    sites : str or list
+        Genomic position or list of positions. Each site should be 1-based
+        and formatted as ``chrom:pos``.
 
     Returns
     -------
@@ -117,27 +116,29 @@ def count_allelic_depth(bam, chrom, pos):
     >>> pybam.count_allelic_depth('in.bam', '19', 41510053)
     {'A': 1, 'C': 2, 'G': 0, 'T': 116, 'N': 0, 'D': 0, 'I': 1}
     """
-    d = {'A': 0, 'C': 0, 'G': 0, 'T': 0, 'N': 0 , 'D': 0, 'I': 0}
-    alignment_file = pysam.AlignmentFile(bam, 'rb')
-    kwargs = dict(
-        min_base_quality=0,
-        ignore_overlaps=False,
-        ignore_orphans=False,
-        truncate=True
-    )
-    for pileupcolumn in alignment_file.pileup(chrom, pos-1, pos, **kwargs):
-        for pileupread in pileupcolumn.pileups:
-            if pileupread.is_del:
-                continue
-            allele = pileupread.alignment.query_sequence[pileupread.query_position]
-            d[allele] += 1
-    for pileupcolumn in alignment_file.pileup(chrom, pos-2, pos-1, **kwargs):
-        for pileupread in pileupcolumn.pileups:
-            if pileupread.indel > 0:
-                d['I'] += 1
-            elif pileupread.indel < 0:
-                d['D'] += 1
-            else:
-                continue
-    alignment_file.close()
-    return d
+    for site in sites:
+        data = {'A': 0, 'C': 0, 'G': 0, 'T': 0, 'N': 0 , 'DEL': 0, 'INS': 0}
+        alignment_file = pysam.AlignmentFile(bam, 'rb')
+        kwargs = dict(
+            min_base_quality=0,
+            ignore_overlaps=False,
+            ignore_orphans=False,
+            truncate=True
+        )
+        for pileupcolumn in alignment_file.pileup(chrom, pos-1, pos, **kwargs):
+            for pileupread in pileupcolumn.pileups:
+                if pileupread.is_del:
+                    continue
+                allele = pileupread.alignment.query_sequence[pileupread.query_position]
+                data[allele] += 1
+        for pileupcolumn in alignment_file.pileup(chrom, pos-2, pos-1, **kwargs):
+            for pileupread in pileupcolumn.pileups:
+                if pileupread.indel < 0:
+                    data['DEL'] += 1
+                elif pileupread.indel > 0:
+                    data['INS'] += 1
+                else:
+                    continue
+        alignment_file.close()
+        data = list(data.values())
+    return data

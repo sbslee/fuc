@@ -672,13 +672,18 @@ def parse_variant(variant):
     """
     Parse specified genomic variant.
 
-    The input variant string must consist of chromosome, position, reference
-    allele, and alternative allele separated by one or more supported
-    delimiters ('-', ':', '>').
+    Generally speaking, the input string should consist of chromosome,
+    position, reference allele, and alternative allele separated by any one
+    or combination of the following delimiters: ``-``, ``:``, ``>`` (e.g.
+    '22-42127941-G-A'). The method will return parsed variant as a tuple with
+    a shape of ``(chrom, pos, ref, alt)`` which has data types of ``(str,
+    int, str, str)``.
 
-    The method will return parsed variant as a tuple with a shape of
-    ``(chrom, pos, ref, alt)`` which has data types of
-    ``(str, int, str, str)``.
+    Note that it's possible to omit reference allele and alternative allele
+    from the input string to indicate position-only data (e.g.
+    '22-42127941'). In this case, the method will return empty string for
+    the alleles -- i.e. ``(str, int, '', '')`` if both are omitted and
+    ``(str, int, str, '')`` if only alternative allele is omitted.
 
     Parameters
     ----------
@@ -698,12 +703,25 @@ def parse_variant(variant):
     ('22', 42127941, 'G', 'A')
     >>> common.parse_variant('22:42127941-G>A')
     ('22', 42127941, 'G', 'A')
+    >>> common.parse_variant('22-42127941')
+    ('22', 42127941, '', '')
+    >>> common.parse_variant('22-42127941-G')
+    ('22', 42127941, 'G', '')
     """
-    l = re.split('-|:|>', variant)
-    chrom = l[0]
-    pos = int(l[1])
-    ref = l[2]
-    alt = l[3]
+    fields = re.split('-|:|>', variant)
+    chrom = fields[0]
+    pos = int(fields[1])
+
+    try:
+        ref = fields[2]
+    except IndexError:
+        ref = ''
+
+    try:
+        alt = fields[3]
+    except IndexError:
+        alt = ''
+
     return (chrom, pos, ref, alt)
 
 def extract_sequence(fasta, region):
