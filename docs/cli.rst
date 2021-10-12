@@ -18,6 +18,7 @@ For getting help on the fuc CLI:
    
    positional arguments:
      COMMAND
+       bam-aldepth  Compute allelic depth from a SAM/BAM/CRAM file.
        bam-depth    Compute read depth from SAM/BAM/CRAM files.
        bam-head     Print the header of a SAM/BAM/CRAM file.
        bam-index    Index a SAM/BAM/CRAM file.
@@ -63,6 +64,28 @@ For getting help on a specific command (e.g. vcf-merge):
 .. code-block:: text
 
    $ fuc vcf-merge -h
+
+bam-aldepth
+===========
+
+.. code-block:: text
+
+   $ fuc bam-aldepth -h
+   usage: fuc bam-aldepth [-h] bam sites
+   
+   #################################################
+   # Count allelic depth from a SAM/BAM/CRAM file. #
+   #################################################
+   
+   Usage examples:
+     $ fuc bam-aldepth in.bam sites.tsv > out.tsv
+   
+   Positional arguments:
+     bam         Alignment file.
+     sites       TSV file containing two columns, chromosome and position.
+   
+   Optional arguments:
+     -h, --help  Show this help message and exit.
 
 bam-depth
 =========

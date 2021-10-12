@@ -111,6 +111,7 @@ For getting help on the fuc CLI:
    
    positional arguments:
      COMMAND
+       bam-aldepth  Compute allelic depth from a SAM/BAM/CRAM file.
        bam-depth    Compute read depth from SAM/BAM/CRAM files.
        bam-head     Print the header of a SAM/BAM/CRAM file.
        bam-index    Index a SAM/BAM/CRAM file.

@@ -8,6 +8,7 @@ computation and easy manipulation.
 from . import common
 
 import pysam
+import pandas as pd
 
 def tag_sm(fn):
     """
@@ -93,15 +94,15 @@ def has_chr(fn):
 
 def count_allelic_depth(bam, sites):
     """
-    Count allelic depth for specified positions.
+    Count allelic depth for specified sites.
 
     Parameters
     ----------
     bam : str
         BAM file.
     sites : str or list
-        Genomic position or list of positions. Each position should consist
-        of chromosome and 1-based coordinate in the format recognized by
+        Genomic site or list of sites. Each site should consist of chromosome
+        and 1-based position in the format that can be recognized by
         :meth:`common.parse_variant` (e.g. '22-42127941').
 
     Returns
@@ -111,18 +112,18 @@ def count_allelic_depth(bam, sites):
 
     Examples
     --------
+
     >>> from fuc import pybam
-    >>> pybam.count_allelic_depth('in.bam', '19', 41510062)
-    {'A': 0, 'C': 0, 'G': 115, 'T': 0, 'N': 0, 'D': 0, 'I': 0}
-    >>> pybam.count_allelic_depth('in.bam', '19', 41510048)
-    {'A': 106, 'C': 7, 'G': 4, 'T': 0, 'N': 0, 'D': 2, 'I': 0}
-    >>> pybam.count_allelic_depth('in.bam', '19', 41510053)
-    {'A': 1, 'C': 2, 'G': 0, 'T': 116, 'N': 0, 'D': 0, 'I': 1}
+    >>> pybam.count_allelic_depth('in.bam', ['19-41510048', '19-41510053', '19-41510062'])
+      Chromosome  Position  Total    A  C    G    T  N  DEL  INS
+    0         19  41510048    119  106  7    4    0  0    2    0
+    1         19  41510053    120    1  2    0  116  0    0    1
+    2         19  41510062    115    0  0  115    0  0    0    0
     """
     if isinstance(sites, str):
         sites = [sites]
 
-    alignment_file = pysam.AlignmentFile(bam, 'rb')
+    f = pysam.AlignmentFile(bam, 'rb')
 
     rows = []
 
@@ -135,23 +136,24 @@ def count_allelic_depth(bam, sites):
             ignore_orphans=False,
             truncate=True
         )
-        for pileupcolumn in alignment_file.pileup(chrom, pos-1, pos, **kwargs):
-            for pileupread in pileupcolumn.pileups:
-                if pileupread.is_del:
-                    continue
-                allele = pileupread.alignment.query_sequence[pileupread.query_position]
-                row[allele] += 1
-        for pileupcolumn in alignment_file.pileup(chrom, pos-2, pos-1, **kwargs):
-            for pileupread in pileupcolumn.pileups:
-                if pileupread.indel < 0:
-                    row['DEL'] += 1
-                elif pileupread.indel > 0:
-                    row['INS'] += 1
+        for i, col in enumerate(f.pileup(chrom, pos-2, pos, **kwargs)):
+            for read in col.pileups:
+                if i == 0:
+                    if read.indel < 0:
+                        row['DEL'] += 1
+                    elif read.indel > 0:
+                        row['INS'] += 1
+                    else:
+                        continue
                 else:
-                    continue
+                    if read.is_del:
+                        continue
+                    allele = read.alignment.query_sequence[read.query_position]
+                    row[allele] += 1
 
-        rows.append(list(row.values()))
+        data = list(row.values())
+        rows.append([chrom, pos, sum(data)] + data)
 
-    alignment_file.close()
+    f.close()
 
-    return rows
+    return pd.DataFrame(rows, columns=['Chromosome', 'Position', 'Total']+list(row))
