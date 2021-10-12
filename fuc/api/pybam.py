@@ -5,6 +5,8 @@ The pybam submodule is designed for working with sequence alignment files
 computation and easy manipulation.
 """
 
+from . import common
+
 import pysam
 
 def tag_sm(fn):
@@ -91,20 +93,21 @@ def has_chr(fn):
 
 def count_allelic_depth(bam, sites):
     """
-    Count depth of coverage for every possible allele.
+    Count allelic depth for specified positions.
 
     Parameters
     ----------
     bam : str
         BAM file.
     sites : str or list
-        Genomic position or list of positions. Each site should be 1-based
-        and formatted as ``chrom:pos``.
+        Genomic position or list of positions. Each position should consist
+        of chromosome and 1-based coordinate in the format recognized by
+        :meth:`common.parse_variant` (e.g. '22-42127941').
 
     Returns
     -------
-    dict
-        Dictionary containing allelic depth counts.
+    pandas.DataFrame
+        DataFrame containing allelic depth.
 
     Examples
     --------
@@ -116,9 +119,16 @@ def count_allelic_depth(bam, sites):
     >>> pybam.count_allelic_depth('in.bam', '19', 41510053)
     {'A': 1, 'C': 2, 'G': 0, 'T': 116, 'N': 0, 'D': 0, 'I': 1}
     """
+    if isinstance(sites, str):
+        sites = [sites]
+
+    alignment_file = pysam.AlignmentFile(bam, 'rb')
+
+    rows = []
+
     for site in sites:
-        data = {'A': 0, 'C': 0, 'G': 0, 'T': 0, 'N': 0 , 'DEL': 0, 'INS': 0}
-        alignment_file = pysam.AlignmentFile(bam, 'rb')
+        chrom, pos, _, _ = common.parse_variant(site)
+        row = {'A': 0, 'C': 0, 'G': 0, 'T': 0, 'N': 0 , 'DEL': 0, 'INS': 0}
         kwargs = dict(
             min_base_quality=0,
             ignore_overlaps=False,
@@ -130,15 +140,18 @@ def count_allelic_depth(bam, sites):
                 if pileupread.is_del:
                     continue
                 allele = pileupread.alignment.query_sequence[pileupread.query_position]
-                data[allele] += 1
+                row[allele] += 1
         for pileupcolumn in alignment_file.pileup(chrom, pos-2, pos-1, **kwargs):
             for pileupread in pileupcolumn.pileups:
                 if pileupread.indel < 0:
-                    data['DEL'] += 1
+                    row['DEL'] += 1
                 elif pileupread.indel > 0:
-                    data['INS'] += 1
+                    row['INS'] += 1
                 else:
                     continue
-        alignment_file.close()
-        data = list(data.values())
-    return data
+
+        rows.append(list(row.values()))
+
+    alignment_file.close()
+
+    return rows
