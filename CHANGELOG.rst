@@ -4,6 +4,8 @@ Changelog
 0.26.0 (in development)
 -----------------------
 
+* Add new method :meth:`pybam.count_allelic_depth`.
+
 0.25.0 (2021-10-09)
 -------------------
 

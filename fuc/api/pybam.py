@@ -88,3 +88,46 @@ def has_chr(fn):
         if 'chr' in contig:
             return True
     return False
+
+def count_allelic_depth(bam, chrom, pos):
+    """
+    Count depth of coverage for every possible allele.
+
+    Parameters
+    ----------
+    bam : str
+        BAM file.
+    chrom : str
+        Contig name.
+    pos : int
+        Genomic position (1-based).
+
+    Returns
+    -------
+    dict
+        Dictionary containing allelic depth counts.
+    """
+    d = {'A': 0, 'C': 0, 'G': 0, 'T': 0, 'N': 0 , 'D': 0, 'I': 0}
+    alignment_file = pysam.AlignmentFile(bam, 'rb')
+    kwargs = dict(
+        min_base_quality=0,
+        ignore_overlaps=False,
+        ignore_orphans=False,
+        truncate=True
+    )
+    for pileupcolumn in alignment_file.pileup(chrom, pos-1, pos, **kwargs):
+        for pileupread in pileupcolumn.pileups:
+            if pileupread.is_del:
+                continue
+            allele = pileupread.alignment.query_sequence[pileupread.query_position]
+            d[allele] += 1
+    for pileupcolumn in alignment_file.pileup(chrom, pos-2, pos-1, **kwargs):
+        for pileupread in pileupcolumn.pileups:
+            if pileupread.indel > 0:
+                d['I'] += 1
+            elif pileupread.indel < 0:
+                d['D'] += 1
+            else:
+                continue
+    alignment_file.close()
+    return d
