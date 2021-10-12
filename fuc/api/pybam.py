@@ -106,6 +106,16 @@ def count_allelic_depth(bam, chrom, pos):
     -------
     dict
         Dictionary containing allelic depth counts.
+
+    Examples
+    --------
+    >>> from fuc import pybam
+    >>> pybam.count_allelic_depth('in.bam', '19', 41510062)
+    {'A': 0, 'C': 0, 'G': 115, 'T': 0, 'N': 0, 'D': 0, 'I': 0}
+    >>> pybam.count_allelic_depth('in.bam', '19', 41510048)
+    {'A': 106, 'C': 7, 'G': 4, 'T': 0, 'N': 0, 'D': 2, 'I': 0}
+    >>> pybam.count_allelic_depth('in.bam', '19', 41510053)
+    {'A': 1, 'C': 2, 'G': 0, 'T': 116, 'N': 0, 'D': 0, 'I': 1}
     """
     d = {'A': 0, 'C': 0, 'G': 0, 'T': 0, 'N': 0 , 'D': 0, 'I': 0}
     alignment_file = pysam.AlignmentFile(bam, 'rb')
