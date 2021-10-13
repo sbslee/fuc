@@ -34,7 +34,12 @@ def create_parser(subparsers):
 def main(args):
     if '.vcf' in args.sites:
         vf = api.pyvcf.VcfFrame.from_file(args.sites)
-        sites = vf.df.apply(lambda r: f'{r.CHROM}-{r.POS}', axis=1).to_list()
+        def one_row(r):
+            if api.pyvcf.row_hasindel(r):
+                return f'{r.CHROM}-{r.POS+1}'
+            else:
+                return f'{r.CHROM}-{r.POS}'
+        sites = vf.df.apply(one_row, axis=1).to_list()
     elif '.bed' in args.sites:
         bf = api.pybed.BedFrame.from_file(args.sites)
         sites = bf.gr.df.apply(lambda r: f'{r.Chromosome}-{r.Start}', axis=1).to_list()
