@@ -909,6 +909,14 @@ class VcfFrame:
         return list(self.df.CHROM.unique())
 
     @property
+    def has_chr_prefix(self):
+        """bool : Whether the (annoying) 'chr' string is found."""
+        for contig in self.contigs:
+            if 'chr' in contig:
+                return True
+        return False
+
+    @property
     def sites_only(self):
         """bool : Whether the VCF is sites-only."""
         return not self.samples or 'FORMAT' not in self.df.columns
@@ -5141,7 +5149,7 @@ class VcfFrame:
 
         return ax
 
-    def chr_prefix(self, mode='remove'):
+    def update_chr_prefix(self, mode='remove'):
         """
         Add or remove the (annoying) 'chr' string from the CHROM column.
 
@@ -5178,13 +5186,13 @@ class VcfFrame:
         1  chr1  101  .   T   C    .      .    .     GT  0/1
         2     2  100  .   T   C    .      .    .     GT  0/1
         3     2  101  .   C   G    .      .    .     GT  0/1
-        >>> vf.chr_prefix(mode='remove').df
+        >>> vf.update_chr_prefix(mode='remove').df
           CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A
         0     1  100  .   G   A    .      .    .     GT  0/1
         1     1  101  .   T   C    .      .    .     GT  0/1
         2     2  100  .   T   C    .      .    .     GT  0/1
         3     2  101  .   C   G    .      .    .     GT  0/1
-        >>> vf.chr_prefix(mode='add').df
+        >>> vf.update_chr_prefix(mode='add').df
           CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A
         0  chr1  100  .   G   A    .      .    .     GT  0/1
         1  chr1  101  .   T   C    .      .    .     GT  0/1

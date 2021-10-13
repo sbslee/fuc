@@ -144,6 +144,14 @@ class CovFrame:
         return list(self.df.Chromosome.unique())
 
     @property
+    def has_chr_prefix(self):
+        """bool : Whether the (annoying) 'chr' string is found."""
+        for contig in self.contigs:
+            if 'chr' in contig:
+                return True
+        return False
+
+    @property
     def samples(self):
         """list : List of the sample names."""
         return self.df.columns[2:].to_list()
@@ -838,7 +846,7 @@ class CovFrame:
         df = self.df.apply(one_row, axis=1)
         return self.__class__(df)
 
-    def chr_prefix(self, mode='remove'):
+    def update_chr_prefix(self, mode='remove'):
         """
         Add or remove the (annoying) 'chr' string from the Chromosome column.
 
@@ -872,7 +880,7 @@ class CovFrame:
         3          2         4  38  25
         4          2         5  33   8
         5          2         6  21  22
-        >>> cf.chr_prefix(mode='remove').df
+        >>> cf.update_chr_prefix(mode='remove').df
           Chromosome  Position   A   B
         0          1         1  35  25
         1          1         2  23  14
@@ -880,7 +888,7 @@ class CovFrame:
         3          2         4  38  25
         4          2         5  33   8
         5          2         6  21  22
-        >>> cf.chr_prefix(mode='add').df
+        >>> cf.update_chr_prefix(mode='add').df
           Chromosome  Position   A   B
         0       chr1         1  35  25
         1       chr1         2  23  14

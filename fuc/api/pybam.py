@@ -2,7 +2,9 @@
 The pybam submodule is designed for working with sequence alignment files
 (SAM/BAM/CRAM). It essentially wraps the `pysam
 <https://pysam.readthedocs.io/en/latest/api.html>`_ package to allow fast
-computation and easy manipulation.
+computation and easy manipulation. If you are mainly interested in working
+with depth of coverage data, please check out the pycov submodule which is
+specifically designed for the task.
 """
 
 from . import common
@@ -12,7 +14,7 @@ import pandas as pd
 
 def tag_sm(fn):
     """
-    Extract the SM tags (sample names) from a BAM file.
+    Extract SM tags (sample names) from a BAM file.
 
     Parameters
     ----------
@@ -43,7 +45,7 @@ def tag_sm(fn):
 
 def tag_sn(fn):
     """
-    Extract the SN tags (contig names) from a BAM file.
+    Extract SN tags (contig names) from a BAM file.
 
     Parameters
     ----------
@@ -72,9 +74,9 @@ def tag_sn(fn):
                     tags.append(field.replace('SN:', ''))
     return list(set(tags))
 
-def has_chr(fn):
+def has_chr_prefix(fn):
     """
-    Return True if the 'chr' string is present in the contig names.
+    Return True if contigs have the (annoying) 'chr' string.
 
     Parameters
     ----------
@@ -84,7 +86,7 @@ def has_chr(fn):
     Returns
     -------
     bool
-        Whether or not the 'chr' string is present.
+        Whether the 'chr' string is found.
     """
     contigs = tag_sn(fn)
     for contig in contigs:

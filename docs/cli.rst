@@ -77,12 +77,16 @@ bam-aldepth
    # Count allelic depth from a SAM/BAM/CRAM file. #
    #################################################
    
+   The 'sites' file can be a TSV file containing two columns, chromosome and position. It can also be a BED or VCF file. Input file type will be detected automatically.
+   
    Usage examples:
      $ fuc bam-aldepth in.bam sites.tsv > out.tsv
+     $ fuc bam-aldepth in.bam sites.bed > out.tsv
+     $ fuc bam-aldepth in.bam sites.vcf > out.tsv
    
    Positional arguments:
      bam         Alignment file.
-     sites       TSV file containing two columns, chromosome and position.
+     sites       TSV/BED/VCF file (zipped or unzipped).
    
    Optional arguments:
      -h, --help  Show this help message and exit.

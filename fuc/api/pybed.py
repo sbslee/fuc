@@ -113,6 +113,14 @@ class BedFrame:
         """list : List of contig names."""
         return self.gr.chromosomes
 
+    @property
+    def has_chr_prefix(self):
+        """bool : Whether the (annoying) 'chr' string is found."""
+        for contig in self.contigs:
+            if 'chr' in contig:
+                return True
+        return False
+
     def copy_meta(self):
         """Return a copy of the metadata."""
         return deepcopy(self.meta)
@@ -267,7 +275,7 @@ class BedFrame:
         """
         return cls(meta, pr.PyRanges(data))
 
-    def chr_prefix(self, mode='remove'):
+    def update_chr_prefix(self, mode='remove'):
         """
         Add or remove the (annoying) 'chr' string from the Chromosome column.
 
@@ -297,13 +305,13 @@ class BedFrame:
         1          1    400  500
         2       chr2    100  200
         3       chr2    200  300
-        >>> bf.chr_prefix(mode='remove').gr.df
+        >>> bf.update_chr_prefix(mode='remove').gr.df
           Chromosome  Start  End
         0          1    100  200
         1          1    400  500
         2          2    100  200
         3          2    200  300
-        >>> bf.chr_prefix(mode='add').gr.df
+        >>> bf.update_chr_prefix(mode='add').gr.df
           Chromosome  Start  End
         0       chr1    100  200
         1       chr1    400  500

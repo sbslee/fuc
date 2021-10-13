@@ -7,6 +7,9 @@ Changelog
 * Add new method :meth:`pybam.count_allelic_depth`.
 * Update :meth:`common.parse_variant` method to handle position-only strings as input (e.g. '22-42127941-G-A' vs. '22-42127941').
 * Add new command :command:`bam-aldepth`.
+* Rename :meth:`pybam.has_chr` method to :meth:`pybam.has_chr_prefix`.
+* Rename :meth:`pybed.BedFrame.chr_prefix`, :meth:`pycov.CovFrame.chr_prefix`, :meth:`pyvcf.VcfFrame.chr_prefix` methods to :meth:`pybed.BedFrame.update_chr_prefix`, :meth:`pycov.CovFrame.update_chr_prefix`, :meth:`pyvcf.VcfFrame.update_chr_prefix`.
+* Add new properties ``pybed.BedFrame.has_chr_prefix``, ``pycov.CovFrame.has_chr_prefix``, ``pyvcf.VcfFrame.has_chr_prefix``.
 
 0.25.0 (2021-10-09)
 -------------------

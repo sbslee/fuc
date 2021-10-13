@@ -124,7 +124,7 @@ source activate {api.common.conda_env()}
 
     chroms = [str(i) for i in range(1, 23)] + ['X', 'Y']
 
-    if api.pybam.has_chr(df.BAM[0]):
+    if api.pybam.has_chr_prefix(df.BAM[0]):
         chroms = ['chr' + x for x in chroms]
 
     for chrom in chroms:
