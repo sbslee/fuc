@@ -125,12 +125,25 @@ def count_allelic_depth(bam, sites):
     if isinstance(sites, str):
         sites = [sites]
 
+    has_prefix = has_chr_prefix(bam)
+
     f = pysam.AlignmentFile(bam, 'rb')
 
     rows = []
 
     for site in sites:
         chrom, pos, _, _ = common.parse_variant(site)
+
+        if has_prefix:
+            if 'chr' not in chrom:
+                formatted_chrom = 'chr' + chrom
+            else:
+                formatted_chrom = chrom
+        else:
+            if 'chr' in chrom:
+                formatted_chrom = chrom.replace('chr', '')
+            else:
+                formatted_chrom = chrom
         row = {'A': 0, 'C': 0, 'G': 0, 'T': 0, 'N': 0 , 'DEL': 0, 'INS': 0}
         kwargs = dict(
             min_base_quality=0,
@@ -138,7 +151,7 @@ def count_allelic_depth(bam, sites):
             ignore_orphans=False,
             truncate=True
         )
-        for i, col in enumerate(f.pileup(chrom, pos-2, pos, **kwargs)):
+        for i, col in enumerate(f.pileup(formatted_chrom, pos-2, pos, **kwargs)):
             for read in col.pileups:
                 if i == 0:
                     if read.indel < 0:
