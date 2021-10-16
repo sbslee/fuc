@@ -1452,7 +1452,7 @@ class VcfFrame:
     @classmethod
     def from_dict(cls, meta, data):
         """
-        Construct VcfFrame from dict of array-like or dicts.
+        Construct VcfFrame from a dict of array-like or dicts.
 
         Parameters
         ----------
@@ -1498,82 +1498,9 @@ class VcfFrame:
         """
         return cls(meta, pd.DataFrame(data))
 
-    def _from_file1(cls, fn, compression, meta_only, nrows):
-        skip_rows = 0
-
-        if fn.startswith('~'):
-            fn = os.path.expanduser(fn)
-
-        if fn.endswith('.gz') or compression:
-            f = bgzf.open(fn, 'rt')
-        else:
-            f = open(fn)
-
-        meta = []
-        columns = []
-
-        for line in f:
-            if line.startswith('##'):
-                meta.append(line.strip())
-                skip_rows += 1
-            elif line.startswith('#CHROM'):
-                columns += line.strip().split('\t')
-                skip_rows += 1
-            else:
-                break
-
-        f.close()
-
-        if '#CHROM' in columns:
-            columns[columns.index('#CHROM')] = 'CHROM'
-
-        for header in HEADERS:
-            if header not in columns and header != 'FORMAT':
-                raise ValueError(f"Required VCF column missing: '{header}'")
-
-        if meta_only:
-            df = pd.DataFrame(columns=columns)
-        else:
-            dtype = {**HEADERS, **{x: str for x in columns[9:]}}
-            df = pd.read_table(
-                fn, skiprows=skip_rows, names=columns,
-                nrows=nrows, dtype=dtype
-            )
-
-        return cls(meta, df)
-
-    def _from_file2(cls, fn, compression, meta_only, nrows):
-        skip_rows = 0
-        meta = []
-
-        for line in fn:
-            if line.startswith(b'##'):
-                meta.append(line.decode('utf-8').strip())
-                skip_rows += 1
-            elif line.startswith(b'#CHROM'):
-                columns = line.decode('utf-8').strip().split('\t')
-            else:
-                break
-
-        if '#CHROM' in columns:
-            columns[columns.index('#CHROM')] = 'CHROM'
-
-        for header in HEADERS:
-            if header not in columns and header != 'FORMAT':
-                raise ValueError(f"Required VCF column missing: '{header}'")
-
-        dtype = {**HEADERS, **{x: str for x in columns[9:]}}
-
-        if meta_only:
-            df = pd.DataFrame(columns=columns)
-        else:
-            df = pd.read_table(fn, names=columns, nrows=nrows, dtype=dtype)
-
-        return cls(meta, df)
-
     @classmethod
     def from_file(
-        cls, fn, compression=False, meta_only=False, nrows=None
+        cls, fn, compression=False, meta_only=False
     ):
         """
         Construct VcfFrame from a VCF file.
@@ -1590,8 +1517,6 @@ class VcfFrame:
             If True, use BGZF decompression regardless of filename.
         meta_only : bool, default: False
             If True, read metadata and header lines only.
-        nrows : int, optional
-            Number of rows to read. Useful for reading pieces of large files.
 
         Returns
         -------
@@ -1613,17 +1538,32 @@ class VcfFrame:
         >>> vf = pyvcf.VcfFrame.from_file('zipped.vcf.gz')
         >>> vf = pyvcf.VcfFrame.from_file('zipped.vcf', compression=True)
         """
-        args = [cls, fn, compression, meta_only, nrows]
-        if hasattr(fn, 'read'):
-            vf = cls._from_file2(*args)
+        if isinstance(fn, str):
+            s = ''
+            if fn.startswith('~'):
+                fn = os.path.expanduser(fn)
+            if fn.endswith('.gz') or compression:
+                f = bgzf.open(fn, 'rt')
+            else:
+                f = open(fn)
+            for line in f:
+                s += line
+            f.close()
+        elif hasattr(fn, 'read'):
+            s = fn.read()
+            try:
+                s = s.decode('utf-8')
+            except AttributeError:
+                pass
         else:
-            vf = cls._from_file1(*args)
+            TypeError('Incorrect input type')
+        vf = cls.from_string(s)
         return vf
 
     @classmethod
     def from_string(cls, s, meta_only=False):
         """
-        Construct VcfFrame from string.
+        Construct VcfFrame from a string.
 
         Parameters
         ----------
@@ -1639,13 +1579,11 @@ class VcfFrame:
         --------
 
         >>> from fuc import pyvcf
-        >>> s = '##fileformat=VCFv4.2\n##FILTER=<ID=PASS,Description="All filters passed">\n##contig=<ID=1>\n#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tA\n1\t101\t.\tT\tC\t.\t.\t.\tGT\t0/1\n1\t102\t.\tT\tC\t.\t.\t.\tGT\t0/1\n1\t103\t.\tT\tC\t.\t.\t.\tGT\t0/1\n'
-        >>> vf = pyvcf.VcfFrame.from_string(s)
+        >>> vf = pyvcf.VcfFrame.from_string(data)
         >>> vf.df
           CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A
-        0     1  101  .   T   C    .      .    .     GT  0/1
-        1     1  102  .   T   C    .      .    .     GT  0/1
-        2     1  103  .   T   C    .      .    .     GT  0/1
+        0  chr1  100  .   G   A    .      .    .     GT  0/1
+        1  chr1  101  .   T   C    .      .    .     GT  0/1
         """
         skiprows = 0
         meta = []
@@ -1970,7 +1908,7 @@ class VcfFrame:
 
         >>> from fuc import pyvcf
         >>> data = {
-        ...     'CHROM': ['chr1', 'chr2'],
+        ...     'CHROM': ['chr1', 'chr1'],
         ...     'POS': [100, 101],
         ...     'ID': ['.', '.'],
         ...     'REF': ['G', 'T'],
@@ -1979,14 +1917,14 @@ class VcfFrame:
         ...     'FILTER': ['.', '.'],
         ...     'INFO': ['.', '.'],
         ...     'FORMAT': ['GT', 'GT'],
-        ...     'Steven': ['0/1', '1/1']
+        ...     'A': ['0/1', '0/1']
         ... }
         >>> vf = pyvcf.VcfFrame.from_dict(['##fileformat=VCFv4.3'], data)
         >>> print(vf.to_string())
         ##fileformat=VCFv4.3
-        #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	Steven
+        #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	A
         chr1	100	.	G	A	.	.	.	GT	0/1
-        chr2	101	.	T	C	.	.	.	GT	1/1
+        chr1	101	.	T	C	.	.	.	GT	0/1
         """
         s = ''
         if self.meta:
