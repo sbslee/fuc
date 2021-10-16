@@ -72,6 +72,8 @@ from Bio import bgzf
 import matplotlib.pyplot as plt
 from matplotlib_venn import venn2, venn3
 import seaborn as sns
+from pysam import VariantFile
+from io import StringIO
 
 HEADERS = {
     'CHROM': str,
@@ -818,6 +820,46 @@ def simulate_sample(
         )
         l.append(genotype)
     return l
+
+def slice(file, regions, path=None):
+    """
+    Slice the input VCF file for specified regions.
+
+    Parameters
+    ----------
+    file : str
+        Input VCF file.
+    regions : str or list
+        Target region or list of regions with the format ``chrom:start-end``.
+    path : str, optional
+        Output VCF file. If None is provided the result is returned as a string.
+
+    Returns
+    -------
+    None or str
+        If ``path`` is None, returns the resulting VCF format as a string. Otherwise returns None.
+    """
+    if isinstance(regions, str):
+        regions = [regions]
+
+    vcf = VariantFile(file)
+
+    if path is None:
+        data = ''
+        data += str(vcf.header)
+        for region in regions:
+            chrom, start, end = common.parse_region(region)
+            for record in vcf.fetch(chrom, start, end):
+                data += str(record)
+    else:
+        data = None
+        output = VariantFile(path, 'w', header=vcf.header)
+        for region in regions:
+            chrom, start, end = common.parse_region(region)
+            for record in vcf.fetch(chrom, start, end):
+                output.write(record)
+
+    return data
 
 class VcfFrame:
     """
