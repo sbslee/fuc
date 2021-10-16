@@ -15,7 +15,8 @@ Changelog
 * Remove ``nrows`` argument from :meth:`pyvcf.VcfFrame.from_file` method.
 * Add new argument 'regions' to :meth:`pyvcf.VcfFrame.from_file` method.
 * Add new property ``pybed.BedFrame.shape``.
-* Add new method :meth:`pybed.BedFrame.regions`.
+* Add new method :meth:`pybed.BedFrame.to_regions`.
+* Add new method :meth:`pybed.BedFrame.from_regions`.
 
 0.25.0 (2021-10-09)
 -------------------

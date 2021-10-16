@@ -40,6 +40,7 @@ BED lines can have the following fields (the first three are required):
 import pandas as pd
 import pyranges as pr
 from copy import deepcopy
+from . import common
 
 HEADERS = [
     'Chromosome', 'Start', 'End', 'Name', 'Score', 'Strand', 'ThickStart',
@@ -59,11 +60,13 @@ class BedFrame:
     See Also
     --------
     BedFrame.from_dict
-        Construct BedFrame from dict of array-like or dicts.
+        Construct BedFrame from a dict of array-like or dicts.
     BedFrame.from_file
         Construct BedFrame from a BED file.
     BedFrame.from_frame
-        Construct BedFrame from DataFrame.
+        Construct BedFrame from a dataframe.
+    BedFrame.from_region
+        Construct BedFrame from a list of regions.
 
     Examples
     --------
@@ -152,7 +155,8 @@ class BedFrame:
 
     @classmethod
     def from_dict(cls, meta, data):
-        """Construct BedFrame from dict of array-like or dicts.
+        """
+        Construct BedFrame from a dict of array-like or dicts.
 
         Parameters
         ----------
@@ -164,7 +168,7 @@ class BedFrame:
         Returns
         -------
         BedFrame
-            BedFrame.
+            BedFrame object.
 
         See Also
         --------
@@ -173,7 +177,9 @@ class BedFrame:
         BedFrame.from_file
             Construct BedFrame from a BED file.
         BedFrame.from_frame
-            Construct BedFrame from DataFrame.
+            Construct BedFrame from a dataframe.
+        BedFrame.from_region
+            Construct BedFrame from a list of regions.
 
         Examples
         --------
@@ -195,7 +201,8 @@ class BedFrame:
 
     @classmethod
     def from_file(cls, fn):
-        """Construct BedFrame from a BED file.
+        """
+        Construct BedFrame from a BED file.
 
         Parameters
         ----------
@@ -205,16 +212,18 @@ class BedFrame:
         Returns
         -------
         BedFrame
-            BedFrame.
+            BedFrame object.
 
         See Also
         --------
         BedFrame
             BedFrame object creation using constructor.
         BedFrame.from_dict
-            Construct BedFrame from dict of array-like or dicts.
+            Construct BedFrame from a dict of array-like or dicts.
         BedFrame.from_frame
-            Construct BedFrame from DataFrame.
+            Construct BedFrame from a dataframe.
+        BedFrame.from_region
+            Construct BedFrame from a list of regions.
 
         Examples
         --------
@@ -237,7 +246,8 @@ class BedFrame:
 
     @classmethod
     def from_frame(cls, meta, data):
-        """Construct BedFrame from DataFrame.
+        """
+        Construct BedFrame from a dataframe.
 
         Parameters
         ----------
@@ -249,16 +259,18 @@ class BedFrame:
         Returns
         -------
         BedFrame
-            BedFrame.
+            BedFrame object.
 
         See Also
         --------
         BedFrame
             BedFrame object creation using constructor.
         BedFrame.from_dict
-            Construct BedFrame from dict of array-like or dicts.
+            Construct BedFrame from a dict of array-like or dicts.
         BedFrame.from_file
             Construct BedFrame from a BED file.
+        BedFrame.from_region
+            Construct BedFrame from a list of regions.
 
         Examples
         --------
@@ -279,6 +291,59 @@ class BedFrame:
         2       chr3    100  200
         """
         return cls(meta, pr.PyRanges(data))
+
+    @classmethod
+    def from_regions(cls, meta, regions):
+        """
+        Construct BedFrame from a list of regions.
+
+        Parameters
+        ----------
+        meta : list
+            Metadata lines.
+        regions : str or list
+            Region or list of regions.
+
+        Returns
+        -------
+        BedFrame
+            BedFrame object.
+
+        See Also
+        --------
+        BedFrame
+            BedFrame object creation using constructor.
+        BedFrame.from_dict
+            Construct BedFrame from a dict of array-like or dicts.
+        BedFrame.from_file
+            Construct BedFrame from a BED file.
+        BedFrame.from_frame
+            Construct BedFrame from a dataframe.
+
+        Examples
+        --------
+
+        >>> from fuc import pybed
+        >>> data = ['chr1:100-200', 'chr2:100-200', 'chr3:100-200']
+        >>> bf = pybed.BedFrame.from_regions([], data)
+        >>> bf.gr.df
+          Chromosome  Start  End
+        0       chr1    100  200
+        1       chr2    100  200
+        2       chr3    100  200
+        """
+        if isinstance(regions, str):
+            regions = [regions]
+        chroms = []
+        starts = []
+        ends = []
+        for region in regions:
+            chrom, start, end = common.parse_region(region)
+            chroms.append(chrom)
+            starts.append(start)
+            ends.append(end)
+        data = {'Chromosome': chroms, 'Start': starts, 'End': ends}
+        return cls.from_dict([], data)
 
     def update_chr_prefix(self, mode='remove'):
         """
@@ -384,7 +449,7 @@ class BedFrame:
         >>> from fuc import pybed
         >>> data = {
         ...     'Chromosome': ['chr1', 'chr1', 'chr2', 'chr2', 'chr3', 'chr3'],
-        ...     'Start': [10, 30, 15, 25, 50, 70],
+        ...     'Start': [10, 30, 15, 25, 50, 61],
         ...     'End': [40, 50, 25, 35, 60, 80]
         ... }
         >>> bf = pybed.BedFrame.from_dict([], data)
@@ -395,17 +460,17 @@ class BedFrame:
         2       chr2     15   25
         3       chr2     25   35
         4       chr3     50   60
-        5       chr3     70   80
+        5       chr3     61   80
         >>> bf.merge().gr.df
           Chromosome  Start  End
         0       chr1     10   50
         1       chr2     15   35
         2       chr3     50   60
-        3       chr3     70   80
+        3       chr3     61   80
         """
         return self.__class__(self.copy_meta(), self.gr.merge())
 
-    def regions(self, merge=True):
+    def to_regions(self, merge=True):
         """
         Return a list of regions from BedFrame.
 
@@ -418,6 +483,20 @@ class BedFrame:
         -------
         list
             List of regions.
+
+        Examples
+        --------
+        >>> from fuc import pybed
+        >>> data = {
+        ...     'Chromosome': ['chr1', 'chr1', 'chr2', 'chr2', 'chr3', 'chr3'],
+        ...     'Start': [10, 30, 15, 25, 50, 61],
+        ...     'End': [40, 50, 25, 35, 60, 80]
+        ... }
+        >>> bf = pybed.BedFrame.from_dict([], data)
+        >>> bf.regions()
+        ['chr1:10-50', 'chr2:15-35', 'chr3:50-60', 'chr3:61-80']
+        >>> bf.regions(merge=False)
+        ['chr1:10-40', 'chr1:30-50', 'chr2:15-25', 'chr2:25-35', 'chr3:50-60', 'chr3:61-80']
         """
         if merge:
             bf = self.merge()
