@@ -825,9 +825,11 @@ def slice(file, regions, path=None):
     """
     Slice VCF file for specified regions.
 
-    Each region to be sliced must have the format chrom:start-end and be a
-    half-open interval with (start, end]. This means, for example,
-    'chr1:100-103' will extract positions 101, 102, and 103.
+    The method requires the file be BGZF compressed and indexed (.tbi) for
+    random access. Each region to be sliced must have the format
+    chrom:start-end and be a half-open interval with (start, end]. This
+    means, for example, 'chr1:100-103' will extract positions 101, 102, and
+    103.
 
     Parameters
     ----------
@@ -1512,10 +1514,12 @@ class VcfFrame:
         The method will automatically use BGZF decompression if the filename
         ends with '.gz'.
 
-        Use ``regions`` to read only regions of interest to VcfFrame, which
-        will significantly speed up data reading if the input VCF file is
-        large. Note that this requires the VCF to be BGZF compressed and
-        indexed.
+        If the file is large you can speicfy regions of interest to speed up
+        data processing. Note that this requires the file be BGZF compressed
+        and indexed (.tbi) for random access. Each region to be sliced must
+        have the format chrom:start-end and be a half-open interval with
+        (start, end]. This means, for example, 'chr1:100-103' will extract
+        positions 101, 102, and 103.
 
         Parameters
         ----------
@@ -1604,7 +1608,23 @@ class VcfFrame:
         --------
 
         >>> from fuc import pyvcf
-        >>> vf = pyvcf.VcfFrame.from_string(data)
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr1'],
+        ...     'POS': [100, 101],
+        ...     'ID': ['.', '.'],
+        ...     'REF': ['G', 'T'],
+        ...     'ALT': ['A', 'C'],
+        ...     'QUAL': ['.', '.'],
+        ...     'FILTER': ['.', '.'],
+        ...     'INFO': ['.', '.'],
+        ...     'FORMAT': ['GT', 'GT'],
+        ...     'A': ['0/1', '0/1']
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict(['##fileformat=VCFv4.3'], data)
+        >>> s = vf.to_string()
+        >>> print(s[:20])
+        ##fileformat=VCFv4.3
+        >>> vf = pyvcf.VcfFrame.from_string(s)
         >>> vf.df
           CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A
         0  chr1  100  .   G   A    .      .    .     GT  0/1
