@@ -823,21 +823,26 @@ def simulate_sample(
 
 def slice(file, regions, path=None):
     """
-    Slice the input VCF file for specified regions.
+    Slice VCF file for specified regions.
+
+    Each region to be sliced must have the format chrom:start-end and be a
+    half-open interval with (start, end]. This means, for example,
+    'chr1:100-103' will extract positions 101, 102, and 103.
 
     Parameters
     ----------
     file : str
-        Input VCF file.
+        VCF file.
     regions : str or list
-        Target region or list of regions with the format ``chrom:start-end``.
+        Region or list of regions to be sliced.
     path : str, optional
-        Output VCF file. If None is provided the result is returned as a string.
+        Output file. If None is provided the result is returned as a string.
 
     Returns
     -------
     None or str
-        If ``path`` is None, returns the resulting VCF format as a string. Otherwise returns None.
+        If path is None, returns the resulting VCF format as a string.
+        Otherwise returns None.
     """
     if isinstance(regions, str):
         regions = [regions]
@@ -1614,6 +1619,56 @@ class VcfFrame:
         else:
             vf = cls._from_file1(*args)
         return vf
+
+    @classmethod
+    def from_string(cls, s, meta_only=False):
+        """
+        Construct VcfFrame from string.
+
+        Parameters
+        ----------
+        s : str
+        String representation of a VCF file.
+
+        Returns
+        -------
+        VcfFrame
+            VcfFrame object.
+
+        Examples
+        --------
+
+        >>> from fuc import pyvcf
+        >>> s = '##fileformat=VCFv4.2\n##FILTER=<ID=PASS,Description="All filters passed">\n##contig=<ID=1>\n#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tA\n1\t101\t.\tT\tC\t.\t.\t.\tGT\t0/1\n1\t102\t.\tT\tC\t.\t.\t.\tGT\t0/1\n1\t103\t.\tT\tC\t.\t.\t.\tGT\t0/1\n'
+        >>> vf = pyvcf.VcfFrame.from_string(s)
+        >>> vf.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A
+        0     1  101  .   T   C    .      .    .     GT  0/1
+        1     1  102  .   T   C    .      .    .     GT  0/1
+        2     1  103  .   T   C    .      .    .     GT  0/1
+        """
+        skiprows = 0
+        meta = []
+        for line in s.split('\n'):
+            if line.startswith('##'):
+                meta.append(line.strip())
+                skiprows += 1
+            elif line.startswith('#CHROM'):
+                columns = line.strip().split('\t')
+                skiprows += 1
+            else:
+                break
+        columns[0] = 'CHROM'
+        for header in HEADERS:
+            if header not in columns and header != 'FORMAT':
+                raise ValueError(f"Required VCF column missing: '{header}'")
+        if meta_only:
+            df = pd.DataFrame(columns=columns)
+        else:
+            dtype = {**HEADERS, **{x: str for x in columns[9:]}}
+            df = pd.read_table(StringIO(s), skiprows=skiprows,
+                names=columns, dtype=dtype)
+        return cls(meta, df)
 
     def calculate_concordance(self, a, b, c=None, mode='all'):
         """

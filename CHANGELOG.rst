@@ -11,6 +11,7 @@ Changelog
 * Rename :meth:`pybed.BedFrame.chr_prefix`, :meth:`pycov.CovFrame.chr_prefix`, :meth:`pyvcf.VcfFrame.chr_prefix` methods to :meth:`pybed.BedFrame.update_chr_prefix`, :meth:`pycov.CovFrame.update_chr_prefix`, :meth:`pyvcf.VcfFrame.update_chr_prefix`.
 * Add new properties ``pybed.BedFrame.has_chr_prefix``, ``pycov.CovFrame.has_chr_prefix``, ``pyvcf.VcfFrame.has_chr_prefix``.
 * Add new method :meth:`pyvcf.slice`.
+* Add new method :meth:`pyvcf.VcfFrame.from_string`.
 
 0.25.0 (2021-10-09)
 -------------------
