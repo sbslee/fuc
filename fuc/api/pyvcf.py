@@ -829,16 +829,18 @@ def slice(file, regions, path=None):
     random access. Each region to be sliced must have the format
     chrom:start-end and be a half-open interval with (start, end]. This
     means, for example, 'chr1:100-103' will extract positions 101, 102, and
-    103.
+    103. Alternatively, you can provide BED data to specify regions.
 
     Parameters
     ----------
     file : str
         VCF file.
-    regions : str or list
-        Region or list of regions to be sliced.
+    regions : str, list, or pybed.BedFrame
+        Region or list of regions to be sliced. Also accepts a BED file
+        (zipped or unzipped) or a BedFrame.
     path : str, optional
-        Output file. If None is provided the result is returned as a string.
+        Output file. Use ``path='-'`` to write to stdout. If None is provided
+        the result is returned as a string.
 
     Returns
     -------
@@ -848,6 +850,14 @@ def slice(file, regions, path=None):
     """
     if isinstance(regions, str):
         regions = [regions]
+        if '.bed' in regions[0]:
+            regions = pybed.BedFrame.from_file(regions[0]).to_regions()
+    elif isinstance(regions, pybed.BedFrame):
+        regions = regions.to_regions()
+    elif isinstance(regions, list):
+        pass
+    else:
+        raise TypeError('Incorrect regions type')
 
     vcf = VariantFile(file)
 
@@ -865,6 +875,9 @@ def slice(file, regions, path=None):
             chrom, start, end = common.parse_region(region)
             for record in vcf.fetch(chrom, start, end):
                 output.write(record)
+        output.close()
+
+    vcf.close()
 
     return data
 
@@ -1519,7 +1532,8 @@ class VcfFrame:
         and indexed (.tbi) for random access. Each region to be sliced must
         have the format chrom:start-end and be a half-open interval with
         (start, end]. This means, for example, 'chr1:100-103' will extract
-        positions 101, 102, and 103.
+        positions 101, 102, and 103. Alternatively, you can provide BED data
+        to specify regions.
 
         Parameters
         ----------
@@ -1530,8 +1544,9 @@ class VcfFrame:
             If True, use BGZF decompression regardless of the filename.
         meta_only : bool, default: False
             If True, only read metadata and header lines.
-        regions : str or list, optional
-            Region or list of regions to be sliced.
+        regions : str, list, or pybed.BedFrame, optional
+            Region or list of regions to be sliced. Also accepts a BED file
+            or a BedFrame.
 
         Returns
         -------

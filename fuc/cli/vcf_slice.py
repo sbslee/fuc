@@ -3,65 +3,39 @@ import sys
 from .. import api
 
 description = f"""
-###########################################
-# Slice a VCF file for specified regions. #
-###########################################
+==============================================================================
+Slice VCF file for specified regions.
 
-Target regions can be specified with either '--region', '--bed', or '--vcf'.
+Input VCF must be already BGZF compressed and indexed (.tbi) to allow random
+access. Each region to be sliced must have the format chrom:start-end and be
+a half-open interval with (start, end]. This means, for example, chr1:100-103
+will extract positions 101, 102, and 103. Alternatively, you can provide a
+BED file to specify regions.
 
-Pay attention to the 'chr' string in contig names (e.g. 'chr1' vs. '1').
+Specify regions manually:
+  $ fuc {api.common._script_name()} in.vcf.gz 1:100-300 2:400-700 > out.vcf
 
-Usage examples:
-  $ fuc {api.common._script_name()} in.vcf --region 1 > out.vcf
-  $ fuc {api.common._script_name()} in.vcf --region 1:100-300 > out.vcf
-  $ fuc {api.common._script_name()} in.vcf --region 1:100 > out.vcf
-  $ fuc {api.common._script_name()} in.vcf --region chr1:100- > out.vcf
-  $ fuc {api.common._script_name()} in.vcf --region chr1:-300 > out.vcf
-  $ fuc {api.common._script_name()} in.vcf --bed targets.bed > out.vcf
-  $ fuc {api.common._script_name()} in.vcf --vcf targets.vcf > out.vcf
+Speicfy regions with a BED file:
+  $ fuc {api.common._script_name()} in.vcf.gz regions.bed > out.vcf
+==============================================================================
 """
 
 def create_parser(subparsers):
     parser = api.common._add_parser(
         subparsers,
         api.common._script_name(),
-        help='Slice a VCF file for specified regions.',
+        help='Slice VCF file for specified regions.',
         description=description,
     )
     parser.add_argument(
-        'input',
-        help='Input VCF file (zipped or unzipped).'
+        'file',
+        help='VCF file.'
     )
     parser.add_argument(
-        '--region',
-        metavar='TEXT',
-        help="Target region to use for slicing ('chrom:start-end')."
-    )
-    parser.add_argument(
-        '--bed',
-        metavar='PATH',
-        help="BED file to use for slicing (zipped or unzipped)."
-    )
-    parser.add_argument(
-        '--vcf',
-        metavar='PATH',
-        help="VCF file to use for slicing (zipped or unzipped)."
+        'regions',
+        help='One or more regions. Also accepts a BED file (zipped or \n'
+             'unzipped).'
     )
 
 def main(args):
-    vf = api.pyvcf.VcfFrame.from_file(args.input)
-
-    if len([x for x in [args.region, args.bed, args.vcf]
-        if x is not None]) > 1:
-        raise ValueError('Too many arguments')
-
-    if args.region is not None:
-        sliced_vf = vf.slice(args.region)
-    elif args.bed is not None:
-        sliced_vf = vf.filter_bed(args.bed)
-    elif args.vcf is not None:
-        sliced_vf = vf.filter_vcf(args.vcf)
-    else:
-        raise ValueError('Missing target regions')
-
-    sys.stdout.write(sliced_vf.to_string())
+    api.pyvcf.slice(args.file, args.regions, path='-')

@@ -51,7 +51,7 @@ For getting help on the fuc CLI:
        vcf-filter   Filter a VCF file.
        vcf-merge    Merge two or more VCF files.
        vcf-rename   Rename the samples in a VCF file.
-       vcf-slice    Slice a VCF file for specified regions.
+       vcf-slice    Slice VCF file for specified regions.
        vcf-vcf2bed  Convert a VCF file to a BED file.
        vcf-vep      Filter a VCF file annotated by Ensembl VEP.
    
@@ -1059,33 +1059,31 @@ vcf-slice
 .. code-block:: text
 
    $ fuc vcf-slice -h
-   usage: fuc vcf-slice [-h] [--region TEXT] [--bed PATH] [--vcf PATH] input
+   usage: fuc vcf-slice [-h] file regions
    
-   ###########################################
-   # Slice a VCF file for specified regions. #
-   ###########################################
+   ==============================================================================
+   Slice VCF file for specified regions.
    
-   Target regions can be specified with either '--region', '--bed', or '--vcf'.
+   Input VCF must be already BGZF compressed and indexed (.tbi) to allow random
+   access. Each region to be sliced must have the format chrom:start-end and be
+   a half-open interval with (start, end]. This means, for example, chr1:100-103
+   will extract positions 101, 102, and 103. Alternatively, you can provide a
+   BED file to specify regions.
    
-   Pay attention to the 'chr' string in contig names (e.g. 'chr1' vs. '1').
+   Specify regions manually:
+     $ fuc vcf-slice in.vcf.gz 1:100-300 2:400-700 > out.vcf
    
-   Usage examples:
-     $ fuc vcf-slice in.vcf --region 1 > out.vcf
-     $ fuc vcf-slice in.vcf --region 1:100-300 > out.vcf
-     $ fuc vcf-slice in.vcf --region 1:100 > out.vcf
-     $ fuc vcf-slice in.vcf --region chr1:100- > out.vcf
-     $ fuc vcf-slice in.vcf --region chr1:-300 > out.vcf
-     $ fuc vcf-slice in.vcf --bed targets.bed > out.vcf
-     $ fuc vcf-slice in.vcf --vcf targets.vcf > out.vcf
+   Speicfy regions with a BED file:
+     $ fuc vcf-slice in.vcf.gz regions.bed > out.vcf
+   ==============================================================================
    
    Positional arguments:
-     input          Input VCF file (zipped or unzipped).
+     file        VCF file.
+     regions     One or more regions. Also accepts a BED file (zipped or 
+                 unzipped).
    
    Optional arguments:
-     -h, --help     Show this help message and exit.
-     --region TEXT  Target region to use for slicing ('chrom:start-end').
-     --bed PATH     BED file to use for slicing (zipped or unzipped).
-     --vcf PATH     VCF file to use for slicing (zipped or unzipped).
+     -h, --help  Show this help message and exit.
 
 vcf-vcf2bed
 ===========

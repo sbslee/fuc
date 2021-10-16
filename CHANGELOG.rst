@@ -17,6 +17,8 @@ Changelog
 * Add new property ``pybed.BedFrame.shape``.
 * Add new method :meth:`pybed.BedFrame.to_regions`.
 * Add new method :meth:`pybed.BedFrame.from_regions`.
+* Update :meth:`pyvcf.VcfFrame.from_file` method to accept BED data to specify regions of interest.
+* Update :command:`vcf-slice` command to run significantly faster by allowing random access.
 
 0.25.0 (2021-10-09)
 -------------------
