@@ -114,6 +114,11 @@ class BedFrame:
         return self.gr.chromosomes
 
     @property
+    def shape(self):
+        """tuple : Dimensionality of BedFrame (intervals, columns)."""
+        return self.gr.df.shape
+
+    @property
     def has_chr_prefix(self):
         """bool : Whether the (annoying) 'chr' string is found."""
         for contig in self.contigs:
@@ -366,7 +371,7 @@ class BedFrame:
 
     def merge(self):
         """
-        Merge overlapping intervals within the BedFrame.
+        Merge overlapping intervals within BedFrame.
 
         Returns
         -------
@@ -399,3 +404,24 @@ class BedFrame:
         3       chr3     70   80
         """
         return self.__class__(self.copy_meta(), self.gr.merge())
+
+    def regions(self, merge=True):
+        """
+        Return a list of regions from BedFrame.
+
+        Parameters
+        ----------
+        merge : bool, default: True
+            Whether to merge overlapping intervals.
+
+        Returns
+        -------
+        list
+            List of regions.
+        """
+        if merge:
+            bf = self.merge()
+        else:
+            bf = self
+        s = bf.gr.df.apply(lambda r: f'{r.Chromosome}:{r.Start}-{r.End}', axis=1)
+        return s.to_list()
