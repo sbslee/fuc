@@ -13,6 +13,7 @@ Changelog
 * Add new method :meth:`pyvcf.slice`.
 * Add new method :meth:`pyvcf.VcfFrame.from_string`.
 * Remove ``nrows`` argument from :meth:`pyvcf.VcfFrame.from_file` method.
+* Add new argument 'regions' to :meth:`pyvcf.VcfFrame.from_file` method.
 
 0.25.0 (2021-10-09)
 -------------------

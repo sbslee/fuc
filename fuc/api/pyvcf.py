@@ -880,9 +880,11 @@ class VcfFrame:
     See Also
     --------
     VcfFrame.from_dict
-        Construct VcfFrame from dict of array-like or dicts.
+        Construct VcfFrame from a dict of array-like or dicts.
     VcfFrame.from_file
         Construct VcfFrame from a VCF file.
+    VcfFrame.from_string
+        Construct VcfFrame from a string.
 
     Examples
     --------
@@ -1472,6 +1474,8 @@ class VcfFrame:
             VcfFrame object creation using constructor.
         VcfFrame.from_file
             Construct VcfFrame from a VCF file.
+        VcfFrame.from_string
+            Construct VcfFrame from a string.
 
         Examples
         --------
@@ -1500,7 +1504,7 @@ class VcfFrame:
 
     @classmethod
     def from_file(
-        cls, fn, compression=False, meta_only=False
+        cls, fn, compression=False, meta_only=False, regions=None
     ):
         """
         Construct VcfFrame from a VCF file.
@@ -1508,15 +1512,22 @@ class VcfFrame:
         The method will automatically use BGZF decompression if the filename
         ends with '.gz'.
 
+        Use ``regions`` to read only regions of interest to VcfFrame, which
+        will significantly speed up data reading if the input VCF file is
+        large. Note that this requires the VCF to be BGZF compressed and
+        indexed.
+
         Parameters
         ----------
         fn : str or file-like object
             VCF file (zipped or unzipped). By file-like object, we refer to
             objects with a :meth:`read()` method, such as a file handle.
         compression : bool, default: False
-            If True, use BGZF decompression regardless of filename.
+            If True, use BGZF decompression regardless of the filename.
         meta_only : bool, default: False
-            If True, read metadata and header lines only.
+            If True, only read metadata and header lines.
+        regions : str or list, optional
+            Region or list of regions to be sliced.
 
         Returns
         -------
@@ -1528,7 +1539,9 @@ class VcfFrame:
         VcfFrame
             VcfFrame object creation using constructor.
         VcfFrame.from_dict
-            Construct VcfFrame from dict of array-like or dicts.
+            Construct VcfFrame from a dict of array-like or dicts.
+        VcfFrame.from_string
+            Construct VcfFrame from a string.
 
         Examples
         --------
@@ -1539,16 +1552,19 @@ class VcfFrame:
         >>> vf = pyvcf.VcfFrame.from_file('zipped.vcf', compression=True)
         """
         if isinstance(fn, str):
-            s = ''
-            if fn.startswith('~'):
-                fn = os.path.expanduser(fn)
-            if fn.endswith('.gz') or compression:
-                f = bgzf.open(fn, 'rt')
+            if regions is None:
+                s = ''
+                if fn.startswith('~'):
+                    fn = os.path.expanduser(fn)
+                if fn.endswith('.gz') or compression:
+                    f = bgzf.open(fn, 'rt')
+                else:
+                    f = open(fn)
+                for line in f:
+                    s += line
+                f.close()
             else:
-                f = open(fn)
-            for line in f:
-                s += line
-            f.close()
+                s = slice(fn, regions)
         elif hasattr(fn, 'read'):
             s = fn.read()
             try:
@@ -1568,12 +1584,21 @@ class VcfFrame:
         Parameters
         ----------
         s : str
-        String representation of a VCF file.
+            String representation of a VCF file.
 
         Returns
         -------
         VcfFrame
             VcfFrame object.
+
+        See Also
+        --------
+        VcfFrame
+            VcfFrame object creation using constructor.
+        VcfFrame.from_file
+            Construct VcfFrame from a VCF file.
+        VcfFrame.from_dict
+            Construct VcfFrame from a dict of array-like or dicts.
 
         Examples
         --------
