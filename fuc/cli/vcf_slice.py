@@ -3,21 +3,13 @@ import sys
 from .. import api
 
 description = f"""
-==============================================================================
 Slice VCF file for specified regions.
 
-Input VCF must be already BGZF compressed and indexed (.tbi) to allow random
-access. Each region to be sliced must have the format chrom:start-end and be
-a half-open interval with (start, end]. This means, for example, chr1:100-103
-will extract positions 101, 102, and 103. Alternatively, you can provide a
-BED file to specify regions.
-
-Specify regions manually:
+To specify regions manually:
   $ fuc {api.common._script_name()} in.vcf.gz 1:100-300 2:400-700 > out.vcf
 
-Speicfy regions with a BED file:
+To speicfy regions with a BED file:
   $ fuc {api.common._script_name()} in.vcf.gz regions.bed > out.vcf
-==============================================================================
 """
 
 def create_parser(subparsers):
@@ -29,12 +21,17 @@ def create_parser(subparsers):
     )
     parser.add_argument(
         'file',
-        help='VCF file.'
+        help='Input VCF file must be already BGZF compressed (.gz) and \n'
+             'indexed (.tbi) to allow random access.'
     )
     parser.add_argument(
         'regions',
-        help='One or more regions. Also accepts a BED file (zipped or \n'
-             'unzipped).'
+        nargs='+',
+        help='One or more regions to be sliced. Each region must have the \n'
+             'format chrom:start-end and be a half-open interval with \n'
+             '(start, end]. This means, for example, chr1:100-103 will \n'
+             'extract positions 101, 102, and 103. Alternatively, you can \n'
+             'provide a BED file (zipped or unzipped) to speciy regions.'
     )
 
 def main(args):

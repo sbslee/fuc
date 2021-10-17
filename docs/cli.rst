@@ -1059,28 +1059,24 @@ vcf-slice
 .. code-block:: text
 
    $ fuc vcf-slice -h
-   usage: fuc vcf-slice [-h] file regions
+   usage: fuc vcf-slice [-h] file regions [regions ...]
    
-   ==============================================================================
    Slice VCF file for specified regions.
    
-   Input VCF must be already BGZF compressed and indexed (.tbi) to allow random
-   access. Each region to be sliced must have the format chrom:start-end and be
-   a half-open interval with (start, end]. This means, for example, chr1:100-103
-   will extract positions 101, 102, and 103. Alternatively, you can provide a
-   BED file to specify regions.
-   
-   Specify regions manually:
+   To specify regions manually:
      $ fuc vcf-slice in.vcf.gz 1:100-300 2:400-700 > out.vcf
    
-   Speicfy regions with a BED file:
+   To speicfy regions with a BED file:
      $ fuc vcf-slice in.vcf.gz regions.bed > out.vcf
-   ==============================================================================
    
    Positional arguments:
-     file        VCF file.
-     regions     One or more regions. Also accepts a BED file (zipped or 
-                 unzipped).
+     file        Input VCF file must be already BGZF compressed (.gz) and 
+                 indexed (.tbi) to allow random access.
+     regions     One or more regions to be sliced. Each region must have the 
+                 format chrom:start-end and be a half-open interval with 
+                 (start, end]. This means, for example, chr1:100-103 will 
+                 extract positions 101, 102, and 103. Alternatively, you can 
+                 provide a BED file (zipped or unzipped) to speciy regions.
    
    Optional arguments:
      -h, --help  Show this help message and exit.

@@ -1208,7 +1208,7 @@ def sort_variants(variants):
 
     >>> from fuc import common
     >>> variants = ['5-200-G-T', '5:100:T:C', '1:100:A>C', '10-100-G-C']
-    >>> sorted(variants) # Lexicographic order (not what we want)
+    >>> sorted(variants) # Lexicographic sorting (not what we want)
     ['10-100-G-C', '1:100:A>C', '5-200-G-T', '5:100:T:C']
     >>> common.sort_variants(variants)
     ['1:100:A>C', '5:100:T:C', '5-200-G-T', '10-100-G-C']
@@ -1219,3 +1219,34 @@ def sort_variants(variants):
             chrom = pyvcf.CONTIGS.index(chrom)
         return (chrom, pos, ref, alt)
     return sorted(variants, key=func)
+
+def sort_regions(regions):
+    """
+    Return sorted list of regions.
+
+    Parameters
+    ----------
+    regions : list
+        List of regions.
+
+    Returns
+    -------
+    list
+        Sorted list.
+
+    Examples
+    --------
+
+    >>> from fuc import common
+    >>> regions = ['22:1000-1500', '16:100-200', '22:200-300']
+    >>> sorted(regions) # Lexicographic sorting (not what we want)
+    ['16:100-200', '22:1000-1500', '22:200-300']
+    >>> common.sort_regions(regions)
+    ['16:100-200', '22:200-300', '22:1000-1500']
+    """
+    def func(x):
+        chrom, start, end = parse_region(x)
+        if chrom in pyvcf.CONTIGS:
+            chrom = pyvcf.CONTIGS.index(chrom)
+        return (chrom, start, end)
+    return sorted(regions, key=func)
