@@ -1064,10 +1064,10 @@ vcf-slice
    Slice VCF file for specified regions.
    
    To specify regions manually:
-     $ fuc vcf-slice in.vcf.gz 1:100-300 2:400-700 > out.vcf
+   $ fuc vcf-slice in.vcf.gz 1:100-300 2:400-700 > out.vcf
    
    To speicfy regions with a BED file:
-     $ fuc vcf-slice in.vcf.gz regions.bed > out.vcf
+   $ fuc vcf-slice in.vcf.gz regions.bed > out.vcf
    
    Positional arguments:
      file        Input VCF file must be already BGZF compressed (.gz) and 

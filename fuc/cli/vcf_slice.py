@@ -6,10 +6,10 @@ description = f"""
 Slice VCF file for specified regions.
 
 To specify regions manually:
-  $ fuc {api.common._script_name()} in.vcf.gz 1:100-300 2:400-700 > out.vcf
+$ fuc {api.common._script_name()} in.vcf.gz 1:100-300 2:400-700 > out.vcf
 
 To speicfy regions with a BED file:
-  $ fuc {api.common._script_name()} in.vcf.gz regions.bed > out.vcf
+$ fuc {api.common._script_name()} in.vcf.gz regions.bed > out.vcf
 """
 
 def create_parser(subparsers):
