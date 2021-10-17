@@ -1076,7 +1076,7 @@ vcf-slice
                  format chrom:start-end and be a half-open interval with 
                  (start, end]. This means, for example, chr1:100-103 will 
                  extract positions 101, 102, and 103. Alternatively, you can 
-                 provide a BED file (zipped or unzipped) to speciy regions.
+                 provide a BED file (zipped or unzipped) to specify regions.
    
    Optional arguments:
      -h, --help  Show this help message and exit.

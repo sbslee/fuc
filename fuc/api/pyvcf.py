@@ -825,22 +825,20 @@ def slice(file, regions, path=None):
     """
     Slice VCF file for specified regions.
 
-    The method requires the file be BGZF compressed and indexed (.tbi) for
-    random access. Each region to be sliced must have the format
-    chrom:start-end and be a half-open interval with (start, end]. This
-    means, for example, 'chr1:100-103' will extract positions 101, 102, and
-    103. Alternatively, you can provide BED data to specify regions.
-
     Parameters
     ----------
     file : str
-        VCF file.
+        Input VCF file must be already BGZF compressed (.gz) and indexed
+        (.tbi) to allow random access.
     regions : str, list, or pybed.BedFrame
-        Region or list of regions to be sliced. Also accepts a BED file
-        (zipped or unzipped) or a BedFrame.
+        One or more regions to be sliced. Each region must have the format
+        chrom:start-end and be a half-open interval with (start, end]. This
+        means, for example, chr1:100-103 will extract positions 101, 102, and
+        103. Alternatively, you can provide a BED file (zipped or unzipped)
+        to specify regions.
     path : str, optional
-        Output file. Use ``path='-'`` to write to stdout. If None is provided
-        the result is returned as a string.
+        Output VCF file. Writes to stdout when ``path='-'``. If None is
+        provided the result is returned as a string.
 
     Returns
     -------
@@ -855,7 +853,10 @@ def slice(file, regions, path=None):
     elif isinstance(regions, pybed.BedFrame):
         regions = regions.to_regions()
     elif isinstance(regions, list):
-        pass
+        if '.bed' in regions[0]:
+            regions = pybed.BedFrame.from_file(regions[0]).to_regions()
+        else:
+            regions = common.sort_regions(regions)
     else:
         raise TypeError('Incorrect regions type')
 

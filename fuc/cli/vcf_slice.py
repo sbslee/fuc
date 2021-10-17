@@ -31,7 +31,7 @@ def create_parser(subparsers):
              'format chrom:start-end and be a half-open interval with \n'
              '(start, end]. This means, for example, chr1:100-103 will \n'
              'extract positions 101, 102, and 103. Alternatively, you can \n'
-             'provide a BED file (zipped or unzipped) to speciy regions.'
+             'provide a BED file (zipped or unzipped) to specify regions.'
     )
 
 def main(args):
