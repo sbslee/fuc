@@ -20,6 +20,7 @@ Changelog
 * Update :meth:`pyvcf.VcfFrame.from_file` method to accept BED data to specify regions of interest.
 * Update :command:`vcf-slice` command to run significantly faster by allowing random access.
 * Add new method :meth:`common.sort_regions`.
+* Fix minor bug in :meth:`pyvcf.VcfFrame.get_af` method when the variant of interest does not exist in VcfFrame.
 
 0.25.0 (2021-10-09)
 -------------------

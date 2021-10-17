@@ -5525,7 +5525,7 @@ class VcfFrame:
         try:
             i = r.FORMAT.values[0].split(':').index('AF')
         except ValueError:
-            i = None
+            return np.nan
 
         alts = r.ALT.values[0].split(',')
 
@@ -5536,7 +5536,7 @@ class VcfFrame:
 
         field = r[sample].values[0].split(':')[i]
 
-        if field == '.' or i is None:
+        if field == '.':
             af = np.nan
         else:
             af = float(field.split(',')[j+1])
