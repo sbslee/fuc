@@ -4,49 +4,57 @@ from .. import api
 
 import pysam
 
-description = f"""
-###############################################
-# Compute read depth from SAM/BAM/CRAM files. #
-###############################################
+description = """
+Compute read depth from SAM/BAM/CRAM files.
 
-Alignment files must be specified with either '--bam' or '--fn', but it's an error to use both.
+By default, the command will count all reads within the alignment files. You
+can specify regions of interest with --bed or --region. When you do this, pay
+close attention to the 'chr' string in contig names (e.g. 'chr1' vs. '1').
+Note also that --region requires the input files be indexed.
+"""
 
-By default, the command will count all reads within the alignment files. You can specify target regions with either '--bed' or '--region', but not both. When you do this, pay close attention to the 'chr' string in contig names (e.g. 'chr1' vs. '1'). Note also that '--region' requires the input files be indexed.
+epilog = f"""
+[Example] To specify regions with a BED file:
+  $ fuc {api.common._script_name()} \\
+  --bam 1.bam 2.bam \\
+  --bed in.bed > out.tsv
 
-Under the hood, the command computes read depth using the 'samtools depth' command.
-
-Usage examples:
-  $ fuc {api.common._script_name()} --bam 1.bam 2.bam --bed in.bed > out.tsv
-  $ fuc {api.common._script_name()} --fn bam.list --region chr1:100-200 > out.tsv
+[Example] To specify regions manually:
+  $ fuc {api.common._script_name()} \\
+  --fn bam.list \\
+  --region chr1:100-200 > out.tsv
 """
 
 def create_parser(subparsers):
     parser = api.common._add_parser(
         subparsers,
         api.common._script_name(),
-        help='Compute read depth from SAM/BAM/CRAM files.',
         description=description,
+        epilog=epilog,
+        help='Compute read depth from SAM/BAM/CRAM files.',
     )
     parser.add_argument(
         '--bam',
         metavar='PATH',
         nargs='+',
-        help='One or more alignment files.'
+        help='One or more alignment files. Cannot be used with --fn.'
     )
     parser.add_argument(
         '--fn',
         metavar='PATH',
-        help='File containing one alignment file per line.'
+        help='File containing one alignment file per line. Cannot \n'
+             'be used with --bam.'
     )
     parser.add_argument(
         '--bed',
         metavar='PATH',
-        help='BED file.'
+        help='BED file. Cannot be used with --region.'
     )
     parser.add_argument(
         '--region',
         metavar='TEXT',
-        help="Target region ('chrom:start-end')."
+        help="Target region ('chrom:start-end'). Cannot be used \n"
+             "with --bed."
     )
     parser.add_argument(
         '--zero',

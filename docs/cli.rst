@@ -73,23 +73,22 @@ bam-aldepth
    $ fuc bam-aldepth -h
    usage: fuc bam-aldepth [-h] bam sites
    
-   #################################################
-   # Count allelic depth from a SAM/BAM/CRAM file. #
-   #################################################
-   
-   The 'sites' file can be a TSV file containing two columns, chromosome and position. It can also be a BED or VCF file. Input file type will be detected automatically.
-   
-   Usage examples:
-     $ fuc bam-aldepth in.bam sites.tsv > out.tsv
-     $ fuc bam-aldepth in.bam sites.bed > out.tsv
-     $ fuc bam-aldepth in.bam sites.vcf > out.tsv
+   Count allelic depth from a SAM/BAM/CRAM file.
    
    Positional arguments:
      bam         Alignment file.
-     sites       TSV/BED/VCF file (zipped or unzipped).
+     sites       TSV file containing two columns, chromosome and position. 
+                 This can also be a BED or VCF file (zipped or unzipped). 
+                 Input type will be detected automatically.
    
    Optional arguments:
      -h, --help  Show this help message and exit.
+   
+   [Example] Provide sites with a TSV file:
+     $ fuc bam-aldepth in.bam sites.tsv > out.tsv
+   
+   [Example] Provide sites with a VCF file:
+     $ fuc bam-aldepth in.bam sites.vcf > out.tsv
 
 bam-depth
 =========
@@ -100,28 +99,33 @@ bam-depth
    usage: fuc bam-depth [-h] [--bam PATH [PATH ...]] [--fn PATH] [--bed PATH]
                         [--region TEXT] [--zero]
    
-   ###############################################
-   # Compute read depth from SAM/BAM/CRAM files. #
-   ###############################################
+   Compute read depth from SAM/BAM/CRAM files.
    
-   Alignment files must be specified with either '--bam' or '--fn', but it's an error to use both.
-   
-   By default, the command will count all reads within the alignment files. You can specify target regions with either '--bed' or '--region', but not both. When you do this, pay close attention to the 'chr' string in contig names (e.g. 'chr1' vs. '1'). Note also that '--region' requires the input files be indexed.
-   
-   Under the hood, the command computes read depth using the 'samtools depth' command.
-   
-   Usage examples:
-     $ fuc bam-depth --bam 1.bam 2.bam --bed in.bed > out.tsv
-     $ fuc bam-depth --fn bam.list --region chr1:100-200 > out.tsv
+   By default, the command will count all reads within the alignment files. You
+   can specify regions of interest with --bed or --region. When you do this, pay
+   close attention to the 'chr' string in contig names (e.g. 'chr1' vs. '1').
+   Note also that --region requires the input files be indexed.
    
    Optional arguments:
      -h, --help            Show this help message and exit.
      --bam PATH [PATH ...]
-                           One or more alignment files.
-     --fn PATH             File containing one alignment file per line.
-     --bed PATH            BED file.
-     --region TEXT         Target region ('chrom:start-end').
+                           One or more alignment files. Cannot be used with --fn.
+     --fn PATH             File containing one alignment file per line. Cannot 
+                           be used with --bam.
+     --bed PATH            BED file. Cannot be used with --region.
+     --region TEXT         Target region ('chrom:start-end'). Cannot be used 
+                           with --bed.
      --zero                Output all positions including those with zero depth.
+   
+   [Example] To specify regions with a BED file:
+     $ fuc bam-depth \
+     --bam 1.bam 2.bam \
+     --bed in.bed > out.tsv
+   
+   [Example] To specify regions manually:
+     $ fuc bam-depth \
+     --fn bam.list \
+     --region chr1:100-200 > out.tsv
 
 bam-head
 ========
@@ -131,20 +135,16 @@ bam-head
    $ fuc bam-head -h
    usage: fuc bam-head [-h] bam
    
-   ############################################
-   # Print the header of a SAM/BAM/CRAM file. #
-   ############################################
-   
-   Usage examples:
-     $ fuc bam-head in.sam
-     $ fuc bam-head in.bam
-     $ fuc bam-head in.cram
+   Print the header of a SAM/BAM/CRAM file.
    
    Positional arguments:
      bam         Alignment file.
    
    Optional arguments:
      -h, --help  Show this help message and exit.
+   
+   [Example] Print the header of a BAM file:
+     $ fuc bam-head in.bam
 
 bam-index
 =========
@@ -154,12 +154,7 @@ bam-index
    $ fuc bam-index -h
    usage: fuc bam-index [-h] bam
    
-   ##############################
-   # Index a SAM/BAM/CRAM file. #
-   ##############################
-   
-   Usage examples:
-     $ fuc bam-index in.bam
+   Index a SAM/BAM/CRAM file.
    
    Positional arguments:
      bam         Alignment file.
@@ -175,12 +170,7 @@ bam-rename
    $ fuc bam-rename -h
    usage: fuc bam-rename [-h] bam name
    
-   ##############################################
-   # Rename the sample in a SAM/BAM/CRAM file. #
-   ##############################################
-   
-   Usage examples:
-     $ fuc bam-rename in.bam NA12878 > out.bam
+   Rename the sample in a SAM/BAM/CRAM file.
    
    Positional arguments:
      bam         Alignment file.
@@ -188,6 +178,9 @@ bam-rename
    
    Optional arguments:
      -h, --help  Show this help message and exit.
+   
+   [Example] Write a new BAM file after renaming:
+     $ fuc bam-rename in.bam NA12878 > out.bam
 
 bam-slice
 =========

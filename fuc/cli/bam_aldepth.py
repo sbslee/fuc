@@ -2,16 +2,15 @@ import sys
 
 from .. import api
 
-description = f"""
-#################################################
-# Count allelic depth from a SAM/BAM/CRAM file. #
-#################################################
+description = """
+Count allelic depth from a SAM/BAM/CRAM file.
+"""
 
-The 'sites' file can be a TSV file containing two columns, chromosome and position. It can also be a BED or VCF file. Input file type will be detected automatically.
-
-Usage examples:
+epilog = f"""
+[Example] Provide sites with a TSV file:
   $ fuc {api.common._script_name()} in.bam sites.tsv > out.tsv
-  $ fuc {api.common._script_name()} in.bam sites.bed > out.tsv
+
+[Example] Provide sites with a VCF file:
   $ fuc {api.common._script_name()} in.bam sites.vcf > out.tsv
 """
 
@@ -19,8 +18,9 @@ def create_parser(subparsers):
     parser = api.common._add_parser(
         subparsers,
         api.common._script_name(),
-        help='Compute allelic depth from a SAM/BAM/CRAM file.',
         description=description,
+        epilog=epilog,
+        help='Compute allelic depth from a SAM/BAM/CRAM file.',
     )
     parser.add_argument(
         'bam',
@@ -28,7 +28,9 @@ def create_parser(subparsers):
     )
     parser.add_argument(
         'sites',
-        help='TSV/BED/VCF file (zipped or unzipped).'
+        help='TSV file containing two columns, chromosome and position. \n'
+             'This can also be a BED or VCF file (zipped or unzipped). \n'
+             'Input type will be detected automatically.'
     )
 
 def main(args):

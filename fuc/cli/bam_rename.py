@@ -6,11 +6,11 @@ from .. import api
 import pysam
 
 description = f"""
-##############################################
-# Rename the sample in a SAM/BAM/CRAM file. #
-##############################################
+Rename the sample in a SAM/BAM/CRAM file.
+"""
 
-Usage examples:
+epilog = f"""
+[Example] Write a new BAM file after renaming:
   $ fuc {api.common._script_name()} in.bam NA12878 > out.bam
 """
 
@@ -18,8 +18,9 @@ def create_parser(subparsers):
     parser = api.common._add_parser(
         subparsers,
         api.common._script_name(),
-        help='Rename the sample in a SAM/BAM/CRAM file.',
         description=description,
+        epilog=epilog,
+        help='Rename the sample in a SAM/BAM/CRAM file.',
     )
     parser.add_argument('bam', help='Alignment file.')
     parser.add_argument('name', help='New sample name.')
