@@ -2,31 +2,49 @@ import sys
 
 from .. import api
 
-description = f"""
-#####################################
-# Convert a MAF file to a VCF file. #
-#####################################
+description = """
+Convert a MAF file to a VCF file.
 
-In order to handle INDELs the command makes use of a reference assembly (i.e. FASTA file). If SNVs are your only concern, then you do not need a FASTA file and can just use the '--ignore_indels' flag.
+In order to handle INDELs the command makes use of a reference assembly (i.e.
+FASTA file). If SNVs are your only concern, then you do not need a FASTA file
+and can just use --ignore_indels.
 
-If you are going to provide a FASTA file, please make sure to select the appropriate one (e.g. one that matches the genome assembly).
+If you are going to provide a FASTA file, please make sure to select the
+appropriate one (e.g. one that matches the genome assembly).
 
-In addition to basic genotype calls (e.g. '0/1'), you can extract more information from the MAF file by specifying the column(s) that contain additional genotype data of interest with the '--cols' argument. If provided, this argument will append the requested data to individual sample genotypes (e.g. '0/1:0.23').
+In addition to basic genotype calls (e.g. '0/1'), you can extract more
+information from the MAF file by specifying the column(s) that contain
+additional genotype data of interest with the '--cols' argument. If provided,
+this argument will append the requested data to individual sample genotypes
+(e.g. '0/1:0.23').
 
-You can also control how these additional genotype information appear in the FORMAT field (e.g. AF) with the '--names' argument. If this argument is not provided, the original column name(s) will be displayed.
+You can also control how these additional genotype information appear in the
+FORMAT field (e.g. AF) with the '--names' argument. If this argument is not
+provided, the original column name(s) will be displayed.
+"""
 
-Usage examples:
+epilog = f"""
+[Example] Convert both SNVs and indels:
   $ fuc {api.common._script_name()} in.maf --fasta hs37d5.fa > out.vcf
+
+[Example] Convert SNVs only:
   $ fuc {api.common._script_name()} in.maf --ignore_indels > out.vcf
-  $ fuc {api.common._script_name()} in.maf --fasta hs37d5.fa --cols i_TumorVAF_WU --names AF > out.vcf
+
+[Example] Extract AF field:
+  $ fuc {api.common._script_name()} \\
+  in.maf \\
+  --fasta hs37d5.fa \\
+  --cols i_TumorVAF_WU \\
+  --names AF > out.vcf
 """
 
 def create_parser(subparsers):
     parser = api.common._add_parser(
         subparsers,
         api.common._script_name(),
-        help='Convert a MAF file to a VCF file.',
         description=description,
+        epilog=epilog,
+        help='Convert a MAF file to a VCF file.',
     )
     parser.add_argument(
         'maf',

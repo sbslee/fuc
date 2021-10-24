@@ -7,23 +7,28 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-description = f"""
-###############################################
-# Parse the Reports directory from bcl2fastq. #
-###############################################
+description = """
+Parse the Reports directory from bcl2fastq.
 
-This command will parse, and extract various statistics from, HTML files in the Reports directory created by the bcl2fastq or bcl2fastq2 prograrm.
-
-After creating an output directory, the command will write the following files:
+This command will parse, and extract various statistics from, HTML files in
+the Reports directory created by the bcl2fastq or bcl2fastq2 prograrm. After
+creating an output directory, the command will write the following files:
   - flowcell-summary.csv
   - lane-summary.csv
   - top-unknown-barcodes.csv
   - reports.pdf
 
-Use '--sheet' to sort samples in the lane-summary.csv file in the same order as your SampleSheet.csv file. You can also provide a modified version of your SampleSheet.csv file to subset samples for the lane-summary.csv and reports.pdf files.
+Use --sheet to sort samples in the lane-summary.csv file in the same order
+as your SampleSheet.csv file. You can also provide a modified version of your
+SampleSheet.csv file to subset samples for the lane-summary.csv and
+reports.pdf files.
+"""
 
-Usage examples:
+epilog = f"""
+[Example] Parse a Reports directory:
   $ fuc {api.common._script_name()} Reports output
+
+[Example] Sort and/or subset samples:
   $ fuc {api.common._script_name()} Reports output --sheet SampleSheet.csv
 """
 
@@ -45,7 +50,8 @@ def create_parser(subparsers):
     parser.add_argument(
         '--sheet',
         metavar='PATH',
-        help='SampleSheet.csv file. Used for sorting and/or subsetting samples.'
+        help='SampleSheet.csv file. Used for sorting and/or subsetting \n'
+             'samples.'
     )
 
 def main(args):

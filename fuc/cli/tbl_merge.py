@@ -4,16 +4,23 @@ from .. import api
 
 import pandas as pd
 
-description = f"""
-##########################
-# Merge two table files. #
-##########################
+description = """
+Merge two table files.
 
-This command will merge two table files using one or more shared columns. The command essentially wraps the 'pandas.DataFrame.merge' method from the pandas package. For details on the merging algorithms, please visit the method's documentation page.
+This command will merge two table files using one or more shared columns.
+The command essentially wraps the 'pandas.DataFrame.merge' method from the
+pandas package. For details on the merging algorithms, please visit the
+method's documentation page.
+"""
 
-Usage examples:
+epilog = f"""
+[Example] Merge two tables:
   $ fuc {api.common._script_name()} left.tsv right.tsv > merged.tsv
+
+[Example] When the left table is a CSV:
   $ fuc {api.common._script_name()} left.csv right.tsv --lsep , > merged.tsv
+
+[Example] Merge with the outer algorithm:
   $ fuc {api.common._script_name()} left.tsv right.tsv --how outer > merged.tsv
 """
 
@@ -23,8 +30,9 @@ def create_parser(subparsers):
     parser = api.common._add_parser(
         subparsers,
         api.common._script_name(),
-        help='Merge two table files.',
         description=description,
+        epilog=epilog,
+        help='Merge two table files.',
     )
     parser.add_argument(
         'left',
@@ -39,7 +47,8 @@ def create_parser(subparsers):
         metavar='TEXT',
         choices=CHOICES,
         default='inner',
-        help=f"Type of merge to be performed {CHOICES} (default: 'inner')."
+        help="Type of merge to be performed (default: 'inner') \n"
+             "(choices: 'left', 'right', 'outer', 'inner', 'cross')."
     )
     parser.add_argument(
         '--on',

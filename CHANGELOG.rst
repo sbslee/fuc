@@ -1,8 +1,8 @@
 Changelog
 *********
 
-0.26.0 (in development)
------------------------
+0.26.0 (2021-10-24)
+-------------------
 
 * Add new method :meth:`pybam.count_allelic_depth`.
 * Update :meth:`common.parse_variant` method to handle position-only strings as input (e.g. '22-42127941-G-A' vs. '22-42127941').

@@ -5,8 +5,6 @@ from .. import api
 
 description = """
 Count sequence reads in FASTQ files.
-
-The command will look for stdin if there are no arguments.
 """
 
 epilog = f"""

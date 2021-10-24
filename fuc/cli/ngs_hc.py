@@ -6,10 +6,8 @@ from .. import api
 
 import pandas as pd
 
-description = f"""
-##################################################
-# Pipeline for germline short variant discovery. #
-##################################################
+description = """
+Pipeline for germline short variant discovery.
 
 External dependencies:
   - SGE: Required for job submission (i.e. qsub).
@@ -17,18 +15,37 @@ External dependencies:
 
 Manifest columns:
   - BAM: Recalibrated BAM file.
+"""
 
-Usage examples:
-  $ fuc {api.common._script_name()} manifest.csv ref.fa output_dir "-q queue_name" "-Xmx15g -Xms15g" "-Xmx30g -Xms30g" --dbsnp dbSNP.vcf
-  $ fuc {api.common._script_name()} manifest.csv ref.fa output_dir "-l h='node_A|node_B'" "-Xmx15g -Xms15g" "-Xmx30g -Xms30g" --bed in.bed
+epilog = f"""
+[Example] Specify queue:
+  $ fuc {api.common._script_name()} \\
+  manifest.csv \\
+  ref.fa \\
+  output_dir \\
+  "-q queue_name" \\
+  "-Xmx15g -Xms15g" \\
+  "-Xmx30g -Xms30g" \\
+  --dbsnp dbSNP.vcf
+
+[Example] Specify nodes:
+  $ fuc {api.common._script_name()} \\
+  manifest.csv \\
+  ref.fa \\
+  output_dir \\
+  "-l h='node_A|node_B'" \\
+  "-Xmx15g -Xms15g" \\
+  "-Xmx30g -Xms30g" \\
+  --bed in.bed
 """
 
 def create_parser(subparsers):
     parser = api.common._add_parser(
         subparsers,
         api.common._script_name(),
-        help='Pipeline for germline short variant discovery.',
         description=description,
+        epilog=epilog,
+        help='Pipeline for germline short variant discovery.',
     )
     parser.add_argument(
         'manifest',

@@ -3,12 +3,14 @@ import sys
 from .. import api
 
 description = f"""
-Slice VCF file for specified regions.
+Slice a VCF file for specified regions.
+"""
 
-To specify regions manually:
+epilog = f"""
+[Example] Specify regions manually:
 $ fuc {api.common._script_name()} in.vcf.gz 1:100-300 2:400-700 > out.vcf
 
-To speicfy regions with a BED file:
+[Example] Speicfy regions with a BED file:
 $ fuc {api.common._script_name()} in.vcf.gz regions.bed > out.vcf
 """
 
@@ -16,8 +18,9 @@ def create_parser(subparsers):
     parser = api.common._add_parser(
         subparsers,
         api.common._script_name(),
-        help='Slice VCF file for specified regions.',
         description=description,
+        epilog=epilog,
+        help='Slice a VCF file for specified regions.',
     )
     parser.add_argument(
         'file',

@@ -2,12 +2,12 @@ import sys
 
 from .. import api
 
-description = f"""
-#####################################
-# Convert a VCF file to a MAF file. #
-#####################################
+description = """
+Convert a VCF file to a MAF file.
+"""
 
-Usage examples:
+epilog = f"""
+[Example] Convert VCF to MAF:
   $ fuc {api.common._script_name()} in.vcf > out.maf
 """
 
@@ -15,8 +15,9 @@ def create_parser(subparsers):
     parser = api.common._add_parser(
         subparsers,
         api.common._script_name(),
-        help='Convert a VCF file to a MAF file.',
         description=description,
+        epilog=epilog,
+        help='Convert a VCF file to a MAF file.',
     )
     parser.add_argument('vcf', help='Annotated VCF file.')
 

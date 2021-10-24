@@ -7,29 +7,40 @@ from .. import api
 import pandas as pd
 
 description = f"""
-#######################################################
-# Pipeline for constructing a panel of normals (PoN). #
-#######################################################
-
-The pipeline is based on GATK's tutorial "(How to) Call somatic mutations using GATK4 Mutect2" (https://gatk.broadinstitute.org/hc/en-us/articles/360035531132).
+Pipeline for constructing a panel of normals (PoN).
 
 Dependencies:
   - GATK: Required for constructing PoN.
 
 Manifest columns:
   - BAM: Path to recalibrated BAM file.
+"""
 
-Usage examples:
-  $ fuc {api.common._script_name()} manifest.csv ref.fa output_dir "-q queue_name" "-Xmx15g -Xms15g"
-  $ fuc {api.common._script_name()} manifest.csv ref.fa output_dir "-l h='node_A|node_B'" "-Xmx15g -Xms15g"
+epilog = f"""
+[Example] Specify queue:
+  $ fuc {api.common._script_name()} \\
+  manifest.csv \\
+  ref.fa \\
+  output_dir \\
+  "-q queue_name" \\
+  "-Xmx15g -Xms15g"
+
+[Example] Specify nodes:
+  $ fuc {api.common._script_name()} \\
+  manifest.csv \\
+  ref.fa \\
+  output_dir \\
+  "-l h='node_A|node_B'" \\
+  "-Xmx15g -Xms15g"
 """
 
 def create_parser(subparsers):
     parser = api.common._add_parser(
         subparsers,
         api.common._script_name(),
-        help='Pipeline for constructing a panel of normals (PoN).',
         description=description,
+        epilog=epilog,
+        help='Pipeline for constructing a panel of normals (PoN).',
     )
     parser.add_argument(
         'manifest',

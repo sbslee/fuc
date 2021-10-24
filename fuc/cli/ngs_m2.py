@@ -6,10 +6,8 @@ from .. import api
 
 import pandas as pd
 
-description = f"""
-#################################################
-# Pipeline for somatic short variant discovery. #
-#################################################
+description = """
+Pipeline for somatic short variant discovery.
 
 External dependencies:
   - SGE: Required for job submission (i.e. qsub).
@@ -18,10 +16,29 @@ External dependencies:
 Manifest columns:
   - Tumor: Recalibrated BAM file for tumor.
   - Normal: Recalibrated BAM file for matched normal.
+"""
 
-Usage examples:
-  $ fuc {api.common._script_name()} manifest.csv ref.fa output_dir pon.vcf germline.vcf "-q queue_name" "-Xmx15g -Xms15g"
-  $ fuc {api.common._script_name()} manifest.csv ref.fa output_dir pon.vcf germline.vcf "-l h='node_A|node_B'" "-Xmx15g -Xms15g" --bed in.bed
+epilog = f"""
+[Example] Specify queue:
+  $ fuc {api.common._script_name()} \\
+  manifest.csv \\
+  ref.fa \\
+  output_dir \\
+  pon.vcf \\
+  germline.vcf \\
+  "-q queue_name" \\
+  "-Xmx15g -Xms15g"
+
+[Example] Specify nodes:
+  $ fuc {api.common._script_name()} \\
+  manifest.csv \\
+  ref.fa \\
+  output_dir \\
+  pon.vcf \\
+  germline.vcf \\
+  "-l h='node_A|node_B'" \\
+  "-Xmx15g -Xms15g" \\
+  --bed in.bed
 """
 
 def create_parser(subparsers):

@@ -117,7 +117,7 @@ For getting help on the fuc CLI:
        bam-index    Index a SAM/BAM/CRAM file.
        bam-rename   Rename the sample in a SAM/BAM/CRAM file.
        bam-slice    Slice a SAM/BAM/CRAM file.
-       bed-intxn    Find the intersection of two or more BED files.
+       bed-intxn    Find the intersection of BED files.
        bed-sum      Summarize a BED file.
        cov-concat   Concatenate depth of coverage files.
        cov-rename   Rename the samples in a depth of coverage file.
@@ -144,9 +144,9 @@ For getting help on the fuc CLI:
        vcf-filter   Filter a VCF file.
        vcf-merge    Merge two or more VCF files.
        vcf-rename   Rename the samples in a VCF file.
-       vcf-slice    Slice VCF file for specified regions.
+       vcf-slice    Slice a VCF file for specified regions.
        vcf-vcf2bed  Convert a VCF file to a BED file.
-       vcf-vep      Filter a VCF file annotated by Ensembl VEP.
+       vcf-vep      Filter a VCF file by annotations from Ensembl VEP.
    
    optional arguments:
      -h, --help     Show this help message and exit.
