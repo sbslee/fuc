@@ -2,21 +2,22 @@ import sys
 
 from .. import api
 
-description = f"""
-###################################################
-# Find the intersection of two or more BED files. #
-###################################################
+description = """
+Find the intersection of BED files.
+"""
 
-Usage examples:
-  $ fuc {api.common._script_name()} 1.bed 2.bed 3.bed > intersect.bed
+epilog = f"""
+[Example] Find the intersection of three BED files:
+  $ fuc {api.common._script_name()} in1.bed in2.bed in3.bed > out.bed
 """
 
 def create_parser(subparsers):
     parser = api.common._add_parser(
         subparsers,
         api.common._script_name(),
-        help='Find the intersection of two or more BED files.',
         description=description,
+        epilog=epilog,
+        help='Find the intersection of BED files.',
     )
     parser.add_argument('bed', help='BED files.', nargs='+')
 

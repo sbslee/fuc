@@ -3,18 +3,21 @@ from pathlib import Path
 
 from .. import api
 
-description = f"""
-######################################
-# Check whether certain files exist. #
-######################################
+description = """
+Check whether certain files exist.
 
-This command will check whether or not specified files including directoires exist, returning 'True' if they exist and 'False' otherwise.
+This command will check whether or not specified files including directories
+exist, returning 'True' if they exist and 'False' otherwise.
+"""
 
-The command will look for stdin if there are no arguments.
+epilog = f"""
+[Example] Test a file:
+  $ fuc {api.common._script_name()} in.txt
 
-Usage examples:
-  $ fuc {api.common._script_name()} test.txt
-  $ fuc {api.common._script_name()} test_dir
+[Example] Test a directory:
+  $ fuc {api.common._script_name()} dir
+
+[Example] When the input is stdin:
   $ cat test.list | fuc {api.common._script_name()}
 """
 
@@ -22,8 +25,9 @@ def create_parser(subparsers):
     parser = api.common._add_parser(
         subparsers,
         api.common._script_name(),
-        help='Check whether certain files exist.',
         description=description,
+        epilog=epilog,
+        help='Check whether certain files exist.',
     )
     parser.add_argument('files', nargs='*',
         help='Files and directories to be tested (default: stdin).')

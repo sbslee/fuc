@@ -1,13 +1,15 @@
 from .. import api
 
-description = f"""
-###########################
-# Summarize a FASTQ file. #
-###########################
+description = """
+Summarize a FASTQ file.
 
-This command will output a summary of the input FASTQ file. The summary includes the total number of sequence reads, the distribution of read lengths, and the numbers of unique and duplicate sequences.
+This command will output a summary of the input FASTQ file. The summary
+includes the total number of sequence reads, the distribution of read
+lengths, and the numbers of unique and duplicate sequences.
+"""
 
-Usage examples:
+epilog = f"""
+[Example] Summarize a FASTQ file:
   $ fuc {api.common._script_name()} in.fastq
 """
 
@@ -15,10 +17,14 @@ def create_parser(subparsers):
     parser = api.common._add_parser(
         subparsers,
         api.common._script_name(),
-        help='Summarize a FASTQ file.',
         description=description,
+        epilog=epilog,
+        help='Summarize a FASTQ file.',
     )
-    parser.add_argument('fastq', help='FASTQ file (zipped or unqzipped).')
+    parser.add_argument(
+        'fastq',
+        help='FASTQ file (zipped or unqzipped).'
+    )
 
 def main(args):
     qf = api.pyfq.FqFrame.from_file(args.fastq)

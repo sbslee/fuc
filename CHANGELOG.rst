@@ -1,6 +1,27 @@
 Changelog
 *********
 
+0.26.0 (2021-10-24)
+-------------------
+
+* Add new method :meth:`pybam.count_allelic_depth`.
+* Update :meth:`common.parse_variant` method to handle position-only strings as input (e.g. '22-42127941-G-A' vs. '22-42127941').
+* Add new command :command:`bam-aldepth`.
+* Rename :meth:`pybam.has_chr` method to :meth:`pybam.has_chr_prefix`.
+* Rename :meth:`pybed.BedFrame.chr_prefix`, :meth:`pycov.CovFrame.chr_prefix`, :meth:`pyvcf.VcfFrame.chr_prefix` methods to :meth:`pybed.BedFrame.update_chr_prefix`, :meth:`pycov.CovFrame.update_chr_prefix`, :meth:`pyvcf.VcfFrame.update_chr_prefix`.
+* Add new properties ``pybed.BedFrame.has_chr_prefix``, ``pycov.CovFrame.has_chr_prefix``, ``pyvcf.VcfFrame.has_chr_prefix``.
+* Add new method :meth:`pyvcf.slice`.
+* Add new method :meth:`pyvcf.VcfFrame.from_string`.
+* Remove ``nrows`` argument from :meth:`pyvcf.VcfFrame.from_file` method.
+* Add new argument ``regions`` to :meth:`pyvcf.VcfFrame.from_file` method.
+* Add new property ``pybed.BedFrame.shape``.
+* Add new method :meth:`pybed.BedFrame.to_regions`.
+* Add new method :meth:`pybed.BedFrame.from_regions`.
+* Update :meth:`pyvcf.VcfFrame.from_file` method to accept BED data to specify regions of interest.
+* Update :command:`vcf-slice` command to run significantly faster by allowing random access.
+* Add new method :meth:`common.sort_regions`.
+* Fix minor bug in :meth:`pyvcf.VcfFrame.get_af` method when the variant of interest does not exist in VcfFrame.
+
 0.25.0 (2021-10-09)
 -------------------
 

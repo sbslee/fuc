@@ -7,11 +7,12 @@ from .. import api
 import pandas as pd
 
 description = f"""
-####################################################################
-# Pipeline for converting FASTQ files to analysis-ready BAM files. #
-####################################################################
+Pipeline for converting FASTQ files to analysis-ready BAM files.
 
-Here, "analysis-ready" means that the final BAM files are: 1) aligned to a reference genome, 2) sorted by genomic coordinate, 3) marked for duplicate reads, 4) recalibrated by BQSR model, and 5) ready for downstream analyses such as variant calling.
+Here, "analysis-ready" means that the final BAM files are: 1) aligned to a
+reference genome, 2) sorted by genomic coordinate, 3) marked for duplicate
+reads, 4) recalibrated by BQSR model, and 5) ready for downstream analyses
+such as variant calling.
 
 External dependencies:
   - SGE: Required for job submission (i.e. qsub).
@@ -23,18 +24,39 @@ Manifest columns:
   - Name: Sample name.
   - Read1: Path to forward FASTA file.
   - Read2: Path to reverse FASTA file.
+"""
 
-Usage examples:
-  $ fuc {api.common._script_name()} manifest.csv ref.fa output_dir "-q queue_name -pe pe_name 10" "-q queue_name" "-Xmx15g -Xms15g" 1.vcf 2.vcf 3.vcf --thread 10
-  $ fuc {api.common._script_name()} manifest.csv ref.fa output_dir "-l h='node_A|node_B' -pe pe_name 10" "-l h='node_A|node_B'" "-Xmx15g -Xms15g" 1.vcf 2.vcf 3.vcf --thread 10
+epilog = f"""
+[Example] Specify queue:
+  $ fuc {api.common._script_name()} \\
+  manifest.csv \\
+  ref.fa \\
+  output_dir \\
+  "-q queue_name -pe pe_name 10" \\
+  "-q queue_name" \\
+  "-Xmx15g -Xms15g" \\
+  1.vcf 2.vcf 3.vcf \\
+  --thread 10
+
+[Example] Specify nodes:
+  $ fuc {api.common._script_name()} \\
+  manifest.csv \\
+  ref.fa \\
+  output_dir \\
+  "-l h='node_A|node_B' -pe pe_name 10" \\
+  "-l h='node_A|node_B'" \\
+  "-Xmx15g -Xms15g" \\
+  1.vcf 2.vcf 3.vcf \\
+  --thread 10
 """
 
 def create_parser(subparsers):
     parser = api.common._add_parser(
         subparsers,
         api.common._script_name(),
-        help='Pipeline for converting FASTQ files to analysis-ready BAM files.',
         description=description,
+        epilog=epilog,
+        help='Pipeline for converting FASTQ files to analysis-ready BAM files.',
     )
     parser.add_argument(
         'manifest',
@@ -52,12 +74,16 @@ def create_parser(subparsers):
     parser.add_argument(
         'qsub1',
         type=str,
-        help="SGE resoruce to request with qsub for read alignment and sorting. Since both tasks support multithreading, it is recommended to speicfy a parallel environment (PE) to speed up the process (also see '--thread')."
+        help="SGE resoruce to request with qsub for read alignment \n"
+             "and sorting. Since both tasks support multithreading, \n"
+             "it is recommended to speicfy a parallel environment (PE) \n"
+             "to speed up the process (also see --thread)."
     )
     parser.add_argument(
         'qsub2',
         type=str,
-        help='SGE resoruce to request with qsub for the rest of the tasks, which do not support multithreading.'
+        help="SGE resoruce to request with qsub for the rest of the \n"
+             "tasks, which do not support multithreading."
     )
     parser.add_argument(
         'java',
@@ -67,7 +93,8 @@ def create_parser(subparsers):
         'vcf',
         type=str,
         nargs='+',
-        help='One or more reference VCF files containing known variant sites (e.g. 1000 Genomes Project).'
+        help='One or more reference VCF files containing known variant \n'
+             'sites (e.g. 1000 Genomes Project).'
     )
     parser.add_argument(
         '--bed',

@@ -4,29 +4,36 @@ from .. import api
 
 import pandas as pd
 
-description = f"""
-###################################################
-# Rename the samples in a depth of coverage file. #
-###################################################
+description = """
+Rename the samples in a depth of coverage file.
 
-There are three different renaming modes using the 'names' file:
-  - 'MAP': Default mode. Requires two columns, old names in the first and new names in the second.
-  - 'INDEX': Requires two columns, new names in the first and 0-based indicies in the second.
-  - 'RANGE': Requires only one column of new names but '--range' must be specified.
+There are three different renaming modes using the names file:
+  - 'MAP': Default mode. Requires two columns, old names in the first
+    and new names in the second.
+  - 'INDEX': Requires two columns, new names in the first and 0-based
+    indicies in the second.
+  - 'RANGE': Requires only one column of new names but --range must
+    be specified.
+"""
 
-Usage examples:
+epilog = f"""
+[Example] Using the default 'MAP' mode:
   $ fuc {api.common._script_name()} in.tsv old_new.tsv > out.tsv
+
+[Example] Using the 'INDEX' mode:
   $ fuc {api.common._script_name()} in.tsv new_idx.tsv --mode INDEX > out.tsv
+
+[Example] Using the 'RANGE' mode:
   $ fuc {api.common._script_name()} in.tsv new_only.tsv --mode RANGE --range 2 5 > out.tsv
-  $ fuc {api.common._script_name()} in.tsv old_new.csv --sep , > out.tsv
 """
 
 def create_parser(subparsers):
     parser = api.common._add_parser(
         subparsers,
         api.common._script_name(),
-        help='Rename the samples in a depth of coverage file.',
         description=description,
+        epilog=epilog,
+        help='Rename the samples in a depth of coverage file.',
     )
     parser.add_argument(
         'tsv',
@@ -41,20 +48,23 @@ def create_parser(subparsers):
         metavar='TEXT',
         default='MAP',
         choices=['MAP', 'INDEX', 'RANGE'],
-        help="Renaming mode (default: 'MAP') (choices: 'MAP', 'INDEX', 'RANGE')."
+        help="Renaming mode (default: 'MAP') (choices: 'MAP', \n"
+             "'INDEX', 'RANGE')."
     )
     parser.add_argument(
         '--range',
         metavar='INT',
         type=int,
         nargs=2,
-        help="Index range to use when renaming the samples. Applicable only with the 'RANGE' mode."
+        help="Index range to use when renaming the samples. \n"
+             "Applicable only with the 'RANGE' mode."
     )
     parser.add_argument(
         '--sep',
         metavar='TEXT',
         default='\t',
-        help="Delimiter to use for reading the 'names' file (default: '\\t')."
+        help="Delimiter to use when reading the names file \n"
+             "(default: '\\t')."
     )
 
 def main(args):

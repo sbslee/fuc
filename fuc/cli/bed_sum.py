@@ -1,24 +1,22 @@
 from .. import api
 
-description = f"""
-#########################
-# Summarize a BED file. #
-#########################
+description = """
+Summarize a BED file.
 
-This command will compute various summary statstics for a BED file. The returned statistics include the total numbers of probes and covered base pairs for each chromosome.
+This command will compute various summary statistics for a BED file. The
+returned statistics include the total numbers of probes and covered base
+pairs for each chromosome.
 
-By default, covered base paris are displayed in bp, but if you prefer you can, for example, use '--bases 1000' to display in kb.
-
-Usage examples:
-  $ fuc {api.common._script_name()} in.bed
+By default, covered base pairs are displayed in bp, but if you prefer you
+can, for example, use '--bases 1000' to display in kb.
 """
 
 def create_parser(subparsers):
     parser = api.common._add_parser(
         subparsers,
         api.common._script_name(),
-        help='Summarize a BED file.',
         description=description,
+        help='Summarize a BED file.',
     )
     parser.add_argument(
         'bed',

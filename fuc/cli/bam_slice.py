@@ -4,17 +4,15 @@ from .. import api
 
 import pysam
 
-description = f"""
-##############################
-# Slice a SAM/BAM/CRAM file. #
-##############################
+description = """
+Slice a SAM/BAM/CRAM file.
+"""
 
-This command will slice the input alignment file for specified region(s).
-
-Usage examples:
-  $ fuc {api.common._script_name()} in.bam chr1:100-200 > out.bam
+epilog = f"""
+[Example] Slice a BAM file:
   $ fuc {api.common._script_name()} in.bam chr1:100-200 chr2:100-200 > out.bam
-  $ fuc {api.common._script_name()} in.bam chr1:100-200 --format SAM > out.sam
+
+[Example] Slice a CRAM file:
   $ fuc {api.common._script_name()} in.bam chr1:100-200 --format CRAM --fasta ref.fa > out.cram
 """
 
@@ -22,31 +20,31 @@ def create_parser(subparsers):
     parser = api.common._add_parser(
         subparsers,
         api.common._script_name(),
-        help='Slice a SAM/BAM/CRAM file.',
         description=description,
+        epilog=epilog,
+        help='Slice a SAM/BAM/CRAM file.',
     )
     parser.add_argument(
         'bam',
         help='Alignment file.'
     )
     parser.add_argument(
-        'region',
+        'regions',
         nargs='+',
-        help="Space-separated regions ('chrom:start-end')."
+        help="List of regions to be sliced ('chrom:start-end')."
     )
     parser.add_argument(
         '--format',
         metavar='TEXT',
         default='BAM',
         choices=['SAM', 'BAM', 'CRAM'],
-        help=
-            "Output format (default: 'BAM') (choices: 'SAM', 'BAM', 'CRAM'). "
-            "A FASTA file must be specified with '--fasta' for 'CRAM'."
+        help="Output format (default: 'BAM') (choices: 'SAM', 'BAM', \n"
+             "'CRAM')."
     )
     parser.add_argument(
         '--fasta',
         metavar='PATH',
-        help="FASTA file. Required when '--format' is 'CRAM'."
+        help="FASTA file. Required when --format is 'CRAM'."
     )
 
 def main(args):
@@ -67,6 +65,6 @@ def main(args):
     else:
         stdout_method = sys.stdout.write
 
-    alignments = pysam.view(args.bam, *args.region, *options)
+    alignments = pysam.view(args.bam, *args.regions, *options)
 
     stdout_method(alignments)

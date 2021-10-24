@@ -18,12 +18,13 @@ For getting help on the fuc CLI:
    
    positional arguments:
      COMMAND
+       bam-aldepth  Compute allelic depth from a SAM/BAM/CRAM file.
        bam-depth    Compute read depth from SAM/BAM/CRAM files.
        bam-head     Print the header of a SAM/BAM/CRAM file.
        bam-index    Index a SAM/BAM/CRAM file.
        bam-rename   Rename the sample in a SAM/BAM/CRAM file.
        bam-slice    Slice a SAM/BAM/CRAM file.
-       bed-intxn    Find the intersection of two or more BED files.
+       bed-intxn    Find the intersection of BED files.
        bed-sum      Summarize a BED file.
        cov-concat   Concatenate depth of coverage files.
        cov-rename   Rename the samples in a depth of coverage file.
@@ -52,7 +53,7 @@ For getting help on the fuc CLI:
        vcf-rename   Rename the samples in a VCF file.
        vcf-slice    Slice a VCF file for specified regions.
        vcf-vcf2bed  Convert a VCF file to a BED file.
-       vcf-vep      Filter a VCF file annotated by Ensembl VEP.
+       vcf-vep      Filter a VCF file by annotations from Ensembl VEP.
    
    optional arguments:
      -h, --help     Show this help message and exit.
@@ -64,6 +65,31 @@ For getting help on a specific command (e.g. vcf-merge):
 
    $ fuc vcf-merge -h
 
+bam-aldepth
+===========
+
+.. code-block:: text
+
+   $ fuc bam-aldepth -h
+   usage: fuc bam-aldepth [-h] bam sites
+   
+   Count allelic depth from a SAM/BAM/CRAM file.
+   
+   Positional arguments:
+     bam         Alignment file.
+     sites       TSV file containing two columns, chromosome and position. 
+                 This can also be a BED or VCF file (zipped or unzipped). 
+                 Input type will be detected automatically.
+   
+   Optional arguments:
+     -h, --help  Show this help message and exit.
+   
+   [Example] Provide sites with a TSV file:
+     $ fuc bam-aldepth in.bam sites.tsv > out.tsv
+   
+   [Example] Provide sites with a VCF file:
+     $ fuc bam-aldepth in.bam sites.vcf > out.tsv
+
 bam-depth
 =========
 
@@ -73,28 +99,33 @@ bam-depth
    usage: fuc bam-depth [-h] [--bam PATH [PATH ...]] [--fn PATH] [--bed PATH]
                         [--region TEXT] [--zero]
    
-   ###############################################
-   # Compute read depth from SAM/BAM/CRAM files. #
-   ###############################################
+   Compute read depth from SAM/BAM/CRAM files.
    
-   Alignment files must be specified with either '--bam' or '--fn', but it's an error to use both.
-   
-   By default, the command will count all reads within the alignment files. You can specify target regions with either '--bed' or '--region', but not both. When you do this, pay close attention to the 'chr' string in contig names (e.g. 'chr1' vs. '1'). Note also that '--region' requires the input files be indexed.
-   
-   Under the hood, the command computes read depth using the 'samtools depth' command.
-   
-   Usage examples:
-     $ fuc bam-depth --bam 1.bam 2.bam --bed in.bed > out.tsv
-     $ fuc bam-depth --fn bam.list --region chr1:100-200 > out.tsv
+   By default, the command will count all reads within the alignment files. You
+   can specify regions of interest with --bed or --region. When you do this, pay
+   close attention to the 'chr' string in contig names (e.g. 'chr1' vs. '1').
+   Note also that --region requires the input files be indexed.
    
    Optional arguments:
      -h, --help            Show this help message and exit.
      --bam PATH [PATH ...]
-                           One or more alignment files.
-     --fn PATH             File containing one alignment file per line.
-     --bed PATH            BED file.
-     --region TEXT         Target region ('chrom:start-end').
+                           One or more alignment files. Cannot be used with --fn.
+     --fn PATH             File containing one alignment file per line. Cannot 
+                           be used with --bam.
+     --bed PATH            BED file. Cannot be used with --region.
+     --region TEXT         Target region ('chrom:start-end'). Cannot be used 
+                           with --bed.
      --zero                Output all positions including those with zero depth.
+   
+   [Example] To specify regions with a BED file:
+     $ fuc bam-depth \
+     --bam 1.bam 2.bam \
+     --bed in.bed > out.tsv
+   
+   [Example] To specify regions manually:
+     $ fuc bam-depth \
+     --fn bam.list \
+     --region chr1:100-200 > out.tsv
 
 bam-head
 ========
@@ -104,20 +135,16 @@ bam-head
    $ fuc bam-head -h
    usage: fuc bam-head [-h] bam
    
-   ############################################
-   # Print the header of a SAM/BAM/CRAM file. #
-   ############################################
-   
-   Usage examples:
-     $ fuc bam-head in.sam
-     $ fuc bam-head in.bam
-     $ fuc bam-head in.cram
+   Print the header of a SAM/BAM/CRAM file.
    
    Positional arguments:
      bam         Alignment file.
    
    Optional arguments:
      -h, --help  Show this help message and exit.
+   
+   [Example] Print the header of a BAM file:
+     $ fuc bam-head in.bam
 
 bam-index
 =========
@@ -127,18 +154,16 @@ bam-index
    $ fuc bam-index -h
    usage: fuc bam-index [-h] bam
    
-   ##############################
-   # Index a SAM/BAM/CRAM file. #
-   ##############################
-   
-   Usage examples:
-     $ fuc bam-index in.bam
+   Index a SAM/BAM/CRAM file.
    
    Positional arguments:
      bam         Alignment file.
    
    Optional arguments:
      -h, --help  Show this help message and exit.
+   
+   [Example] Index a BAM file:
+     $ fuc bam-index in.bam
 
 bam-rename
 ==========
@@ -148,12 +173,7 @@ bam-rename
    $ fuc bam-rename -h
    usage: fuc bam-rename [-h] bam name
    
-   ##############################################
-   # Rename the sample in a SAM/BAM/CRAM file. #
-   ##############################################
-   
-   Usage examples:
-     $ fuc bam-rename in.bam NA12878 > out.bam
+   Rename the sample in a SAM/BAM/CRAM file.
    
    Positional arguments:
      bam         Alignment file.
@@ -161,6 +181,9 @@ bam-rename
    
    Optional arguments:
      -h, --help  Show this help message and exit.
+   
+   [Example] Write a new BAM file after renaming:
+     $ fuc bam-rename in.bam NA12878 > out.bam
 
 bam-slice
 =========
@@ -169,28 +192,25 @@ bam-slice
 
    $ fuc bam-slice -h
    usage: fuc bam-slice [-h] [--format TEXT] [--fasta PATH]
-                        bam region [region ...]
+                        bam regions [regions ...]
    
-   ##############################
-   # Slice a SAM/BAM/CRAM file. #
-   ##############################
-   
-   This command will slice the input alignment file for specified region(s).
-   
-   Usage examples:
-     $ fuc bam-slice in.bam chr1:100-200 > out.bam
-     $ fuc bam-slice in.bam chr1:100-200 chr2:100-200 > out.bam
-     $ fuc bam-slice in.bam chr1:100-200 --format SAM > out.sam
-     $ fuc bam-slice in.bam chr1:100-200 --format CRAM --fasta ref.fa > out.cram
+   Slice a SAM/BAM/CRAM file.
    
    Positional arguments:
      bam            Alignment file.
-     region         Space-separated regions ('chrom:start-end').
+     regions        List of regions to be sliced ('chrom:start-end').
    
    Optional arguments:
      -h, --help     Show this help message and exit.
-     --format TEXT  Output format (default: 'BAM') (choices: 'SAM', 'BAM', 'CRAM'). A FASTA file must be specified with '--fasta' for 'CRAM'.
-     --fasta PATH   FASTA file. Required when '--format' is 'CRAM'.
+     --format TEXT  Output format (default: 'BAM') (choices: 'SAM', 'BAM', 
+                    'CRAM').
+     --fasta PATH   FASTA file. Required when --format is 'CRAM'.
+   
+   [Example] Slice a BAM file:
+     $ fuc bam-slice in.bam chr1:100-200 chr2:100-200 > out.bam
+   
+   [Example] Slice a CRAM file:
+     $ fuc bam-slice in.bam chr1:100-200 --format CRAM --fasta ref.fa > out.cram
 
 bed-intxn
 =========
@@ -200,18 +220,16 @@ bed-intxn
    $ fuc bed-intxn -h
    usage: fuc bed-intxn [-h] bed [bed ...]
    
-   ###################################################
-   # Find the intersection of two or more BED files. #
-   ###################################################
-   
-   Usage examples:
-     $ fuc bed-intxn 1.bed 2.bed 3.bed > intersect.bed
+   Find the intersection of BED files.
    
    Positional arguments:
      bed         BED files.
    
    Optional arguments:
      -h, --help  Show this help message and exit.
+   
+   [Example] Find the intersection of three BED files:
+     $ fuc bed-intxn in1.bed in2.bed in3.bed > out.bed
 
 bed-sum
 =======
@@ -221,16 +239,14 @@ bed-sum
    $ fuc bed-sum -h
    usage: fuc bed-sum [-h] [--bases INT] [--decimals INT] bed
    
-   #########################
-   # Summarize a BED file. #
-   #########################
+   Summarize a BED file.
    
-   This command will compute various summary statstics for a BED file. The returned statistics include the total numbers of probes and covered base pairs for each chromosome.
+   This command will compute various summary statistics for a BED file. The
+   returned statistics include the total numbers of probes and covered base
+   pairs for each chromosome.
    
-   By default, covered base paris are displayed in bp, but if you prefer you can, for example, use '--bases 1000' to display in kb.
-   
-   Usage examples:
-     $ fuc bed-sum in.bed
+   By default, covered base pairs are displayed in bp, but if you prefer you
+   can, for example, use '--bases 1000' to display in kb.
    
    Positional arguments:
      bed             BED file.
@@ -248,20 +264,21 @@ cov-concat
    $ fuc cov-concat -h
    usage: fuc cov-concat [-h] [--axis INT] PATH [PATH ...]
    
-   #######################################
-   # Concatenate depth of coverage files #
-   #######################################
-   
-   Usage examples:
-     $ fuc cov-concat 1.tsv 2.tsv > rows.tsv
-     $ fuc cov-concat 1.tsv 2.tsv --axis 1 > cols.tsv
+   Concatenate depth of coverage files.
    
    Positional arguments:
      PATH        One or more TSV files.
    
    Optional arguments:
      -h, --help  Show this help message and exit.
-     --axis INT  The axis to concatenate along (default: 0) (chocies: 0, 1 where 0 is index and 1 is columns).
+     --axis INT  The axis to concatenate along (default: 0) (choices: 
+                 0, 1 where 0 is index and 1 is columns).
+   
+   [Example] Concatenate vertically:
+     $ fuc cov-concat in1.tsv in2.tsv > out.tsv
+   
+   [Example] Concatenate horizontally:
+     $ fuc cov-concat in1.tsv in2.tsv --axis 1 > out.tsv
 
 cov-rename
 ==========
@@ -272,20 +289,15 @@ cov-rename
    usage: fuc cov-rename [-h] [--mode TEXT] [--range INT INT] [--sep TEXT]
                          tsv names
    
-   ###################################################
-   # Rename the samples in a depth of coverage file. #
-   ###################################################
+   Rename the samples in a depth of coverage file.
    
-   There are three different renaming modes using the 'names' file:
-     - 'MAP': Default mode. Requires two columns, old names in the first and new names in the second.
-     - 'INDEX': Requires two columns, new names in the first and 0-based indicies in the second.
-     - 'RANGE': Requires only one column of new names but '--range' must be specified.
-   
-   Usage examples:
-     $ fuc cov-rename in.tsv old_new.tsv > out.tsv
-     $ fuc cov-rename in.tsv new_idx.tsv --mode INDEX > out.tsv
-     $ fuc cov-rename in.tsv new_only.tsv --mode RANGE --range 2 5 > out.tsv
-     $ fuc cov-rename in.tsv old_new.csv --sep , > out.tsv
+   There are three different renaming modes using the names file:
+     - 'MAP': Default mode. Requires two columns, old names in the first
+       and new names in the second.
+     - 'INDEX': Requires two columns, new names in the first and 0-based
+       indicies in the second.
+     - 'RANGE': Requires only one column of new names but --range must
+       be specified.
    
    Positional arguments:
      tsv              TSV file (zipped or unzipped).
@@ -293,9 +305,21 @@ cov-rename
    
    Optional arguments:
      -h, --help       Show this help message and exit.
-     --mode TEXT      Renaming mode (default: 'MAP') (choices: 'MAP', 'INDEX', 'RANGE').
-     --range INT INT  Index range to use when renaming the samples. Applicable only with the 'RANGE' mode.
-     --sep TEXT       Delimiter to use for reading the 'names' file (default: '\t').
+     --mode TEXT      Renaming mode (default: 'MAP') (choices: 'MAP', 
+                      'INDEX', 'RANGE').
+     --range INT INT  Index range to use when renaming the samples. 
+                      Applicable only with the 'RANGE' mode.
+     --sep TEXT       Delimiter to use when reading the names file 
+                      (default: '\t').
+   
+   [Example] Using the default 'MAP' mode:
+     $ fuc cov-rename in.tsv old_new.tsv > out.tsv
+   
+   [Example] Using the 'INDEX' mode:
+     $ fuc cov-rename in.tsv new_idx.tsv --mode INDEX > out.tsv
+   
+   [Example] Using the 'RANGE' mode:
+     $ fuc cov-rename in.tsv new_only.tsv --mode RANGE --range 2 5 > out.tsv
 
 fq-count
 ========
@@ -305,21 +329,19 @@ fq-count
    $ fuc fq-count -h
    usage: fuc fq-count [-h] [fastq ...]
    
-   ########################################
-   # Count sequence reads in FASTQ files. #
-   ########################################
-   
-   It will look for stdin if there are no arguments.
-   
-   Usage examples:
-     $ fuc fq-count in.fastq
-     $ cat fastq.list | fuc fq-count
+   Count sequence reads in FASTQ files.
    
    Positional arguments:
      fastq       FASTQ files (zipped or unzipped) (default: stdin).
    
    Optional arguments:
      -h, --help  Show this help message and exit.
+   
+   [Example] When the input is a FASTQ file:
+     $ fuc fq-count in1.fastq in2.fastq
+   
+   [Example] When the input is stdin:
+     $ cat fastq.list | fuc fq-count
 
 fq-sum
 ======
@@ -329,20 +351,20 @@ fq-sum
    $ fuc fq-sum -h
    usage: fuc fq-sum [-h] fastq
    
-   ###########################
-   # Summarize a FASTQ file. #
-   ###########################
+   Summarize a FASTQ file.
    
-   This command will output a summary of the input FASTQ file. The summary includes the total number of sequence reads, the distribution of read lengths, and the numbers of unique and duplicate sequences.
-   
-   Usage examples:
-     $ fuc fq-sum in.fastq
+   This command will output a summary of the input FASTQ file. The summary
+   includes the total number of sequence reads, the distribution of read
+   lengths, and the numbers of unique and duplicate sequences.
    
    Positional arguments:
      fastq       FASTQ file (zipped or unqzipped).
    
    Optional arguments:
      -h, --help  Show this help message and exit.
+   
+   [Example] Summarize a FASTQ file:
+     $ fuc fq-sum in.fastq
 
 fuc-bgzip
 =========
@@ -352,25 +374,25 @@ fuc-bgzip
    $ fuc fuc-bgzip -h
    usage: fuc fuc-bgzip [-h] [file ...]
    
-   #################################
-   # Write a BGZF compressed file. #
-   #################################
+   Write a BGZF compressed file.
    
-   BGZF (Blocked GNU Zip Format) is a modified form of gzip compression which can be applied to any file format to provide compression with efficient random access.
-   
-   In addition to being required for random access to and writing of BAM files, the BGZF format can also be used for most of the sequence data formats (e.g. FASTA, FASTQ, GenBank, VCF, MAF).
-   
-   The command will look for stdin if there are no arguments.
-   
-   Usage examples:
-     $ fuc fuc-bgzip in.vcf > out.vcf.gz
-     $ cat in.vcf | fuc fuc-bgzip > out.vcf.gz
+   BGZF (Blocked GNU Zip Format) is a modified form of gzip compression which
+   can be applied to any file format to provide compression with efficient
+   random access. In addition to being required for random access to and writing
+   of BAM files, the BGZF format can also be used for most of the sequence data
+   formats (e.g. FASTA, FASTQ, GenBank, VCF, MAF).
    
    Positional arguments:
      file        File to be compressed (default: stdin).
    
    Optional arguments:
      -h, --help  Show this help message and exit.
+   
+   [Example] When the input is a VCF file:
+     $ fuc fuc-bgzip in.vcf > out.vcf.gz
+   
+   [Example] When the input is stdin:
+     $ cat in.vcf | fuc fuc-bgzip > out.vcf.gz
 
 fuc-compf
 =========
@@ -380,14 +402,10 @@ fuc-compf
    $ fuc fuc-compf -h
    usage: fuc fuc-compf [-h] left right
    
-   ######################################
-   # Compare the contents of two files. #
-   ######################################
+   Compare the contents of two files.
    
-   This command will compare the contents of two files, returning 'True' if they are identical and 'False' otherwise.
-   
-   Usage examples:
-     $ fuc fuc-compf left.txt right.txt
+   This command will compare the contents of two files, returning 'True' if they
+   are identical and 'False' otherwise.
    
    Positional arguments:
      left        Left file.
@@ -395,6 +413,9 @@ fuc-compf
    
    Optional arguments:
      -h, --help  Show this help message and exit.
+   
+   [Example] Compare two files:
+     $ fuc fuc-compf left.txt right.txt
 
 fuc-demux
 =========
@@ -404,23 +425,20 @@ fuc-demux
    $ fuc fuc-demux -h
    usage: fuc fuc-demux [-h] [--sheet PATH] reports output
    
-   ###############################################
-   # Parse the Reports directory from bcl2fastq. #
-   ###############################################
+   Parse the Reports directory from bcl2fastq.
    
-   This command will parse, and extract various statistics from, HTML files in the Reports directory created by the bcl2fastq or bcl2fastq2 prograrm.
-   
-   After creating an output directory, the command will write the following files:
+   This command will parse, and extract various statistics from, HTML files in
+   the Reports directory created by the bcl2fastq or bcl2fastq2 prograrm. After
+   creating an output directory, the command will write the following files:
      - flowcell-summary.csv
      - lane-summary.csv
      - top-unknown-barcodes.csv
      - reports.pdf
    
-   Use '--sheet' to sort samples in the lane-summary.csv file in the same order as your SampleSheet.csv file. You can also provide a modified version of your SampleSheet.csv file to subset samples for the lane-summary.csv and reports.pdf files.
-   
-   Usage examples:
-     $ fuc fuc-demux Reports output
-     $ fuc fuc-demux Reports output --sheet SampleSheet.csv
+   Use --sheet to sort samples in the lane-summary.csv file in the same order
+   as your SampleSheet.csv file. You can also provide a modified version of your
+   SampleSheet.csv file to subset samples for the lane-summary.csv and
+   reports.pdf files.
    
    Positional arguments:
      reports       Reports directory.
@@ -428,7 +446,8 @@ fuc-demux
    
    Optional arguments:
      -h, --help    Show this help message and exit.
-     --sheet PATH  SampleSheet.csv file. Used for sorting and/or subsetting samples.
+     --sheet PATH  SampleSheet.csv file. Used for sorting and/or subsetting 
+                   samples.
 
 fuc-exist
 =========
@@ -438,24 +457,25 @@ fuc-exist
    $ fuc fuc-exist -h
    usage: fuc fuc-exist [-h] [files ...]
    
-   ######################################
-   # Check whether certain files exist. #
-   ######################################
+   Check whether certain files exist.
    
-   This command will check whether or not specified files including directoires exist, returning 'True' if they exist and 'False' otherwise.
-   
-   The command will look for stdin if there are no arguments.
-   
-   Usage examples:
-     $ fuc fuc-exist test.txt
-     $ fuc fuc-exist test_dir
-     $ cat test.list | fuc fuc-exist
+   This command will check whether or not specified files including directories
+   exist, returning 'True' if they exist and 'False' otherwise.
    
    Positional arguments:
      files       Files and directories to be tested (default: stdin).
    
    Optional arguments:
      -h, --help  Show this help message and exit.
+   
+   [Example] Test a file:
+     $ fuc fuc-exist in.txt
+   
+   [Example] Test a directory:
+     $ fuc fuc-exist dir
+   
+   [Example] When the input is stdin:
+     $ cat test.list | fuc fuc-exist
 
 fuc-find
 ========
@@ -465,16 +485,10 @@ fuc-find
    $ fuc fuc-find -h
    usage: fuc fuc-find [-h] [--dir PATH] pattern
    
-   ################################################################
-   # Find all filenames matching a specified pattern recursively. #
-   ################################################################
+   Find all filenames matching a specified pattern recursively.
    
-   This command will recursively find all the filenames matching a specified pattern and then return their absolute paths.
-   
-   Usage examples:
-     $ fuc fuc-find "*.vcf"
-     $ fuc fuc-find "*.vcf.*"
-     $ fuc fuc-find "*.vcf.gz" --dir ~/test_dir
+   This command will recursively find all the filenames matching a specified
+   pattern and then return their absolute paths.
    
    Positional arguments:
      pattern     Filename pattern.
@@ -482,6 +496,15 @@ fuc-find
    Optional arguments:
      -h, --help  Show this help message and exit.
      --dir PATH  Directory to search in (default: current directory).
+   
+   [Example] Find VCF files in the current directory:
+     $ fuc fuc-find "*.vcf"
+   
+   [Example] Find specific VCF files:
+     $ fuc fuc-find "*.vcf.*"
+   
+   [Example] Find zipped VCF files in a specific directory:
+     $ fuc fuc-find "*.vcf.gz" --dir ~/test_dir
 
 fuc-undetm
 ==========
@@ -491,14 +514,10 @@ fuc-undetm
    $ fuc fuc-undetm -h
    usage: fuc fuc-undetm [-h] [--count INT] fastq
    
-   ##########################################################################
-   # Compute top unknown barcodes using undertermined FASTQ from bcl2fastq. #
-   ##########################################################################
+   Compute top unknown barcodes using undertermined FASTQ from bcl2fastq.
    
-   This command will compute top unknown barcodes using undertermined FASTQ from the bcl2fastq or bcl2fastq2 prograrm.
-   
-   Usage examples:
-     $ fuc fuc-undetm Undetermined_S0_R1_001.fastq.gz
+   This command will compute top unknown barcodes using undertermined FASTQ from
+   the bcl2fastq or bcl2fastq2 prograrm.
    
    Positional arguments:
      fastq        Undertermined FASTQ (zipped or unzipped).
@@ -506,6 +525,9 @@ fuc-undetm
    Optional arguments:
      -h, --help   Show this help message and exit.
      --count INT  Number of top unknown barcodes to return (default: 30).
+   
+   [Example] Compute top unknown barcodes:
+     $ fuc fuc-undetm Undetermined_S0_R1_001.fastq.gz
 
 maf-maf2vcf
 ===========
@@ -517,22 +539,24 @@ maf-maf2vcf
                           [--cols TEXT [TEXT ...]] [--names TEXT [TEXT ...]]
                           maf
    
-   #####################################
-   # Convert a MAF file to a VCF file. #
-   #####################################
+   Convert a MAF file to a VCF file.
    
-   In order to handle INDELs the command makes use of a reference assembly (i.e. FASTA file). If SNVs are your only concern, then you do not need a FASTA file and can just use the '--ignore_indels' flag.
+   In order to handle INDELs the command makes use of a reference assembly (i.e.
+   FASTA file). If SNVs are your only concern, then you do not need a FASTA file
+   and can just use --ignore_indels.
    
-   If you are going to provide a FASTA file, please make sure to select the appropriate one (e.g. one that matches the genome assembly).
+   If you are going to provide a FASTA file, please make sure to select the
+   appropriate one (e.g. one that matches the genome assembly).
    
-   In addition to basic genotype calls (e.g. '0/1'), you can extract more information from the MAF file by specifying the column(s) that contain additional genotype data of interest with the '--cols' argument. If provided, this argument will append the requested data to individual sample genotypes (e.g. '0/1:0.23').
+   In addition to basic genotype calls (e.g. '0/1'), you can extract more
+   information from the MAF file by specifying the column(s) that contain
+   additional genotype data of interest with the '--cols' argument. If provided,
+   this argument will append the requested data to individual sample genotypes
+   (e.g. '0/1:0.23').
    
-   You can also control how these additional genotype information appear in the FORMAT field (e.g. AF) with the '--names' argument. If this argument is not provided, the original column name(s) will be displayed.
-   
-   Usage examples:
-     $ fuc maf-maf2vcf in.maf --fasta hs37d5.fa > out.vcf
-     $ fuc maf-maf2vcf in.maf --ignore_indels > out.vcf
-     $ fuc maf-maf2vcf in.maf --fasta hs37d5.fa --cols i_TumorVAF_WU --names AF > out.vcf
+   You can also control how these additional genotype information appear in the
+   FORMAT field (e.g. AF) with the '--names' argument. If this argument is not
+   provided, the original column name(s) will be displayed.
    
    Positional arguments:
      maf                   MAF file (zipped or unzipped).
@@ -545,6 +569,19 @@ maf-maf2vcf
                            Column(s) in the MAF file.
      --names TEXT [TEXT ...]
                            Name(s) to be displayed in the FORMAT field.
+   
+   [Example] Convert both SNVs and indels:
+     $ fuc maf-maf2vcf in.maf --fasta hs37d5.fa > out.vcf
+   
+   [Example] Convert SNVs only:
+     $ fuc maf-maf2vcf in.maf --ignore_indels > out.vcf
+   
+   [Example] Extract AF field:
+     $ fuc maf-maf2vcf \
+     in.maf \
+     --fasta hs37d5.fa \
+     --cols i_TumorVAF_WU \
+     --names AF > out.vcf
 
 maf-oncoplt
 ===========
@@ -557,15 +594,10 @@ maf-oncoplt
                           [--legend_fontsize FLOAT]
                           maf out
    
-   #######################################
-   # Create an oncoplot with a MAF file. #
-   #######################################
+   Create an oncoplot with a MAF file.
    
-   The format of output image (PDF/PNG/JPEG/SVG) will be automatically determined by the output file's extension.
-   
-   Usage examples:
-     $ fuc maf-oncoplt in.maf out.png
-     $ fuc maf-oncoplt in.maf out.pdf
+   The format of output image (PDF/PNG/JPEG/SVG) will be automatically
+   determined by the output file's extension.
    
    Positional arguments:
      maf                   MAF file.
@@ -582,6 +614,12 @@ maf-oncoplt
                            Font size of tick labels (default: 15).
      --legend_fontsize FLOAT
                            Font size of legend texts (default: 15).
+   
+   [Example] Output a PNG file:
+     $ fuc maf-oncoplt in.maf out.png
+   
+   [Example] Output a PDF file:
+     $ fuc maf-oncoplt in.maf out.pdf
 
 maf-sumplt
 ==========
@@ -593,15 +631,10 @@ maf-sumplt
                          [--ticklabels_fontsize FLOAT] [--legend_fontsize FLOAT]
                          maf out
    
-   ##########################################
-   # Create a summary plot with a MAF file. #
-   ##########################################
+   Create a summary plot with a MAF file.
    
-   The format of output image (PDF/PNG/JPEG/SVG) will be automatically determined by the output file's extension.
-   
-   Usage examples:
-     $ fuc maf-sumplt in.maf out.png
-     $ fuc maf-sumplt in.maf out.pdf
+   The format of output image (PDF/PNG/JPEG/SVG) will be automatically
+   determined by the output file's extension.
    
    Positional arguments:
      maf                   MAF file.
@@ -617,6 +650,12 @@ maf-sumplt
                            font size of tick labels (default: 12)
      --legend_fontsize FLOAT
                            font size of legend texts (default: 12)
+   
+   [Example] Output a PNG file:
+     $ fuc maf-sumplt in.maf out.png
+   
+   [Example] Output a PNG file:
+     $ fuc maf-sumplt in.maf out.pdf
 
 maf-vcf2maf
 ===========
@@ -626,18 +665,16 @@ maf-vcf2maf
    $ fuc maf-vcf2maf -h
    usage: fuc maf-vcf2maf [-h] vcf
    
-   #####################################
-   # Convert a VCF file to a MAF file. #
-   #####################################
-   
-   Usage examples:
-     $ fuc maf-vcf2maf in.vcf > out.maf
+   Convert a VCF file to a MAF file.
    
    Positional arguments:
      vcf         Annotated VCF file.
    
    Optional arguments:
      -h, --help  Show this help message and exit.
+   
+   [Example] Convert VCF to MAF:
+     $ fuc maf-vcf2maf in.vcf > out.maf
 
 ngs-fq2bam
 ==========
@@ -649,11 +686,12 @@ ngs-fq2bam
                          [--force] [--keep]
                          manifest fasta output qsub1 qsub2 java vcf [vcf ...]
    
-   ####################################################################
-   # Pipeline for converting FASTQ files to analysis-ready BAM files. #
-   ####################################################################
+   Pipeline for converting FASTQ files to analysis-ready BAM files.
    
-   Here, "analysis-ready" means that the final BAM files are: 1) aligned to a reference genome, 2) sorted by genomic coordinate, 3) marked for duplicate reads, 4) recalibrated by BQSR model, and 5) ready for downstream analyses such as variant calling.
+   Here, "analysis-ready" means that the final BAM files are: 1) aligned to a
+   reference genome, 2) sorted by genomic coordinate, 3) marked for duplicate
+   reads, 4) recalibrated by BQSR model, and 5) ready for downstream analyses
+   such as variant calling.
    
    External dependencies:
      - SGE: Required for job submission (i.e. qsub).
@@ -666,18 +704,19 @@ ngs-fq2bam
      - Read1: Path to forward FASTA file.
      - Read2: Path to reverse FASTA file.
    
-   Usage examples:
-     $ fuc ngs-fq2bam manifest.csv ref.fa output_dir "-q queue_name -pe pe_name 10" "-q queue_name" "-Xmx15g -Xms15g" 1.vcf 2.vcf 3.vcf --thread 10
-     $ fuc ngs-fq2bam manifest.csv ref.fa output_dir "-l h='node_A|node_B' -pe pe_name 10" "-l h='node_A|node_B'" "-Xmx15g -Xms15g" 1.vcf 2.vcf 3.vcf --thread 10
-   
    Positional arguments:
      manifest         Sample manifest CSV file.
      fasta            Reference FASTA file.
      output           Output directory.
-     qsub1            SGE resoruce to request with qsub for read alignment and sorting. Since both tasks support multithreading, it is recommended to speicfy a parallel environment (PE) to speed up the process (also see '--thread').
-     qsub2            SGE resoruce to request with qsub for the rest of the tasks, which do not support multithreading.
+     qsub1            SGE resoruce to request with qsub for read alignment 
+                      and sorting. Since both tasks support multithreading, 
+                      it is recommended to speicfy a parallel environment (PE) 
+                      to speed up the process (also see --thread).
+     qsub2            SGE resoruce to request with qsub for the rest of the 
+                      tasks, which do not support multithreading.
      java             Java resoruce to request for GATK.
-     vcf              One or more reference VCF files containing known variant sites (e.g. 1000 Genomes Project).
+     vcf              One or more reference VCF files containing known variant 
+                      sites (e.g. 1000 Genomes Project).
    
    Optional arguments:
      -h, --help       Show this help message and exit.
@@ -686,6 +725,28 @@ ngs-fq2bam
      --platform TEXT  Sequencing platform (default: 'Illumina').
      --force          Overwrite the output directory if it already exists.
      --keep           Keep temporary files.
+   
+   [Example] Specify queue:
+     $ fuc ngs-fq2bam \
+     manifest.csv \
+     ref.fa \
+     output_dir \
+     "-q queue_name -pe pe_name 10" \
+     "-q queue_name" \
+     "-Xmx15g -Xms15g" \
+     1.vcf 2.vcf 3.vcf \
+     --thread 10
+   
+   [Example] Specify nodes:
+     $ fuc ngs-fq2bam \
+     manifest.csv \
+     ref.fa \
+     output_dir \
+     "-l h='node_A|node_B' -pe pe_name 10" \
+     "-l h='node_A|node_B'" \
+     "-Xmx15g -Xms15g" \
+     1.vcf 2.vcf 3.vcf \
+     --thread 10
 
 ngs-hc
 ======
@@ -697,9 +758,7 @@ ngs-hc
                      [--keep]
                      manifest fasta output qsub java1 java2
    
-   ##################################################
-   # Pipeline for germline short variant discovery. #
-   ##################################################
+   Pipeline for germline short variant discovery.
    
    External dependencies:
      - SGE: Required for job submission (i.e. qsub).
@@ -707,10 +766,6 @@ ngs-hc
    
    Manifest columns:
      - BAM: Recalibrated BAM file.
-   
-   Usage examples:
-     $ fuc ngs-hc manifest.csv ref.fa output_dir "-q queue_name" "-Xmx15g -Xms15g" "-Xmx30g -Xms30g" --dbsnp dbSNP.vcf
-     $ fuc ngs-hc manifest.csv ref.fa output_dir "-l h='node_A|node_B'" "-Xmx15g -Xms15g" "-Xmx30g -Xms30g" --bed in.bed
    
    Positional arguments:
      manifest      Sample manifest CSV file.
@@ -727,6 +782,26 @@ ngs-hc
      --job TEXT    Job submission ID for SGE.
      --force       Overwrite the output directory if it already exists.
      --keep        Keep temporary files.
+   
+   [Example] Specify queue:
+     $ fuc ngs-hc \
+     manifest.csv \
+     ref.fa \
+     output_dir \
+     "-q queue_name" \
+     "-Xmx15g -Xms15g" \
+     "-Xmx30g -Xms30g" \
+     --dbsnp dbSNP.vcf
+   
+   [Example] Specify nodes:
+     $ fuc ngs-hc \
+     manifest.csv \
+     ref.fa \
+     output_dir \
+     "-l h='node_A|node_B'" \
+     "-Xmx15g -Xms15g" \
+     "-Xmx30g -Xms30g" \
+     --bed in.bed
 
 ngs-m2
 ======
@@ -737,9 +812,7 @@ ngs-m2
    usage: fuc ngs-m2 [-h] [--bed PATH] [--force] [--keep]
                      manifest fasta output pon germline qsub java
    
-   #################################################
-   # Pipeline for somatic short variant discovery. #
-   #################################################
+   Pipeline for somatic short variant discovery.
    
    External dependencies:
      - SGE: Required for job submission (i.e. qsub).
@@ -748,10 +821,6 @@ ngs-m2
    Manifest columns:
      - Tumor: Recalibrated BAM file for tumor.
      - Normal: Recalibrated BAM file for matched normal.
-   
-   Usage examples:
-     $ fuc ngs-m2 manifest.csv ref.fa output_dir pon.vcf germline.vcf "-q queue_name" "-Xmx15g -Xms15g"
-     $ fuc ngs-m2 manifest.csv ref.fa output_dir pon.vcf germline.vcf "-l h='node_A|node_B'" "-Xmx15g -Xms15g" --bed in.bed
    
    Positional arguments:
      manifest    Sample manifest CSV file.
@@ -777,21 +846,13 @@ ngs-pon
    usage: fuc ngs-pon [-h] [--bed PATH] [--force] [--keep]
                       manifest fasta output qsub java
    
-   #######################################################
-   # Pipeline for constructing a panel of normals (PoN). #
-   #######################################################
-   
-   The pipeline is based on GATK's tutorial "(How to) Call somatic mutations using GATK4 Mutect2" (https://gatk.broadinstitute.org/hc/en-us/articles/360035531132).
+   Pipeline for constructing a panel of normals (PoN).
    
    Dependencies:
      - GATK: Required for constructing PoN.
    
    Manifest columns:
      - BAM: Path to recalibrated BAM file.
-   
-   Usage examples:
-     $ fuc ngs-pon manifest.csv ref.fa output_dir "-q queue_name" "-Xmx15g -Xms15g"
-     $ fuc ngs-pon manifest.csv ref.fa output_dir "-l h='node_A|node_B'" "-Xmx15g -Xms15g"
    
    Positional arguments:
      manifest    Sample manifest CSV file.
@@ -805,6 +866,22 @@ ngs-pon
      --bed PATH  BED file.
      --force     Overwrite the output directory if it already exists.
      --keep      Keep temporary files.
+   
+   [Example] Specify queue:
+     $ fuc ngs-pon \
+     manifest.csv \
+     ref.fa \
+     output_dir \
+     "-q queue_name" \
+     "-Xmx15g -Xms15g"
+   
+   [Example] Specify nodes:
+     $ fuc ngs-pon \
+     manifest.csv \
+     ref.fa \
+     output_dir \
+     "-l h='node_A|node_B'" \
+     "-Xmx15g -Xms15g"
 
 tabix-index
 ===========
@@ -814,17 +891,11 @@ tabix-index
    $ fuc tabix-index -h
    usage: fuc tabix-index [-h] [--force] file
    
-   ############################################
-   # Index a GFF/BED/SAM/VCF file with Tabix. #
-   ############################################
+   Index a GFF/BED/SAM/VCF file with Tabix.
    
-   The Tabix program is used to index a TAB-delimited genome position file (GFF/BED/SAM/VCF) and create an index file (.tbi). The input data file must be position sorted and compressed by bgzip.
-   
-   Usage examples:
-     $ fuc tabix-index in.gff.gz
-     $ fuc tabix-index in.bed.gz
-     $ fuc tabix-index in.sam.gz
-     $ fuc tabix-index in.vcf.gz
+   The Tabix program is used to index a TAB-delimited genome position file
+   (GFF/BED/SAM/VCF) and create an index file (.tbi). The input data file must
+   be position sorted and compressed by bgzip.
    
    Positional arguments:
      file        File to be indexed.
@@ -832,6 +903,18 @@ tabix-index
    Optional arguments:
      -h, --help  Show this help message and exit.
      --force     Force to overwrite the index file if it is present.
+   
+   [Example] Index a GFF file:
+     $ fuc tabix-index in.gff.gz
+   
+   [Example] Index a BED file:
+     $ fuc tabix-index in.bed.gz
+   
+   [Example] Index a SAM file:
+     $ fuc tabix-index in.sam.gz
+   
+   [Example] Index a VCF file.
+     $ fuc tabix-index in.vcf.gz
 
 tabix-slice
 ===========
@@ -841,14 +924,12 @@ tabix-slice
    $ fuc tabix-slice -h
    usage: fuc tabix-slice [-h] file regions [regions ...]
    
-   ############################################
-   # Slice a GFF/BED/SAM/VCF file with Tabix. #
-   ############################################
+   Slice a GFF/BED/SAM/VCF file with Tabix.
    
-   After creating an index file (.tbi), the Tabix program is able to quickly retrieve data lines overlapping regions specified in the format "chr:start-end". Coordinates specified in this region format are 1-based and inclusive.
-   
-   Usage examples:
-     $ fuc tabix-slice in.vcf.gz chr1:100-200 > out.vcf
+   After creating an index file (.tbi), the Tabix program is able to quickly
+   retrieve data lines overlapping regions specified in the format
+   'chr:start-end'. Coordinates specified in this region format are 1-based and
+   inclusive.
    
    Positional arguments:
      file        File to be sliced.
@@ -856,6 +937,9 @@ tabix-slice
    
    Optional arguments:
      -h, --help  Show this help message and exit.
+   
+   [Example] Slice a VCF file:
+     $ fuc tabix-slice in.vcf.gz chr1:100-200 > out.vcf
 
 tbl-merge
 =========
@@ -867,16 +951,12 @@ tbl-merge
                         [--rsep TEXT] [--osep TEXT]
                         left right
    
-   ##########################
-   # Merge two table files. #
-   ##########################
+   Merge two table files.
    
-   This command will merge two table files using one or more shared columns. The command essentially wraps the 'pandas.DataFrame.merge' method from the pandas package. For details on the merging algorithms, please visit the method's documentation page.
-   
-   Usage examples:
-     $ fuc tbl-merge left.tsv right.tsv > merged.tsv
-     $ fuc tbl-merge left.csv right.tsv --lsep , > merged.tsv
-     $ fuc tbl-merge left.tsv right.tsv --how outer > merged.tsv
+   This command will merge two table files using one or more shared columns.
+   The command essentially wraps the 'pandas.DataFrame.merge' method from the
+   pandas package. For details on the merging algorithms, please visit the
+   method's documentation page.
    
    Positional arguments:
      left                  Left file.
@@ -884,11 +964,21 @@ tbl-merge
    
    Optional arguments:
      -h, --help            Show this help message and exit.
-     --how TEXT            Type of merge to be performed ['left', 'right', 'outer', 'inner', 'cross'] (default: 'inner').
+     --how TEXT            Type of merge to be performed (default: 'inner') 
+                           (choices: 'left', 'right', 'outer', 'inner', 'cross').
      --on TEXT [TEXT ...]  Column names to join on.
      --lsep TEXT           Delimiter to use for the left file (default: '\t').
      --rsep TEXT           Delimiter to use for the right file (default: '\t').
      --osep TEXT           Delimiter to use for the output file (default: '\t').
+   
+   [Example] Merge two tables:
+     $ fuc tbl-merge left.tsv right.tsv > merged.tsv
+   
+   [Example] When the left table is a CSV:
+     $ fuc tbl-merge left.csv right.tsv --lsep , > merged.tsv
+   
+   [Example] Merge with the outer algorithm:
+     $ fuc tbl-merge left.tsv right.tsv --how outer > merged.tsv
 
 tbl-sum
 =======
@@ -901,13 +991,7 @@ tbl-sum
                       [--expr TEXT] [--columns TEXT [TEXT ...]] [--dtypes PATH]
                       table_file
    
-   ###########################
-   # Summarize a table file. #
-   ###########################
-   
-   Usage examples:
-     $ fuc tbl-sum table.tsv
-     $ fuc tbl-sum table.csv --sep ,
+   Summarize a table file.
    
    Positional arguments:
      table_file            Table file.
@@ -915,14 +999,31 @@ tbl-sum
    Optional arguments:
      -h, --help            Show this help message and exit.
      --sep TEXT            Delimiter to use (default: '\t').
-     --skiprows TEXT       Comma-separated line numbers to skip (0-indexed) or number of lines to skip at the start of the file (e.g. `--skiprows 1,` will skip the second line, `--skiprows 2,4` will skip the third and fifth lines, and `--skiprows 10` will skip the first 10 lines).
+     --skiprows TEXT       Comma-separated line numbers to skip (0-indexed) or 
+                           number of lines to skip at the start of the file 
+                           (e.g. `--skiprows 1,` will skip the second line, 
+                           `--skiprows 2,4` will skip the third and fifth lines, 
+                           and `--skiprows 10` will skip the first 10 lines).
      --na_values TEXT [TEXT ...]
-                           Additional strings to recognize as NA/NaN (by default, the following values are interpreted as NaN: '', '#N/A', '#N/A N/A', '#NA', '-1.#IND', '-1.#QNAN', '-NaN', '-nan', '1.#IND', '1.#QNAN', '<NA>', 'N/A', 'NA', 'NULL', 'NaN', 'n/a', 'nan', 'null').
-     --keep_default_na     Wwhether or not to include the default NaN values when parsing the data (see 'pandas.read_table' for details).
-     --expr TEXT           Query the columns of a pandas.DataFrame with a boolean expression (e.g. `--query "A == 'yes'"`).
+                           Additional strings to recognize as NA/NaN (by 
+                           default, the following values are interpreted 
+                           as NaN: '', '#N/A', '#N/A N/A', '#NA', '-1.#IND', 
+                           '-1.#QNAN', '-NaN', '-nan', '1.#IND', '1.#QNAN', 
+                           '<NA>', 'N/A', 'NA', 'NULL', 'NaN', 'n/a', 'nan', 
+                           'null').
+     --keep_default_na     Whether or not to include the default NaN values when 
+                           parsing the data (see 'pandas.read_table' for details).
+     --expr TEXT           Query the columns of a pandas.DataFrame with a 
+                           boolean expression (e.g. `--query "A == 'yes'"`).
      --columns TEXT [TEXT ...]
-                           Columns to be summarized (by default, all columns will be included).
-     --dtypes PATH         File of column names and their data types (etheir 'categorical' or 'numeric'); one tab-delimited pair of column name and data type per line.
+                           Columns to be summarized (by default, all columns 
+                           will be included).
+     --dtypes PATH         File of column names and their data types (either 
+                           'categorical' or 'numeric'); one tab-delimited pair of 
+                           column name and data type per line.
+   
+   [Example] Summarize a table:
+     $ fuc tbl-sum table.tsv
 
 vcf-filter
 ==========
@@ -935,22 +1036,7 @@ vcf-filter
                          [--filter_empty]
                          vcf
    
-   ######################
-   # Filter a VCF file. #
-   ######################
-   
-   Usage examples:
-     $ fuc vcf-filter in.vcf --expr 'GT == "0/0"' > out.vcf
-     $ fuc vcf-filter in.vcf --expr 'GT != "0/0"' > out.vcf
-     $ fuc vcf-filter in.vcf --expr 'DP < 30' > out.vcf
-     $ fuc vcf-filter in.vcf --expr 'DP < 30' --greedy > out.vcf
-     $ fuc vcf-filter in.vcf --expr 'AD[1] < 10' --greedy > out.vcf
-     $ fuc vcf-filter in.vcf --expr 'AD[1] < 10 and DP < 30' --greedy > out.vcf
-     $ fuc vcf-filter in.vcf --expr 'AD[1] < 10 or DP < 30' --greedy > out.vcf
-     $ fuc vcf-filter in.vcf --expr 'AD[1] < 10 or DP < 30' --opposite > out.vcf
-     $ fuc vcf-filter in.vcf --expr 'np.mean(AD) < 10' --greedy --samples sample.list > out.vcf
-     $ fuc vcf-filter in.vcf --drop_duplicates CHROM POS REF ALT > out.vcf
-     $ fuc vcf-filter in.vcf --filter_empty > out.vcf
+   Filter a VCF file.
    
    Positional arguments:
      vcf                   VCF file (zipped or unzipped).
@@ -958,12 +1044,43 @@ vcf-filter
    Optional arguments:
      -h, --help            Show this help message and exit.
      --expr TEXT           Expression to evaluate.
-     --samples PATH        File of sample names to apply the marking (one sample per line).
+     --samples PATH        File of sample names to apply the marking (one 
+                           sample per line).
      --drop_duplicates [TEXT ...]
-                           Only consider certain columns for identifying duplicates, by default use all of the columns.
-     --greedy              Use this flag to mark even ambiguous genotypes as missing.
-     --opposite            Use this flag to mark all genotypes that do not satisfy the query expression as missing and leave those that do intact.
-     --filter_empty        Use this flag to remove rows with no genotype calls at all.
+                           Only consider certain columns for identifying 
+                           duplicates, by default use all of the columns.
+     --greedy              Use this flag to mark even ambiguous genotypes 
+                           as missing.
+     --opposite            Use this flag to mark all genotypes that do not 
+                           satisfy the query expression as missing and leave 
+                           those that do intact.
+     --filter_empty        Use this flag to remove rows with no genotype 
+                           calls at all.
+   
+   [Example] Mark genotypes with 0/0 as missing:
+     $ fuc vcf-filter in.vcf --expr 'GT == "0/0"' > out.vcf
+   
+   [Example] Mark genotypes that are not 0/0 as missing:
+     $ fuc vcf-filter in.vcf --expr 'GT != "0/0"' > out.vcf
+   
+   [Example] Mark genotypes whose DP is less than 30 as missing:
+     $ fuc vcf-filter in.vcf --expr 'DP < 30' > out.vcf
+   
+   [Example] Same as above, but also mark ambiguous genotypes as missing:
+     $ fuc vcf-filter in.vcf --expr 'DP < 30' --greedy > out.vcf
+   
+   [Example] Build a complex query to select genotypes to be marked missing:
+     $ fuc vcf-filter in.vcf --expr 'AD[1] < 10 or DP < 30' --opposite > out.vcf
+   
+   [Example] Compute summary statistics and subset samples:
+     $ fuc vcf-filter in.vcf \
+     --expr 'np.mean(AD) < 10' --greedy --samples sample.list > out.vcf
+   
+   [Example] Drop duplicate rows:
+     $ fuc vcf-filter in.vcf --drop_duplicates CHROM POS REF ALT > out.vcf
+   
+   [Example] Filter out rows without genotypes:
+     $ fuc vcf-filter in.vcf --filter_empty > out.vcf
 
 vcf-merge
 =========
@@ -974,23 +1091,27 @@ vcf-merge
    usage: fuc vcf-merge [-h] [--how TEXT] [--format TEXT] [--sort] [--collapse]
                         vcf_files [vcf_files ...]
    
-   ################################
-   # Merge two or more VCF files. #
-   ################################
-   
-   Usage examples:
-     $ fuc vcf-merge 1.vcf 2.vcf 3.vcf > merged.vcf
-     $ fuc vcf-merge 1.vcf 2.vcf --format GT:AD:DP > merged.vcf
+   Merge two or more VCF files.
    
    Positional arguments:
      vcf_files      VCF files (zipped or unzipped).
    
    Optional arguments:
      -h, --help     Show this help message and exit.
-     --how TEXT     Type of merge as defined in `pandas.DataFrame.merge` (default: 'inner').
-     --format TEXT  FORMAT subfields to be retained (e.g. 'GT:AD:DP') (default: 'GT').
-     --sort         Use this flag to turn off sorting of records (default: True).
-     --collapse     Use this flag to collapse duplicate records (default: False).
+     --how TEXT     Type of merge as defined in pandas.DataFrame.merge 
+                    (default: 'inner').
+     --format TEXT  FORMAT subfields to be retained (e.g. 'GT:AD:DP') 
+                    (default: 'GT').
+     --sort         Use this flag to turn off sorting of records 
+                    (default: True).
+     --collapse     Use this flag to collapse duplicate records 
+                    (default: False).
+   
+   [Example] Merge multiple VCF files:
+     $ fuc vcf-merge 1.vcf 2.vcf 3.vcf > merged.vcf
+   
+   [Example] Keep the GT, AD, DP fields:
+     $ fuc vcf-merge 1.vcf 2.vcf --format GT:AD:DP > merged.vcf
 
 vcf-rename
 ==========
@@ -1001,20 +1122,15 @@ vcf-rename
    usage: fuc vcf-rename [-h] [--mode TEXT] [--range INT INT] [--sep TEXT]
                          vcf names
    
-   #####################################
-   # Rename the samples in a VCF file. #
-   #####################################
+   Rename the samples in a VCF file.
    
    There are three different renaming modes using the 'names' file:
-     - 'MAP': Default mode. Requires two columns, old names in the first and new names in the second.
-     - 'INDEX': Requires two columns, new names in the first and 0-based indicies in the second.
-     - 'RANGE': Requires only one column of new names but '--range' must be specified.
-   
-   Usage examples:
-     $ fuc vcf-rename in.vcf old_new.tsv > out.vcf
-     $ fuc vcf-rename in.vcf new_idx.tsv --mode INDEX > out.vcf
-     $ fuc vcf-rename in.vcf new_only.tsv --mode RANGE --range 2 5 > out.vcf
-     $ fuc vcf-rename in.vcf old_new.csv --sep , > out.vcf
+     - 'MAP': Default mode. Requires two columns, old names in the first
+       and new names in the second.
+     - 'INDEX': Requires two columns, new names in the first and 0-based
+       indicies in the second.
+     - 'RANGE': Requires only one column of new names but '--range' must
+       be specified.
    
    Positional arguments:
      vcf              VCF file (zipped or unzipped).
@@ -1022,9 +1138,21 @@ vcf-rename
    
    Optional arguments:
      -h, --help       Show this help message and exit.
-     --mode TEXT      Renaming mode (default: 'MAP') (choices: 'MAP', 'INDEX', 'RANGE').
-     --range INT INT  Index range to use when renaming the samples. Applicable only with the 'RANGE' mode.
-     --sep TEXT       Delimiter to use for reading the 'names' file (default: '\t').
+     --mode TEXT      Renaming mode (default: 'MAP') (choices: 'MAP', 
+                      'INDEX', 'RANGE').
+     --range INT INT  Index range to use when renaming the samples. 
+                      Applicable only with the 'RANGE' mode.
+     --sep TEXT       Delimiter to use for reading the 'names' file 
+                      (default: '\t').
+   
+   [Example] Using the default 'MAP' mode:
+     $ fuc vcf-rename in.vcf old_new.tsv > out.vcf
+   
+   [Example] Using the 'INDEX' mode:
+     $ fuc vcf-rename in.vcf new_idx.tsv --mode INDEX > out.vcf
+   
+   [Example] Using the 'RANGE' mode:
+     $ fuc vcf-rename in.vcf new_only.tsv --mode RANGE --range 2 5 > out.vcf
 
 vcf-slice
 =========
@@ -1032,33 +1160,27 @@ vcf-slice
 .. code-block:: text
 
    $ fuc vcf-slice -h
-   usage: fuc vcf-slice [-h] [--region TEXT] [--bed PATH] [--vcf PATH] input
+   usage: fuc vcf-slice [-h] file regions [regions ...]
    
-   ###########################################
-   # Slice a VCF file for specified regions. #
-   ###########################################
-   
-   Target regions can be specified with either '--region', '--bed', or '--vcf'.
-   
-   Pay attention to the 'chr' string in contig names (e.g. 'chr1' vs. '1').
-   
-   Usage examples:
-     $ fuc vcf-slice in.vcf --region 1 > out.vcf
-     $ fuc vcf-slice in.vcf --region 1:100-300 > out.vcf
-     $ fuc vcf-slice in.vcf --region 1:100 > out.vcf
-     $ fuc vcf-slice in.vcf --region chr1:100- > out.vcf
-     $ fuc vcf-slice in.vcf --region chr1:-300 > out.vcf
-     $ fuc vcf-slice in.vcf --bed targets.bed > out.vcf
-     $ fuc vcf-slice in.vcf --vcf targets.vcf > out.vcf
+   Slice a VCF file for specified regions.
    
    Positional arguments:
-     input          Input VCF file (zipped or unzipped).
+     file        Input VCF file must be already BGZF compressed (.gz) and 
+                 indexed (.tbi) to allow random access.
+     regions     One or more regions to be sliced. Each region must have the 
+                 format chrom:start-end and be a half-open interval with 
+                 (start, end]. This means, for example, chr1:100-103 will 
+                 extract positions 101, 102, and 103. Alternatively, you can 
+                 provide a BED file (zipped or unzipped) to specify regions.
    
    Optional arguments:
-     -h, --help     Show this help message and exit.
-     --region TEXT  Target region to use for slicing ('chrom:start-end').
-     --bed PATH     BED file to use for slicing (zipped or unzipped).
-     --vcf PATH     VCF file to use for slicing (zipped or unzipped).
+     -h, --help  Show this help message and exit.
+   
+   [Example] Specify regions manually:
+   $ fuc vcf-slice in.vcf.gz 1:100-300 2:400-700 > out.vcf
+   
+   [Example] Speicfy regions with a BED file:
+   $ fuc vcf-slice in.vcf.gz regions.bed > out.vcf
 
 vcf-vcf2bed
 ===========
@@ -1068,18 +1190,16 @@ vcf-vcf2bed
    $ fuc vcf-vcf2bed -h
    usage: fuc vcf-vcf2bed [-h] vcf
    
-   #####################################
-   # Convert a VCF file to a BED file. #
-   #####################################
-   
-   Usage examples:
-     $ fuc vcf-vcf2bed in.vcf > out.bed
+   Convert a VCF file to a BED file.
    
    Positional arguments:
-     vcf         VCF file.
+     vcf         VCF file (zipped or unzipped).
    
    Optional arguments:
      -h, --help  Show this help message and exit.
+   
+   [Example] Convert VCF to BED:
+     $ fuc vcf-vcf2bed in.vcf > out.bed
 
 vcf-vep
 =======
@@ -1089,25 +1209,38 @@ vcf-vep
    $ fuc vcf-vep -h
    usage: fuc vcf-vep [-h] [--opposite] [--as_zero] vcf expr
    
-   ###############################################
-   # Filter a VCF file annotated by Ensembl VEP. #
-   ###############################################
-   
-   Usage examples:
-     $ fuc vcf-vep in.vcf "SYMBOL == 'TP53'" > out.vcf
-     $ fuc vcf-vep in.vcf "SYMBOL != 'TP53'" > out.vcf
-     $ fuc vcf-vep in.vcf "SYMBOL == 'TP53'" --opposite > out.vcf
-     $ fuc vcf-vep in.vcf "Consequence in ['splice_donor_variant', 'stop_gained']" > out.vcf
-     $ fuc vcf-vep in.vcf "(SYMBOL == 'TP53') and (Consequence.str.contains('stop_gained'))" > out.vcf
-     $ fuc vcf-vep in.vcf "gnomAD_AF < 0.001" > out.vcf
-     $ fuc vcf-vep in.vcf "gnomAD_AF < 0.001" --as_zero > out.vcf
+   Filter a VCF file by annotations from Ensembl VEP.
    
    Positional arguments:
-     vcf         VCF file annotated by Ensembl VEP.
+     vcf         VCF file annotated by Ensembl VEP (zipped or unzipped).
      expr        Query expression to evaluate.
    
    Optional arguments:
      -h, --help  Show this help message and exit.
-     --opposite  Use this flag to return only records that don't meet the said criteria.
+     --opposite  Use this flag to return only records that don't 
+                 meet the said criteria.
      --as_zero   Use this flag to treat missing values as zero instead of NaN.
+   
+   [Example] Select variants in the TP53 gene:
+     $ fuc vcf-vep in.vcf "SYMBOL == 'TP53'" > out.vcf
+   
+   [Example] Exclude variants from the TP53 gene:
+     $ fuc vcf-vep in.vcf "SYMBOL != 'TP53'" > out.vcf
+   
+   [Example] Same as above:
+     $ fuc vcf-vep in.vcf "SYMBOL == 'TP53'" --opposite > out.vcf
+   
+   [Example] Select splice donor or stop-gain variants:
+     $ fuc vcf-vep in.vcf \
+     "Consequence in ['splice_donor_variant', 'stop_gained']" > out.vcf
+   
+   [Example] Build a complex query to select specific variants:
+     $ fuc vcf-vep in.vcf \
+     "(SYMBOL == 'TP53') and (Consequence.str.contains('stop_gained'))" > out.vcf
+   
+   [Example] Select variants whose gnomAD AF is less than 0.001:
+     $ fuc vcf-vep in.vcf "gnomAD_AF < 0.001" > out.vcf
+   
+   [Example] Variants without AF data will be treated as having AF of 0:
+     $ fuc vcf-vep in.vcf "gnomAD_AF < 0.001" --as_zero > out.vcf
 

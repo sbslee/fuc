@@ -2,15 +2,18 @@ from .. import api
 
 import matplotlib.pyplot as plt
 
-description = f"""
-##########################################
-# Create a summary plot with a MAF file. #
-##########################################
+description = """
+Create a summary plot with a MAF file.
 
-The format of output image (PDF/PNG/JPEG/SVG) will be automatically determined by the output file's extension.
+The format of output image (PDF/PNG/JPEG/SVG) will be automatically
+determined by the output file's extension.
+"""
 
-Usage examples:
+epilog = f"""
+[Example] Output a PNG file:
   $ fuc {api.common._script_name()} in.maf out.png
+
+[Example] Output a PNG file:
   $ fuc {api.common._script_name()} in.maf out.pdf
 """
 
@@ -18,8 +21,9 @@ def create_parser(subparsers):
     parser = api.common._add_parser(
         subparsers,
         api.common._script_name(),
-        help='Create a summary plot with a MAF file.',
         description=description,
+        epilog=epilog,
+        help='Create a summary plot with a MAF file.',
     )
     parser.add_argument(
         'maf',

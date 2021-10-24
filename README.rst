@@ -111,12 +111,13 @@ For getting help on the fuc CLI:
    
    positional arguments:
      COMMAND
+       bam-aldepth  Compute allelic depth from a SAM/BAM/CRAM file.
        bam-depth    Compute read depth from SAM/BAM/CRAM files.
        bam-head     Print the header of a SAM/BAM/CRAM file.
        bam-index    Index a SAM/BAM/CRAM file.
        bam-rename   Rename the sample in a SAM/BAM/CRAM file.
        bam-slice    Slice a SAM/BAM/CRAM file.
-       bed-intxn    Find the intersection of two or more BED files.
+       bed-intxn    Find the intersection of BED files.
        bed-sum      Summarize a BED file.
        cov-concat   Concatenate depth of coverage files.
        cov-rename   Rename the samples in a depth of coverage file.
@@ -145,7 +146,7 @@ For getting help on the fuc CLI:
        vcf-rename   Rename the samples in a VCF file.
        vcf-slice    Slice a VCF file for specified regions.
        vcf-vcf2bed  Convert a VCF file to a BED file.
-       vcf-vep      Filter a VCF file annotated by Ensembl VEP.
+       vcf-vep      Filter a VCF file by annotations from Ensembl VEP.
    
    optional arguments:
      -h, --help     Show this help message and exit.
@@ -160,7 +161,7 @@ For getting help on a specific command (e.g. vcf-merge):
 Below is the list of submodules available in the fuc API:
 
 - **common** : The common submodule is used by other fuc submodules such as pyvcf and pybed. It also provides many day-to-day actions used in the field of bioinformatics.
-- **pybam** : The pybam submodule is designed for working with sequence alignment files (SAM/BAM/CRAM). It essentially wraps the `pysam <https://pysam.readthedocs.io/en/latest/api.html>`_ package to allow fast computation and easy manipulation.
+- **pybam** : The pybam submodule is designed for working with sequence alignment files (SAM/BAM/CRAM). It essentially wraps the `pysam <https://pysam.readthedocs.io/en/latest/api.html>`_ package to allow fast computation and easy manipulation. If you are mainly interested in working with depth of coverage data, please check out the pycov submodule which is specifically designed for the task.
 - **pybed** : The pybed submodule is designed for working with BED files. It implements ``pybed.BedFrame`` which stores BED data as ``pandas.DataFrame`` via the `pyranges <https://github.com/biocore-ntnu/pyranges>`_ package to allow fast computation and easy manipulation. The submodule strictly adheres to the standard `BED specification <https://genome.ucsc.edu/FAQ/FAQformat.html>`_.
 - **pycov** : The pycov submodule is designed for working with depth of coverage data from sequence alingment files (SAM/BAM/CRAM). It implements ``pycov.CovFrame`` which stores read depth data as ``pandas.DataFrame`` via the `pysam <https://pysam.readthedocs.io/en/latest/api.html>`_ package to allow fast computation and easy manipulation. The ``pycov.CovFrame`` class also contains many useful plotting methods such as ``CovFrame.plot_region`` and ``CovFrame.plot_uniformity``.
 - **pyfq** : The pyfq submodule is designed for working with FASTQ files. It implements ``pyfq.FqFrame`` which stores FASTQ data as ``pandas.DataFrame`` to allow fast computation and easy manipulation.

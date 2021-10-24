@@ -672,13 +672,18 @@ def parse_variant(variant):
     """
     Parse specified genomic variant.
 
-    The input variant string must consist of chromosome, position, reference
-    allele, and alternative allele separated by one or more supported
-    delimiters ('-', ':', '>').
+    Generally speaking, the input string should consist of chromosome,
+    position, reference allele, and alternative allele separated by any one
+    or combination of the following delimiters: ``-``, ``:``, ``>`` (e.g.
+    '22-42127941-G-A'). The method will return parsed variant as a tuple with
+    a shape of ``(chrom, pos, ref, alt)`` which has data types of ``(str,
+    int, str, str)``.
 
-    The method will return parsed variant as a tuple with a shape of
-    ``(chrom, pos, ref, alt)`` which has data types of
-    ``(str, int, str, str)``.
+    Note that it's possible to omit reference allele and alternative allele
+    from the input string to indicate position-only data (e.g.
+    '22-42127941'). In this case, the method will return empty string for
+    the alleles -- i.e. ``(str, int, '', '')`` if both are omitted and
+    ``(str, int, str, '')`` if only alternative allele is omitted.
 
     Parameters
     ----------
@@ -698,12 +703,25 @@ def parse_variant(variant):
     ('22', 42127941, 'G', 'A')
     >>> common.parse_variant('22:42127941-G>A')
     ('22', 42127941, 'G', 'A')
+    >>> common.parse_variant('22-42127941')
+    ('22', 42127941, '', '')
+    >>> common.parse_variant('22-42127941-G')
+    ('22', 42127941, 'G', '')
     """
-    l = re.split('-|:|>', variant)
-    chrom = l[0]
-    pos = int(l[1])
-    ref = l[2]
-    alt = l[3]
+    fields = re.split('-|:|>', variant)
+    chrom = fields[0]
+    pos = int(fields[1])
+
+    try:
+        ref = fields[2]
+    except IndexError:
+        ref = ''
+
+    try:
+        alt = fields[3]
+    except IndexError:
+        alt = ''
+
     return (chrom, pos, ref, alt)
 
 def extract_sequence(fasta, region):
@@ -1190,7 +1208,7 @@ def sort_variants(variants):
 
     >>> from fuc import common
     >>> variants = ['5-200-G-T', '5:100:T:C', '1:100:A>C', '10-100-G-C']
-    >>> sorted(variants) # Lexicographic order (not what we want)
+    >>> sorted(variants) # Lexicographic sorting (not what we want)
     ['10-100-G-C', '1:100:A>C', '5-200-G-T', '5:100:T:C']
     >>> common.sort_variants(variants)
     ['1:100:A>C', '5:100:T:C', '5-200-G-T', '10-100-G-C']
@@ -1201,3 +1219,34 @@ def sort_variants(variants):
             chrom = pyvcf.CONTIGS.index(chrom)
         return (chrom, pos, ref, alt)
     return sorted(variants, key=func)
+
+def sort_regions(regions):
+    """
+    Return sorted list of regions.
+
+    Parameters
+    ----------
+    regions : list
+        List of regions.
+
+    Returns
+    -------
+    list
+        Sorted list.
+
+    Examples
+    --------
+
+    >>> from fuc import common
+    >>> regions = ['22:1000-1500', '16:100-200', '22:200-300']
+    >>> sorted(regions) # Lexicographic sorting (not what we want)
+    ['16:100-200', '22:1000-1500', '22:200-300']
+    >>> common.sort_regions(regions)
+    ['16:100-200', '22:200-300', '22:1000-1500']
+    """
+    def func(x):
+        chrom, start, end = parse_region(x)
+        if chrom in pyvcf.CONTIGS:
+            chrom = pyvcf.CONTIGS.index(chrom)
+        return (chrom, start, end)
+    return sorted(regions, key=func)

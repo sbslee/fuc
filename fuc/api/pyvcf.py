@@ -72,6 +72,8 @@ from Bio import bgzf
 import matplotlib.pyplot as plt
 from matplotlib_venn import venn2, venn3
 import seaborn as sns
+from pysam import VariantFile
+from io import StringIO
 
 HEADERS = {
     'CHROM': str,
@@ -819,6 +821,67 @@ def simulate_sample(
         l.append(genotype)
     return l
 
+def slice(file, regions, path=None):
+    """
+    Slice VCF file for specified regions.
+
+    Parameters
+    ----------
+    file : str
+        Input VCF file must be already BGZF compressed (.gz) and indexed
+        (.tbi) to allow random access.
+    regions : str, list, or pybed.BedFrame
+        One or more regions to be sliced. Each region must have the format
+        chrom:start-end and be a half-open interval with (start, end]. This
+        means, for example, chr1:100-103 will extract positions 101, 102, and
+        103. Alternatively, you can provide a BED file (zipped or unzipped)
+        to specify regions.
+    path : str, optional
+        Output VCF file. Writes to stdout when ``path='-'``. If None is
+        provided the result is returned as a string.
+
+    Returns
+    -------
+    None or str
+        If path is None, returns the resulting VCF format as a string.
+        Otherwise returns None.
+    """
+    if isinstance(regions, str):
+        regions = [regions]
+        if '.bed' in regions[0]:
+            regions = pybed.BedFrame.from_file(regions[0]).to_regions()
+    elif isinstance(regions, pybed.BedFrame):
+        regions = regions.to_regions()
+    elif isinstance(regions, list):
+        if '.bed' in regions[0]:
+            regions = pybed.BedFrame.from_file(regions[0]).to_regions()
+        else:
+            regions = common.sort_regions(regions)
+    else:
+        raise TypeError('Incorrect regions type')
+
+    vcf = VariantFile(file)
+
+    if path is None:
+        data = ''
+        data += str(vcf.header)
+        for region in regions:
+            chrom, start, end = common.parse_region(region)
+            for record in vcf.fetch(chrom, start, end):
+                data += str(record)
+    else:
+        data = None
+        output = VariantFile(path, 'w', header=vcf.header)
+        for region in regions:
+            chrom, start, end = common.parse_region(region)
+            for record in vcf.fetch(chrom, start, end):
+                output.write(record)
+        output.close()
+
+    vcf.close()
+
+    return data
+
 class VcfFrame:
     """
     Class for storing VCF data.
@@ -833,9 +896,11 @@ class VcfFrame:
     See Also
     --------
     VcfFrame.from_dict
-        Construct VcfFrame from dict of array-like or dicts.
+        Construct VcfFrame from a dict of array-like or dicts.
     VcfFrame.from_file
         Construct VcfFrame from a VCF file.
+    VcfFrame.from_string
+        Construct VcfFrame from a string.
 
     Examples
     --------
@@ -907,6 +972,14 @@ class VcfFrame:
     def contigs(self):
         """list : List of contig names."""
         return list(self.df.CHROM.unique())
+
+    @property
+    def has_chr_prefix(self):
+        """bool : Whether the (annoying) 'chr' string is found."""
+        for contig in self.contigs:
+            if 'chr' in contig:
+                return True
+        return False
 
     @property
     def sites_only(self):
@@ -1397,7 +1470,7 @@ class VcfFrame:
     @classmethod
     def from_dict(cls, meta, data):
         """
-        Construct VcfFrame from dict of array-like or dicts.
+        Construct VcfFrame from a dict of array-like or dicts.
 
         Parameters
         ----------
@@ -1417,6 +1490,8 @@ class VcfFrame:
             VcfFrame object creation using constructor.
         VcfFrame.from_file
             Construct VcfFrame from a VCF file.
+        VcfFrame.from_string
+            Construct VcfFrame from a string.
 
         Examples
         --------
@@ -1443,82 +1518,9 @@ class VcfFrame:
         """
         return cls(meta, pd.DataFrame(data))
 
-    def _from_file1(cls, fn, compression, meta_only, nrows):
-        skip_rows = 0
-
-        if fn.startswith('~'):
-            fn = os.path.expanduser(fn)
-
-        if fn.endswith('.gz') or compression:
-            f = bgzf.open(fn, 'rt')
-        else:
-            f = open(fn)
-
-        meta = []
-        columns = []
-
-        for line in f:
-            if line.startswith('##'):
-                meta.append(line.strip())
-                skip_rows += 1
-            elif line.startswith('#CHROM'):
-                columns += line.strip().split('\t')
-                skip_rows += 1
-            else:
-                break
-
-        f.close()
-
-        if '#CHROM' in columns:
-            columns[columns.index('#CHROM')] = 'CHROM'
-
-        for header in HEADERS:
-            if header not in columns and header != 'FORMAT':
-                raise ValueError(f"Required VCF column missing: '{header}'")
-
-        if meta_only:
-            df = pd.DataFrame(columns=columns)
-        else:
-            dtype = {**HEADERS, **{x: str for x in columns[9:]}}
-            df = pd.read_table(
-                fn, skiprows=skip_rows, names=columns,
-                nrows=nrows, dtype=dtype
-            )
-
-        return cls(meta, df)
-
-    def _from_file2(cls, fn, compression, meta_only, nrows):
-        skip_rows = 0
-        meta = []
-
-        for line in fn:
-            if line.startswith(b'##'):
-                meta.append(line.decode('utf-8').strip())
-                skip_rows += 1
-            elif line.startswith(b'#CHROM'):
-                columns = line.decode('utf-8').strip().split('\t')
-            else:
-                break
-
-        if '#CHROM' in columns:
-            columns[columns.index('#CHROM')] = 'CHROM'
-
-        for header in HEADERS:
-            if header not in columns and header != 'FORMAT':
-                raise ValueError(f"Required VCF column missing: '{header}'")
-
-        dtype = {**HEADERS, **{x: str for x in columns[9:]}}
-
-        if meta_only:
-            df = pd.DataFrame(columns=columns)
-        else:
-            df = pd.read_table(fn, names=columns, nrows=nrows, dtype=dtype)
-
-        return cls(meta, df)
-
     @classmethod
     def from_file(
-        cls, fn, compression=False, meta_only=False, nrows=None
+        cls, fn, compression=False, meta_only=False, regions=None
     ):
         """
         Construct VcfFrame from a VCF file.
@@ -1526,17 +1528,26 @@ class VcfFrame:
         The method will automatically use BGZF decompression if the filename
         ends with '.gz'.
 
+        If the file is large you can speicfy regions of interest to speed up
+        data processing. Note that this requires the file be BGZF compressed
+        and indexed (.tbi) for random access. Each region to be sliced must
+        have the format chrom:start-end and be a half-open interval with
+        (start, end]. This means, for example, 'chr1:100-103' will extract
+        positions 101, 102, and 103. Alternatively, you can provide BED data
+        to specify regions.
+
         Parameters
         ----------
         fn : str or file-like object
             VCF file (zipped or unzipped). By file-like object, we refer to
             objects with a :meth:`read()` method, such as a file handle.
         compression : bool, default: False
-            If True, use BGZF decompression regardless of filename.
+            If True, use BGZF decompression regardless of the filename.
         meta_only : bool, default: False
-            If True, read metadata and header lines only.
-        nrows : int, optional
-            Number of rows to read. Useful for reading pieces of large files.
+            If True, only read metadata and header lines.
+        regions : str, list, or pybed.BedFrame, optional
+            Region or list of regions to be sliced. Also accepts a BED file
+            or a BedFrame.
 
         Returns
         -------
@@ -1548,7 +1559,9 @@ class VcfFrame:
         VcfFrame
             VcfFrame object creation using constructor.
         VcfFrame.from_dict
-            Construct VcfFrame from dict of array-like or dicts.
+            Construct VcfFrame from a dict of array-like or dicts.
+        VcfFrame.from_string
+            Construct VcfFrame from a string.
 
         Examples
         --------
@@ -1558,12 +1571,103 @@ class VcfFrame:
         >>> vf = pyvcf.VcfFrame.from_file('zipped.vcf.gz')
         >>> vf = pyvcf.VcfFrame.from_file('zipped.vcf', compression=True)
         """
-        args = [cls, fn, compression, meta_only, nrows]
-        if hasattr(fn, 'read'):
-            vf = cls._from_file2(*args)
+        if isinstance(fn, str):
+            if regions is None:
+                s = ''
+                if fn.startswith('~'):
+                    fn = os.path.expanduser(fn)
+                if fn.endswith('.gz') or compression:
+                    f = bgzf.open(fn, 'rt')
+                else:
+                    f = open(fn)
+                for line in f:
+                    s += line
+                f.close()
+            else:
+                s = slice(fn, regions)
+        elif hasattr(fn, 'read'):
+            s = fn.read()
+            try:
+                s = s.decode('utf-8')
+            except AttributeError:
+                pass
         else:
-            vf = cls._from_file1(*args)
+            TypeError('Incorrect input type')
+        vf = cls.from_string(s)
         return vf
+
+    @classmethod
+    def from_string(cls, s, meta_only=False):
+        """
+        Construct VcfFrame from a string.
+
+        Parameters
+        ----------
+        s : str
+            String representation of a VCF file.
+
+        Returns
+        -------
+        VcfFrame
+            VcfFrame object.
+
+        See Also
+        --------
+        VcfFrame
+            VcfFrame object creation using constructor.
+        VcfFrame.from_file
+            Construct VcfFrame from a VCF file.
+        VcfFrame.from_dict
+            Construct VcfFrame from a dict of array-like or dicts.
+
+        Examples
+        --------
+
+        >>> from fuc import pyvcf
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr1'],
+        ...     'POS': [100, 101],
+        ...     'ID': ['.', '.'],
+        ...     'REF': ['G', 'T'],
+        ...     'ALT': ['A', 'C'],
+        ...     'QUAL': ['.', '.'],
+        ...     'FILTER': ['.', '.'],
+        ...     'INFO': ['.', '.'],
+        ...     'FORMAT': ['GT', 'GT'],
+        ...     'A': ['0/1', '0/1']
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict(['##fileformat=VCFv4.3'], data)
+        >>> s = vf.to_string()
+        >>> print(s[:20])
+        ##fileformat=VCFv4.3
+        >>> vf = pyvcf.VcfFrame.from_string(s)
+        >>> vf.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A
+        0  chr1  100  .   G   A    .      .    .     GT  0/1
+        1  chr1  101  .   T   C    .      .    .     GT  0/1
+        """
+        skiprows = 0
+        meta = []
+        for line in s.split('\n'):
+            if line.startswith('##'):
+                meta.append(line.strip())
+                skiprows += 1
+            elif line.startswith('#CHROM'):
+                columns = line.strip().split('\t')
+                skiprows += 1
+            else:
+                break
+        columns[0] = 'CHROM'
+        for header in HEADERS:
+            if header not in columns and header != 'FORMAT':
+                raise ValueError(f"Required VCF column missing: '{header}'")
+        if meta_only:
+            df = pd.DataFrame(columns=columns)
+        else:
+            dtype = {**HEADERS, **{x: str for x in columns[9:]}}
+            df = pd.read_table(StringIO(s), skiprows=skiprows,
+                names=columns, dtype=dtype)
+        return cls(meta, df)
 
     def calculate_concordance(self, a, b, c=None, mode='all'):
         """
@@ -1865,7 +1969,7 @@ class VcfFrame:
 
         >>> from fuc import pyvcf
         >>> data = {
-        ...     'CHROM': ['chr1', 'chr2'],
+        ...     'CHROM': ['chr1', 'chr1'],
         ...     'POS': [100, 101],
         ...     'ID': ['.', '.'],
         ...     'REF': ['G', 'T'],
@@ -1874,14 +1978,14 @@ class VcfFrame:
         ...     'FILTER': ['.', '.'],
         ...     'INFO': ['.', '.'],
         ...     'FORMAT': ['GT', 'GT'],
-        ...     'Steven': ['0/1', '1/1']
+        ...     'A': ['0/1', '0/1']
         ... }
         >>> vf = pyvcf.VcfFrame.from_dict(['##fileformat=VCFv4.3'], data)
         >>> print(vf.to_string())
         ##fileformat=VCFv4.3
-        #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	Steven
+        #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	A
         chr1	100	.	G	A	.	.	.	GT	0/1
-        chr2	101	.	T	C	.	.	.	GT	1/1
+        chr1	101	.	T	C	.	.	.	GT	0/1
         """
         s = ''
         if self.meta:
@@ -5141,7 +5245,7 @@ class VcfFrame:
 
         return ax
 
-    def chr_prefix(self, mode='remove'):
+    def update_chr_prefix(self, mode='remove'):
         """
         Add or remove the (annoying) 'chr' string from the CHROM column.
 
@@ -5178,13 +5282,13 @@ class VcfFrame:
         1  chr1  101  .   T   C    .      .    .     GT  0/1
         2     2  100  .   T   C    .      .    .     GT  0/1
         3     2  101  .   C   G    .      .    .     GT  0/1
-        >>> vf.chr_prefix(mode='remove').df
+        >>> vf.update_chr_prefix(mode='remove').df
           CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A
         0     1  100  .   G   A    .      .    .     GT  0/1
         1     1  101  .   T   C    .      .    .     GT  0/1
         2     2  100  .   T   C    .      .    .     GT  0/1
         3     2  101  .   C   G    .      .    .     GT  0/1
-        >>> vf.chr_prefix(mode='add').df
+        >>> vf.update_chr_prefix(mode='add').df
           CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A
         0  chr1  100  .   G   A    .      .    .     GT  0/1
         1  chr1  101  .   T   C    .      .    .     GT  0/1
@@ -5421,7 +5525,7 @@ class VcfFrame:
         try:
             i = r.FORMAT.values[0].split(':').index('AF')
         except ValueError:
-            i = None
+            return np.nan
 
         alts = r.ALT.values[0].split(',')
 
@@ -5432,7 +5536,7 @@ class VcfFrame:
 
         field = r[sample].values[0].split(':')[i]
 
-        if field == '.' or i is None:
+        if field == '.':
             af = np.nan
         else:
             af = float(field.split(',')[j+1])
