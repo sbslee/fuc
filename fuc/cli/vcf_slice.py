@@ -23,7 +23,7 @@ def create_parser(subparsers):
         help='Slice a VCF file for specified regions.',
     )
     parser.add_argument(
-        'file',
+        'vcf',
         help='Input VCF file must be already BGZF compressed (.gz) and \n'
              'indexed (.tbi) to allow random access.'
     )
@@ -38,4 +38,4 @@ def create_parser(subparsers):
     )
 
 def main(args):
-    api.pyvcf.slice(args.file, args.regions, path='-')
+    api.pyvcf.slice(args.vcf, args.regions, path='-')
