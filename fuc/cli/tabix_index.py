@@ -22,7 +22,7 @@ epilog = f"""
 [Example] Index a SAM file:
   $ fuc {api.common._script_name()} in.sam.gz
 
-[Example] Index a VCF file.
+[Example] Index a VCF file:
   $ fuc {api.common._script_name()} in.vcf.gz
 """
 

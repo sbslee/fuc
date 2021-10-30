@@ -5,6 +5,7 @@ Changelog
 -----------------------
 
 * Rename ``file`` argument to ``vcf`` for :command:`vcf-slice` command.
+* Add new command :command:`vcf-index`.
 
 0.26.0 (2021-10-24)
 -------------------

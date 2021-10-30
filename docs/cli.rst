@@ -49,6 +49,7 @@ For getting help on the fuc CLI:
        tbl-merge    Merge two table files.
        tbl-sum      Summarize a table file.
        vcf-filter   Filter a VCF file.
+       vcf-index    Index a VCF file.
        vcf-merge    Merge two or more VCF files.
        vcf-rename   Rename the samples in a VCF file.
        vcf-slice    Slice a VCF file for specified regions.
@@ -913,7 +914,7 @@ tabix-index
    [Example] Index a SAM file:
      $ fuc tabix-index in.sam.gz
    
-   [Example] Index a VCF file.
+   [Example] Index a VCF file:
      $ fuc tabix-index in.vcf.gz
 
 tabix-slice
@@ -1082,6 +1083,33 @@ vcf-filter
    [Example] Filter out rows without genotypes:
      $ fuc vcf-filter in.vcf --filter_empty > out.vcf
 
+vcf-index
+=========
+
+.. code-block:: text
+
+   $ fuc vcf-index -h
+   usage: fuc vcf-index [-h] [--force] vcf
+   
+   Index a VCF file.
+   
+   This command will create an index file (.tbi) for the input VCF.
+   
+   Positional arguments:
+     vcf         Input VCF file to be indexed. When an uncompressed file is 
+                 given, the command will automatically create a BGZF 
+                 compressed copy of the file (.gz) before indexing.
+   
+   Optional arguments:
+     -h, --help  Show this help message and exit.
+     --force     Force to overwrite the index file if it is already present.
+   
+   [Example] Index a compressed VCF file:
+     $ fuc vcf-index in.vcf.gz
+   
+   [Example] Index an uncompressed VCF file:
+     $ fuc vcf-index in.vcf
+
 vcf-merge
 =========
 
@@ -1160,12 +1188,12 @@ vcf-slice
 .. code-block:: text
 
    $ fuc vcf-slice -h
-   usage: fuc vcf-slice [-h] file regions [regions ...]
+   usage: fuc vcf-slice [-h] vcf regions [regions ...]
    
    Slice a VCF file for specified regions.
    
    Positional arguments:
-     file        Input VCF file must be already BGZF compressed (.gz) and 
+     vcf         Input VCF file must be already BGZF compressed (.gz) and 
                  indexed (.tbi) to allow random access.
      regions     One or more regions to be sliced. Each region must have the 
                  format chrom:start-end and be a half-open interval with 
