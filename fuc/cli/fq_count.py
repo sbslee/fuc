@@ -26,7 +26,7 @@ def create_parser(subparsers):
     parser.add_argument(
         'fastq',
         nargs='*',
-        help='FASTQ files (zipped or unzipped) (default: stdin).'
+        help='FASTQ files (compressed or uncompressed) (default: stdin).'
     )
 
 def main(args):

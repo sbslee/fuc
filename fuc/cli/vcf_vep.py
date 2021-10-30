@@ -41,7 +41,7 @@ def create_parser(subparsers):
     )
     parser.add_argument(
         'vcf',
-        help='VCF file annotated by Ensembl VEP (zipped or unzipped).'
+        help='VCF file annotated by Ensembl VEP (compressed or uncompressed).'
     )
     parser.add_argument(
         'expr',

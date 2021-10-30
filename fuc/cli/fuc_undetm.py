@@ -25,7 +25,7 @@ def create_parser(subparsers):
     )
     parser.add_argument(
         'fastq',
-        help='Undertermined FASTQ (zipped or unzipped).'
+        help='Undertermined FASTQ (compressed or uncompressed).'
     )
     parser.add_argument(
         '--count',

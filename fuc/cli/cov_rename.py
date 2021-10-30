@@ -37,7 +37,7 @@ def create_parser(subparsers):
     )
     parser.add_argument(
         'tsv',
-        help='TSV file (zipped or unzipped).'
+        help='TSV file (compressed or uncompressed).'
     )
     parser.add_argument(
         'names',

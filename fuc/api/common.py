@@ -190,7 +190,7 @@ class AnnFrame:
         Parameters
         ----------
         fn : str
-            Text file (zipped or unzipped).
+            Text file (compressed or uncompressed).
         sample_col : str or int
             Column containing unique sample names, either given as string
             name or column index.

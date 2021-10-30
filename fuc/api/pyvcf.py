@@ -863,8 +863,10 @@ def slice(file, regions, path=None):
         One or more regions to be sliced. Each region must have the format
         chrom:start-end and be a half-open interval with (start, end]. This
         means, for example, chr1:100-103 will extract positions 101, 102, and
-        103. Alternatively, you can provide a BED file (zipped or unzipped)
-        to specify regions.
+        103. Alternatively, you can provide a BED file (compressed or
+        uncompressed) to specify regions. Note that the 'chr' prefix in
+        contig names (e.g. 'chr1' vs. '1') will be automatically added or
+        removed as necessary to match the input VCF's contig names.
     path : str, optional
         Output VCF file. Writes to stdout when ``path='-'``. If None is
         provided the result is returned as a string.
@@ -887,6 +889,11 @@ def slice(file, regions, path=None):
             regions = common.sort_regions(regions)
     else:
         raise TypeError('Incorrect regions type')
+
+    if has_chr_prefix(file):
+        regions = common.update_chr_prefix(regions, mode='add')
+    else:
+        regions = common.update_chr_prefix(regions, mode='remove')
 
     vcf = VariantFile(file)
 
@@ -1567,8 +1574,9 @@ class VcfFrame:
         Parameters
         ----------
         fn : str or file-like object
-            VCF file (zipped or unzipped). By file-like object, we refer to
-            objects with a :meth:`read()` method, such as a file handle.
+            VCF file (compressed or uncompressed). By file-like object, we
+            refer to objects with a :meth:`read()` method, such as a file
+            handle.
         compression : bool, default: False
             If True, use BGZF decompression regardless of the filename.
         meta_only : bool, default: False

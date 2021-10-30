@@ -48,7 +48,7 @@ def create_parser(subparsers):
     )
     parser.add_argument(
         'maf',
-        help='MAF file (zipped or unzipped).'
+        help='MAF file (compressed or uncompressed).'
     )
     parser.add_argument(
         '--fasta',

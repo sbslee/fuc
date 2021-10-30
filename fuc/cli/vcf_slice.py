@@ -30,11 +30,14 @@ def create_parser(subparsers):
     parser.add_argument(
         'regions',
         nargs='+',
-        help='One or more regions to be sliced. Each region must have the \n'
-             'format chrom:start-end and be a half-open interval with \n'
-             '(start, end]. This means, for example, chr1:100-103 will \n'
-             'extract positions 101, 102, and 103. Alternatively, you can \n'
-             'provide a BED file (zipped or unzipped) to specify regions.'
+        help="One or more regions to be sliced. Each region must have the \n"
+             "format chrom:start-end and be a half-open interval with \n"
+             "(start, end]. This means, for example, chr1:100-103 will \n"
+             "extract positions 101, 102, and 103. Alternatively, you can \n"
+             "provide a BED file (compressed or uncompressed) to specify \n"
+             "regions. Note that the 'chr' prefix in contig names (e.g. \n"
+             "'chr1' vs. '1') will be automatically added or removed as \n"
+             "necessary to match the input VCF's contig names."
     )
 
 def main(args):
