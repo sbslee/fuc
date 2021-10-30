@@ -463,6 +463,34 @@ def gt_pseudophase(g):
     l[0] = l[0].replace('/', '|')
     return ':'.join(l)
 
+def has_chr_prefix(file, size=1000):
+    """
+    Return True if all of the sampled contigs from a VCF file have the
+    (annoying) 'chr' string.
+
+    Parameters
+    ----------
+    file : str
+        VCF file (compressed or uncompressed).
+    size : int, default: 1000
+        Sampling size.
+
+    Returns
+    -------
+    bool
+        True if the 'chr' string is found.
+    """
+    n = 0
+    vcf = VariantFile(file)
+    for record in vcf.fetch():
+        n += 1
+        if 'chr' not in record.chrom:
+            return False
+        if n > size:
+            break
+    vcf.close()
+    return True
+
 def merge(
     vfs, how='inner', format='GT', sort=True, collapse=False
 ):
@@ -565,7 +593,8 @@ def merge(
     return merged_vf
 
 def row_hasindel(r):
-    """Return True if the row has an indel.
+    """
+    Return True if the row has an indel.
 
     Parameters
     ----------
@@ -823,7 +852,7 @@ def simulate_sample(
 
 def slice(file, regions, path=None):
     """
-    Slice VCF file for specified regions.
+    Slice a VCF file for specified regions.
 
     Parameters
     ----------
@@ -848,9 +877,8 @@ def slice(file, regions, path=None):
     """
     if isinstance(regions, str):
         regions = [regions]
-        if '.bed' in regions[0]:
-            regions = pybed.BedFrame.from_file(regions[0]).to_regions()
-    elif isinstance(regions, pybed.BedFrame):
+
+    if isinstance(regions, pybed.BedFrame):
         regions = regions.to_regions()
     elif isinstance(regions, list):
         if '.bed' in regions[0]:
