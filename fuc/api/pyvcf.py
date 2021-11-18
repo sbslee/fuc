@@ -3889,7 +3889,8 @@ class VcfFrame:
         return self.__class__(self.copy_meta(), self.df[i])
 
     def filter_sampany(self, samples=None, opposite=False, as_index=False):
-        """Select rows if any one of the given samples has the variant.
+        """
+        Select rows if any one of the given samples has the variant.
 
         The default behavior is to use all samples in the VcfFrame.
 
@@ -3979,7 +3980,7 @@ class VcfFrame:
         i = self.df.apply(f, axis=1)
         if opposite:
             i = ~i
-        if index:
+        if as_index:
             return i
         return self.__class__(self.copy_meta(), self.df[i])
 

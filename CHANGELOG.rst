@@ -9,6 +9,7 @@ Changelog
 * Add new method :meth:`pyvcf.has_chr_prefix`.
 * Add new command :meth:`common.update_chr_prefix`.
 * Update :meth:`pyvcf.slice` method to automatically handle the 'chr' prefix.
+* Fix bug caused by a typo in :meth:`pyvcf.VcfFrame.filter_sampany` method.
 
 0.26.0 (2021-10-24)
 -------------------
