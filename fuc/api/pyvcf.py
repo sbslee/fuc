@@ -1004,8 +1004,8 @@ def plot_af_correlation(vf1, vf2, ax=None, figsize=None):
     s1 = vf1.filter_multialt().filter_empty(threshold=1).df.apply(one_row, axis=1)
     s2 = vf2.filter_multialt().filter_empty(threshold=1).df.apply(one_row, axis=1)
 
-    s1.columns = ['Locus', 'A']
-    s2.columns = ['Locus', 'B']
+    s1.columns = ['Locus', 'First']
+    s2.columns = ['Locus', 'Second']
 
     s1 = s1.set_index('Locus')
     s2 = s2.set_index('Locus')
@@ -1015,7 +1015,7 @@ def plot_af_correlation(vf1, vf2, ax=None, figsize=None):
     if ax is None:
         fig, ax = plt.subplots(figsize=figsize)
 
-    sns.scatterplot(data=df, x='A', y='B', ax=ax)
+    sns.scatterplot(data=df, x='First', y='Second', ax=ax)
 
     return ax
 
