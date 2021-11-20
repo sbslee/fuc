@@ -4,6 +4,9 @@ Changelog
 0.28.0 (in development)
 -----------------------
 
+* Update :meth:`pyvcf.VcfFrame.filter_empty` method so that users can choose a varying number of missing genotypes as threshold.
+* Add new method :meth:`pyvcf.plot_af_correlation`.
+
 0.27.0 (2021-11-20)
 -------------------
 
