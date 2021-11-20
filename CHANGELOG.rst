@@ -1,8 +1,8 @@
 Changelog
 *********
 
-0.27.0 (in development)
------------------------
+0.27.0 (2021-11-20)
+-------------------
 
 * Rename ``file`` argument to ``vcf`` for :command:`vcf-slice` command.
 * Add new command :command:`vcf-index`.
