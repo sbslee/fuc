@@ -142,6 +142,7 @@ For getting help on the fuc CLI:
        tbl-merge    Merge two table files.
        tbl-sum      Summarize a table file.
        vcf-filter   Filter a VCF file.
+       vcf-index    Index a VCF file.
        vcf-merge    Merge two or more VCF files.
        vcf-rename   Rename the samples in a VCF file.
        vcf-slice    Slice a VCF file for specified regions.

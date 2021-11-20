@@ -190,7 +190,7 @@ class AnnFrame:
         Parameters
         ----------
         fn : str
-            Text file (zipped or unzipped).
+            Text file (compressed or uncompressed).
         sample_col : str or int
             Column containing unique sample names, either given as string
             name or column index.
@@ -1250,3 +1250,43 @@ def sort_regions(regions):
             chrom = pyvcf.CONTIGS.index(chrom)
         return (chrom, start, end)
     return sorted(regions, key=func)
+
+def update_chr_prefix(regions, mode='remove'):
+    """
+    Add or remove the (annoying) 'chr' string from specified regions.
+
+    Parameters
+    ----------
+    regions : str or list
+        One or more regions to be updated.
+    mode : {'add', 'remove'}, default: 'remove'
+        Whether to add or remove the 'chr' string.
+
+    Returns
+    -------
+    VcfFrame
+        str or list.
+
+    Example
+    -------
+
+    >>> from fuc import common
+    >>> common.update_chr_prefix(['chr1:100-200', '1:300-400'], mode='remove')
+    ['1:100-200', '1:300-400']
+    >>> common.update_chr_prefix(['chr1:100-200', '1:300-400'], mode='add')
+    ['chr1:100-200', 'chr1:300-400']
+    """
+    def remove(x):
+        return x.replace('chr', '')
+
+    def add(x):
+        if 'chr' not in x:
+            x = 'chr' + x
+        return x
+
+    modes = {'remove': remove, 'add': add}
+
+    if isinstance(regions, str):
+        return modes[mode](regions)
+
+    return [modes[mode](x) for x in regions]

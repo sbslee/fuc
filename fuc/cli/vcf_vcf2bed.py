@@ -21,7 +21,7 @@ def create_parser(subparsers):
     )
     parser.add_argument(
         'vcf',
-        help='VCF file (zipped or unzipped).'
+        help='VCF file (compressed or uncompressed).'
     )
 
 def main(args):

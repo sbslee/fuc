@@ -294,7 +294,7 @@ class MafFrame:
         Parameters
         ----------
         fn : str
-            MAF file (zipped or unzipped).
+            MAF file (compressed or uncompressed).
 
         Returns
         -------

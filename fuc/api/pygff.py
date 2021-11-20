@@ -87,7 +87,7 @@ class GffFrame:
         Parameters
         ----------
         fn : str
-            GFF/GTF file (zipped or unzipped).
+            GFF/GTF file (compressed or uncompressed).
 
         Returns
         -------

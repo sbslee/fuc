@@ -24,7 +24,7 @@ def create_parser(subparsers):
     )
     parser.add_argument(
         'vcf_files',
-        help='VCF files (zipped or unzipped).',
+        help='VCF files (compressed or uncompressed).',
         nargs='+'
     )
     parser.add_argument(

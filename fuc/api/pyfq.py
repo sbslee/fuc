@@ -35,7 +35,7 @@ class FqFrame:
         Parameters
         ----------
         fn : str
-            FASTQ file path (zipped or unzipped).
+            FASTQ file path (compressed or uncompressed).
 
         Returns
         -------

@@ -29,8 +29,8 @@ def create_parser(subparsers):
     parser.add_argument(
         'sites',
         help='TSV file containing two columns, chromosome and position. \n'
-             'This can also be a BED or VCF file (zipped or unzipped). \n'
-             'Input type will be detected automatically.'
+             'This can also be a BED or VCF file (compressed or \n'
+             'uncompressed) Input type will be detected automatically.'
     )
 
 def main(args):

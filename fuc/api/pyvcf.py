@@ -463,6 +463,34 @@ def gt_pseudophase(g):
     l[0] = l[0].replace('/', '|')
     return ':'.join(l)
 
+def has_chr_prefix(file, size=1000):
+    """
+    Return True if all of the sampled contigs from a VCF file have the
+    (annoying) 'chr' string.
+
+    Parameters
+    ----------
+    file : str
+        VCF file (compressed or uncompressed).
+    size : int, default: 1000
+        Sampling size.
+
+    Returns
+    -------
+    bool
+        True if the 'chr' string is found.
+    """
+    n = 0
+    vcf = VariantFile(file)
+    for record in vcf.fetch():
+        n += 1
+        if 'chr' not in record.chrom:
+            return False
+        if n > size:
+            break
+    vcf.close()
+    return True
+
 def merge(
     vfs, how='inner', format='GT', sort=True, collapse=False
 ):
@@ -565,7 +593,8 @@ def merge(
     return merged_vf
 
 def row_hasindel(r):
-    """Return True if the row has an indel.
+    """
+    Return True if the row has an indel.
 
     Parameters
     ----------
@@ -823,7 +852,7 @@ def simulate_sample(
 
 def slice(file, regions, path=None):
     """
-    Slice VCF file for specified regions.
+    Slice a VCF file for specified regions.
 
     Parameters
     ----------
@@ -834,8 +863,10 @@ def slice(file, regions, path=None):
         One or more regions to be sliced. Each region must have the format
         chrom:start-end and be a half-open interval with (start, end]. This
         means, for example, chr1:100-103 will extract positions 101, 102, and
-        103. Alternatively, you can provide a BED file (zipped or unzipped)
-        to specify regions.
+        103. Alternatively, you can provide a BED file (compressed or
+        uncompressed) to specify regions. Note that the 'chr' prefix in
+        contig names (e.g. 'chr1' vs. '1') will be automatically added or
+        removed as necessary to match the input VCF's contig names.
     path : str, optional
         Output VCF file. Writes to stdout when ``path='-'``. If None is
         provided the result is returned as a string.
@@ -848,9 +879,8 @@ def slice(file, regions, path=None):
     """
     if isinstance(regions, str):
         regions = [regions]
-        if '.bed' in regions[0]:
-            regions = pybed.BedFrame.from_file(regions[0]).to_regions()
-    elif isinstance(regions, pybed.BedFrame):
+
+    if isinstance(regions, pybed.BedFrame):
         regions = regions.to_regions()
     elif isinstance(regions, list):
         if '.bed' in regions[0]:
@@ -859,6 +889,11 @@ def slice(file, regions, path=None):
             regions = common.sort_regions(regions)
     else:
         raise TypeError('Incorrect regions type')
+
+    if has_chr_prefix(file):
+        regions = common.update_chr_prefix(regions, mode='add')
+    else:
+        regions = common.update_chr_prefix(regions, mode='remove')
 
     vcf = VariantFile(file)
 
@@ -1539,8 +1574,9 @@ class VcfFrame:
         Parameters
         ----------
         fn : str or file-like object
-            VCF file (zipped or unzipped). By file-like object, we refer to
-            objects with a :meth:`read()` method, such as a file handle.
+            VCF file (compressed or uncompressed). By file-like object, we
+            refer to objects with a :meth:`read()` method, such as a file
+            handle.
         compression : bool, default: False
             If True, use BGZF decompression regardless of the filename.
         meta_only : bool, default: False
@@ -3853,7 +3889,8 @@ class VcfFrame:
         return self.__class__(self.copy_meta(), self.df[i])
 
     def filter_sampany(self, samples=None, opposite=False, as_index=False):
-        """Select rows if any one of the given samples has the variant.
+        """
+        Select rows if any one of the given samples has the variant.
 
         The default behavior is to use all samples in the VcfFrame.
 
@@ -3943,7 +3980,7 @@ class VcfFrame:
         i = self.df.apply(f, axis=1)
         if opposite:
             i = ~i
-        if index:
+        if as_index:
             return i
         return self.__class__(self.copy_meta(), self.df[i])
 

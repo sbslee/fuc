@@ -49,6 +49,7 @@ For getting help on the fuc CLI:
        tbl-merge    Merge two table files.
        tbl-sum      Summarize a table file.
        vcf-filter   Filter a VCF file.
+       vcf-index    Index a VCF file.
        vcf-merge    Merge two or more VCF files.
        vcf-rename   Rename the samples in a VCF file.
        vcf-slice    Slice a VCF file for specified regions.
@@ -78,8 +79,8 @@ bam-aldepth
    Positional arguments:
      bam         Alignment file.
      sites       TSV file containing two columns, chromosome and position. 
-                 This can also be a BED or VCF file (zipped or unzipped). 
-                 Input type will be detected automatically.
+                 This can also be a BED or VCF file (compressed or 
+                 uncompressed) Input type will be detected automatically.
    
    Optional arguments:
      -h, --help  Show this help message and exit.
@@ -300,7 +301,7 @@ cov-rename
        be specified.
    
    Positional arguments:
-     tsv              TSV file (zipped or unzipped).
+     tsv              TSV file (compressed or uncompressed).
      names            Text file containing information for renaming the samples.
    
    Optional arguments:
@@ -332,7 +333,7 @@ fq-count
    Count sequence reads in FASTQ files.
    
    Positional arguments:
-     fastq       FASTQ files (zipped or unzipped) (default: stdin).
+     fastq       FASTQ files (compressed or uncompressed) (default: stdin).
    
    Optional arguments:
      -h, --help  Show this help message and exit.
@@ -520,7 +521,7 @@ fuc-undetm
    the bcl2fastq or bcl2fastq2 prograrm.
    
    Positional arguments:
-     fastq        Undertermined FASTQ (zipped or unzipped).
+     fastq        Undertermined FASTQ (compressed or uncompressed).
    
    Optional arguments:
      -h, --help   Show this help message and exit.
@@ -559,7 +560,7 @@ maf-maf2vcf
    provided, the original column name(s) will be displayed.
    
    Positional arguments:
-     maf                   MAF file (zipped or unzipped).
+     maf                   MAF file (compressed or uncompressed).
    
    Optional arguments:
      -h, --help            Show this help message and exit.
@@ -913,7 +914,7 @@ tabix-index
    [Example] Index a SAM file:
      $ fuc tabix-index in.sam.gz
    
-   [Example] Index a VCF file.
+   [Example] Index a VCF file:
      $ fuc tabix-index in.vcf.gz
 
 tabix-slice
@@ -1039,7 +1040,7 @@ vcf-filter
    Filter a VCF file.
    
    Positional arguments:
-     vcf                   VCF file (zipped or unzipped).
+     vcf                   VCF file (compressed or uncompressed).
    
    Optional arguments:
      -h, --help            Show this help message and exit.
@@ -1082,6 +1083,33 @@ vcf-filter
    [Example] Filter out rows without genotypes:
      $ fuc vcf-filter in.vcf --filter_empty > out.vcf
 
+vcf-index
+=========
+
+.. code-block:: text
+
+   $ fuc vcf-index -h
+   usage: fuc vcf-index [-h] [--force] vcf
+   
+   Index a VCF file.
+   
+   This command will create an index file (.tbi) for the input VCF.
+   
+   Positional arguments:
+     vcf         Input VCF file to be indexed. When an uncompressed file is 
+                 given, the command will automatically create a BGZF 
+                 compressed copy of the file (.gz) before indexing.
+   
+   Optional arguments:
+     -h, --help  Show this help message and exit.
+     --force     Force to overwrite the index file if it is already present.
+   
+   [Example] Index a compressed VCF file.
+     $ fuc vcf-index in.vcf.gz
+   
+   [Example] Index an uncompressed VCF file. Will create a compressed file first.
+     $ fuc vcf-index in.vcf
+
 vcf-merge
 =========
 
@@ -1094,7 +1122,7 @@ vcf-merge
    Merge two or more VCF files.
    
    Positional arguments:
-     vcf_files      VCF files (zipped or unzipped).
+     vcf_files      VCF files (compressed or uncompressed).
    
    Optional arguments:
      -h, --help     Show this help message and exit.
@@ -1133,7 +1161,7 @@ vcf-rename
        be specified.
    
    Positional arguments:
-     vcf              VCF file (zipped or unzipped).
+     vcf              VCF file (compressed or uncompressed).
      names            Text file containing information for renaming the samples.
    
    Optional arguments:
@@ -1160,26 +1188,29 @@ vcf-slice
 .. code-block:: text
 
    $ fuc vcf-slice -h
-   usage: fuc vcf-slice [-h] file regions [regions ...]
+   usage: fuc vcf-slice [-h] vcf regions [regions ...]
    
    Slice a VCF file for specified regions.
    
    Positional arguments:
-     file        Input VCF file must be already BGZF compressed (.gz) and 
+     vcf         Input VCF file must be already BGZF compressed (.gz) and 
                  indexed (.tbi) to allow random access.
      regions     One or more regions to be sliced. Each region must have the 
                  format chrom:start-end and be a half-open interval with 
                  (start, end]. This means, for example, chr1:100-103 will 
                  extract positions 101, 102, and 103. Alternatively, you can 
-                 provide a BED file (zipped or unzipped) to specify regions.
+                 provide a BED file (compressed or uncompressed) to specify 
+                 regions. Note that the 'chr' prefix in contig names (e.g. 
+                 'chr1' vs. '1') will be automatically added or removed as 
+                 necessary to match the input VCF's contig names.
    
    Optional arguments:
      -h, --help  Show this help message and exit.
    
-   [Example] Specify regions manually:
+   [Example] Specify regions manually.
    $ fuc vcf-slice in.vcf.gz 1:100-300 2:400-700 > out.vcf
    
-   [Example] Speicfy regions with a BED file:
+   [Example] Speicfy regions with a BED file.
    $ fuc vcf-slice in.vcf.gz regions.bed > out.vcf
 
 vcf-vcf2bed
@@ -1193,7 +1224,7 @@ vcf-vcf2bed
    Convert a VCF file to a BED file.
    
    Positional arguments:
-     vcf         VCF file (zipped or unzipped).
+     vcf         VCF file (compressed or uncompressed).
    
    Optional arguments:
      -h, --help  Show this help message and exit.
@@ -1212,7 +1243,7 @@ vcf-vep
    Filter a VCF file by annotations from Ensembl VEP.
    
    Positional arguments:
-     vcf         VCF file annotated by Ensembl VEP (zipped or unzipped).
+     vcf         VCF file annotated by Ensembl VEP (compressed or uncompressed).
      expr        Query expression to evaluate.
    
    Optional arguments:

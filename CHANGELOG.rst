@@ -1,6 +1,16 @@
 Changelog
 *********
 
+0.27.0 (2021-11-20)
+-------------------
+
+* Rename ``file`` argument to ``vcf`` for :command:`vcf-slice` command.
+* Add new command :command:`vcf-index`.
+* Add new method :meth:`pyvcf.has_chr_prefix`.
+* Add new command :meth:`common.update_chr_prefix`.
+* Update :meth:`pyvcf.slice` method to automatically handle the 'chr' prefix.
+* Fix bug caused by a typo in :meth:`pyvcf.VcfFrame.filter_sampany` method.
+
 0.26.0 (2021-10-24)
 -------------------
 
