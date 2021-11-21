@@ -7,11 +7,14 @@ Slice a VCF file for specified regions.
 """
 
 epilog = f"""
-[Example] Specify regions manually.
+[Example] Specify regions manually:
 $ fuc {api.common._script_name()} in.vcf.gz 1:100-300 2:400-700 > out.vcf
 
-[Example] Speicfy regions with a BED file.
+[Example] Speicfy regions with a BED file:
 $ fuc {api.common._script_name()} in.vcf.gz regions.bed > out.vcf
+
+[Example] Output a compressed file:
+$ fuc {api.common._script_name()} in.vcf.gz regions.bed | fuc fuc-bgzip > out.vcf
 """
 
 def create_parser(subparsers):
