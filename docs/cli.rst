@@ -1104,10 +1104,10 @@ vcf-index
      -h, --help  Show this help message and exit.
      --force     Force to overwrite the index file if it is already present.
    
-   [Example] Index a compressed VCF file.
+   [Example] Index a compressed VCF file:
      $ fuc vcf-index in.vcf.gz
    
-   [Example] Index an uncompressed VCF file. Will create a compressed file first.
+   [Example] Index an uncompressed VCF file (will create a compressed VCF first):
      $ fuc vcf-index in.vcf
 
 vcf-merge
@@ -1207,11 +1207,14 @@ vcf-slice
    Optional arguments:
      -h, --help  Show this help message and exit.
    
-   [Example] Specify regions manually.
+   [Example] Specify regions manually:
    $ fuc vcf-slice in.vcf.gz 1:100-300 2:400-700 > out.vcf
    
-   [Example] Speicfy regions with a BED file.
+   [Example] Speicfy regions with a BED file:
    $ fuc vcf-slice in.vcf.gz regions.bed > out.vcf
+   
+   [Example] Output a compressed file:
+   $ fuc vcf-slice in.vcf.gz regions.bed | fuc fuc-bgzip > out.vcf.gz
 
 vcf-vcf2bed
 ===========

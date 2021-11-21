@@ -14,7 +14,7 @@ $ fuc {api.common._script_name()} in.vcf.gz 1:100-300 2:400-700 > out.vcf
 $ fuc {api.common._script_name()} in.vcf.gz regions.bed > out.vcf
 
 [Example] Output a compressed file:
-$ fuc {api.common._script_name()} in.vcf.gz regions.bed | fuc fuc-bgzip > out.vcf
+$ fuc {api.common._script_name()} in.vcf.gz regions.bed | fuc fuc-bgzip > out.vcf.gz
 """
 
 def create_parser(subparsers):
