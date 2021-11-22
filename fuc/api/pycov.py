@@ -523,6 +523,91 @@ class CovFrame:
         """
         return self.df.to_csv(index=False, sep='\t')
 
+    def matrix_uniformity(
+        self, frac=0.1, n=20, m=None
+    ):
+        """
+        Compute a matrix of fraction of sampled bases >= coverage with a
+        shape of (coverages, samples).
+
+        Parameters
+        ----------
+        frac : float, default: 0.1
+            Fraction of data to be sampled (to speed up the process).
+        n : int or list, default: 20
+            Number of evenly spaced points to generate for the x-axis.
+            Alternatively, positions can be manually specified by providing
+            a list.
+        m : float, optional
+            Maximum point in the x-axis. By default, it will be the maximum
+            depth in the entire dataset.
+
+        Returns
+        -------
+        pandas.DataFrame
+            Matrix of fraction of sampled bases >= coverage.
+
+        Examples
+        --------
+
+        >>> import numpy as np
+        >>> from fuc import pycov
+        >>> data = {
+        ...     'Chromosome': ['chr1'] * 1000,
+        ...     'Position': np.arange(1000, 2000),
+        ...     'A': pycov.simulate(loc=35, scale=5),
+        ...     'B': pycov.simulate(loc=25, scale=7),
+        ... }
+        >>> cf = pycov.CovFrame.from_dict(data)
+        >>> cf.matrix_uniformity()
+                      A     B
+        Coverage
+        1.000000   1.00  1.00
+        3.368421   1.00  1.00
+        5.736842   1.00  1.00
+        8.105263   1.00  1.00
+        10.473684  1.00  1.00
+        12.842105  1.00  0.98
+        15.210526  1.00  0.93
+        17.578947  1.00  0.87
+        19.947368  1.00  0.77
+        22.315789  1.00  0.64
+        24.684211  1.00  0.50
+        27.052632  0.97  0.35
+        29.421053  0.84  0.25
+        31.789474  0.70  0.16
+        34.157895  0.51  0.07
+        36.526316  0.37  0.07
+        38.894737  0.21  0.03
+        41.263158  0.09  0.02
+        43.631579  0.04  0.00
+        46.000000  0.02  0.00
+        """
+        # Sample positions to speed up the process.
+        df = self.df.sample(frac=frac)
+
+        # Determine x-axis points.
+        if isinstance(n, list):
+            coverages = n
+        else:
+            if m is None:
+                m = df.iloc[:, 2:].max().max()
+            coverages = np.linspace(1, m, n, endpoint=True)
+
+        data = {'Coverage': coverages}
+
+        for sample in self.samples:
+            fractions = []
+            for coverage in coverages:
+                count = sum(df[sample] >= coverage)
+                fractions.append(count / df.shape[0])
+            data[sample] = fractions
+
+        df = pd.DataFrame(data)
+        df = df.set_index("Coverage")
+
+        return df
+
     def plot_uniformity(
         self, mode='aggregated', frac=0.1, n=20, m=None, marker=None,
         ax=None, figsize=None, **kwargs
@@ -592,26 +677,8 @@ class CovFrame:
             >>> cf.plot_uniformity(mode='individual')
             >>> plt.tight_layout()
         """
-        # Sample positions to speed up the process.
-        df = self.df.sample(frac=frac)
-
-        # Determine x-axis points.
-        if isinstance(n, list):
-            coverages = n
-        else:
-            if m is None:
-                m = df.iloc[:, 2:].max().max()
-            coverages = np.linspace(1, m, n, endpoint=True)
-
-        data = {'Coverage': coverages}
-
-        for sample in self.samples:
-            fractions = []
-            for coverage in coverages:
-                count = sum(df[sample] >= coverage)
-                fractions.append(count / df.shape[0])
-            data[sample] = fractions
-        df = pd.DataFrame(data)
+        df = self.matrix_uniformity(frac=frac, n=n, m=m)
+        df = df.reset_index()
         df = df.melt(id_vars=['Coverage'], var_name='Sample',
             value_name='Fraction')
 

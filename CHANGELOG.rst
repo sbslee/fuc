@@ -7,6 +7,7 @@ Changelog
 * Update :meth:`pyvcf.VcfFrame.filter_empty` method so that users can choose a varying number of missing genotypes as threshold.
 * Add new method :meth:`pyvcf.plot_af_correlation`.
 * Update :command:`bam-slice` command to support BED file as input for specifying regions. Additionally, from now on, the command will automatically handle the annoying 'chr' prefix.
+* Add new method :meth:`pycov.CovFrame.matrix_uniformity`.
 
 0.27.0 (2021-11-20)
 -------------------
