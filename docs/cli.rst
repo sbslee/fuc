@@ -195,11 +195,20 @@ bam-slice
    usage: fuc bam-slice [-h] [--format TEXT] [--fasta PATH]
                         bam regions [regions ...]
    
-   Slice a SAM/BAM/CRAM file.
+   Slice an alignment file (SAM/BAM/CRAM).
    
    Positional arguments:
-     bam            Alignment file.
-     regions        List of regions to be sliced ('chrom:start-end').
+     bam            Input alignment file must be already indexed (.bai) to allow 
+                    random access. You can index an alignment file with the 
+                    bam-index command.
+     regions        One or more regions to be sliced. Each region must have the 
+                    format chrom:start-end and be a half-open interval with 
+                    (start, end]. This means, for example, chr1:100-103 will 
+                    extract positions 101, 102, and 103. Alternatively, you can 
+                    provide a BED file (compressed or uncompressed) to specify 
+                    regions. Note that the 'chr' prefix in contig names (e.g. 
+                    'chr1' vs. '1') will be automatically added or removed as 
+                    necessary to match the input VCF's contig names.
    
    Optional arguments:
      -h, --help     Show this help message and exit.
@@ -207,11 +216,14 @@ bam-slice
                     'CRAM').
      --fasta PATH   FASTA file. Required when --format is 'CRAM'.
    
-   [Example] Slice a BAM file:
-     $ fuc bam-slice in.bam chr1:100-200 chr2:100-200 > out.bam
+   [Example] Specify regions manually:
+     $ fuc bam-slice in.bam 1:100-300 2:400-700 > out.bam
+   
+   [Example] Speicfy regions with a BED file:
+     $ fuc bam-slice in.bam regions.bed > out.bam
    
    [Example] Slice a CRAM file:
-     $ fuc bam-slice in.bam chr1:100-200 --format CRAM --fasta ref.fa > out.cram
+     $ fuc bam-slice in.bam regions.bed --format CRAM --fasta ref.fa > out.cram
 
 bed-intxn
 =========
@@ -1194,7 +1206,9 @@ vcf-slice
    
    Positional arguments:
      vcf         Input VCF file must be already BGZF compressed (.gz) and 
-                 indexed (.tbi) to allow random access.
+                 indexed (.tbi) to allow random access. A VCF file can be 
+                 compressed with the fuc-bgzip command and indexed with the 
+                 vcf-index command.
      regions     One or more regions to be sliced. Each region must have the 
                  format chrom:start-end and be a half-open interval with 
                  (start, end]. This means, for example, chr1:100-103 will 
@@ -1208,13 +1222,13 @@ vcf-slice
      -h, --help  Show this help message and exit.
    
    [Example] Specify regions manually:
-   $ fuc vcf-slice in.vcf.gz 1:100-300 2:400-700 > out.vcf
+     $ fuc vcf-slice in.vcf.gz 1:100-300 2:400-700 > out.vcf
    
    [Example] Speicfy regions with a BED file:
-   $ fuc vcf-slice in.vcf.gz regions.bed > out.vcf
+     $ fuc vcf-slice in.vcf.gz regions.bed > out.vcf
    
    [Example] Output a compressed file:
-   $ fuc vcf-slice in.vcf.gz regions.bed | fuc fuc-bgzip > out.vcf.gz
+     $ fuc vcf-slice in.vcf.gz regions.bed | fuc fuc-bgzip > out.vcf.gz
 
 vcf-vcf2bed
 ===========

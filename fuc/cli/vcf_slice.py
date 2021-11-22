@@ -8,13 +8,13 @@ Slice a VCF file for specified regions.
 
 epilog = f"""
 [Example] Specify regions manually:
-$ fuc {api.common._script_name()} in.vcf.gz 1:100-300 2:400-700 > out.vcf
+  $ fuc {api.common._script_name()} in.vcf.gz 1:100-300 2:400-700 > out.vcf
 
 [Example] Speicfy regions with a BED file:
-$ fuc {api.common._script_name()} in.vcf.gz regions.bed > out.vcf
+  $ fuc {api.common._script_name()} in.vcf.gz regions.bed > out.vcf
 
 [Example] Output a compressed file:
-$ fuc {api.common._script_name()} in.vcf.gz regions.bed | fuc fuc-bgzip > out.vcf.gz
+  $ fuc {api.common._script_name()} in.vcf.gz regions.bed | fuc fuc-bgzip > out.vcf.gz
 """
 
 def create_parser(subparsers):
@@ -27,8 +27,10 @@ def create_parser(subparsers):
     )
     parser.add_argument(
         'vcf',
-        help='Input VCF file must be already BGZF compressed (.gz) and \n'
-             'indexed (.tbi) to allow random access.'
+        help="Input VCF file must be already BGZF compressed (.gz) and \n"
+             "indexed (.tbi) to allow random access. A VCF file can be \n"
+             "compressed with the fuc-bgzip command and indexed with the \n"
+             "vcf-index command."
     )
     parser.add_argument(
         'regions',
