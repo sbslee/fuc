@@ -902,6 +902,10 @@ def slice(file, regions, path=None):
         data += str(vcf.header)
         for region in regions:
             chrom, start, end = common.parse_region(region)
+            if np.isnan(start):
+                start = None
+            if np.isnan(end):
+                end = None
             for record in vcf.fetch(chrom, start, end):
                 data += str(record)
     else:
