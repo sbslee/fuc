@@ -40,6 +40,7 @@ For getting help on the fuc CLI:
        maf-oncoplt  Create an oncoplot with a MAF file.
        maf-sumplt   Create a summary plot with a MAF file.
        maf-vcf2maf  Convert a VCF file to a MAF file.
+       ngs-bam2fq   Pipeline for converting BAM files to FASTQ files.
        ngs-fq2bam   Pipeline for converting FASTQ files to analysis-ready BAM files.
        ngs-hc       Pipeline for germline short variant discovery.
        ngs-m2       Pipeline for somatic short variant discovery.
@@ -688,6 +689,54 @@ maf-vcf2maf
    
    [Example] Convert VCF to MAF:
      $ fuc maf-vcf2maf in.vcf > out.maf
+
+ngs-bam2fq
+==========
+
+.. code-block:: text
+
+   $ fuc ngs-bam2fq -h
+   usage: fuc ngs-bam2fq [-h] [--thread INT] [--force] manifest output qsub
+   
+   Pipeline for converting BAM files to FASTQ files.
+   
+   This pipeline will assume input BAM files consist of paired-end reads
+   and output two FASTQ files for each sample (forward and reverse reads).
+   That is, SAMPLE.bam will produce SAMPLE_R1.fastq and SAMPLE_R2.fastq.
+   
+   External dependencies:
+     - SGE: Required for job submission (i.e. qsub).
+     - SAMtools: Required for BAM to FASTQ conversion.
+   
+   Manifest columns:
+     - BAM: BAM file.
+   
+   Positional arguments:
+     manifest      Sample manifest CSV file.
+     output        Output directory.
+     qsub          SGE resoruce to request with qsub for BAM to FASTQ 
+                   conversion. Since this oppoeration supports multithreading, 
+                   it is recommended to speicfy a parallel environment (PE) 
+                   to speed up the process (also see --thread).
+   
+   Optional arguments:
+     -h, --help    Show this help message and exit.
+     --thread INT  Number of threads to use (default: 1).
+     --force       Overwrite the output directory if it already exists.
+   
+   [Example] Specify queue:
+     $ fuc ngs-bam2fq \
+     manifest.csv \
+     output_dir \
+     "-q queue_name -pe pe_name 10" \
+     --thread 10
+   
+   [Example] Specify nodes:
+     $ fuc ngs-bam2fq \
+     manifest.csv \
+     output_dir \
+     "-l h='node_A|node_B' -pe pe_name 10" \
+     --thread 10
 
 ngs-fq2bam
 ==========

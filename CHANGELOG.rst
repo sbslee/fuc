@@ -9,6 +9,7 @@ Changelog
 * Update :command:`bam-slice` command to support BED file as input for specifying regions. Additionally, from now on, the command will automatically handle the annoying 'chr' prefix.
 * Add new method :meth:`pycov.CovFrame.matrix_uniformity`.
 * Fix bug in :meth:`pyvcf.slice` method when the input region is missing start or end.
+* Add new command :command:`ngs-bam2fq`.
 
 0.27.0 (2021-11-20)
 -------------------
