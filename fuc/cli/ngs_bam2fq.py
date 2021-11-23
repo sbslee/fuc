@@ -88,8 +88,11 @@ def main(args):
 
     df = pd.read_csv(args.manifest)
 
+    names = []
+
     for i, r in df.iterrows():
         name = os.path.basename(r.BAM).replace('.bam', '')
+        names.append(name)
         with open(f'{args.output}/shell/{name}.sh', 'w') as f:
             f.write(
 f"""#!/bin/bash
@@ -99,4 +102,18 @@ source activate {api.common.conda_env()}
 
 # Convert BAM to FASTQ.
 samtools collate -O -@ {args.thread} {r.BAM} | samtools fastq -1 {args.output}/{name}_R1.fastq -2 {args.output}/{name}_R2.fastq
+""")
+
+    with open(f'{args.output}/shell/qsubme.sh', 'w') as f:
+        f.write(
+f"""#!/bin/bash
+
+p={args.output}
+
+names=({" ".join(names)})
+
+for name in ${{names[@]}}
+do
+  qsub {args.qsub} -S /bin/bash -e $p/log -o $p/log -N $name $p/shell/$name.sh
+done
 """)
