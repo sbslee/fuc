@@ -701,8 +701,9 @@ ngs-bam2fq
    Pipeline for converting BAM files to FASTQ files.
    
    This pipeline will assume input BAM files consist of paired-end reads
-   and output two FASTQ files for each sample (forward and reverse reads).
-   That is, SAMPLE.bam will produce SAMPLE_R1.fastq and SAMPLE_R2.fastq.
+   and output two zipped FASTQ files for each sample (forward and reverse
+   reads). That is, SAMPLE.bam will produce SAMPLE_R1.fastq.gz and
+   SAMPLE_R2.fastq.gz.
    
    External dependencies:
      - SGE: Required for job submission (i.e. qsub).
