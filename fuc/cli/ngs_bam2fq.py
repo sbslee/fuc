@@ -102,7 +102,7 @@ f"""#!/bin/bash
 source activate {api.common.conda_env()}
 
 # Convert BAM to FASTQ.
-samtools collate -O -@ {args.thread} {r.BAM} | samtools fastq -1 {args.output}/{name}_R1.fastq.gz -2 {args.output}/{name}_R2.fastq.gz
+samtools collate -O -@ {args.thread} {r.BAM} | samtools fastq -0 /dev/null -1 {args.output}/{name}_R1.fastq.gz -2 {args.output}/{name}_R2.fastq.gz
 """)
 
     with open(f'{args.output}/shell/qsubme.sh', 'w') as f:
