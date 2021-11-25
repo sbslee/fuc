@@ -194,7 +194,7 @@ class CovFrame:
         zero : bool, default: False
             If True, output all positions (including those with zero depth).
         map_qual: int, optional
-            Only count reads with mapping quality greater than orequal to
+            Only count reads with mapping quality greater than or equal to
             this number.
         names : list, optional
             Use these as sample names instead of the SM tags.
