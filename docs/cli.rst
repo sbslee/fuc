@@ -28,6 +28,7 @@ For getting help on the fuc CLI:
        bed-sum      Summarize a BED file.
        cov-concat   Concatenate depth of coverage files.
        cov-rename   Rename the samples in a depth of coverage file.
+       fa-filter    Filter sequence records in a FASTA file
        fq-count     Count sequence reads in FASTQ files.
        fq-sum       Summarize a FASTQ file.
        fuc-bgzip    Write a BGZF compressed file.
@@ -334,6 +335,32 @@ cov-rename
    
    [Example] Using the 'RANGE' mode:
      $ fuc cov-rename in.tsv new_only.tsv --mode RANGE --range 2 5 > out.tsv
+
+fa-filter
+=========
+
+.. code-block:: text
+
+   $ fuc fa-filter -h
+   usage: fuc fa-filter [-h] [--contigs TEXT [TEXT ...]] [--exclude] fasta
+   
+   Filter sequence records in a FASTA file.
+   
+   Positional arguments:
+     fasta                 FASTA file (compressed or uncompressed).
+   
+   Optional arguments:
+     -h, --help            Show this help message and exit.
+     --contigs TEXT [TEXT ...]
+                           One or more contigs to be selected. Alternatively, you can 
+                           provide a file containing one contig per line. 
+     --exclude             Exclude specified contigs.
+   
+   [Example] Select certain contigs:
+     $ fuc fa-filter in.fasta --contigs chr1 chr2
+   
+   [Example] Select certain contigs:
+     $ fuc fa-filter in.fasta --contigs contigs.list --exclude
 
 fq-count
 ========

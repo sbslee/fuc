@@ -121,6 +121,7 @@ For getting help on the fuc CLI:
        bed-sum      Summarize a BED file.
        cov-concat   Concatenate depth of coverage files.
        cov-rename   Rename the samples in a depth of coverage file.
+       fa-filter    Filter sequence records in a FASTA file
        fq-count     Count sequence reads in FASTQ files.
        fq-sum       Summarize a FASTQ file.
        fuc-bgzip    Write a BGZF compressed file.
