@@ -357,10 +357,10 @@ fa-filter
      --exclude             Exclude specified contigs.
    
    [Example] Select certain contigs:
-     $ fuc fa-filter in.fasta --contigs chr1 chr2
+     $ fuc fa-filter in.fasta --contigs chr1 chr2 > out.fasta
    
    [Example] Select certain contigs:
-     $ fuc fa-filter in.fasta --contigs contigs.list --exclude
+     $ fuc fa-filter in.fasta --contigs contigs.list --exclude > out.fasta
 
 fq-count
 ========

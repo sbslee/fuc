@@ -12,10 +12,10 @@ Filter sequence records in a FASTA file.
 
 epilog = f"""
 [Example] Select certain contigs:
-  $ fuc {api.common._script_name()} in.fasta --contigs chr1 chr2
+  $ fuc {api.common._script_name()} in.fasta --contigs chr1 chr2 > out.fasta
 
 [Example] Select certain contigs:
-  $ fuc {api.common._script_name()} in.fasta --contigs contigs.list --exclude
+  $ fuc {api.common._script_name()} in.fasta --contigs contigs.list --exclude > out.fasta
 """
 
 def create_parser(subparsers):
