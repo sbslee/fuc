@@ -3226,6 +3226,8 @@ class VcfFrame:
             i = ~i
         if as_index:
             return i
+        if i.empty:
+            return self.__class__(self.copy_meta(), self.copy_df())
         return self.__class__(self.copy_meta(), self.df[i])
 
     def filter_empty(self, threshold=0, opposite=False, as_index=False):
@@ -3321,6 +3323,8 @@ class VcfFrame:
             i = ~i
         if as_index:
             return i
+        if i.empty:
+            return self.__class__(self.copy_meta(), self.copy_df())
         return self.__class__(self.copy_meta(), self.df[i])
 
     def filter_indel(self, opposite=False, as_index=False):
@@ -3392,6 +3396,8 @@ class VcfFrame:
             i = ~i
         if as_index:
             return i
+        if i.empty:
+            return self.__class__(self.copy_meta(), self.copy_df())
         return self.__class__(self.copy_meta(), self.df[i])
 
     def filter_flagall(self, flags, opposite=False, as_index=False):
@@ -3473,6 +3479,8 @@ class VcfFrame:
             i = ~i
         if as_index:
             return i
+        if i.empty:
+            return self.__class__(self.copy_meta(), self.copy_df())
         return self.__class__(self.copy_meta(), self.df[i])
 
     def filter_flagany(self, flags, opposite=False, as_index=False):
@@ -3554,6 +3562,8 @@ class VcfFrame:
             i = ~i
         if as_index:
             return i
+        if i.empty:
+            return self.__class__(self.copy_meta(), self.copy_df())
         return self.__class__(self.copy_meta(), self.df[i])
 
     def filter_multialt(self, opposite=False, as_index=False):
@@ -3627,6 +3637,8 @@ class VcfFrame:
             i = ~i
         if as_index:
             return i
+        if i.empty:
+            return self.__class__(self.copy_meta(), self.copy_df())
         return self.__class__(self.copy_meta(), self.df[i])
 
     def filter_pass(self, opposite=False, as_index=False):
@@ -3698,10 +3710,13 @@ class VcfFrame:
             i = ~i
         if as_index:
             return i
+        if i.empty:
+            return self.__class__(self.copy_meta(), self.copy_df())
         return self.__class__(self.copy_meta(), self.df[i])
 
     def filter_phased(self, opposite=False, as_index=False):
-        """Remove rows with phased genotypes.
+        """
+        Remove rows with phased genotypes.
 
         Parameters
         ----------
@@ -3769,10 +3784,13 @@ class VcfFrame:
             i = ~i
         if as_index:
             return i
+        if i.empty:
+            return self.__class__(self.copy_meta(), self.copy_df())
         return self.__class__(self.copy_meta(), self.df[i])
 
     def filter_polyp(self, opposite=False, as_index=False):
-        """Remove rows with a polyploid genotype call.
+        """
+        Remove rows with a polyploid genotype call.
 
         Parameters
         ----------
@@ -3840,6 +3858,8 @@ class VcfFrame:
             i = ~i
         if as_index:
             return i
+        if i.empty:
+            return self.__class__(self.copy_meta(), self.copy_df())
         return self.__class__(self.copy_meta(), self.df[i])
 
     def filter_qual(self, threshold, opposite=False, as_index=False):
@@ -3918,6 +3938,8 @@ class VcfFrame:
             i = ~i
         if as_index:
             return i
+        if i.empty:
+            return self.__class__(self.copy_meta(), self.copy_df())
         return self.__class__(self.copy_meta(), self.df[i])
 
     def filter_sampall(self, samples=None, opposite=False, as_index=False):
@@ -4014,6 +4036,8 @@ class VcfFrame:
             i = ~i
         if as_index:
             return i
+        if i.empty:
+            return self.__class__(self.copy_meta(), self.copy_df())
         return self.__class__(self.copy_meta(), self.df[i])
 
     def filter_sampany(self, samples=None, opposite=False, as_index=False):
@@ -4110,6 +4134,8 @@ class VcfFrame:
             i = ~i
         if as_index:
             return i
+        if i.empty:
+            return self.__class__(self.copy_meta(), self.copy_df())
         return self.__class__(self.copy_meta(), self.df[i])
 
     def filter_sampnum(self, threshold, opposite=False, as_index=False):
@@ -4195,8 +4221,9 @@ class VcfFrame:
             i = ~i
         if as_index:
             return i
-        vf = self.__class__(self.copy_meta(), self.df[i])
-        return vf
+        if i.empty:
+            return self.__class__(self.copy_meta(), self.copy_df())
+        return self.__class__(self.copy_meta(), self.df[i])
 
     def filter_vcf(self, vcf, opposite=False, as_index=False):
         """
@@ -4295,6 +4322,8 @@ class VcfFrame:
             i = ~i
         if as_index:
             return i
+        if i.empty:
+            return self.__class__(self.copy_meta(), self.copy_df())
         return self.__class__(self.copy_meta(), self.df[i])
 
     def subtract(self, a, b):
