@@ -11,6 +11,7 @@ Changelog
 * Fix bug in :meth:`pyvcf.slice` method when the input region is missing start or end.
 * Add new command :command:`ngs-bam2fq`.
 * Add new command :command:`fa-filter`.
+* Update :meth:`pycov.CovFrame.plot_region` method to raise an error if the CovFrame is empty.
 
 0.27.0 (2021-11-20)
 -------------------

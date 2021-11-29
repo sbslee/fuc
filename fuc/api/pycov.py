@@ -437,6 +437,9 @@ class CovFrame:
             >>> ax.legend()
             >>> plt.tight_layout()
         """
+        if self.df.empty:
+            raise ValueError('CovFrame is empty')
+
         if region is None:
             if len(self.contigs) == 1:
                 cf = self.copy()
