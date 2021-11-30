@@ -2453,6 +2453,9 @@ class VcfFrame:
             >>> vf.plot_region('NA18973', k='#AD_FRAC_ALT', label='ALT', ax=ax)
             >>> plt.tight_layout()
         """
+        if self.df.empty:
+            raise ValueError('VcfFrame is empty')
+
         sample = sample if isinstance(sample, str) else self.samples[sample]
 
         if region is None:
