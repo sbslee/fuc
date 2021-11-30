@@ -13,6 +13,7 @@ Changelog
 * Add new command :command:`fa-filter`.
 * Update :meth:`pycov.CovFrame.plot_region` method to raise an error if the CovFrame is empty.
 * Update :meth:`pyvcf.VcfFrame.filter_*` methods so that they don't raise an error when the VcfFrame is empty.
+* Update :meth:`common.plot_exons` method to not italicize text by default (use ``name='$text$'`` to italicize).
 
 0.27.0 (2021-11-20)
 -------------------

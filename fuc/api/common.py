@@ -1034,7 +1034,7 @@ def plot_exons(
     ends : list
         List of exon end positions.
     name : str, optional
-        Gene name.
+        Gene name. Use ``name='$text$'`` to italicize the text.
     offset : float, default: 1
         How far gene name should be plotted from the gene model.
     color : str, default: 'black'
@@ -1086,7 +1086,7 @@ def plot_exons(
         ax.text(
             x=(starts[0]+ends[-1]) / 2,
             y=y-offset,
-            s=f'${name}$',
+            s=name,
             horizontalalignment='center',
             fontsize=fontsize,
         )
