@@ -103,6 +103,11 @@ def create_parser(subparsers):
         action='store_true',
         help='Keep temporary files.'
     )
+    parser.add_argument(
+        '--posix',
+        action='store_true',
+        help='Optimize for a POSIX filesystem.'
+    )
 
 def main(args):
     if os.path.exists(args.output) and args.force:
@@ -168,6 +173,15 @@ source activate {api.common.conda_env()}
         with open(f'{args.output}/shell/S2-{chrom}.sh', 'w') as f:
 
             ####################
+            # POSIX filesystem #
+            ####################
+
+            if args.posix:
+                export = 'export TILEDB_DISABLE_FILE_LOCKING=1'
+            else:
+                export = '# export TILEDB_DISABLE_FILE_LOCKING=1'
+
+            ####################
             # GenomicsDBImport #
             ####################
 
@@ -207,6 +221,9 @@ source activate {api.common.conda_env()}
 
             f.write(
 f"""#!/bin/bash
+
+# Optimize for POSIX filesystem.
+{export}
 
 # Activate conda environment.
 source activate {api.common.conda_env()}
