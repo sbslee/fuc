@@ -845,7 +845,7 @@ ngs-hc
 
    $ fuc ngs-hc -h
    usage: fuc ngs-hc [-h] [--bed PATH] [--dbsnp PATH] [--job TEXT] [--force]
-                     [--keep]
+                     [--keep] [--posix]
                      manifest fasta output qsub java1 java2
    
    Pipeline for germline short variant discovery.
@@ -872,6 +872,7 @@ ngs-hc
      --job TEXT    Job submission ID for SGE.
      --force       Overwrite the output directory if it already exists.
      --keep        Keep temporary files.
+     --posix       Optimize for a POSIX filesystem.
    
    [Example] Specify queue:
      $ fuc ngs-hc \
