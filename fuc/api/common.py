@@ -307,6 +307,11 @@ class AnnFrame:
         if group_order is None:
             group_order = sorted([x for x in s.unique() if x == x])
         else:
+            if set(s) != set(group_order):
+                raise ValueError(
+                    f'Different groups detected. User provided '
+                    f'{sorted(group_order)} but AnnFrame column '
+                    f'contains {sorted(s.unique())}.')
             s = s[s.isin(group_order)]
         d = {k: v for v, k in enumerate(group_order)}
         df = s.to_frame().applymap(lambda x: x if pd.isna(x) else d[x])
