@@ -15,6 +15,7 @@ Changelog
 * Update :meth:`pyvcf.VcfFrame.filter_*` methods so that they don't raise an error when the VcfFrame is empty.
 * Update :meth:`common.plot_exons` method to not italicize text by default (use ``name='$text$'`` to italicize).
 * Add new argument ``--posix`` to :command:`ngs-hc` command.
+* Add new method :meth:`common.AnnFrame.subset`.
 
 0.27.0 (2021-11-20)
 -------------------

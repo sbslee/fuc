@@ -445,6 +445,63 @@ class AnnFrame:
 
         return df.index.to_list()
 
+    def subset(self, samples, exclude=False):
+        """
+        Subset AnnFrame for specified samples.
+
+        Parameters
+        ----------
+        samples : str or list
+            Sample name or list of names (the order matters).
+        exclude : bool, default: False
+            If True, exclude specified samples.
+
+        Returns
+        -------
+        AnnFrame
+            Subsetted AnnFrame.
+
+        Examples
+        --------
+
+        >>> from fuc import common
+        >>> data = {
+        ...     'SampleID': ['A', 'B', 'C', 'D'],
+        ...     'PatientID': ['P1', 'P1', 'P2', 'P2'],
+        ...     'Tissue': ['Normal', 'Tumor', 'Normal', 'Tumor'],
+        ...     'Age': [30, 30, 57, 57]
+        ... }
+        >>> af = common.AnnFrame.from_dict(data, sample_col='SampleID') # or sample_col=0
+        >>> af.df
+                 PatientID  Tissue  Age
+        SampleID
+        A               P1  Normal   30
+        B               P1   Tumor   30
+        C               P2  Normal   57
+        D               P2   Tumor   57
+
+        We can subset the AnnFrame for the normal samples A and C:
+
+        >>> af.subset(['A', 'C']).df
+                 PatientID  Tissue  Age
+        SampleID
+        A               P1  Normal   30
+        C               P2  Normal   57
+
+        Alternatively, we can exclude those samples:
+
+        >>> af.subset(['A', 'C'], exclude=True).df
+                 PatientID Tissue  Age
+        SampleID
+        B               P1  Tumor   30
+        D               P2  Tumor   57
+        """
+        if isinstance(samples, str):
+            samples = [samples]
+        if exclude:
+            samples = [x for x in self.samples if x not in samples]
+        return self.__class__(self.df.loc[samples])
+
 def _script_name():
     """Return the current script's filename."""
     fn = inspect.stack()[1].filename
