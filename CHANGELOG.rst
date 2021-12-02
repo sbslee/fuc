@@ -16,7 +16,7 @@ Changelog
 * Update :meth:`common.plot_exons` method to not italicize text by default (use ``name='$text$'`` to italicize).
 * Add new argument ``--posix`` to :command:`ngs-hc` command.
 * Add new method :meth:`common.AnnFrame.subset`.
-* Update :meth:`common.AnnFrame.plot_annot` method to raise an error if user-provided list of groups differs from what the AnnFrame column contains.
+* Update :meth:`common.AnnFrame.plot_annot` method to raise an error if user provides an invalid group in ``group_order``.
 
 0.27.0 (2021-11-20)
 -------------------

@@ -233,9 +233,12 @@ class AnnFrame:
         Parameters
         ----------
         group_col : str
-            AnnFrame column containing sample group information.
+            AnnFrame column containing sample group information. If the
+            column has NaN values, they will be converted to 'N/A' string.
         group_order : list, optional
-            List of sample group names.
+            List of sample group names (in that order too). You can use this
+            to subset samples belonging to specified groups only. You must
+            include all relevant groups when also using ``samples``.
         samples : list, optional
             Display only specified samples (in that order too).
         colors : str or list, default: 'tab10'
@@ -298,6 +301,7 @@ class AnnFrame:
         """
         # Get the selected column.
         s = self.df[group_col]
+        s = s.fillna('N/A')
 
         # Subset the samples, if necessary.
         if samples is not None:
@@ -307,14 +311,26 @@ class AnnFrame:
         if group_order is None:
             group_order = sorted([x for x in s.unique() if x == x])
         else:
-            if set(s) != set(group_order):
-                raise ValueError(
-                    f'Different groups detected. User provided '
-                    f'{sorted(group_order)} but AnnFrame column '
-                    f'contains {sorted(s.unique())}.')
-            s = s[s.isin(group_order)]
+            # Make sure all specified groups are valid.
+            for group in group_order:
+                groups = ', '.join([f"'{x}'" for x in sorted(s.unique())])
+                if group not in s.unique():
+                    raise ValueError(f"The group '{group}' does not exist. "
+                        f"The following groups are available: {groups}.")
+
+            if len(group_order) < len(s.unique()):
+                if samples is None:
+                    s = s[s.isin(group_order)]
+                else:
+                    missing = ', '.join([f"'{x}'" for x in s.unique()
+                        if x not in group_order])
+                    raise ValueError("The 'group_order' argumnet must "
+                        "include all groups when used with the 'samples' "
+                        "argument. Following groups are currently missing: "
+                        f"{missing}.")
+
         d = {k: v for v, k in enumerate(group_order)}
-        df = s.to_frame().applymap(lambda x: x if pd.isna(x) else d[x])
+        df = s.to_frame().applymap(lambda x: d[x])
 
         # Determine the colors to use.
         if isinstance(colors, str):
