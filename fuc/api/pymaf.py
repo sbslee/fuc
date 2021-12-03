@@ -3798,3 +3798,36 @@ class MafFrame:
             n = [x + y for x, y in zip(n, self.calculate_concordance(a[i], b[i], c[i]))]
         out = venn3(subsets=n[:-1], **venn_kws)
         return out
+
+    def get_gene_concordance(self, gene, a, b):
+        """
+        Test whether two samples have the identical mutation profile for
+        specified gene.
+
+        Parameters
+        ----------
+        gene : str
+            Name of the gene.
+        a, b : str
+            Sample name.
+
+        Returns
+        -------
+        bool
+            True if the two samples have the same mutation profile.
+        """
+        df = self.df[self.df.Hugo_Symbol == gene]
+        df = df[df.Tumor_Sample_Barcode.isin([a, b])]
+
+        # Both samples don't have any mutations.
+        if df.empty:
+            return True
+
+        # Only one sample has mutation(s).
+        if df.Tumor_Sample_Barcode.nunique() == 1:
+            return False
+
+        p1 = set(df[df.Tumor_Sample_Barcode == a].Protein_Change)
+        p2 = set(df[df.Tumor_Sample_Barcode == b].Protein_Change)
+
+        return p1 == p2

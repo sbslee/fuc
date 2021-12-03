@@ -17,6 +17,7 @@ Changelog
 * Add new argument ``--posix`` to :command:`ngs-hc` command.
 * Add new method :meth:`common.AnnFrame.subset`.
 * Update :meth:`common.AnnFrame.plot_annot` method to raise an error if user provides an invalid group in ``group_order``.
+* Add new method :meth:`pymaf.MafFrame.get_gene_concordance`.
 
 0.27.0 (2021-11-20)
 -------------------
