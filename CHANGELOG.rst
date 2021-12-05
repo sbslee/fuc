@@ -1,8 +1,8 @@
 Changelog
 *********
 
-0.28.0 (in development)
------------------------
+0.28.0 (2021-12-05)
+-------------------
 
 * Update :meth:`pyvcf.VcfFrame.filter_empty` method so that users can choose a varying number of missing genotypes as threshold.
 * Add new method :meth:`pyvcf.plot_af_correlation`.
@@ -12,7 +12,7 @@ Changelog
 * Add new command :command:`ngs-bam2fq`.
 * Add new command :command:`fa-filter`.
 * Update :meth:`pycov.CovFrame.plot_region` and :meth:`pyvcf.VcfFrame.plot_region` methods to raise an error if the CovFrame/VcfFrame is empty.
-* Update :meth:`pyvcf.VcfFrame.filter_*` methods so that they don't raise an error when the VcfFrame is empty.
+* Update :meth:`pyvcf.VcfFrame.filter_*` methods so that they don't raise an error when the VcfFrame is empty (i.e. will return the empty VcfFrame).
 * Update :meth:`common.plot_exons` method to not italicize text by default (use ``name='$text$'`` to italicize).
 * Add new argument ``--posix`` to :command:`ngs-hc` command.
 * Add new method :meth:`common.AnnFrame.subset`.
