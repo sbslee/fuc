@@ -11,10 +11,10 @@ This command will create an index file (.tbi) for the input VCF.
 """
 
 epilog = f"""
-[Example] Index a compressed VCF file.
+[Example] Index a compressed VCF file:
   $ fuc {api.common._script_name()} in.vcf.gz
 
-[Example] Index an uncompressed VCF file. Will create a compressed file first.
+[Example] Index an uncompressed VCF file (will create a compressed VCF first):
   $ fuc {api.common._script_name()} in.vcf
 """
 

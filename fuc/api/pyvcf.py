@@ -902,6 +902,10 @@ def slice(file, regions, path=None):
         data += str(vcf.header)
         for region in regions:
             chrom, start, end = common.parse_region(region)
+            if np.isnan(start):
+                start = None
+            if np.isnan(end):
+                end = None
             for record in vcf.fetch(chrom, start, end):
                 data += str(record)
     else:
@@ -916,6 +920,108 @@ def slice(file, regions, path=None):
     vcf.close()
 
     return data
+
+def plot_af_correlation(vf1, vf2, ax=None, figsize=None):
+    """
+    Create a scatter plot showing the correlation of allele frequency between
+    two VCF files.
+
+    This method will exclude the following sites:
+
+        - non-onverlapping sites
+        - multiallelic sites
+        - sites with one or more missing genotypes
+
+    Parameters
+    ----------
+    vf1, vf2 : VcfFrame
+        VcfFrame objects to be compared.
+    ax : matplotlib.axes.Axes, optional
+        Pre-existing axes for the plot. Otherwise, crete a new one.
+    figsize : tuple, optional
+        Width, height in inches. Format: (float, float).
+
+    Returns
+    -------
+    matplotlib.axes.Axes
+        The matplotlib axes containing the plot.
+
+    Examples
+    --------
+    .. plot::
+        :context: close-figs
+
+        >>> from fuc import pyvcf, common
+        >>> import matplotlib.pyplot as plt
+        >>> data1 = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102, 103, 104, 105],
+        ...     'ID': ['.', '.', '.', '.', '.', '.'],
+        ...     'REF': ['G', 'T', 'G', 'T', 'A', 'C'],
+        ...     'ALT': ['A', 'C', 'C', 'G,A', 'C', 'T'],
+        ...     'QUAL': ['.', '.', '.', '.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.', '.', '.', '.'],
+        ...     'INFO': ['.', '.', '.', '.', '.', '.'],
+        ...     'FORMAT': ['GT:DP', 'GT', 'GT', 'GT', 'GT', 'GT'],
+        ...     'A': ['0/1:30', '0/0', '1/1', '0/1', '1/1', '0/1'],
+        ...     'B': ['0/0:30', '0/0', '0/1', '0/1', '1/1', '0/1'],
+        ...     'C': ['1/1:30', '0/0', '1/1', '0/1', '1/1', '0/1'],
+        ...     'D': ['0/0:30', '0/0', '0/0', '0/0', '1/1', '0/1'],
+        ...     'E': ['0/0:30', '0/0', '0/0', '1/2', '1/1', '0/1'],
+        ... }
+        >>> vf1 = pyvcf.VcfFrame.from_dict([], data1)
+        >>> data2 = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1', 'chr1'],
+        ...     'POS': [101, 102, 103, 104, 105],
+        ...     'ID': ['.', '.', '.', '.', '.'],
+        ...     'REF': ['T', 'G', 'T', 'A', 'C'],
+        ...     'ALT': ['C', 'C', 'G,A', 'C', 'T'],
+        ...     'QUAL': ['.', '.', '.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.', '.', '.'],
+        ...     'INFO': ['.', '.', '.', '.', '.'],
+        ...     'FORMAT': ['GT', 'GT', 'GT', 'GT', 'GT'],
+        ...     'F': ['0/0', '0/1', '0/1', '1/1', '0/0'],
+        ...     'G': ['0/0', '0/1', '0/1', '1/1', './.'],
+        ...     'H': ['0/0', '0/1', '0/1', '1/1', '1/1'],
+        ...     'I': ['0/0', '0/1', '0/0', '1/1', '1/1'],
+        ...     'J': ['0/0', '0/1', '1/2', '1/1', '0/1'],
+        ... }
+        >>> vf2 = pyvcf.VcfFrame.from_dict([], data2)
+        >>> pyvcf.plot_af_correlation(vf1, vf2)
+        >>> plt.tight_layout()
+    """
+    def one_gt(g):
+        alleles = g.split(':')[0].split('/')
+        alleles = [x for x in alleles if x != '0']
+        return len(alleles)
+
+    def one_row(r):
+        locus = f'{r.CHROM}-{r.POS}-{r.REF}-{r.ALT}'
+        ac = r[9:].apply(one_gt).sum()
+        if 'X' in r.CHROM or 'Y' in r.CHROM:
+            total = len(r[9:])
+        else:
+            total = len(r[9:]) * 2
+        af = ac / total
+        return pd.Series([locus, af])
+
+    s1 = vf1.filter_multialt().filter_empty(threshold=1).df.apply(one_row, axis=1)
+    s2 = vf2.filter_multialt().filter_empty(threshold=1).df.apply(one_row, axis=1)
+
+    s1.columns = ['Locus', 'First']
+    s2.columns = ['Locus', 'Second']
+
+    s1 = s1.set_index('Locus')
+    s2 = s2.set_index('Locus')
+
+    df = pd.concat([s1, s2], axis=1).dropna()
+
+    if ax is None:
+        fig, ax = plt.subplots(figsize=figsize)
+
+    sns.scatterplot(data=df, x='First', y='Second', ax=ax)
+
+    return ax
 
 class VcfFrame:
     """
@@ -2347,6 +2453,9 @@ class VcfFrame:
             >>> vf.plot_region('NA18973', k='#AD_FRAC_ALT', label='ALT', ax=ax)
             >>> plt.tight_layout()
         """
+        if self.df.empty:
+            raise ValueError('VcfFrame is empty')
+
         sample = sample if isinstance(sample, str) else self.samples[sample]
 
         if region is None:
@@ -3120,13 +3229,20 @@ class VcfFrame:
             i = ~i
         if as_index:
             return i
+        if i.empty:
+            return self.__class__(self.copy_meta(), self.copy_df())
         return self.__class__(self.copy_meta(), self.df[i])
 
-    def filter_empty(self, opposite=False, as_index=False):
-        """Remove rows with no genotype calls at all.
+    def filter_empty(self, threshold=0, opposite=False, as_index=False):
+        """
+        Remove rows with missing genotype calls.
 
         Parameters
         ----------
+        threshold: int, default: 0
+            Exclude the row if it has a number of missing genotypes that is
+            greater than or equal to this number. When 0 (default), exclude
+            rows where all of the samples have a missing genotype.
         opposite : bool, default: False
             If True, return rows that don't meet the said criteria.
         as_index : bool, default: False
@@ -3143,56 +3259,75 @@ class VcfFrame:
 
         >>> from fuc import pyvcf
         >>> data = {
-        ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1'],
-        ...     'POS': [100, 101, 102, 103],
-        ...     'ID': ['.', '.', '.', '.'],
-        ...     'REF': ['G', 'T', 'A', 'C'],
-        ...     'ALT': ['A', 'C', 'T', 'A'],
-        ...     'QUAL': ['.', '.', '.', '.'],
-        ...     'FILTER': ['.', '.', '.', '.'],
-        ...     'INFO': ['.', '.', '.', '.'],
-        ...     'FORMAT': ['GT', 'GT', 'GT', 'GT'],
-        ...     'Steven': ['0/0', './.', '0/1', './.'],
-        ...     'Sara': ['0/0', './.', './.', './.'],
-        ...     'James': ['0/0', './.', '0/1', './.'],
+        ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102, 103, 104],
+        ...     'ID': ['.', '.', '.', '.', '.'],
+        ...     'REF': ['G', 'T', 'A', 'C', 'C'],
+        ...     'ALT': ['A', 'C', 'T', 'A', 'T'],
+        ...     'QUAL': ['.', '.', '.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.', '.', '.'],
+        ...     'INFO': ['.', '.', '.', '.', '.'],
+        ...     'FORMAT': ['GT', 'GT', 'GT', 'GT', 'GT'],
+        ...     'A': ['0/1', './.', './.', './.', './.'],
+        ...     'B': ['0/0', '0/1', './.', './.', './.'],
+        ...     'C': ['0/0', '0/0', '0/1', './.', './.'],
         ... }
         >>> vf = pyvcf.VcfFrame.from_dict([], data)
-        >>> vf.filter_indel().df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven Sara James
-        0  chr1  100  .   G   A    .      .    .     GT    0/0  0/0   0/0
-        1  chr1  101  .   T   C    .      .    .     GT    ./.  ./.   ./.
-        2  chr1  102  .   A   T    .      .    .     GT    0/1  ./.   0/1
-        3  chr1  103  .   C   A    .      .    .     GT    ./.  ./.   ./.
+        >>> vf.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    B    C
+        0  chr1  100  .   G   A    .      .    .     GT  0/1  0/0  0/0
+        1  chr1  101  .   T   C    .      .    .     GT  ./.  0/1  0/0
+        2  chr1  102  .   A   T    .      .    .     GT  ./.  ./.  0/1
+        3  chr1  103  .   C   A    .      .    .     GT  ./.  ./.  ./.
+        4  chr1  104  .   C   T    .      .    .     GT  ./.  ./.  ./.
 
-        We can remove empty rows:
+        We can remove rows that are completely empty:
 
         >>> vf.filter_empty().df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven Sara James
-        0  chr1  100  .   G   A    .      .    .     GT    0/0  0/0   0/0
-        1  chr1  102  .   A   T    .      .    .     GT    0/1  ./.   0/1
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    B    C
+        0  chr1  100  .   G   A    .      .    .     GT  0/1  0/0  0/0
+        1  chr1  101  .   T   C    .      .    .     GT  ./.  0/1  0/0
+        2  chr1  102  .   A   T    .      .    .     GT  ./.  ./.  0/1
 
-        We can also select those rows:
+        We can remove rows where at least two samples have missing genotype:
+
+        >>> vf.filter_empty(threshold=2).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    B    C
+        0  chr1  100  .   G   A    .      .    .     GT  0/1  0/0  0/0
+        1  chr1  101  .   T   C    .      .    .     GT  ./.  0/1  0/0
+
+        We can show rows that are completely empty:
 
         >>> vf.filter_empty(opposite=True).df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven Sara James
-        0  chr1  101  .   T   C    .      .    .     GT    ./.  ./.   ./.
-        1  chr1  103  .   C   A    .      .    .     GT    ./.  ./.   ./.
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    B    C
+        0  chr1  103  .   C   A    .      .    .     GT  ./.  ./.  ./.
+        1  chr1  104  .   C   T    .      .    .     GT  ./.  ./.  ./.
 
         Finally, we can return boolean index array from the filtering:
 
         >>> vf.filter_empty(as_index=True)
         0     True
-        1    False
+        1     True
         2     True
         3    False
+        4    False
         dtype: bool
         """
-        f = lambda r: not all(r.iloc[9:].apply(gt_miss))
-        i = self.df.apply(f, axis=1)
+        if not threshold:
+            threshold = self.shape[1]
+
+        def one_row(r):
+            s = r[9:].apply(gt_miss)
+            return s.sum() < threshold
+
+        i = self.df.apply(one_row, axis=1)
+
         if opposite:
             i = ~i
         if as_index:
             return i
+        if i.empty:
+            return self.__class__(self.copy_meta(), self.copy_df())
         return self.__class__(self.copy_meta(), self.df[i])
 
     def filter_indel(self, opposite=False, as_index=False):
@@ -3264,6 +3399,8 @@ class VcfFrame:
             i = ~i
         if as_index:
             return i
+        if i.empty:
+            return self.__class__(self.copy_meta(), self.copy_df())
         return self.__class__(self.copy_meta(), self.df[i])
 
     def filter_flagall(self, flags, opposite=False, as_index=False):
@@ -3345,6 +3482,8 @@ class VcfFrame:
             i = ~i
         if as_index:
             return i
+        if i.empty:
+            return self.__class__(self.copy_meta(), self.copy_df())
         return self.__class__(self.copy_meta(), self.df[i])
 
     def filter_flagany(self, flags, opposite=False, as_index=False):
@@ -3426,6 +3565,8 @@ class VcfFrame:
             i = ~i
         if as_index:
             return i
+        if i.empty:
+            return self.__class__(self.copy_meta(), self.copy_df())
         return self.__class__(self.copy_meta(), self.df[i])
 
     def filter_multialt(self, opposite=False, as_index=False):
@@ -3499,6 +3640,8 @@ class VcfFrame:
             i = ~i
         if as_index:
             return i
+        if i.empty:
+            return self.__class__(self.copy_meta(), self.copy_df())
         return self.__class__(self.copy_meta(), self.df[i])
 
     def filter_pass(self, opposite=False, as_index=False):
@@ -3570,10 +3713,13 @@ class VcfFrame:
             i = ~i
         if as_index:
             return i
+        if i.empty:
+            return self.__class__(self.copy_meta(), self.copy_df())
         return self.__class__(self.copy_meta(), self.df[i])
 
     def filter_phased(self, opposite=False, as_index=False):
-        """Remove rows with phased genotypes.
+        """
+        Remove rows with phased genotypes.
 
         Parameters
         ----------
@@ -3641,10 +3787,13 @@ class VcfFrame:
             i = ~i
         if as_index:
             return i
+        if i.empty:
+            return self.__class__(self.copy_meta(), self.copy_df())
         return self.__class__(self.copy_meta(), self.df[i])
 
     def filter_polyp(self, opposite=False, as_index=False):
-        """Remove rows with a polyploid genotype call.
+        """
+        Remove rows with a polyploid genotype call.
 
         Parameters
         ----------
@@ -3712,6 +3861,8 @@ class VcfFrame:
             i = ~i
         if as_index:
             return i
+        if i.empty:
+            return self.__class__(self.copy_meta(), self.copy_df())
         return self.__class__(self.copy_meta(), self.df[i])
 
     def filter_qual(self, threshold, opposite=False, as_index=False):
@@ -3790,6 +3941,8 @@ class VcfFrame:
             i = ~i
         if as_index:
             return i
+        if i.empty:
+            return self.__class__(self.copy_meta(), self.copy_df())
         return self.__class__(self.copy_meta(), self.df[i])
 
     def filter_sampall(self, samples=None, opposite=False, as_index=False):
@@ -3886,6 +4039,8 @@ class VcfFrame:
             i = ~i
         if as_index:
             return i
+        if i.empty:
+            return self.__class__(self.copy_meta(), self.copy_df())
         return self.__class__(self.copy_meta(), self.df[i])
 
     def filter_sampany(self, samples=None, opposite=False, as_index=False):
@@ -3982,6 +4137,8 @@ class VcfFrame:
             i = ~i
         if as_index:
             return i
+        if i.empty:
+            return self.__class__(self.copy_meta(), self.copy_df())
         return self.__class__(self.copy_meta(), self.df[i])
 
     def filter_sampnum(self, threshold, opposite=False, as_index=False):
@@ -4067,8 +4224,9 @@ class VcfFrame:
             i = ~i
         if as_index:
             return i
-        vf = self.__class__(self.copy_meta(), self.df[i])
-        return vf
+        if i.empty:
+            return self.__class__(self.copy_meta(), self.copy_df())
+        return self.__class__(self.copy_meta(), self.df[i])
 
     def filter_vcf(self, vcf, opposite=False, as_index=False):
         """
@@ -4167,6 +4325,8 @@ class VcfFrame:
             i = ~i
         if as_index:
             return i
+        if i.empty:
+            return self.__class__(self.copy_meta(), self.copy_df())
         return self.__class__(self.copy_meta(), self.df[i])
 
     def subtract(self, a, b):

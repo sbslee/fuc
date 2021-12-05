@@ -121,6 +121,7 @@ For getting help on the fuc CLI:
        bed-sum      Summarize a BED file.
        cov-concat   Concatenate depth of coverage files.
        cov-rename   Rename the samples in a depth of coverage file.
+       fa-filter    Filter sequence records in a FASTA file
        fq-count     Count sequence reads in FASTQ files.
        fq-sum       Summarize a FASTQ file.
        fuc-bgzip    Write a BGZF compressed file.
@@ -133,6 +134,7 @@ For getting help on the fuc CLI:
        maf-oncoplt  Create an oncoplot with a MAF file.
        maf-sumplt   Create a summary plot with a MAF file.
        maf-vcf2maf  Convert a VCF file to a MAF file.
+       ngs-bam2fq   Pipeline for converting BAM files to FASTQ files.
        ngs-fq2bam   Pipeline for converting FASTQ files to analysis-ready BAM files.
        ngs-hc       Pipeline for germline short variant discovery.
        ngs-m2       Pipeline for somatic short variant discovery.

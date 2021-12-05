@@ -233,9 +233,12 @@ class AnnFrame:
         Parameters
         ----------
         group_col : str
-            AnnFrame column containing sample group information.
+            AnnFrame column containing sample group information. If the
+            column has NaN values, they will be converted to 'N/A' string.
         group_order : list, optional
-            List of sample group names.
+            List of sample group names (in that order too). You can use this
+            to subset samples belonging to specified groups only. You must
+            include all relevant groups when also using ``samples``.
         samples : list, optional
             Display only specified samples (in that order too).
         colors : str or list, default: 'tab10'
@@ -298,6 +301,7 @@ class AnnFrame:
         """
         # Get the selected column.
         s = self.df[group_col]
+        s = s.fillna('N/A')
 
         # Subset the samples, if necessary.
         if samples is not None:
@@ -307,9 +311,26 @@ class AnnFrame:
         if group_order is None:
             group_order = sorted([x for x in s.unique() if x == x])
         else:
-            s = s[s.isin(group_order)]
+            # Make sure all specified groups are valid.
+            for group in group_order:
+                groups = ', '.join([f"'{x}'" for x in sorted(s.unique())])
+                if group not in s.unique():
+                    raise ValueError(f"The group '{group}' does not exist. "
+                        f"The following groups are available: {groups}.")
+
+            if len(group_order) < len(s.unique()):
+                if samples is None:
+                    s = s[s.isin(group_order)]
+                else:
+                    missing = ', '.join([f"'{x}'" for x in s.unique()
+                        if x not in group_order])
+                    raise ValueError("The 'group_order' argumnet must "
+                        "include all groups when used with the 'samples' "
+                        "argument. Following groups are currently missing: "
+                        f"{missing}.")
+
         d = {k: v for v, k in enumerate(group_order)}
-        df = s.to_frame().applymap(lambda x: x if pd.isna(x) else d[x])
+        df = s.to_frame().applymap(lambda x: d[x])
 
         # Determine the colors to use.
         if isinstance(colors, str):
@@ -444,6 +465,63 @@ class AnnFrame:
         df = df.sort_values(by=by)
 
         return df.index.to_list()
+
+    def subset(self, samples, exclude=False):
+        """
+        Subset AnnFrame for specified samples.
+
+        Parameters
+        ----------
+        samples : str or list
+            Sample name or list of names (the order matters).
+        exclude : bool, default: False
+            If True, exclude specified samples.
+
+        Returns
+        -------
+        AnnFrame
+            Subsetted AnnFrame.
+
+        Examples
+        --------
+
+        >>> from fuc import common
+        >>> data = {
+        ...     'SampleID': ['A', 'B', 'C', 'D'],
+        ...     'PatientID': ['P1', 'P1', 'P2', 'P2'],
+        ...     'Tissue': ['Normal', 'Tumor', 'Normal', 'Tumor'],
+        ...     'Age': [30, 30, 57, 57]
+        ... }
+        >>> af = common.AnnFrame.from_dict(data, sample_col='SampleID') # or sample_col=0
+        >>> af.df
+                 PatientID  Tissue  Age
+        SampleID
+        A               P1  Normal   30
+        B               P1   Tumor   30
+        C               P2  Normal   57
+        D               P2   Tumor   57
+
+        We can subset the AnnFrame for the normal samples A and C:
+
+        >>> af.subset(['A', 'C']).df
+                 PatientID  Tissue  Age
+        SampleID
+        A               P1  Normal   30
+        C               P2  Normal   57
+
+        Alternatively, we can exclude those samples:
+
+        >>> af.subset(['A', 'C'], exclude=True).df
+                 PatientID Tissue  Age
+        SampleID
+        B               P1  Tumor   30
+        D               P2  Tumor   57
+        """
+        if isinstance(samples, str):
+            samples = [samples]
+        if exclude:
+            samples = [x for x in self.samples if x not in samples]
+        return self.__class__(self.df.loc[samples])
 
 def _script_name():
     """Return the current script's filename."""
@@ -1034,7 +1112,7 @@ def plot_exons(
     ends : list
         List of exon end positions.
     name : str, optional
-        Gene name.
+        Gene name. Use ``name='$text$'`` to italicize the text.
     offset : float, default: 1
         How far gene name should be plotted from the gene model.
     color : str, default: 'black'
@@ -1086,7 +1164,7 @@ def plot_exons(
         ax.text(
             x=(starts[0]+ends[-1]) / 2,
             y=y-offset,
-            s=f'${name}$',
+            s=name,
             horizontalalignment='center',
             fontsize=fontsize,
         )

@@ -28,6 +28,7 @@ For getting help on the fuc CLI:
        bed-sum      Summarize a BED file.
        cov-concat   Concatenate depth of coverage files.
        cov-rename   Rename the samples in a depth of coverage file.
+       fa-filter    Filter sequence records in a FASTA file
        fq-count     Count sequence reads in FASTQ files.
        fq-sum       Summarize a FASTQ file.
        fuc-bgzip    Write a BGZF compressed file.
@@ -40,6 +41,7 @@ For getting help on the fuc CLI:
        maf-oncoplt  Create an oncoplot with a MAF file.
        maf-sumplt   Create a summary plot with a MAF file.
        maf-vcf2maf  Convert a VCF file to a MAF file.
+       ngs-bam2fq   Pipeline for converting BAM files to FASTQ files.
        ngs-fq2bam   Pipeline for converting FASTQ files to analysis-ready BAM files.
        ngs-hc       Pipeline for germline short variant discovery.
        ngs-m2       Pipeline for somatic short variant discovery.
@@ -195,11 +197,20 @@ bam-slice
    usage: fuc bam-slice [-h] [--format TEXT] [--fasta PATH]
                         bam regions [regions ...]
    
-   Slice a SAM/BAM/CRAM file.
+   Slice an alignment file (SAM/BAM/CRAM).
    
    Positional arguments:
-     bam            Alignment file.
-     regions        List of regions to be sliced ('chrom:start-end').
+     bam            Input alignment file must be already indexed (.bai) to allow 
+                    random access. You can index an alignment file with the 
+                    bam-index command.
+     regions        One or more regions to be sliced. Each region must have the 
+                    format chrom:start-end and be a half-open interval with 
+                    (start, end]. This means, for example, chr1:100-103 will 
+                    extract positions 101, 102, and 103. Alternatively, you can 
+                    provide a BED file (compressed or uncompressed) to specify 
+                    regions. Note that the 'chr' prefix in contig names (e.g. 
+                    'chr1' vs. '1') will be automatically added or removed as 
+                    necessary to match the input VCF's contig names.
    
    Optional arguments:
      -h, --help     Show this help message and exit.
@@ -207,11 +218,14 @@ bam-slice
                     'CRAM').
      --fasta PATH   FASTA file. Required when --format is 'CRAM'.
    
-   [Example] Slice a BAM file:
-     $ fuc bam-slice in.bam chr1:100-200 chr2:100-200 > out.bam
+   [Example] Specify regions manually:
+     $ fuc bam-slice in.bam 1:100-300 2:400-700 > out.bam
+   
+   [Example] Speicfy regions with a BED file:
+     $ fuc bam-slice in.bam regions.bed > out.bam
    
    [Example] Slice a CRAM file:
-     $ fuc bam-slice in.bam chr1:100-200 --format CRAM --fasta ref.fa > out.cram
+     $ fuc bam-slice in.bam regions.bed --format CRAM --fasta ref.fa > out.cram
 
 bed-intxn
 =========
@@ -321,6 +335,32 @@ cov-rename
    
    [Example] Using the 'RANGE' mode:
      $ fuc cov-rename in.tsv new_only.tsv --mode RANGE --range 2 5 > out.tsv
+
+fa-filter
+=========
+
+.. code-block:: text
+
+   $ fuc fa-filter -h
+   usage: fuc fa-filter [-h] [--contigs TEXT [TEXT ...]] [--exclude] fasta
+   
+   Filter sequence records in a FASTA file.
+   
+   Positional arguments:
+     fasta                 FASTA file (compressed or uncompressed).
+   
+   Optional arguments:
+     -h, --help            Show this help message and exit.
+     --contigs TEXT [TEXT ...]
+                           One or more contigs to be selected. Alternatively, you can 
+                           provide a file containing one contig per line. 
+     --exclude             Exclude specified contigs.
+   
+   [Example] Select certain contigs:
+     $ fuc fa-filter in.fasta --contigs chr1 chr2 > out.fasta
+   
+   [Example] Select certain contigs:
+     $ fuc fa-filter in.fasta --contigs contigs.list --exclude > out.fasta
 
 fq-count
 ========
@@ -677,6 +717,55 @@ maf-vcf2maf
    [Example] Convert VCF to MAF:
      $ fuc maf-vcf2maf in.vcf > out.maf
 
+ngs-bam2fq
+==========
+
+.. code-block:: text
+
+   $ fuc ngs-bam2fq -h
+   usage: fuc ngs-bam2fq [-h] [--thread INT] [--force] manifest output qsub
+   
+   Pipeline for converting BAM files to FASTQ files.
+   
+   This pipeline will assume input BAM files consist of paired-end reads
+   and output two zipped FASTQ files for each sample (forward and reverse
+   reads). That is, SAMPLE.bam will produce SAMPLE_R1.fastq.gz and
+   SAMPLE_R2.fastq.gz.
+   
+   External dependencies:
+     - SGE: Required for job submission (i.e. qsub).
+     - SAMtools: Required for BAM to FASTQ conversion.
+   
+   Manifest columns:
+     - BAM: BAM file.
+   
+   Positional arguments:
+     manifest      Sample manifest CSV file.
+     output        Output directory.
+     qsub          SGE resoruce to request with qsub for BAM to FASTQ 
+                   conversion. Since this oppoeration supports multithreading, 
+                   it is recommended to speicfy a parallel environment (PE) 
+                   to speed up the process (also see --thread).
+   
+   Optional arguments:
+     -h, --help    Show this help message and exit.
+     --thread INT  Number of threads to use (default: 1).
+     --force       Overwrite the output directory if it already exists.
+   
+   [Example] Specify queue:
+     $ fuc ngs-bam2fq \
+     manifest.csv \
+     output_dir \
+     "-q queue_name -pe pe_name 10" \
+     --thread 10
+   
+   [Example] Specify nodes:
+     $ fuc ngs-bam2fq \
+     manifest.csv \
+     output_dir \
+     "-l h='node_A|node_B' -pe pe_name 10" \
+     --thread 10
+
 ngs-fq2bam
 ==========
 
@@ -756,7 +845,7 @@ ngs-hc
 
    $ fuc ngs-hc -h
    usage: fuc ngs-hc [-h] [--bed PATH] [--dbsnp PATH] [--job TEXT] [--force]
-                     [--keep]
+                     [--keep] [--posix]
                      manifest fasta output qsub java1 java2
    
    Pipeline for germline short variant discovery.
@@ -783,6 +872,7 @@ ngs-hc
      --job TEXT    Job submission ID for SGE.
      --force       Overwrite the output directory if it already exists.
      --keep        Keep temporary files.
+     --posix       Optimize for a POSIX filesystem.
    
    [Example] Specify queue:
      $ fuc ngs-hc \
@@ -1104,10 +1194,10 @@ vcf-index
      -h, --help  Show this help message and exit.
      --force     Force to overwrite the index file if it is already present.
    
-   [Example] Index a compressed VCF file.
+   [Example] Index a compressed VCF file:
      $ fuc vcf-index in.vcf.gz
    
-   [Example] Index an uncompressed VCF file. Will create a compressed file first.
+   [Example] Index an uncompressed VCF file (will create a compressed VCF first):
      $ fuc vcf-index in.vcf
 
 vcf-merge
@@ -1194,7 +1284,9 @@ vcf-slice
    
    Positional arguments:
      vcf         Input VCF file must be already BGZF compressed (.gz) and 
-                 indexed (.tbi) to allow random access.
+                 indexed (.tbi) to allow random access. A VCF file can be 
+                 compressed with the fuc-bgzip command and indexed with the 
+                 vcf-index command.
      regions     One or more regions to be sliced. Each region must have the 
                  format chrom:start-end and be a half-open interval with 
                  (start, end]. This means, for example, chr1:100-103 will 
@@ -1207,11 +1299,14 @@ vcf-slice
    Optional arguments:
      -h, --help  Show this help message and exit.
    
-   [Example] Specify regions manually.
-   $ fuc vcf-slice in.vcf.gz 1:100-300 2:400-700 > out.vcf
+   [Example] Specify regions manually:
+     $ fuc vcf-slice in.vcf.gz 1:100-300 2:400-700 > out.vcf
    
-   [Example] Speicfy regions with a BED file.
-   $ fuc vcf-slice in.vcf.gz regions.bed > out.vcf
+   [Example] Speicfy regions with a BED file:
+     $ fuc vcf-slice in.vcf.gz regions.bed > out.vcf
+   
+   [Example] Output a compressed file:
+     $ fuc vcf-slice in.vcf.gz regions.bed | fuc fuc-bgzip > out.vcf.gz
 
 vcf-vcf2bed
 ===========
