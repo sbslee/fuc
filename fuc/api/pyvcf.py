@@ -1128,9 +1128,78 @@ class VcfFrame:
         return not self.samples or 'FORMAT' not in self.df.columns
 
     @property
+    def phased(self):
+        """
+        Return True if every genotype in VcfFrame is haplotype phased.
+
+        Returns
+        -------
+        bool
+            If VcfFrame is fully phased, return True, if not return False.
+
+        Examples
+        --------
+
+        >>> from fuc import pyvcf
+        >>> data1 = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102],
+        ...     'ID': ['.', '.', '.'],
+        ...     'REF': ['G', 'T', 'A'],
+        ...     'ALT': ['A', 'C', 'T'],
+        ...     'QUAL': ['.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.'],
+        ...     'INFO': ['.', '.', '.'],
+        ...     'FORMAT': ['GT', 'GT', 'GT'],
+        ...     'A': ['1|1', '0|0', '1|0'],
+        ...     'B': ['1|0', '0|1', '1|0'],
+        ... }
+        >>> vf1 = pyvcf.VcfFrame.from_dict([], data1)
+        >>> vf1.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    B
+        0  chr1  100  .   G   A    .      .    .     GT  1|1  1|0
+        1  chr1  101  .   T   C    .      .    .     GT  0|0  0|1
+        2  chr1  102  .   A   T    .      .    .     GT  1|0  1|0
+        >>> vf1.phased
+        True
+        >>> data2 = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102],
+        ...     'ID': ['.', '.', '.'],
+        ...     'REF': ['G', 'T', 'A'],
+        ...     'ALT': ['A', 'C', 'T'],
+        ...     'QUAL': ['.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.'],
+        ...     'INFO': ['.', '.', '.'],
+        ...     'FORMAT': ['GT', 'GT', 'GT'],
+        ...     'C': ['1|1', '0/0', '1|0'],
+        ...     'D': ['1|0', '0/1', '1|0'],
+        ... }
+        >>> vf2 = pyvcf.VcfFrame.from_dict([], data2)
+        >>> vf2.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    C    D
+        0  chr1  100  .   G   A    .      .    .     GT  1|1  1|0
+        1  chr1  101  .   T   C    .      .    .     GT  0/0  0/1
+        2  chr1  102  .   A   T    .      .    .     GT  1|0  1|0
+        >>> vf2.phased
+        False
+        """
+        def one_row(r):
+            def one_gt(g):
+                return '|' in g.split(':')[0]
+            return r[9:].apply(one_gt).all()
+        s = self.df.apply(one_row, axis=1)
+        return s.all()
+
+    @property
     def empty(self):
         """
         Indicator whether VcfFrame is empty.
+
+        Returns
+        -------
+        bool
+            If VcfFrame is empty, return True, if not return False.
 
         Examples
         --------

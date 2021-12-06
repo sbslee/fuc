@@ -4,6 +4,8 @@ Changelog
 0.29.0 (in development)
 -----------------------
 
+* Add new property ``pyvcf.VcfFrame.phased``.
+
 0.28.0 (2021-12-05)
 -------------------
 
