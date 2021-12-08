@@ -4703,6 +4703,10 @@ class VcfFrame:
         0  chr1  205  .   T   C    .      .    .     GT    1/1
         1  chr1  297  .   A   T    .      .    .     GT    0/1
         """
+        if self.has_chr_prefix:
+            region = common.update_chr_prefix(region, mode='add')
+        else:
+            region = common.update_chr_prefix(region, mode='remove')
         chrom, start, end = common.parse_region(region)
         df = self.df[self.df.CHROM == chrom]
         if not pd.isna(start):

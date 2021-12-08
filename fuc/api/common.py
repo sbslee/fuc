@@ -1333,6 +1333,9 @@ def update_chr_prefix(regions, mode='remove'):
     """
     Add or remove the (annoying) 'chr' string from specified regions.
 
+    The method will automatically detect regions that don't need to be
+    updated and will return them unchanged.
+
     Parameters
     ----------
     regions : str or list
@@ -1349,10 +1352,18 @@ def update_chr_prefix(regions, mode='remove'):
     -------
 
     >>> from fuc import common
-    >>> common.update_chr_prefix(['chr1:100-200', '1:300-400'], mode='remove')
-    ['1:100-200', '1:300-400']
-    >>> common.update_chr_prefix(['chr1:100-200', '1:300-400'], mode='add')
-    ['chr1:100-200', 'chr1:300-400']
+    >>> common.update_chr_prefix(['chr1:100-200', '2:300-400'], mode='remove')
+    ['1:100-200', '2:300-400']
+    >>> common.update_chr_prefix(['chr1:100-200', '2:300-400'], mode='add')
+    ['chr1:100-200', 'chr2:300-400']
+    >>> common.update_chr_prefix('chr1:100-200', mode='remove')
+    '1:100-200'
+    >>> common.update_chr_prefix('chr1:100-200', mode='add')
+    'chr1:100-200'
+    >>> common.update_chr_prefix('2:300-400', mode='add')
+    'chr2:300-400'
+    >>> common.update_chr_prefix('2:300-400', mode='remove')
+    '2:300-400'
     """
     def remove(x):
         return x.replace('chr', '')

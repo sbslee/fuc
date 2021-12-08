@@ -5,6 +5,7 @@ Changelog
 -----------------------
 
 * Add new property ``pyvcf.VcfFrame.phased``.
+* Update :meth:`pyvcf.VcfFrame.slice` method to automatically handle the 'chr' string.
 
 0.28.0 (2021-12-05)
 -------------------
