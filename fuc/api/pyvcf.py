@@ -4646,12 +4646,14 @@ class VcfFrame:
 
     def slice(self, region):
         """
-        Slice the VcfFrame for the region.
+        Slice VcfFrame for specified region.
 
         Parameters
         ----------
         region : str
-            Region ('chrom:start-end').
+            Region to slice ('chrom:start-end'). The 'chr' string will be
+            handled automatically. For example, 'chr1' and '1' will have the
+            same effect in slicing.
 
         Returns
         -------
@@ -4660,6 +4662,8 @@ class VcfFrame:
 
         Examples
         --------
+
+        Assume we have following data:
 
         >>> from fuc import pyvcf
         >>> data = {
@@ -4672,36 +4676,59 @@ class VcfFrame:
         ...     'FILTER': ['.', '.', '.', '.'],
         ...     'INFO': ['.', '.', '.', '.'],
         ...     'FORMAT': ['GT', 'GT', 'GT', 'GT'],
-        ...     'Steven': ['0/1', '1/1', '0/1', '0/1']
+        ...     'A': ['0/1', '1/1', '0/0', '0/0'],
+        ...     'B': ['0/0', '0/0', '0/1', '0/1'],
         ... }
         >>> vf = pyvcf.VcfFrame.from_dict([], data)
         >>> vf.df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
-        0  chr1  100  .   G   A    .      .    .     GT    0/1
-        1  chr1  205  .   T   C    .      .    .     GT    1/1
-        2  chr1  297  .   A   T    .      .    .     GT    0/1
-        3  chr2  101  .   C   A    .      .    .     GT    0/1
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    B
+        0  chr1  100  .   G   A    .      .    .     GT  0/1  0/0
+        1  chr1  205  .   T   C    .      .    .     GT  1/1  0/0
+        2  chr1  297  .   A   T    .      .    .     GT  0/0  0/1
+        3  chr2  101  .   C   A    .      .    .     GT  0/0  0/1
+
+        We can specify a full region:
+
         >>> vf.slice('chr1:101-300').df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
-        0  chr1  205  .   T   C    .      .    .     GT    1/1
-        1  chr1  297  .   A   T    .      .    .     GT    0/1
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    B
+        0  chr1  205  .   T   C    .      .    .     GT  1/1  0/0
+        1  chr1  297  .   A   T    .      .    .     GT  0/0  0/1
+
+        We can specify a region without the 'chr' string:
+
+        >>> vf.slice('1:101-300').df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    B
+        0  chr1  205  .   T   C    .      .    .     GT  1/1  0/0
+        1  chr1  297  .   A   T    .      .    .     GT  0/0  0/1
+
+        We can specify the contig only:
+
         >>> vf.slice('chr1').df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
-        0  chr1  100  .   G   A    .      .    .     GT    0/1
-        1  chr1  205  .   T   C    .      .    .     GT    1/1
-        2  chr1  297  .   A   T    .      .    .     GT    0/1
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    B
+        0  chr1  100  .   G   A    .      .    .     GT  0/1  0/0
+        1  chr1  205  .   T   C    .      .    .     GT  1/1  0/0
+        2  chr1  297  .   A   T    .      .    .     GT  0/0  0/1
+
+        We can omit the start position:
+
         >>> vf.slice('chr1:-296').df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
-        0  chr1  100  .   G   A    .      .    .     GT    0/1
-        1  chr1  205  .   T   C    .      .    .     GT    1/1
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    B
+        0  chr1  100  .   G   A    .      .    .     GT  0/1  0/0
+        1  chr1  205  .   T   C    .      .    .     GT  1/1  0/0
+
+        We can omit the end position as well:
+
         >>> vf.slice('chr1:101').df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
-        0  chr1  205  .   T   C    .      .    .     GT    1/1
-        1  chr1  297  .   A   T    .      .    .     GT    0/1
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    B
+        0  chr1  205  .   T   C    .      .    .     GT  1/1  0/0
+        1  chr1  297  .   A   T    .      .    .     GT  0/0  0/1
+
+        You can also omit the end position this way:
+
         >>> vf.slice('chr1:101-').df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
-        0  chr1  205  .   T   C    .      .    .     GT    1/1
-        1  chr1  297  .   A   T    .      .    .     GT    0/1
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    B
+        0  chr1  205  .   T   C    .      .    .     GT  1/1  0/0
+        1  chr1  297  .   A   T    .      .    .     GT  0/0  0/1
         """
         if self.has_chr_prefix:
             region = common.update_chr_prefix(region, mode='add')
