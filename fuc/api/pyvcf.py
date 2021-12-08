@@ -1132,12 +1132,11 @@ class VcfFrame:
         """
         Return True if every genotype in VcfFrame is haplotype phased.
 
-        The method will return False if VcfFrame is empty.
-
         Returns
         -------
         bool
             If VcfFrame is fully phased, return True, if not return False.
+            Also return False if VcfFrame is empty.
 
         Examples
         --------
