@@ -1806,7 +1806,7 @@ class VcfFrame:
             except AttributeError:
                 pass
         else:
-            TypeError('Incorrect input type')
+            raise TypeError(f'Incorrect input type: {type(fn).__name__}')
         vf = cls.from_string(s)
         return vf
 
