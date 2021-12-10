@@ -7,6 +7,7 @@ Changelog
 * Add new property ``pyvcf.VcfFrame.phased``.
 * Update :meth:`pyvcf.VcfFrame.slice` method to automatically handle the 'chr' string.
 * Update :command:`ngs-hc` command to set ``--native-pair-hmm-threads 1`` for HaplotypeCaller.
+* Update :command:`ngs-hc` command to set ``-XX:ParallelGCThreads=1`` and ``-XX:ConcGCThreads=1`` for Java.
 
 0.28.0 (2021-12-05)
 -------------------

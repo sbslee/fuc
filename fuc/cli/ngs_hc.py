@@ -128,6 +128,8 @@ def main(args):
     else:
         remove = 'rm'
 
+    java_shared = '-XX:ParallelGCThreads=1 -XX:ConcGCThreads=1'
+
     basenames = []
 
     for i, r in df.iterrows():
@@ -142,7 +144,7 @@ def main(args):
 
             command = 'gatk HaplotypeCaller'
             command += f' --QUIET'
-            command += f' --java-options "{args.java1}"'
+            command += f' --java-options "{java_shared} {args.java1}"'
             command += f' -R {args.fasta}'
             command += f' --native-pair-hmm-threads 1'
             command += f' --emit-ref-confidence GVCF'
@@ -188,7 +190,7 @@ source activate {api.common.conda_env()}
 
             command1 = 'gatk GenomicsDBImport'
             command1 += f' --QUIET'
-            command1 += f' --java-options "{args.java2}"'
+            command1 += f' --java-options "{java_shared} {args.java2}"'
             command1 += f' -L {chrom}'
             command1 += f' --genomicsdb-workspace-path {args.output}/temp/db-{chrom}'
             command1 += ' ' + ' '.join([f'-V {args.output}/temp/{x}.g.vcf' for x in basenames])
@@ -199,7 +201,7 @@ source activate {api.common.conda_env()}
 
             command2 = 'gatk GenotypeGVCFs'
             command2 += f' --QUIET'
-            command2 += f' --java-options "{args.java2}"'
+            command2 += f' --java-options "{java_shared} {args.java2}"'
             command2 += f' -R {args.fasta}'
             command2 += f' -V gendb://{args.output}/temp/db-{chrom}'
             command2 += f' -O {args.output}/temp/{chrom}.joint.vcf'
@@ -213,7 +215,7 @@ source activate {api.common.conda_env()}
 
             command3 = 'gatk VariantFiltration'
             command3 += f' --QUIET'
-            command3 += f' --java-options "{args.java2}"'
+            command3 += f' --java-options "{java_shared} {args.java2}"'
             command3 += f' -R {args.fasta}'
             command3 += f' -O {args.output}/temp/{chrom}.joint.filtered.vcf'
             command3 += f' --variant {args.output}/temp/{chrom}.joint.vcf'
@@ -247,7 +249,7 @@ source activate {api.common.conda_env()}
 
         command = 'gatk GatherVcfs'
         command += f' --QUIET'
-        command += f' --java-options "{args.java2}"'
+        command += f' --java-options "{java_shared} {args.java2}"'
         command += f' -O {args.output}/merged.joint.filtered.vcf'
         command += ' ' + ' '.join([f'-I {args.output}/temp/{x}.joint.filtered.vcf' for x in chroms])
 
