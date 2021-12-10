@@ -144,6 +144,7 @@ def main(args):
             command += f' --QUIET'
             command += f' --java-options "{args.java1}"'
             command += f' -R {args.fasta}'
+            command += f' --native-pair-hmm-threads 1'
             command += f' --emit-ref-confidence GVCF'
             command += f' -I {r.BAM}'
             command += f' -O {args.output}/temp/{basename}.g.vcf'
