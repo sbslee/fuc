@@ -199,6 +199,7 @@ source activate {api.common.conda_env()}
             command1 += f' --QUIET'
             command1 += f' --java-options "{java_shared} {args.java2}"'
             command1 += f' -L {chrom}'
+            command1 += f' --reader-threads {args.thread}'
             command1 += f' --genomicsdb-workspace-path {args.output}/temp/db-{chrom}'
             command1 += ' ' + ' '.join([f'-V {args.output}/temp/{x}.g.vcf' for x in basenames])
 
