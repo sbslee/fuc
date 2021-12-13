@@ -88,6 +88,13 @@ def create_parser(subparsers):
         help='VCF file from dbSNP.'
     )
     parser.add_argument(
+        '--thread',
+        metavar='INT',
+        type=int,
+        default=1,
+        help='Number of threads to use (default: 1).'
+    )
+    parser.add_argument(
         '--job',
         metavar='TEXT',
         type=str,
@@ -128,7 +135,7 @@ def main(args):
     else:
         remove = 'rm'
 
-    java_shared = '-XX:ParallelGCThreads=1 -XX:ConcGCThreads=1'
+    java_shared = f'-XX:ParallelGCThreads={args.thread} -XX:ConcGCThreads={args.thread}'
 
     basenames = []
 
@@ -146,7 +153,7 @@ def main(args):
             command += f' --QUIET'
             command += f' --java-options "{java_shared} {args.java1}"'
             command += f' -R {args.fasta}'
-            command += f' --native-pair-hmm-threads 1'
+            command += f' --native-pair-hmm-threads {args.thread}'
             command += f' --emit-ref-confidence GVCF'
             command += f' -I {r.BAM}'
             command += f' -O {args.output}/temp/{basename}.g.vcf'
