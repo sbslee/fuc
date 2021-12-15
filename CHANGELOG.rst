@@ -7,11 +7,12 @@ Changelog
 * Add new property ``pyvcf.VcfFrame.phased``.
 * Update :meth:`pyvcf.VcfFrame.slice` method to automatically handle the 'chr' string.
 * Add new argument ``--thread`` to :command:`ngs-hc` command. This argument will be used to set ``--native-pair-hmm-threads`` for GATK's :command:`HaplotypeCaller` command, ``--reader-threads`` for GATK's :command:`GenomicsDBImport` command, and ``-XX:ParallelGCThreads`` and ``-XX:ConcGCThreads`` for Java.
-* Add new argument ``--batch`` to :command:`ngs-hc` command. This argument sets the batch size used for :command:`GenomicsDBImport` command.
+* Add new argument ``--batch`` to :command:`ngs-hc` command. This argument will be used to set ``--batch-size`` for GATK's :command:`GenomicsDBImport` command.
 * Update :command:`ngs-bam2fq` command to fix the SGE issue that outputs an error like ``Unable to run job: denied: "XXXXX" is not a valid object name (cannot start with a digit)``.
-* Update :command:`ngs-hc` command so that when ``--posix`` is set it will use ``--genomicsdb-shared-posixfs-optimizations`` argument from :command:`GenomicsDBImport` command instead of doing ``export TILEDB_DISABLE_FILE_LOCKING=1``.
+* Update :command:`ngs-hc` command so that when ``--posix`` is set, it will use ``--genomicsdb-shared-posixfs-optimizations`` argument from GATK's :command:`GenomicsDBImport` command instead of exporting shell variable (i.e. ``export TILEDB_DISABLE_FILE_LOCKING=1``).
 * Add new argument ``--job`` to :command:`ngs-fq2bam` command.
 * Update :command:`ngs-fq2bam` command so that BAM creation step and BAM processing step are now in one step.
+* Update :command:`ngs-fq2bam` command so that ``--thread`` is now also used to set ``-XX:ParallelGCThreads`` and ``-XX:ConcGCThreads`` for Java.
 
 0.28.0 (2021-12-05)
 -------------------

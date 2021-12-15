@@ -141,6 +141,8 @@ def main(args):
     else:
         remove = 'rm'
 
+    java_shared = f'-XX:ParallelGCThreads={args.thread} -XX:ConcGCThreads={args.thread}'
+
     for i, r in df.iterrows():
         with open(f'{args.output}/shell/S1-{r.Name}.sh', 'w') as f:
 
@@ -160,7 +162,7 @@ def main(args):
 
             command2 = 'gatk MarkDuplicates'
             command2 += f' --QUIET'
-            command2 += f' --java-options "{args.java}"'
+            command2 += f' --java-options "{java_shared} {args.java}"'
             command2 += f' -I {args.output}/temp/{r.Name}.sorted.bam'
             command2 += f' -O {args.output}/temp/{r.Name}.sorted.markdup.bam'
             command2 += f' -M {args.output}/temp/{r.Name}.metrics'
@@ -171,7 +173,7 @@ def main(args):
 
             command3 = 'gatk BaseRecalibrator'
             command3 += f' --QUIET'
-            command3 += f' --java-options "{args.java}"'
+            command3 += f' --java-options "{java_shared} {args.java}"'
             command3 += f' -R {args.fasta}'
             command3 += f' -I {args.output}/temp/{r.Name}.sorted.markdup.bam'
             command3 += f' -O {args.output}/temp/{r.Name}.table'
@@ -185,7 +187,7 @@ def main(args):
 
             command4 = 'gatk ApplyBQSR'
             command4 += f' --QUIET'
-            command4 += f' --java-options "{args.java}"'
+            command4 += f' --java-options "{java_shared} {args.java}"'
             command4 += f' -bqsr {args.output}/temp/{r.Name}.table'
             command4 += f' -I {args.output}/temp/{r.Name}.sorted.markdup.bam'
             command4 += f' -O {args.output}/{r.Name}.sorted.markdup.recal.bam'
