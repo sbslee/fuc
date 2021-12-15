@@ -10,7 +10,7 @@ Changelog
 * Add new argument ``--batch`` to :command:`ngs-hc` command. This argument sets the batch size used for :command:`GenomicsDBImport` command.
 * Update :command:`ngs-bam2fq` command to fix the SGE issue that outputs an error like ``Unable to run job: denied: "XXXXX" is not a valid object name (cannot start with a digit)``.
 * Update :command:`ngs-hc` command so that when ``--posix`` is set it will use ``--genomicsdb-shared-posixfs-optimizations`` argument from :command:`GenomicsDBImport` command instead of doing ``export TILEDB_DISABLE_FILE_LOCKING=1``.
-* Add new argument ``--job`` argument to :command:`ngs-fq2bam` command.
+* Add new argument ``--job`` to :command:`ngs-fq2bam` command.
 * Update :command:`ngs-fq2bam` command so that BAM creation step and BAM processing step are now in one step.
 
 0.28.0 (2021-12-05)
