@@ -99,12 +99,11 @@ def create_parser(subparsers):
         metavar='INT',
         type=int,
         default=0,
-        help='Batch size used for the GenomicsDBImport command. This \n'
-             'argument controls the number of samples for which readers \n'
-             'are open at once and therefore provides a way to minimize \n'
-             'memory consumption. The size of 0 (default) means no \n'
-             'batching (i.e. readers for all samples will be opened at \n'
-             'once).'
+        help='Batch size used for GenomicsDBImport (default: 0). This \n'
+             'controls the number of samples for which readers are \n'
+             'open at once and therefore provides a way to minimize \n'
+             'memory consumption. The size of 0 means no batching (i.e. \n'
+             'readers for all samples will be opened at once).'
     )
     parser.add_argument(
         '--job',
