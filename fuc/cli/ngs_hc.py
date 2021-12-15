@@ -95,6 +95,18 @@ def create_parser(subparsers):
         help='Number of threads to use (default: 1).'
     )
     parser.add_argument(
+        '--batch',
+        metavar='INT',
+        type=int,
+        default=0,
+        help='Batch size used for the GenomicsDBImport command. This \n'
+             'argument controls the number of samples for which readers \n'
+             'are open at once and therefore provides a way to minimize \n'
+             'memory consumption. The size of 0 (default) means no \n'
+             'batching (i.e. readers for all samples will be opened at \n'
+             'once).'
+    )
+    parser.add_argument(
         '--job',
         metavar='TEXT',
         type=str,
@@ -200,6 +212,7 @@ source activate {api.common.conda_env()}
             command1 += f' --java-options "{java_shared} {args.java2}"'
             command1 += f' -L {chrom}'
             command1 += f' --reader-threads {args.thread}'
+            command1 += f' --batch-size {args.batch}'
             command1 += f' --genomicsdb-workspace-path {args.output}/temp/db-{chrom}'
             command1 += ' ' + ' '.join([f'-V {args.output}/temp/{x}.g.vcf' for x in basenames])
 

@@ -7,6 +7,7 @@ Changelog
 * Add new property ``pyvcf.VcfFrame.phased``.
 * Update :meth:`pyvcf.VcfFrame.slice` method to automatically handle the 'chr' string.
 * Add new argument ``--thread`` to :command:`ngs-hc` command. This argument will be used to set ``--native-pair-hmm-threads`` for GATK's :command:`HaplotypeCaller` command, ``--reader-threads`` for GATK's :command:`GenomicsDBImport` command, and ``-XX:ParallelGCThreads`` and ``-XX:ConcGCThreads`` for Java.
+* Add new argument ``--batch`` to :command:`ngs-hc` command. This argument sets the batch size used for :command:`GenomicsDBImport` command.
 
 0.28.0 (2021-12-05)
 -------------------

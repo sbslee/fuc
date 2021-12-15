@@ -844,8 +844,8 @@ ngs-hc
 .. code-block:: text
 
    $ fuc ngs-hc -h
-   usage: fuc ngs-hc [-h] [--bed PATH] [--dbsnp PATH] [--thread INT] [--job TEXT]
-                     [--force] [--keep] [--posix]
+   usage: fuc ngs-hc [-h] [--bed PATH] [--dbsnp PATH] [--thread INT]
+                     [--batch INT] [--job TEXT] [--force] [--keep] [--posix]
                      manifest fasta output qsub java1 java2
    
    Pipeline for germline short variant discovery.
@@ -870,6 +870,12 @@ ngs-hc
      --bed PATH    BED file.
      --dbsnp PATH  VCF file from dbSNP.
      --thread INT  Number of threads to use (default: 1).
+     --batch INT   Batch size used for the GenomicsDBImport command. This 
+                   argument controls the number of samples for which readers 
+                   are open at once and therefore provides a way to minimize 
+                   memory consumption. The size of 0 (default) means no 
+                   batching (i.e. readers for all samples will be opened at 
+                   once).
      --job TEXT    Job submission ID for SGE.
      --force       Overwrite the output directory if it already exists.
      --keep        Keep temporary files.
