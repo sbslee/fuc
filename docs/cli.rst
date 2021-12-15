@@ -210,7 +210,7 @@ bam-slice
                     provide a BED file (compressed or uncompressed) to specify 
                     regions. Note that the 'chr' prefix in contig names (e.g. 
                     'chr1' vs. '1') will be automatically added or removed as 
-                    necessary to match the input VCF's contig names.
+                    necessary to match the input BED's contig names.
    
    Optional arguments:
      -h, --help     Show this help message and exit.
