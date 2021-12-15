@@ -115,6 +115,6 @@ names=({" ".join(names)})
 
 for name in ${{names[@]}}
 do
-  qsub {args.qsub} -S /bin/bash -e $p/log -o $p/log -N $name $p/shell/$name.sh
+  qsub {args.qsub} -S /bin/bash -e $p/log -o $p/log -N S1-$name $p/shell/$name.sh
 done
 """)
