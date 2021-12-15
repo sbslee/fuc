@@ -124,7 +124,13 @@ def create_parser(subparsers):
     parser.add_argument(
         '--posix',
         action='store_true',
-        help='Optimize for a POSIX filesystem.'
+        help='Set GenomicsDBImport to allow for optimizations to improve \n'
+             'the usability and performance for shared Posix Filesystems \n'
+             '(e.g. NFS, Lustre). If set, file level locking is disabled \n'
+             'and file system writes are minimized by keeping a higher \n'
+             'number of file descriptors open for longer periods of time. \n'
+             'Use with --batch if keeping a large number of file \n'
+             'descriptors open is an issue.'
     )
 
 def main(args):
@@ -194,15 +200,6 @@ source activate {api.common.conda_env()}
         with open(f'{args.output}/shell/S2-{chrom}.sh', 'w') as f:
 
             ####################
-            # POSIX filesystem #
-            ####################
-
-            if args.posix:
-                export = 'export TILEDB_DISABLE_FILE_LOCKING=1'
-            else:
-                export = '# export TILEDB_DISABLE_FILE_LOCKING=1'
-
-            ####################
             # GenomicsDBImport #
             ####################
 
@@ -211,6 +208,8 @@ source activate {api.common.conda_env()}
             command1 += f' --java-options "{java_shared} {args.java2}"'
             command1 += f' -L {chrom}'
             command1 += f' --reader-threads {args.thread}'
+            if args.posix:
+                command1 += ' --genomicsdb-shared-posixfs-optimizations'
             command1 += f' --batch-size {args.batch}'
             command1 += f' --genomicsdb-workspace-path {args.output}/temp/db-{chrom}'
             command1 += ' ' + ' '.join([f'-V {args.output}/temp/{x}.g.vcf' for x in basenames])
@@ -244,9 +243,6 @@ source activate {api.common.conda_env()}
 
             f.write(
 f"""#!/bin/bash
-
-# Optimize for POSIX filesystem.
-{export}
 
 # Activate conda environment.
 source activate {api.common.conda_env()}

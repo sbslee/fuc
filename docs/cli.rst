@@ -878,7 +878,13 @@ ngs-hc
      --job TEXT    Job submission ID for SGE.
      --force       Overwrite the output directory if it already exists.
      --keep        Keep temporary files.
-     --posix       Optimize for a POSIX filesystem.
+     --posix       Set GenomicsDBImport to allow for optimizations to improve 
+                   the usability and performance for shared Posix Filesystems 
+                   (e.g. NFS, Lustre). If set, file level locking is disabled 
+                   and file system writes are minimized by keeping a higher 
+                   number of file descriptors open for longer periods of time. 
+                   Use with --batch if keeping a large number of file 
+                   descriptors open is an issue.
    
    [Example] Specify queue:
      $ fuc ngs-hc \
