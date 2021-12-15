@@ -33,7 +33,6 @@ epilog = f"""
   ref.fa \\
   output_dir \\
   "-q queue_name -pe pe_name 10" \\
-  "-q queue_name" \\
   "-Xmx15g -Xms15g" \\
   1.vcf 2.vcf 3.vcf \\
   --thread 10
@@ -44,7 +43,6 @@ epilog = f"""
   ref.fa \\
   output_dir \\
   "-l h='node_A|node_B' -pe pe_name 10" \\
-  "-l h='node_A|node_B'" \\
   "-Xmx15g -Xms15g" \\
   1.vcf 2.vcf 3.vcf \\
   --thread 10
@@ -72,18 +70,9 @@ def create_parser(subparsers):
         help='Output directory.'
     )
     parser.add_argument(
-        'qsub1',
+        'qsub',
         type=str,
-        help="SGE resoruce to request with qsub for read alignment \n"
-             "and sorting. Since both tasks support multithreading, \n"
-             "it is recommended to speicfy a parallel environment (PE) \n"
-             "to speed up the process (also see --thread)."
-    )
-    parser.add_argument(
-        'qsub2',
-        type=str,
-        help="SGE resoruce to request with qsub for the rest of the \n"
-             "tasks, which do not support multithreading."
+        help='SGE resoruce to request for qsub.'
     )
     parser.add_argument(
         'java',
@@ -253,6 +242,6 @@ samples=({" ".join(df.Name)})
 
 for sample in ${{samples[@]}}
 do
-  qsub {args.qsub1} -S /bin/bash -e $p/log -o $p/log -N S1-$sample{jid} $p/shell/S1-$sample.sh
+  qsub {args.qsub} -S /bin/bash -e $p/log -o $p/log -N S1-$sample{jid} $p/shell/S1-$sample.sh
 done
 """)

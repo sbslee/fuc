@@ -774,7 +774,7 @@ ngs-fq2bam
    $ fuc ngs-fq2bam -h
    usage: fuc ngs-fq2bam [-h] [--bed PATH] [--thread INT] [--platform TEXT]
                          [--job TEXT] [--force] [--keep]
-                         manifest fasta output qsub1 qsub2 java vcf [vcf ...]
+                         manifest fasta output qsub java vcf [vcf ...]
    
    Pipeline for converting FASTQ files to analysis-ready BAM files.
    
@@ -798,12 +798,7 @@ ngs-fq2bam
      manifest         Sample manifest CSV file.
      fasta            Reference FASTA file.
      output           Output directory.
-     qsub1            SGE resoruce to request with qsub for read alignment 
-                      and sorting. Since both tasks support multithreading, 
-                      it is recommended to speicfy a parallel environment (PE) 
-                      to speed up the process (also see --thread).
-     qsub2            SGE resoruce to request with qsub for the rest of the 
-                      tasks, which do not support multithreading.
+     qsub             SGE resoruce to request for qsub.
      java             Java resoruce to request for GATK.
      vcf              One or more reference VCF files containing known variant 
                       sites (e.g. 1000 Genomes Project).
@@ -823,7 +818,6 @@ ngs-fq2bam
      ref.fa \
      output_dir \
      "-q queue_name -pe pe_name 10" \
-     "-q queue_name" \
      "-Xmx15g -Xms15g" \
      1.vcf 2.vcf 3.vcf \
      --thread 10
@@ -834,7 +828,6 @@ ngs-fq2bam
      ref.fa \
      output_dir \
      "-l h='node_A|node_B' -pe pe_name 10" \
-     "-l h='node_A|node_B'" \
      "-Xmx15g -Xms15g" \
      1.vcf 2.vcf 3.vcf \
      --thread 10
