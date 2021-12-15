@@ -773,7 +773,7 @@ ngs-fq2bam
 
    $ fuc ngs-fq2bam -h
    usage: fuc ngs-fq2bam [-h] [--bed PATH] [--thread INT] [--platform TEXT]
-                         [--force] [--keep]
+                         [--job TEXT] [--force] [--keep]
                          manifest fasta output qsub1 qsub2 java vcf [vcf ...]
    
    Pipeline for converting FASTQ files to analysis-ready BAM files.
@@ -813,6 +813,7 @@ ngs-fq2bam
      --bed PATH       BED file.
      --thread INT     Number of threads to use (default: 1).
      --platform TEXT  Sequencing platform (default: 'Illumina').
+     --job TEXT       Job submission ID for SGE.
      --force          Overwrite the output directory if it already exists.
      --keep           Keep temporary files.
    

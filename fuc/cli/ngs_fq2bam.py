@@ -117,6 +117,12 @@ def create_parser(subparsers):
         help="Sequencing platform (default: 'Illumina')."
     )
     parser.add_argument(
+        '--job',
+        metavar='TEXT',
+        type=str,
+        help='Job submission ID for SGE.'
+    )
+    parser.add_argument(
         '--force',
         action='store_true',
         help='Overwrite the output directory if it already exists.'
@@ -153,6 +159,50 @@ def main(args):
             # BWA-MEM #
             ###########
 
+            command1 = 'bwa mem'
+            command1 += f' -M -R $group -t {args.thread} '
+            command1 += f' {args.fasta} {r.Read1} {r.Read2} |'
+            command1 += f' samtools sort -@ {args.thread}'
+            command1 += f' -o {args.output}/temp/{r.Name}.sorted.bam -'
+
+            ##################
+            # MarkDuplicates #
+            ##################
+
+            command2 = 'gatk MarkDuplicates'
+            command2 += f' --QUIET'
+            command2 += f' --java-options "{args.java}"'
+            command2 += f' -I {args.output}/temp/{r.Name}.sorted.bam'
+            command2 += f' -O {args.output}/temp/{r.Name}.sorted.markdup.bam'
+            command2 += f' -M {args.output}/temp/{r.Name}.metrics'
+
+            ####################
+            # BaseRecalibrator #
+            ####################
+
+            command3 = 'gatk BaseRecalibrator'
+            command3 += f' --QUIET'
+            command3 += f' --java-options "{args.java}"'
+            command3 += f' -R {args.fasta}'
+            command3 += f' -I {args.output}/temp/{r.Name}.sorted.markdup.bam'
+            command3 += f' -O {args.output}/temp/{r.Name}.table'
+            command3 += ' ' + ' '.join([f'--known-sites {x}' for x in args.vcf])
+            if args.bed is not None:
+                command3 += f' -L {args.bed}'
+
+            #############
+            # ApplyBQSR #
+            #############
+
+            command4 = 'gatk ApplyBQSR'
+            command4 += f' --QUIET'
+            command4 += f' --java-options "{args.java}"'
+            command4 += f' -bqsr {args.output}/temp/{r.Name}.table'
+            command4 += f' -I {args.output}/temp/{r.Name}.sorted.markdup.bam'
+            command4 += f' -O {args.output}/{r.Name}.sorted.markdup.recal.bam'
+            if args.bed is not None:
+                command4 += f' -L {args.bed}'
+
             f.write(
 f"""#!/bin/bash
 
@@ -166,68 +216,19 @@ barcode=`echo "$first" | awk -F " " '{{print $2}}' | awk -F ":" '{{print $4}}'`
 group="@RG\\tID:$flowcell\\tPU:$flowcell.$barcode\\tSM:{r.Name}\\tPL:{args.platform}\\tLB:{r.Name}"
 
 # Align and sort seuqnece reads. Assign read group as well.
-bwa mem -M -R $group -t {args.thread} {args.fasta} {r.Read1} {r.Read2} | samtools sort -@ {args.thread} -o {args.output}/temp/{r.Name}.sorted.bam -
-""")
-
-        with open(f'{args.output}/shell/S2-{r.Name}.sh', 'w') as f:
-
-            ##################
-            # MarkDuplicates #
-            ##################
-
-            command1 = 'gatk MarkDuplicates'
-            command1 += f' --QUIET'
-            command1 += f' --java-options "{args.java}"'
-            command1 += f' -I {args.output}/temp/{r.Name}.sorted.bam'
-            command1 += f' -O {args.output}/temp/{r.Name}.sorted.markdup.bam'
-            command1 += f' -M {args.output}/temp/{r.Name}.metrics'
-
-            ####################
-            # BaseRecalibrator #
-            ####################
-
-            command2 = 'gatk BaseRecalibrator'
-            command2 += f' --QUIET'
-            command2 += f' --java-options "{args.java}"'
-            command2 += f' -R {args.fasta}'
-            command2 += f' -I {args.output}/temp/{r.Name}.sorted.markdup.bam'
-            command2 += f' -O {args.output}/temp/{r.Name}.table'
-            command2 += ' ' + ' '.join([f'--known-sites {x}' for x in args.vcf])
-
-            if args.bed is not None:
-                command2 += f' -L {args.bed}'
-
-            #############
-            # ApplyBQSR #
-            #############
-
-            command3 = 'gatk ApplyBQSR'
-            command3 += f' --QUIET'
-            command3 += f' --java-options "{args.java}"'
-            command3 += f' -bqsr {args.output}/temp/{r.Name}.table'
-            command3 += f' -I {args.output}/temp/{r.Name}.sorted.markdup.bam'
-            command3 += f' -O {args.output}/{r.Name}.sorted.markdup.recal.bam'
-
-            if args.bed is not None:
-                command3 += f' -L {args.bed}'
-
-            f.write(
-f"""#!/bin/bash
-
-# Activate conda environment.
-source activate {api.common.conda_env()}
+{command1}
 
 # Mark duplicate reads.
-{command1}
+{command2}
 
 # Index BAM file.
 samtools index {args.output}/temp/{r.Name}.sorted.markdup.bam
 
 # Build BQSR model.
-{command2}
+{command3}
 
 # Apply BQSR model.
-{command3}
+{command4}
 
 # Remove temporary files.
 {remove} {args.output}/temp/{r.Name}.metrics
@@ -236,6 +237,11 @@ samtools index {args.output}/temp/{r.Name}.sorted.markdup.bam
 {remove} {args.output}/temp/{r.Name}.sorted.markdup.bam
 {remove} {args.output}/temp/{r.Name}.sorted.markdup.bam.bai
 """)
+
+    if args.job is None:
+        jid = ''
+    else:
+        jid = '-' + args.job
 
     with open(f'{args.output}/shell/qsubme.sh', 'w') as f:
         f.write(
@@ -247,7 +253,6 @@ samples=({" ".join(df.Name)})
 
 for sample in ${{samples[@]}}
 do
-  qsub {args.qsub1} -S /bin/bash -e $p/log -o $p/log -N S1-$sample $p/shell/S1-$sample.sh
-  qsub {args.qsub2} -S /bin/bash -e $p/log -o $p/log -N S2-$sample -hold_jid S1-$sample $p/shell/S2-$sample.sh
+  qsub {args.qsub1} -S /bin/bash -e $p/log -o $p/log -N S1-$sample{jid} $p/shell/S1-$sample.sh
 done
 """)
