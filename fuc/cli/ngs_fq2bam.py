@@ -151,7 +151,7 @@ def main(args):
             ###########
 
             command1 = 'bwa mem'
-            command1 += f' -M -R $group -t {args.thread} '
+            command1 += f' -M -R $group -t {args.thread}'
             command1 += f' {args.fasta} {r.Read1} {r.Read2} |'
             command1 += f' samtools sort -@ {args.thread}'
             command1 += f' -o {args.output}/temp/{r.Name}.sorted.bam -'
@@ -208,6 +208,13 @@ group="@RG\\tID:$flowcell\\tPU:$flowcell.$barcode\\tSM:{r.Name}\\tPL:{args.platf
 
 # Align and sort seuqnece reads. Assign read group as well.
 {command1}
+
+if [ $? -eq 0 ]; then
+    echo "Successfully finished aligning and sorting seuqnece reads"
+else
+    echo "Failed to align and sort seuqnece reads, aborting"
+    exit 1
+fi
 
 # Mark duplicate reads.
 {command2}
