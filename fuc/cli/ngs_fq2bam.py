@@ -239,7 +239,7 @@ samtools index {args.output}/temp/{r.Name}.sorted.markdup.bam
     if args.job is None:
         jid = ''
     else:
-        jid = '-' + args.job
+        jid = args.job + '-'
 
     with open(f'{args.output}/shell/qsubme.sh', 'w') as f:
         f.write(
@@ -251,6 +251,6 @@ samples=({" ".join(df.Name)})
 
 for sample in ${{samples[@]}}
 do
-  qsub {args.qsub} -S /bin/bash -e $p/log -o $p/log -N S1-$sample{jid} $p/shell/S1-$sample.sh
+  qsub {args.qsub} -S /bin/bash -e $p/log -o $p/log -N {jid}S1-$sample $p/shell/S1-$sample.sh
 done
 """)
