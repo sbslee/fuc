@@ -13,6 +13,7 @@ Changelog
 * Add new argument ``--job`` to :command:`ngs-fq2bam` command.
 * Update :command:`ngs-fq2bam` command so that BAM creation step and BAM processing step are now in one step.
 * Update :command:`ngs-fq2bam` command so that ``--thread`` is now also used to set ``-XX:ParallelGCThreads`` and ``-XX:ConcGCThreads`` for Java.
+* Add new method :meth:`common.parse_list_or_file`.
 
 0.28.0 (2021-12-05)
 -------------------
