@@ -1333,6 +1333,9 @@ def update_chr_prefix(regions, mode='remove'):
     """
     Add or remove the (annoying) 'chr' string from specified regions.
 
+    The method will automatically detect regions that don't need to be
+    updated and will return them unchanged.
+
     Parameters
     ----------
     regions : str or list
@@ -1349,10 +1352,18 @@ def update_chr_prefix(regions, mode='remove'):
     -------
 
     >>> from fuc import common
-    >>> common.update_chr_prefix(['chr1:100-200', '1:300-400'], mode='remove')
-    ['1:100-200', '1:300-400']
-    >>> common.update_chr_prefix(['chr1:100-200', '1:300-400'], mode='add')
-    ['chr1:100-200', 'chr1:300-400']
+    >>> common.update_chr_prefix(['chr1:100-200', '2:300-400'], mode='remove')
+    ['1:100-200', '2:300-400']
+    >>> common.update_chr_prefix(['chr1:100-200', '2:300-400'], mode='add')
+    ['chr1:100-200', 'chr2:300-400']
+    >>> common.update_chr_prefix('chr1:100-200', mode='remove')
+    '1:100-200'
+    >>> common.update_chr_prefix('chr1:100-200', mode='add')
+    'chr1:100-200'
+    >>> common.update_chr_prefix('2:300-400', mode='add')
+    'chr2:300-400'
+    >>> common.update_chr_prefix('2:300-400', mode='remove')
+    '2:300-400'
     """
     def remove(x):
         return x.replace('chr', '')
@@ -1368,3 +1379,54 @@ def update_chr_prefix(regions, mode='remove'):
         return modes[mode](regions)
 
     return [modes[mode](x) for x in regions]
+
+def parse_list_or_file(obj, extensions=['txt', 'tsv', 'csv', 'list']):
+    """
+    Parse the input variable and then return a list of items.
+
+    This method is useful when parsing a command line argument that accepts
+    either a list of items or a text file containing one item per line.
+
+    Parameters
+    ----------
+    obj : str or list
+        Object to be tested. Must be non-empty.
+    extensions : list, default: ['txt', 'tsv', 'csv', 'list']
+        Recognized file extensions.
+
+    Returns
+    -------
+    list
+        List of items.
+
+    Examples
+    --------
+
+    >>> from fuc import common
+    >>> common.parse_list_or_file(['A', 'B', 'C'])
+    ['A', 'B', 'C']
+    >>> common.parse_list_or_file('A')
+    ['A']
+    >>> common.parse_list_or_file('example.txt')
+    ['A', 'B', 'C']
+    >>> common.parse_list_or_file(['example.txt'])
+    ['A', 'B', 'C']
+    """
+    if not isinstance(obj, str) and not isinstance(obj, list):
+        raise TypeError(
+            f'Input must be str or list, not {type(obj).__name__}')
+
+    if not obj:
+        raise ValueError('Input is empty')
+
+    if isinstance(obj, str):
+        obj = [obj]
+
+    if len(obj) > 1:
+        return obj
+
+    for extension in extensions:
+        if obj[0].endswith(f'.{extension}'):
+            return convert_file2list(obj[0])
+
+    return obj

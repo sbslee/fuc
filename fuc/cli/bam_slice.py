@@ -43,7 +43,7 @@ def create_parser(subparsers):
              "provide a BED file (compressed or uncompressed) to specify \n"
              "regions. Note that the 'chr' prefix in contig names (e.g. \n"
              "'chr1' vs. '1') will be automatically added or removed as \n"
-             "necessary to match the input VCF's contig names."
+             "necessary to match the input BED's contig names."
     )
     parser.add_argument(
         '--format',

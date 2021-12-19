@@ -210,7 +210,7 @@ bam-slice
                     provide a BED file (compressed or uncompressed) to specify 
                     regions. Note that the 'chr' prefix in contig names (e.g. 
                     'chr1' vs. '1') will be automatically added or removed as 
-                    necessary to match the input VCF's contig names.
+                    necessary to match the input BED's contig names.
    
    Optional arguments:
      -h, --help     Show this help message and exit.
@@ -773,8 +773,8 @@ ngs-fq2bam
 
    $ fuc ngs-fq2bam -h
    usage: fuc ngs-fq2bam [-h] [--bed PATH] [--thread INT] [--platform TEXT]
-                         [--force] [--keep]
-                         manifest fasta output qsub1 qsub2 java vcf [vcf ...]
+                         [--job TEXT] [--force] [--keep]
+                         manifest fasta output qsub java vcf [vcf ...]
    
    Pipeline for converting FASTQ files to analysis-ready BAM files.
    
@@ -798,12 +798,7 @@ ngs-fq2bam
      manifest         Sample manifest CSV file.
      fasta            Reference FASTA file.
      output           Output directory.
-     qsub1            SGE resoruce to request with qsub for read alignment 
-                      and sorting. Since both tasks support multithreading, 
-                      it is recommended to speicfy a parallel environment (PE) 
-                      to speed up the process (also see --thread).
-     qsub2            SGE resoruce to request with qsub for the rest of the 
-                      tasks, which do not support multithreading.
+     qsub             SGE resoruce to request for qsub.
      java             Java resoruce to request for GATK.
      vcf              One or more reference VCF files containing known variant 
                       sites (e.g. 1000 Genomes Project).
@@ -813,6 +808,7 @@ ngs-fq2bam
      --bed PATH       BED file.
      --thread INT     Number of threads to use (default: 1).
      --platform TEXT  Sequencing platform (default: 'Illumina').
+     --job TEXT       Job submission ID for SGE.
      --force          Overwrite the output directory if it already exists.
      --keep           Keep temporary files.
    
@@ -822,7 +818,6 @@ ngs-fq2bam
      ref.fa \
      output_dir \
      "-q queue_name -pe pe_name 10" \
-     "-q queue_name" \
      "-Xmx15g -Xms15g" \
      1.vcf 2.vcf 3.vcf \
      --thread 10
@@ -833,7 +828,6 @@ ngs-fq2bam
      ref.fa \
      output_dir \
      "-l h='node_A|node_B' -pe pe_name 10" \
-     "-l h='node_A|node_B'" \
      "-Xmx15g -Xms15g" \
      1.vcf 2.vcf 3.vcf \
      --thread 10
@@ -844,8 +838,8 @@ ngs-hc
 .. code-block:: text
 
    $ fuc ngs-hc -h
-   usage: fuc ngs-hc [-h] [--bed PATH] [--dbsnp PATH] [--job TEXT] [--force]
-                     [--keep] [--posix]
+   usage: fuc ngs-hc [-h] [--bed PATH] [--dbsnp PATH] [--thread INT]
+                     [--batch INT] [--job TEXT] [--force] [--keep] [--posix]
                      manifest fasta output qsub java1 java2
    
    Pipeline for germline short variant discovery.
@@ -869,10 +863,22 @@ ngs-hc
      -h, --help    Show this help message and exit.
      --bed PATH    BED file.
      --dbsnp PATH  VCF file from dbSNP.
+     --thread INT  Number of threads to use (default: 1).
+     --batch INT   Batch size used for GenomicsDBImport (default: 0). This 
+                   controls the number of samples for which readers are 
+                   open at once and therefore provides a way to minimize 
+                   memory consumption. The size of 0 means no batching (i.e. 
+                   readers for all samples will be opened at once).
      --job TEXT    Job submission ID for SGE.
      --force       Overwrite the output directory if it already exists.
      --keep        Keep temporary files.
-     --posix       Optimize for a POSIX filesystem.
+     --posix       Set GenomicsDBImport to allow for optimizations to improve 
+                   the usability and performance for shared Posix Filesystems 
+                   (e.g. NFS, Lustre). If set, file level locking is disabled 
+                   and file system writes are minimized by keeping a higher 
+                   number of file descriptors open for longer periods of time. 
+                   Use with --batch if keeping a large number of file 
+                   descriptors open is an issue.
    
    [Example] Specify queue:
      $ fuc ngs-hc \

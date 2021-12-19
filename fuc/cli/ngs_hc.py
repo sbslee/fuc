@@ -88,6 +88,24 @@ def create_parser(subparsers):
         help='VCF file from dbSNP.'
     )
     parser.add_argument(
+        '--thread',
+        metavar='INT',
+        type=int,
+        default=1,
+        help='Number of threads to use (default: 1).'
+    )
+    parser.add_argument(
+        '--batch',
+        metavar='INT',
+        type=int,
+        default=0,
+        help='Batch size used for GenomicsDBImport (default: 0). This \n'
+             'controls the number of samples for which readers are \n'
+             'open at once and therefore provides a way to minimize \n'
+             'memory consumption. The size of 0 means no batching (i.e. \n'
+             'readers for all samples will be opened at once).'
+    )
+    parser.add_argument(
         '--job',
         metavar='TEXT',
         type=str,
@@ -106,7 +124,13 @@ def create_parser(subparsers):
     parser.add_argument(
         '--posix',
         action='store_true',
-        help='Optimize for a POSIX filesystem.'
+        help='Set GenomicsDBImport to allow for optimizations to improve \n'
+             'the usability and performance for shared Posix Filesystems \n'
+             '(e.g. NFS, Lustre). If set, file level locking is disabled \n'
+             'and file system writes are minimized by keeping a higher \n'
+             'number of file descriptors open for longer periods of time. \n'
+             'Use with --batch if keeping a large number of file \n'
+             'descriptors open is an issue.'
     )
 
 def main(args):
@@ -128,6 +152,8 @@ def main(args):
     else:
         remove = 'rm'
 
+    java_shared = f'-XX:ParallelGCThreads={args.thread} -XX:ConcGCThreads={args.thread}'
+
     basenames = []
 
     for i, r in df.iterrows():
@@ -142,8 +168,9 @@ def main(args):
 
             command = 'gatk HaplotypeCaller'
             command += f' --QUIET'
-            command += f' --java-options "{args.java1}"'
+            command += f' --java-options "{java_shared} {args.java1}"'
             command += f' -R {args.fasta}'
+            command += f' --native-pair-hmm-threads {args.thread}'
             command += f' --emit-ref-confidence GVCF'
             command += f' -I {r.BAM}'
             command += f' -O {args.output}/temp/{basename}.g.vcf'
@@ -187,8 +214,12 @@ source activate {api.common.conda_env()}
 
             command1 = 'gatk GenomicsDBImport'
             command1 += f' --QUIET'
-            command1 += f' --java-options "{args.java2}"'
+            command1 += f' --java-options "{java_shared} {args.java2}"'
             command1 += f' -L {chrom}'
+            command1 += f' --reader-threads {args.thread}'
+            if args.posix:
+                command1 += ' --genomicsdb-shared-posixfs-optimizations'
+            command1 += f' --batch-size {args.batch}'
             command1 += f' --genomicsdb-workspace-path {args.output}/temp/db-{chrom}'
             command1 += ' ' + ' '.join([f'-V {args.output}/temp/{x}.g.vcf' for x in basenames])
 
@@ -198,7 +229,7 @@ source activate {api.common.conda_env()}
 
             command2 = 'gatk GenotypeGVCFs'
             command2 += f' --QUIET'
-            command2 += f' --java-options "{args.java2}"'
+            command2 += f' --java-options "{java_shared} {args.java2}"'
             command2 += f' -R {args.fasta}'
             command2 += f' -V gendb://{args.output}/temp/db-{chrom}'
             command2 += f' -O {args.output}/temp/{chrom}.joint.vcf'
@@ -212,7 +243,7 @@ source activate {api.common.conda_env()}
 
             command3 = 'gatk VariantFiltration'
             command3 += f' --QUIET'
-            command3 += f' --java-options "{args.java2}"'
+            command3 += f' --java-options "{java_shared} {args.java2}"'
             command3 += f' -R {args.fasta}'
             command3 += f' -O {args.output}/temp/{chrom}.joint.filtered.vcf'
             command3 += f' --variant {args.output}/temp/{chrom}.joint.vcf'
@@ -246,7 +277,7 @@ source activate {api.common.conda_env()}
 
         command = 'gatk GatherVcfs'
         command += f' --QUIET'
-        command += f' --java-options "{args.java2}"'
+        command += f' --java-options "{java_shared} {args.java2}"'
         command += f' -O {args.output}/merged.joint.filtered.vcf'
         command += ' ' + ' '.join([f'-I {args.output}/temp/{x}.joint.filtered.vcf' for x in chroms])
 

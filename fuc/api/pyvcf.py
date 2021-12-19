@@ -1128,9 +1128,81 @@ class VcfFrame:
         return not self.samples or 'FORMAT' not in self.df.columns
 
     @property
+    def phased(self):
+        """
+        Return True if every genotype in VcfFrame is haplotype phased.
+
+        Returns
+        -------
+        bool
+            If VcfFrame is fully phased, return True, if not return False.
+            Also return False if VcfFrame is empty.
+
+        Examples
+        --------
+
+        >>> from fuc import pyvcf
+        >>> data1 = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102],
+        ...     'ID': ['.', '.', '.'],
+        ...     'REF': ['G', 'T', 'A'],
+        ...     'ALT': ['A', 'C', 'T'],
+        ...     'QUAL': ['.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.'],
+        ...     'INFO': ['.', '.', '.'],
+        ...     'FORMAT': ['GT', 'GT', 'GT'],
+        ...     'A': ['1|1', '0|0', '1|0'],
+        ...     'B': ['1|0', '0|1', '1|0'],
+        ... }
+        >>> vf1 = pyvcf.VcfFrame.from_dict([], data1)
+        >>> vf1.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    B
+        0  chr1  100  .   G   A    .      .    .     GT  1|1  1|0
+        1  chr1  101  .   T   C    .      .    .     GT  0|0  0|1
+        2  chr1  102  .   A   T    .      .    .     GT  1|0  1|0
+        >>> vf1.phased
+        True
+        >>> data2 = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102],
+        ...     'ID': ['.', '.', '.'],
+        ...     'REF': ['G', 'T', 'A'],
+        ...     'ALT': ['A', 'C', 'T'],
+        ...     'QUAL': ['.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.'],
+        ...     'INFO': ['.', '.', '.'],
+        ...     'FORMAT': ['GT', 'GT', 'GT'],
+        ...     'C': ['1|1', '0/0', '1|0'],
+        ...     'D': ['1|0', '0/1', '1|0'],
+        ... }
+        >>> vf2 = pyvcf.VcfFrame.from_dict([], data2)
+        >>> vf2.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    C    D
+        0  chr1  100  .   G   A    .      .    .     GT  1|1  1|0
+        1  chr1  101  .   T   C    .      .    .     GT  0/0  0/1
+        2  chr1  102  .   A   T    .      .    .     GT  1|0  1|0
+        >>> vf2.phased
+        False
+        """
+        if self.empty:
+            return False
+        def one_row(r):
+            def one_gt(g):
+                return '|' in g.split(':')[0]
+            return r[9:].apply(one_gt).all()
+        s = self.df.apply(one_row, axis=1)
+        return s.all()
+
+    @property
     def empty(self):
         """
         Indicator whether VcfFrame is empty.
+
+        Returns
+        -------
+        bool
+            If VcfFrame is empty, return True, if not return False.
 
         Examples
         --------
@@ -1734,7 +1806,7 @@ class VcfFrame:
             except AttributeError:
                 pass
         else:
-            TypeError('Incorrect input type')
+            raise TypeError(f'Incorrect input type: {type(fn).__name__}')
         vf = cls.from_string(s)
         return vf
 
@@ -4574,12 +4646,14 @@ class VcfFrame:
 
     def slice(self, region):
         """
-        Slice the VcfFrame for the region.
+        Slice VcfFrame for specified region.
 
         Parameters
         ----------
         region : str
-            Region ('chrom:start-end').
+            Region to slice ('chrom:start-end'). The 'chr' string will be
+            handled automatically. For example, 'chr1' and '1' will have the
+            same effect in slicing.
 
         Returns
         -------
@@ -4588,6 +4662,8 @@ class VcfFrame:
 
         Examples
         --------
+
+        Assume we have following data:
 
         >>> from fuc import pyvcf
         >>> data = {
@@ -4600,37 +4676,64 @@ class VcfFrame:
         ...     'FILTER': ['.', '.', '.', '.'],
         ...     'INFO': ['.', '.', '.', '.'],
         ...     'FORMAT': ['GT', 'GT', 'GT', 'GT'],
-        ...     'Steven': ['0/1', '1/1', '0/1', '0/1']
+        ...     'A': ['0/1', '1/1', '0/0', '0/0'],
+        ...     'B': ['0/0', '0/0', '0/1', '0/1'],
         ... }
         >>> vf = pyvcf.VcfFrame.from_dict([], data)
         >>> vf.df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
-        0  chr1  100  .   G   A    .      .    .     GT    0/1
-        1  chr1  205  .   T   C    .      .    .     GT    1/1
-        2  chr1  297  .   A   T    .      .    .     GT    0/1
-        3  chr2  101  .   C   A    .      .    .     GT    0/1
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    B
+        0  chr1  100  .   G   A    .      .    .     GT  0/1  0/0
+        1  chr1  205  .   T   C    .      .    .     GT  1/1  0/0
+        2  chr1  297  .   A   T    .      .    .     GT  0/0  0/1
+        3  chr2  101  .   C   A    .      .    .     GT  0/0  0/1
+
+        We can specify a full region:
+
         >>> vf.slice('chr1:101-300').df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
-        0  chr1  205  .   T   C    .      .    .     GT    1/1
-        1  chr1  297  .   A   T    .      .    .     GT    0/1
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    B
+        0  chr1  205  .   T   C    .      .    .     GT  1/1  0/0
+        1  chr1  297  .   A   T    .      .    .     GT  0/0  0/1
+
+        We can specify a region without the 'chr' string:
+
+        >>> vf.slice('1:101-300').df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    B
+        0  chr1  205  .   T   C    .      .    .     GT  1/1  0/0
+        1  chr1  297  .   A   T    .      .    .     GT  0/0  0/1
+
+        We can specify the contig only:
+
         >>> vf.slice('chr1').df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
-        0  chr1  100  .   G   A    .      .    .     GT    0/1
-        1  chr1  205  .   T   C    .      .    .     GT    1/1
-        2  chr1  297  .   A   T    .      .    .     GT    0/1
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    B
+        0  chr1  100  .   G   A    .      .    .     GT  0/1  0/0
+        1  chr1  205  .   T   C    .      .    .     GT  1/1  0/0
+        2  chr1  297  .   A   T    .      .    .     GT  0/0  0/1
+
+        We can omit the start position:
+
         >>> vf.slice('chr1:-296').df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
-        0  chr1  100  .   G   A    .      .    .     GT    0/1
-        1  chr1  205  .   T   C    .      .    .     GT    1/1
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    B
+        0  chr1  100  .   G   A    .      .    .     GT  0/1  0/0
+        1  chr1  205  .   T   C    .      .    .     GT  1/1  0/0
+
+        We can omit the end position as well:
+
         >>> vf.slice('chr1:101').df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
-        0  chr1  205  .   T   C    .      .    .     GT    1/1
-        1  chr1  297  .   A   T    .      .    .     GT    0/1
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    B
+        0  chr1  205  .   T   C    .      .    .     GT  1/1  0/0
+        1  chr1  297  .   A   T    .      .    .     GT  0/0  0/1
+
+        You can also omit the end position this way:
+
         >>> vf.slice('chr1:101-').df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
-        0  chr1  205  .   T   C    .      .    .     GT    1/1
-        1  chr1  297  .   A   T    .      .    .     GT    0/1
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    B
+        0  chr1  205  .   T   C    .      .    .     GT  1/1  0/0
+        1  chr1  297  .   A   T    .      .    .     GT  0/0  0/1
         """
+        if self.has_chr_prefix:
+            region = common.update_chr_prefix(region, mode='add')
+        else:
+            region = common.update_chr_prefix(region, mode='remove')
         chrom, start, end = common.parse_region(region)
         df = self.df[self.df.CHROM == chrom]
         if not pd.isna(start):
