@@ -4,6 +4,8 @@ Changelog
 0.30.0 (in development)
 -----------------------
 
+* Update :command:`fuc-find` command to allow users to control whether to use recursive retrieving.
+
 0.29.0 (2021-12-19)
 -------------------
 

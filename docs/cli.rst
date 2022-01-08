@@ -35,7 +35,8 @@ For getting help on the fuc CLI:
        fuc-compf    Compare the contents of two files.
        fuc-demux    Parse the Reports directory from bcl2fastq.
        fuc-exist    Check whether certain files exist.
-       fuc-find     Find all filenames matching a specified pattern recursively.
+       fuc-find     Retrieve absolute paths of files whose name matches a 
+                    specified pattern, optionally recursively.
        fuc-undetm   Compute top unknown barcodes using undertermined FASTQ from bcl2fastq.
        maf-maf2vcf  Convert a MAF file to a VCF file.
        maf-oncoplt  Create an oncoplot with a MAF file.
@@ -524,28 +525,28 @@ fuc-find
 .. code-block:: text
 
    $ fuc fuc-find -h
-   usage: fuc fuc-find [-h] [--dir PATH] pattern
+   usage: fuc fuc-find [-h] [-r] [-d PATH] pattern
    
-   Find all filenames matching a specified pattern recursively.
-   
-   This command will recursively find all the filenames matching a specified
-   pattern and then return their absolute paths.
+   Retrieve absolute paths of files whose name matches a specified pattern,
+   optionally recursively.
    
    Positional arguments:
-     pattern     Filename pattern.
+     pattern               Filename pattern.
    
    Optional arguments:
-     -h, --help  Show this help message and exit.
-     --dir PATH  Directory to search in (default: current directory).
+     -h, --help            Show this help message and exit.
+     -r, --recursive       Turn on recursive retrieving.
+     -d PATH, --directory PATH
+                           Directory to search in (default: current directory).
    
-   [Example] Find VCF files in the current directory:
+   [Example] Retrieve VCF files in the current directory only:
      $ fuc fuc-find "*.vcf"
    
-   [Example] Find specific VCF files:
-     $ fuc fuc-find "*.vcf.*"
+   [Example] Retrieve VCF files recursively:
+     $ fuc fuc-find "*.vcf" -r
    
-   [Example] Find zipped VCF files in a specific directory:
-     $ fuc fuc-find "*.vcf.gz" --dir ~/test_dir
+   [Example] Retrieve VCF files in a specific directory:
+     $ fuc fuc-find "*.vcf" -d /path/to/dir
 
 fuc-undetm
 ==========
