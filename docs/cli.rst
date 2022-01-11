@@ -47,6 +47,7 @@ For getting help on the fuc CLI:
        ngs-hc       Pipeline for germline short variant discovery.
        ngs-m2       Pipeline for somatic short variant discovery.
        ngs-pon      Pipeline for constructing a panel of normals (PoN).
+       ngs-trim     Pipeline for trimming adapters from FASTQ files.
        tabix-index  Index a GFF/BED/SAM/VCF file with Tabix.
        tabix-slice  Slice a GFF/BED/SAM/VCF file with Tabix.
        tbl-merge    Merge two table files.
@@ -980,6 +981,44 @@ ngs-pon
      output_dir \
      "-l h='node_A|node_B'" \
      "-Xmx15g -Xms15g"
+
+ngs-trim
+========
+
+.. code-block:: text
+
+   $ fuc ngs-trim -h
+   usage: fuc ngs-trim [-h] [--thread INT] [--job TEXT] [--force]
+                       manifest output qsub
+   
+   Pipeline for trimming adapters from FASTQ files.
+   
+   External dependencies:
+     - SGE: Required for job submission (i.e. qsub).
+     - cutadapt: Required for trimming adapters.
+   
+   Manifest columns:
+     - Name: Sample name.
+     - Read1: Path to forward FASTA file.
+     - Read2: Path to reverse FASTA file.
+   
+   Positional arguments:
+     manifest      Sample manifest CSV file.
+     output        Output directory.
+     qsub          SGE resoruce to request for qsub.
+   
+   Optional arguments:
+     -h, --help    Show this help message and exit.
+     --thread INT  Number of threads to use (default: 1).
+     --job TEXT    Job submission ID for SGE.
+     --force       Overwrite the output directory if it already exists.
+   
+   [Example] Specify queue:
+     $ fuc ngs-trim \
+     manifest.csv \
+     output_dir \
+     "-q queue_name -pe pe_name 10" \
+     --thread 10
 
 tabix-index
 ===========

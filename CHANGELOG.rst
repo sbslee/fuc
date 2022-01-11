@@ -5,6 +5,7 @@ Changelog
 -----------------------
 
 * Update :command:`fuc-find` command to allow users to control whether to use recursive retrieving.
+* Add new command :command:`ngs-trim`.
 
 0.29.0 (2021-12-19)
 -------------------
