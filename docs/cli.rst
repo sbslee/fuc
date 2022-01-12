@@ -47,6 +47,8 @@ For getting help on the fuc CLI:
        ngs-hc       Pipeline for germline short variant discovery.
        ngs-m2       Pipeline for somatic short variant discovery.
        ngs-pon      Pipeline for constructing a panel of normals (PoN).
+       ngs-quant    Pipeline for running RNAseq quantification from FASTQ files 
+                    with Kallisto.
        ngs-trim     Pipeline for trimming adapters from FASTQ files.
        tabix-index  Index a GFF/BED/SAM/VCF file with Tabix.
        tabix-slice  Slice a GFF/BED/SAM/VCF file with Tabix.
@@ -981,6 +983,48 @@ ngs-pon
      output_dir \
      "-l h='node_A|node_B'" \
      "-Xmx15g -Xms15g"
+
+ngs-quant
+=========
+
+.. code-block:: text
+
+   $ fuc ngs-quant -h
+   usage: fuc ngs-quant [-h] [--thread INT] [--bootstrap INT] [--job TEXT]
+                        [--force]
+                        manifest index output qsub
+   
+   Pipeline for running RNAseq quantification from FASTQ files with Kallisto.
+   
+   External dependencies:
+     - SGE: Required for job submission (i.e. qsub).
+     - kallisto: Required for RNAseq quantification.
+   
+   Manifest columns:
+     - Name: Sample name.
+     - Read1: Path to forward FASTA file.
+     - Read2: Path to reverse FASTA file.
+   
+   Positional arguments:
+     manifest         Sample manifest CSV file.
+     index            Kallisto index file.
+     output           Output directory.
+     qsub             SGE resoruce to request for qsub.
+   
+   Optional arguments:
+     -h, --help       Show this help message and exit.
+     --thread INT     Number of threads to use (default: 1).
+     --bootstrap INT  Number of bootstrap samples (default: 50).
+     --job TEXT       Job submission ID for SGE.
+     --force          Overwrite the output directory if it already exists.
+   
+   [Example] Specify queue:
+     $ fuc ngs-quant \
+     manifest.csv \
+     transcripts.idx \
+     output_dir \
+     "-q queue_name -pe pe_name 10" \
+     --thread 10
 
 ngs-trim
 ========
