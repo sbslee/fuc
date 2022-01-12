@@ -81,6 +81,13 @@ def create_parser(subparsers):
         action='store_true',
         help='Overwrite the output directory if it already exists.'
     )
+    parser.add_argument(
+        '--posix',
+        action='store_true',
+        help='Set the environment variable HDF5_USE_FILE_LOCKING=FALSE \n'
+             'before running Kallisto. This is required for shared Posix \n'
+             'Filesystems (e.g. NFS, Lustre).'
+    )
 
 def main(args):
     if os.path.exists(args.output) and args.force:
@@ -92,6 +99,15 @@ def main(args):
 
     with open(f'{args.output}/command.txt', 'w') as f:
         f.write(' '.join(sys.argv) + '\n')
+
+    ####################
+    # POSIX filesystem #
+    ####################
+
+    if args.posix:
+        export = 'export HDF5_USE_FILE_LOCKING=FALSE'
+    else:
+        export = '# export HDF5_USE_FILE_LOCKING=FALSE'
 
     df = pd.read_csv(args.manifest)
 
@@ -108,6 +124,9 @@ def main(args):
 
             f.write(
 f"""#!/bin/bash
+
+# Optimize for POSIX filesystem.
+{export}
 
 # Activate conda environment.
 source activate {api.common.conda_env()}
