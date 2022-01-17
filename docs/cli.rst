@@ -991,7 +991,7 @@ ngs-quant
 
    $ fuc ngs-quant -h
    usage: fuc ngs-quant [-h] [--thread INT] [--bootstrap INT] [--job TEXT]
-                        [--force]
+                        [--force] [--posix]
                         manifest index output qsub
    
    Pipeline for running RNAseq quantification from FASTQ files with Kallisto.
@@ -1017,6 +1017,9 @@ ngs-quant
      --bootstrap INT  Number of bootstrap samples (default: 50).
      --job TEXT       Job submission ID for SGE.
      --force          Overwrite the output directory if it already exists.
+     --posix          Set the environment variable HDF5_USE_FILE_LOCKING=FALSE 
+                      before running Kallisto. This is required for shared Posix 
+                      Filesystems (e.g. NFS, Lustre).
    
    [Example] Specify queue:
      $ fuc ngs-quant \
