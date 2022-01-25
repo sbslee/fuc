@@ -8,6 +8,7 @@ Changelog
 * Add new command :command:`ngs-trim`.
 * Add new command :command:`ngs-quant`.
 * Add new submodule ``pykallisto``.
+* Update :meth:`pycov.CovFrame.from_bam` method to use filename as sample name when the SM tag is missing.
 
 0.29.0 (2021-12-19)
 -------------------

@@ -8,7 +8,9 @@ also contains many useful plotting methods such as ``CovFrame.plot_region``
 and ``CovFrame.plot_uniformity``.
 """
 from io import StringIO, IOBase
+import warnings
 import gzip
+from pathlib import Path
 
 from . import common, pybam, pybed
 
@@ -181,6 +183,9 @@ class CovFrame:
         Under the hood, the method computes read depth using the
         :command:`samtools depth` command.
 
+        Sample name is extracted from the SM tag. If the tag is missing, the
+        method will set the filename as sample name.
+
         Parameters
         ----------
         bam : str or list, optional
@@ -257,6 +262,14 @@ class CovFrame:
                 name = names[i]
             else:
                 samples = pybam.tag_sm(bam_file)
+                if not samples:
+                    basename = Path(bam_file).stem
+                    message = (
+                        f'SM tags were not found for {bam_file}, will use '
+                        f'file name as sample name ({basename})'
+                    )
+                    samples = [bam_file]
+                    warnings.warn(message)
                 if len(samples) > 1:
                     m = f'multiple sample names detected: {bam_file}'
                     raise ValueError(m)
