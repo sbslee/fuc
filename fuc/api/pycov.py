@@ -268,7 +268,7 @@ class CovFrame:
                         f'SM tags were not found for {bam_file}, will use '
                         f'file name as sample name ({basename})'
                     )
-                    samples = [bam_file]
+                    samples = [basename]
                     warnings.warn(message)
                 if len(samples) > 1:
                     m = f'multiple sample names detected: {bam_file}'
