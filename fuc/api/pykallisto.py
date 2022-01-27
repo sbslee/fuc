@@ -26,9 +26,12 @@ class KallistoFrame:
     filter_func : func, optional
         Filtering function to be applied to each row (i.e. transcript). By
         default, the :meth:`pykallisto.basic_filter` method will be used.
+    filter_target_id : list, optional
+        Transcripts to filter using methods that can't be implemented using
+        ``filter_fun``. If provided, this will override ``filter_fun``.
     """
 
-    def _import_data(self, metadata, filter_func=None):
+    def _import_data(self, metadata, filter_func=None, filter_target_id=None):
         dfs = {}
         for i, r in metadata.iterrows():
             df = pd.read_table(r['path'] + '/abundance.tsv', index_col=0)
@@ -37,16 +40,23 @@ class KallistoFrame:
         df_tx_count.columns = metadata.index
         df_tx_tpm = pd.concat([v['tpm'] for k, v in dfs.items()], axis=1)
         df_tx_tpm.columns = metadata.index
-        if filter_func is None:
-            filter_func = basic_filter
-        filtered_ids = df_tx_count.apply(filter_func, axis=1)
+        if filter_target_id is None:
+            if filter_func is None:
+                filter_func = basic_filter
+            filtered_ids = df_tx_count.apply(filter_func, axis=1)
+        else:
+            filtered_ids = pd.Series(df_tx_count.index.isin(filter_target_id),
+                index=df_tx_count.index)
         return df_tx_count, df_tx_tpm, filtered_ids
 
-    def __init__(self, metadata, tx2gene, aggregation_column, filter_func=None):
+    def __init__(
+        self, metadata, tx2gene, aggregation_column, filter_func=None,
+        filter_target_id=None
+    ):
         self.metadata = metadata
         self.tx2gene = tx2gene
         self.aggregation_column = aggregation_column
-        results = self._import_data(metadata, filter_func)
+        results = self._import_data(metadata, filter_func, filter_target_id)
         self.df_tx_count = results[0]
         self.df_tx_tpm = results[1]
         self.filtered_ids = results[2]
