@@ -3,7 +3,7 @@ The pykallisto submodule is designed for working with RNAseq quantification
 data from Kallisto. It implements ``pykallisto.KallistoFrame`` which stores
 Kallisto's output data as ``pandas.DataFrame`` to allow fast computation and
 easy manipulation. The ``pykallisto.KallistoFrame`` class also contains many
-useful plotting methods such as ``KallistoFrame.plot_txdiff``.
+useful plotting methods such as ``KallistoFrame.plot_differential_abundance``.
 """
 
 import pandas as pd
