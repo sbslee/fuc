@@ -641,7 +641,8 @@ def row_hasindel(r):
     return ref_has or alt_has
 
 def row_parseinfo(r, key):
-    """Return INFO data in the row that match the given key.
+    """
+    Return INFO data in the row that match the given key.
 
     Parameters
     ----------
@@ -691,8 +692,55 @@ def row_parseinfo(r, key):
             result = field[len(key)+1:]
     return result
 
+def row_phased(r):
+    """
+    Return True if every genotype in the row is haplotype phased.
+
+    Parameters
+    ----------
+    r : pandas.Series
+        VCF row.
+
+    Returns
+    -------
+    bool
+        True if the row is fully phased.
+
+    Examples
+    --------
+
+    >>> data = {
+    ...     'CHROM': ['chr1', 'chr1', 'chr1'],
+    ...     'POS': [100, 101, 102],
+    ...     'ID': ['.', '.', '.'],
+    ...     'REF': ['G', 'T', 'A'],
+    ...     'ALT': ['A', 'C', 'T'],
+    ...     'QUAL': ['.', '.', '.'],
+    ...     'FILTER': ['.', '.', '.'],
+    ...     'INFO': ['.', '.', '.'],
+    ...     'FORMAT': ['GT', 'GT', 'GT'],
+    ...     'A': ['1|1', '0/0', '1|0'],
+    ...     'B': ['1|0', '0/1', '1/0'],
+    ... }
+    >>> vf = pyvcf.VcfFrame.from_dict([], data)
+    >>> vf.df
+      CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    B
+    0  chr1  100  .   G   A    .      .    .     GT  1|1  1|0
+    1  chr1  101  .   T   C    .      .    .     GT  0/0  0/1
+    2  chr1  102  .   A   T    .      .    .     GT  1|0  1/0
+    >>> vf.df.apply(pyvcf.row_phased, axis=1)
+    0     True
+    1    False
+    2    False
+    dtype: bool
+    """
+    def one_gt(g):
+        return '|' in g.split(':')[0]
+    return r[9:].apply(one_gt).all()
+
 def row_updateinfo(r, key, value):
-    """Update INFO data in the row that match the given key.
+    """
+    Update INFO data in the row that match the given key.
 
     Parameters
     ----------
@@ -746,7 +794,8 @@ def row_updateinfo(r, key, value):
     return ';'.join(fields)
 
 def row_missval(r):
-    """Return the correctly formatted missing value for the row.
+    """
+    Return the correctly formatted missing value for the row.
 
     Parameters
     ----------
@@ -1187,11 +1236,7 @@ class VcfFrame:
         """
         if self.empty:
             return False
-        def one_row(r):
-            def one_gt(g):
-                return '|' in g.split(':')[0]
-            return r[9:].apply(one_gt).all()
-        s = self.df.apply(one_row, axis=1)
+        s = self.df.apply(row_phased, axis=1)
         return s.all()
 
     @property
