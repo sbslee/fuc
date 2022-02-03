@@ -970,6 +970,72 @@ def slice(file, regions, path=None):
 
     return data
 
+def split(vcf, clean=True):
+    """
+    Split VcfFrame by individual.
+
+    Parameters
+    ----------
+    vcf : str or VcfFrame
+        VCF file or VcfFrame to be split.
+    clean : bool, default: True
+        If True, only return variants present in each individual. In other
+        words, setting this as False will make sure that all individuals
+        have the same number of variants.
+
+    Returns
+    -------
+    list
+        List of individual VcfFrames.
+
+    Examples
+    --------
+
+    >>> from fuc import pyvcf
+    >>> data = {
+    ...     'CHROM': ['chr1', 'chr1'],
+    ...     'POS': [100, 101],
+    ...     'ID': ['.', '.'],
+    ...     'REF': ['G', 'T'],
+    ...     'ALT': ['A', 'C'],
+    ...     'QUAL': ['.', '.'],
+    ...     'FILTER': ['.', '.'],
+    ...     'INFO': ['.', '.'],
+    ...     'FORMAT': ['GT', 'GT'],
+    ...     'A': ['0/1', '0/0'],
+    ...     'B': ['0/1', '0/1'],
+    ... }
+    >>> vf = pyvcf.VcfFrame.from_dict(['##fileformat=VCFv4.3'], data)
+    >>> vf.df
+      CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    B
+    0  chr1  100  .   G   A    .      .    .     GT  0/1  0/1
+    1  chr1  101  .   T   C    .      .    .     GT  0/0  0/1
+    >>> vfs = pyvcf.split(vf)
+    >>> vfs[0].df
+      CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A
+    0  chr1  100  .   G   A    .      .    .     GT  0/1
+    >>> vfs = pyvcf.split(vf, clean=False)
+    >>> vfs[0].df
+      CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A
+    0  chr1  100  .   G   A    .      .    .     GT  0/1
+    1  chr1  101  .   T   C    .      .    .     GT  0/0
+    """
+    # Parse the input VCF.
+    if isinstance(vcf, str):
+        vf = VcfFrame.from_file(vcf)
+    else:
+        vf = vcf
+
+    vfs = []
+
+    for sample in vf.samples:
+        temp_vf = vf.subset(sample)
+        if clean:
+            temp_vf = temp_vf.filter_sampall()
+        vfs.append(temp_vf)
+
+    return vfs
+
 def plot_af_correlation(vf1, vf2, ax=None, figsize=None):
     """
     Create a scatter plot showing the correlation of allele frequency between

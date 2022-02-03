@@ -10,6 +10,7 @@ Changelog
 * Add new submodule ``pykallisto``.
 * Update :meth:`pycov.CovFrame.from_bam` method to use filename as sample name when the SM tag is missing.
 * Add new method :meth:`pyvcf.row_phased`. From now on, it's used to get the ``pyvcf.VcfFrame.phased`` property.
+* Add new method :meth:`pyvcf.split` and :command:`vcf-split` for splitting VCF by individual.
 
 0.29.0 (2021-12-19)
 -------------------

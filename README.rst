@@ -152,6 +152,7 @@ For getting help on the fuc CLI:
        vcf-merge    Merge two or more VCF files.
        vcf-rename   Rename the samples in a VCF file.
        vcf-slice    Slice a VCF file for specified regions.
+       vcf-split    Split a VCF file by individual.
        vcf-vcf2bed  Convert a VCF file to a BED file.
        vcf-vep      Filter a VCF file by annotations from Ensembl VEP.
    

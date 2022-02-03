@@ -59,6 +59,7 @@ For getting help on the fuc CLI:
        vcf-merge    Merge two or more VCF files.
        vcf-rename   Rename the samples in a VCF file.
        vcf-slice    Slice a VCF file for specified regions.
+       vcf-split    Split a VCF file by individual.
        vcf-vcf2bed  Convert a VCF file to a BED file.
        vcf-vep      Filter a VCF file by annotations from Ensembl VEP.
    
@@ -1400,6 +1401,30 @@ vcf-slice
    
    [Example] Output a compressed file:
      $ fuc vcf-slice in.vcf.gz regions.bed | fuc fuc-bgzip > out.vcf.gz
+
+vcf-split
+=========
+
+.. code-block:: text
+
+   $ fuc vcf-split -h
+   usage: fuc vcf-split [-h] [--clean] [--force] vcf output
+   
+   Split a VCF file by individual.
+   
+   Positional arguments:
+     vcf         VCF file to be split.
+     output      Output directory.
+   
+   Optional arguments:
+     -h, --help  Show this help message and exit.
+     --clean     By default, the command will only return variants present in 
+                 each individual. Use the tag to stop this behavior and make 
+                 sure that all individuals have the same number of variants.
+     --force     Overwrite the output directory if it already exists.
+   
+   [Example] Split a VCF file by individual:
+     $ fuc vcf-split in.vcf output_dir
 
 vcf-vcf2bed
 ===========
