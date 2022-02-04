@@ -500,7 +500,9 @@ def merge(
     Parameters
     ----------
     vfs : list
-        List of VcfFrames to be merged.
+        List of VcfFrames to be merged. Note that the 'chr' prefix in contig
+        names (e.g. 'chr1' vs. '1') will be automatically added or removed as
+        necessary to match the contig names of the first VCF.
     how : str, default: 'inner'
         Type of merge as defined in pandas.DataFrame.merge.
     format : str, default: 'GT'
@@ -2406,7 +2408,9 @@ class VcfFrame:
         Parameters
         ----------
         other : VcfFrame
-            Other VcfFrame.
+            Other VcfFrame. Note that the 'chr' prefix in contig names (e.g.
+            'chr1' vs. '1') will be automatically added or removed as
+            necessary to match the contig names of ``self``.
         how : str, default: 'inner'
             Type of merge as defined in `pandas.DataFrame.merge`.
         format : str, default: 'GT'
@@ -2487,6 +2491,15 @@ class VcfFrame:
         1  chr1  101  .   T   C    .      .    .  GT:DP  0/1:29  1/1:30  0/0:24  0/1:31
         2  chr2  200  .   A   T    .      .    .  GT:DP   ./.:.   ./.:.  0/0:26  0/1:26
         """
+        if self.has_chr_prefix and other.has_chr_prefix:
+            pass
+        elif self.has_chr_prefix and not other.has_chr_prefix:
+            other = other.update_chr_prefix('add')
+        elif not self.has_chr_prefix and other.has_chr_prefix:
+            other = other.update_chr_prefix('remove')
+        else:
+            pass
+
         if self.sites_only and other.sites_only:
             df = pd.concat([self.df, other.df])
             merged = self.__class__([], df)
