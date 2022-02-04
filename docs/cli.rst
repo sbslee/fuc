@@ -1306,7 +1306,10 @@ vcf-merge
    Merge two or more VCF files.
    
    Positional arguments:
-     vcf_files      VCF files (compressed or uncompressed).
+     vcf_files      VCF files (compressed or uncompressed). Note that the 'chr'
+                    prefix in contig names (e.g. 'chr1' vs. '1') will be 
+                    automatically added or removed as necessary to match the 
+                    contig names of the first VCF.
    
    Optional arguments:
      -h, --help     Show this help message and exit.
