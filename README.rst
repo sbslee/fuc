@@ -49,6 +49,7 @@ Additionally, fuc can be used to parse output data from the following programs:
 - Ensembl Variant Effect Predictor (VEP)
 - SnpEff
 - bcl2fastq and bcl2fastq2
+- Kallisto
 
 Your contributions (e.g. feature ideas, pull requests) are most welcome.
 
