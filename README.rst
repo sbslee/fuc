@@ -49,6 +49,7 @@ Additionally, fuc can be used to parse output data from the following programs:
 - Ensembl Variant Effect Predictor (VEP)
 - SnpEff
 - bcl2fastq and bcl2fastq2
+- Kallisto
 
 Your contributions (e.g. feature ideas, pull requests) are most welcome.
 
@@ -128,7 +129,8 @@ For getting help on the fuc CLI:
        fuc-compf    Compare the contents of two files.
        fuc-demux    Parse the Reports directory from bcl2fastq.
        fuc-exist    Check whether certain files exist.
-       fuc-find     Find all filenames matching a specified pattern recursively.
+       fuc-find     Retrieve absolute paths of files whose name matches a 
+                    specified pattern, optionally recursively.
        fuc-undetm   Compute top unknown barcodes using undertermined FASTQ from bcl2fastq.
        maf-maf2vcf  Convert a MAF file to a VCF file.
        maf-oncoplt  Create an oncoplot with a MAF file.
@@ -139,6 +141,9 @@ For getting help on the fuc CLI:
        ngs-hc       Pipeline for germline short variant discovery.
        ngs-m2       Pipeline for somatic short variant discovery.
        ngs-pon      Pipeline for constructing a panel of normals (PoN).
+       ngs-quant    Pipeline for running RNAseq quantification from FASTQ files 
+                    with Kallisto.
+       ngs-trim     Pipeline for trimming adapters from FASTQ files.
        tabix-index  Index a GFF/BED/SAM/VCF file with Tabix.
        tabix-slice  Slice a GFF/BED/SAM/VCF file with Tabix.
        tbl-merge    Merge two table files.
@@ -148,6 +153,7 @@ For getting help on the fuc CLI:
        vcf-merge    Merge two or more VCF files.
        vcf-rename   Rename the samples in a VCF file.
        vcf-slice    Slice a VCF file for specified regions.
+       vcf-split    Split a VCF file by individual.
        vcf-vcf2bed  Convert a VCF file to a BED file.
        vcf-vep      Filter a VCF file by annotations from Ensembl VEP.
    
@@ -169,6 +175,7 @@ Below is the list of submodules available in the fuc API:
 - **pycov** : The pycov submodule is designed for working with depth of coverage data from sequence alingment files (SAM/BAM/CRAM). It implements ``pycov.CovFrame`` which stores read depth data as ``pandas.DataFrame`` via the `pysam <https://pysam.readthedocs.io/en/latest/api.html>`_ package to allow fast computation and easy manipulation. The ``pycov.CovFrame`` class also contains many useful plotting methods such as ``CovFrame.plot_region`` and ``CovFrame.plot_uniformity``.
 - **pyfq** : The pyfq submodule is designed for working with FASTQ files. It implements ``pyfq.FqFrame`` which stores FASTQ data as ``pandas.DataFrame`` to allow fast computation and easy manipulation.
 - **pygff** : The pygff submodule is designed for working with GFF/GTF files. It implements ``pygff.GffFrame`` which stores GFF/GTF data as ``pandas.DataFrame`` to allow fast computation and easy manipulation. The submodule strictly adheres to the standard `GFF specification <https://github.com/The-Sequence-Ontology/Specifications/blob/master/gff3.md>`_.
+- **pykallisto** : The pykallisto submodule is designed for working with RNAseq quantification data from Kallisto. It implements ``pykallisto.KallistoFrame`` which stores Kallisto's output data as ``pandas.DataFrame`` to allow fast computation and easy manipulation. The ``pykallisto.KallistoFrame`` class also contains many useful plotting methods such as ``KallistoFrame.plot_differential_abundance``.
 - **pymaf** : The pymaf submodule is designed for working with MAF files. It implements ``pymaf.MafFrame`` which stores MAF data as ``pandas.DataFrame`` to allow fast computation and easy manipulation. The ``pymaf.MafFrame`` class also contains many useful plotting methods such as ``MafFrame.plot_oncoplot`` and ``MafFrame.plot_summary``. The submodule strictly adheres to the standard `MAF specification <https://docs.gdc.cancer.gov/Data/File_Formats/MAF_Format/>`_.
 - **pysnpeff** : The pysnpeff submodule is designed for parsing VCF annotation data from the `SnpEff <https://pcingola.github.io/SnpEff/>`_ program. It should be used with ``pyvcf.VcfFrame``.
 - **pyvcf** : The pyvcf submodule is designed for working with VCF files. It implements ``pyvcf.VcfFrame`` which stores VCF data as ``pandas.DataFrame`` to allow fast computation and easy manipulation. The ``pyvcf.VcfFrame`` class also contains many useful plotting methods such as ``VcfFrame.plot_comparison`` and ``VcfFrame.plot_tmb``. The submodule strictly adheres to the standard `VCF specification <https://samtools.github.io/hts-specs/VCFv4.3.pdf>`_.
@@ -180,6 +187,9 @@ For getting help on a specific submodule (e.g. pyvcf):
 
    >>> from fuc import pyvcf
    >>> help(pyvcf)
+
+In Jupyter Notebook and Lab, you can see the documentation for a python
+function by hitting ``SHIFT + TAB``. Hit it twice to expand the view.
 
 CLI examples
 ============

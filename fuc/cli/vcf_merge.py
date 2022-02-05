@@ -24,8 +24,11 @@ def create_parser(subparsers):
     )
     parser.add_argument(
         'vcf_files',
-        help='VCF files (compressed or uncompressed).',
-        nargs='+'
+        nargs='+',
+        help="VCF files (compressed or uncompressed). Note that the 'chr'\n"
+             "prefix in contig names (e.g. 'chr1' vs. '1') will be \n"
+             "automatically added or removed as necessary to match the \n"
+             "contig names of the first VCF."
     )
     parser.add_argument(
         '--how',

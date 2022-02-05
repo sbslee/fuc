@@ -4,21 +4,19 @@ from pathlib import Path
 from .. import api
 
 description = """
-Find all filenames matching a specified pattern recursively.
-
-This command will recursively find all the filenames matching a specified
-pattern and then return their absolute paths.
+Retrieve absolute paths of files whose name matches a specified pattern,
+optionally recursively.
 """
 
 epilog = f"""
-[Example] Find VCF files in the current directory:
+[Example] Retrieve VCF files in the current directory only:
   $ fuc {api.common._script_name()} "*.vcf"
 
-[Example] Find specific VCF files:
-  $ fuc {api.common._script_name()} "*.vcf.*"
+[Example] Retrieve VCF files recursively:
+  $ fuc {api.common._script_name()} "*.vcf" -r
 
-[Example] Find zipped VCF files in a specific directory:
-  $ fuc {api.common._script_name()} "*.vcf.gz" --dir ~/test_dir
+[Example] Retrieve VCF files in a specific directory:
+  $ fuc {api.common._script_name()} "*.vcf" -d /path/to/dir
 """
 
 def create_parser(subparsers):
@@ -27,19 +25,31 @@ def create_parser(subparsers):
         api.common._script_name(),
         description=description,
         epilog=epilog,
-        help='Find all filenames matching a specified pattern recursively.',
+        help='Retrieve absolute paths of files whose name matches a \n'
+             'specified pattern, optionally recursively.',
     )
     parser.add_argument(
         'pattern',
         help='Filename pattern.'
     )
     parser.add_argument(
-        '--dir',
+        '-r',
+        '--recursive',
+        action='store_true',
+        help='Turn on recursive retrieving.'
+    )
+    parser.add_argument(
+        '-d',
+        '--directory',
         metavar='PATH',
         default=os.getcwd(),
         help='Directory to search in (default: current directory).'
     )
 
 def main(args):
-    for path in Path(args.dir).rglob(args.pattern):
-        print(path.absolute())
+    if args.recursive:
+        for path in Path(args.directory).rglob(args.pattern):
+            print(path.absolute())
+    else:
+        for path in Path(args.directory).glob(args.pattern):
+            print(path.absolute())

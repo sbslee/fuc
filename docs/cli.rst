@@ -35,7 +35,8 @@ For getting help on the fuc CLI:
        fuc-compf    Compare the contents of two files.
        fuc-demux    Parse the Reports directory from bcl2fastq.
        fuc-exist    Check whether certain files exist.
-       fuc-find     Find all filenames matching a specified pattern recursively.
+       fuc-find     Retrieve absolute paths of files whose name matches a 
+                    specified pattern, optionally recursively.
        fuc-undetm   Compute top unknown barcodes using undertermined FASTQ from bcl2fastq.
        maf-maf2vcf  Convert a MAF file to a VCF file.
        maf-oncoplt  Create an oncoplot with a MAF file.
@@ -46,6 +47,9 @@ For getting help on the fuc CLI:
        ngs-hc       Pipeline for germline short variant discovery.
        ngs-m2       Pipeline for somatic short variant discovery.
        ngs-pon      Pipeline for constructing a panel of normals (PoN).
+       ngs-quant    Pipeline for running RNAseq quantification from FASTQ files 
+                    with Kallisto.
+       ngs-trim     Pipeline for trimming adapters from FASTQ files.
        tabix-index  Index a GFF/BED/SAM/VCF file with Tabix.
        tabix-slice  Slice a GFF/BED/SAM/VCF file with Tabix.
        tbl-merge    Merge two table files.
@@ -55,6 +59,7 @@ For getting help on the fuc CLI:
        vcf-merge    Merge two or more VCF files.
        vcf-rename   Rename the samples in a VCF file.
        vcf-slice    Slice a VCF file for specified regions.
+       vcf-split    Split a VCF file by individual.
        vcf-vcf2bed  Convert a VCF file to a BED file.
        vcf-vep      Filter a VCF file by annotations from Ensembl VEP.
    
@@ -524,28 +529,28 @@ fuc-find
 .. code-block:: text
 
    $ fuc fuc-find -h
-   usage: fuc fuc-find [-h] [--dir PATH] pattern
+   usage: fuc fuc-find [-h] [-r] [-d PATH] pattern
    
-   Find all filenames matching a specified pattern recursively.
-   
-   This command will recursively find all the filenames matching a specified
-   pattern and then return their absolute paths.
+   Retrieve absolute paths of files whose name matches a specified pattern,
+   optionally recursively.
    
    Positional arguments:
-     pattern     Filename pattern.
+     pattern               Filename pattern.
    
    Optional arguments:
-     -h, --help  Show this help message and exit.
-     --dir PATH  Directory to search in (default: current directory).
+     -h, --help            Show this help message and exit.
+     -r, --recursive       Turn on recursive retrieving.
+     -d PATH, --directory PATH
+                           Directory to search in (default: current directory).
    
-   [Example] Find VCF files in the current directory:
+   [Example] Retrieve VCF files in the current directory only:
      $ fuc fuc-find "*.vcf"
    
-   [Example] Find specific VCF files:
-     $ fuc fuc-find "*.vcf.*"
+   [Example] Retrieve VCF files recursively:
+     $ fuc fuc-find "*.vcf" -r
    
-   [Example] Find zipped VCF files in a specific directory:
-     $ fuc fuc-find "*.vcf.gz" --dir ~/test_dir
+   [Example] Retrieve VCF files in a specific directory:
+     $ fuc fuc-find "*.vcf" -d /path/to/dir
 
 fuc-undetm
 ==========
@@ -980,6 +985,89 @@ ngs-pon
      "-l h='node_A|node_B'" \
      "-Xmx15g -Xms15g"
 
+ngs-quant
+=========
+
+.. code-block:: text
+
+   $ fuc ngs-quant -h
+   usage: fuc ngs-quant [-h] [--thread INT] [--bootstrap INT] [--job TEXT]
+                        [--force] [--posix]
+                        manifest index output qsub
+   
+   Pipeline for running RNAseq quantification from FASTQ files with Kallisto.
+   
+   External dependencies:
+     - SGE: Required for job submission (i.e. qsub).
+     - kallisto: Required for RNAseq quantification.
+   
+   Manifest columns:
+     - Name: Sample name.
+     - Read1: Path to forward FASTA file.
+     - Read2: Path to reverse FASTA file.
+   
+   Positional arguments:
+     manifest         Sample manifest CSV file.
+     index            Kallisto index file.
+     output           Output directory.
+     qsub             SGE resoruce to request for qsub.
+   
+   Optional arguments:
+     -h, --help       Show this help message and exit.
+     --thread INT     Number of threads to use (default: 1).
+     --bootstrap INT  Number of bootstrap samples (default: 50).
+     --job TEXT       Job submission ID for SGE.
+     --force          Overwrite the output directory if it already exists.
+     --posix          Set the environment variable HDF5_USE_FILE_LOCKING=FALSE 
+                      before running Kallisto. This is required for shared Posix 
+                      Filesystems (e.g. NFS, Lustre).
+   
+   [Example] Specify queue:
+     $ fuc ngs-quant \
+     manifest.csv \
+     transcripts.idx \
+     output_dir \
+     "-q queue_name -pe pe_name 10" \
+     --thread 10
+
+ngs-trim
+========
+
+.. code-block:: text
+
+   $ fuc ngs-trim -h
+   usage: fuc ngs-trim [-h] [--thread INT] [--job TEXT] [--force]
+                       manifest output qsub
+   
+   Pipeline for trimming adapters from FASTQ files.
+   
+   External dependencies:
+     - SGE: Required for job submission (i.e. qsub).
+     - cutadapt: Required for trimming adapters.
+   
+   Manifest columns:
+     - Name: Sample name.
+     - Read1: Path to forward FASTA file.
+     - Read2: Path to reverse FASTA file.
+   
+   Positional arguments:
+     manifest      Sample manifest CSV file.
+     output        Output directory.
+     qsub          SGE resoruce to request for qsub.
+   
+   Optional arguments:
+     -h, --help    Show this help message and exit.
+     --thread INT  Number of threads to use (default: 1).
+     --job TEXT    Job submission ID for SGE.
+     --force       Overwrite the output directory if it already exists.
+   
+   [Example] Specify queue:
+     $ fuc ngs-trim \
+     manifest.csv \
+     output_dir \
+     "-q queue_name -pe pe_name 10" \
+     --thread 10
+
 tabix-index
 ===========
 
@@ -1218,7 +1306,10 @@ vcf-merge
    Merge two or more VCF files.
    
    Positional arguments:
-     vcf_files      VCF files (compressed or uncompressed).
+     vcf_files      VCF files (compressed or uncompressed). Note that the 'chr'
+                    prefix in contig names (e.g. 'chr1' vs. '1') will be 
+                    automatically added or removed as necessary to match the 
+                    contig names of the first VCF.
    
    Optional arguments:
      -h, --help     Show this help message and exit.
@@ -1313,6 +1404,30 @@ vcf-slice
    
    [Example] Output a compressed file:
      $ fuc vcf-slice in.vcf.gz regions.bed | fuc fuc-bgzip > out.vcf.gz
+
+vcf-split
+=========
+
+.. code-block:: text
+
+   $ fuc vcf-split -h
+   usage: fuc vcf-split [-h] [--clean] [--force] vcf output
+   
+   Split a VCF file by individual.
+   
+   Positional arguments:
+     vcf         VCF file to be split.
+     output      Output directory.
+   
+   Optional arguments:
+     -h, --help  Show this help message and exit.
+     --clean     By default, the command will only return variants present in 
+                 each individual. Use the tag to stop this behavior and make 
+                 sure that all individuals have the same number of variants.
+     --force     Overwrite the output directory if it already exists.
+   
+   [Example] Split a VCF file by individual:
+     $ fuc vcf-split in.vcf output_dir
 
 vcf-vcf2bed
 ===========

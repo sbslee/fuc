@@ -500,7 +500,9 @@ def merge(
     Parameters
     ----------
     vfs : list
-        List of VcfFrames to be merged.
+        List of VcfFrames to be merged. Note that the 'chr' prefix in contig
+        names (e.g. 'chr1' vs. '1') will be automatically added or removed as
+        necessary to match the contig names of the first VCF.
     how : str, default: 'inner'
         Type of merge as defined in pandas.DataFrame.merge.
     format : str, default: 'GT'
@@ -641,7 +643,8 @@ def row_hasindel(r):
     return ref_has or alt_has
 
 def row_parseinfo(r, key):
-    """Return INFO data in the row that match the given key.
+    """
+    Return INFO data in the row that match the given key.
 
     Parameters
     ----------
@@ -691,8 +694,55 @@ def row_parseinfo(r, key):
             result = field[len(key)+1:]
     return result
 
+def row_phased(r):
+    """
+    Return True if every genotype in the row is haplotype phased.
+
+    Parameters
+    ----------
+    r : pandas.Series
+        VCF row.
+
+    Returns
+    -------
+    bool
+        True if the row is fully phased.
+
+    Examples
+    --------
+
+    >>> data = {
+    ...     'CHROM': ['chr1', 'chr1', 'chr1'],
+    ...     'POS': [100, 101, 102],
+    ...     'ID': ['.', '.', '.'],
+    ...     'REF': ['G', 'T', 'A'],
+    ...     'ALT': ['A', 'C', 'T'],
+    ...     'QUAL': ['.', '.', '.'],
+    ...     'FILTER': ['.', '.', '.'],
+    ...     'INFO': ['.', '.', '.'],
+    ...     'FORMAT': ['GT', 'GT', 'GT'],
+    ...     'A': ['1|1', '0/0', '1|0'],
+    ...     'B': ['1|0', '0/1', '1/0'],
+    ... }
+    >>> vf = pyvcf.VcfFrame.from_dict([], data)
+    >>> vf.df
+      CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    B
+    0  chr1  100  .   G   A    .      .    .     GT  1|1  1|0
+    1  chr1  101  .   T   C    .      .    .     GT  0/0  0/1
+    2  chr1  102  .   A   T    .      .    .     GT  1|0  1/0
+    >>> vf.df.apply(pyvcf.row_phased, axis=1)
+    0     True
+    1    False
+    2    False
+    dtype: bool
+    """
+    def one_gt(g):
+        return '|' in g.split(':')[0]
+    return r[9:].apply(one_gt).all()
+
 def row_updateinfo(r, key, value):
-    """Update INFO data in the row that match the given key.
+    """
+    Update INFO data in the row that match the given key.
 
     Parameters
     ----------
@@ -746,7 +796,8 @@ def row_updateinfo(r, key, value):
     return ';'.join(fields)
 
 def row_missval(r):
-    """Return the correctly formatted missing value for the row.
+    """
+    Return the correctly formatted missing value for the row.
 
     Parameters
     ----------
@@ -920,6 +971,72 @@ def slice(file, regions, path=None):
     vcf.close()
 
     return data
+
+def split(vcf, clean=True):
+    """
+    Split VcfFrame by individual.
+
+    Parameters
+    ----------
+    vcf : str or VcfFrame
+        VCF file or VcfFrame to be split.
+    clean : bool, default: True
+        If True, only return variants present in each individual. In other
+        words, setting this as False will make sure that all individuals
+        have the same number of variants.
+
+    Returns
+    -------
+    list
+        List of individual VcfFrames.
+
+    Examples
+    --------
+
+    >>> from fuc import pyvcf
+    >>> data = {
+    ...     'CHROM': ['chr1', 'chr1'],
+    ...     'POS': [100, 101],
+    ...     'ID': ['.', '.'],
+    ...     'REF': ['G', 'T'],
+    ...     'ALT': ['A', 'C'],
+    ...     'QUAL': ['.', '.'],
+    ...     'FILTER': ['.', '.'],
+    ...     'INFO': ['.', '.'],
+    ...     'FORMAT': ['GT', 'GT'],
+    ...     'A': ['0/1', '0/0'],
+    ...     'B': ['0/1', '0/1'],
+    ... }
+    >>> vf = pyvcf.VcfFrame.from_dict(['##fileformat=VCFv4.3'], data)
+    >>> vf.df
+      CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    B
+    0  chr1  100  .   G   A    .      .    .     GT  0/1  0/1
+    1  chr1  101  .   T   C    .      .    .     GT  0/0  0/1
+    >>> vfs = pyvcf.split(vf)
+    >>> vfs[0].df
+      CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A
+    0  chr1  100  .   G   A    .      .    .     GT  0/1
+    >>> vfs = pyvcf.split(vf, clean=False)
+    >>> vfs[0].df
+      CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A
+    0  chr1  100  .   G   A    .      .    .     GT  0/1
+    1  chr1  101  .   T   C    .      .    .     GT  0/0
+    """
+    # Parse the input VCF.
+    if isinstance(vcf, str):
+        vf = VcfFrame.from_file(vcf)
+    else:
+        vf = vcf
+
+    vfs = []
+
+    for sample in vf.samples:
+        temp_vf = vf.subset(sample)
+        if clean:
+            temp_vf = temp_vf.filter_sampall()
+        vfs.append(temp_vf)
+
+    return vfs
 
 def plot_af_correlation(vf1, vf2, ax=None, figsize=None):
     """
@@ -1187,11 +1304,7 @@ class VcfFrame:
         """
         if self.empty:
             return False
-        def one_row(r):
-            def one_gt(g):
-                return '|' in g.split(':')[0]
-            return r[9:].apply(one_gt).all()
-        s = self.df.apply(one_row, axis=1)
+        s = self.df.apply(row_phased, axis=1)
         return s.all()
 
     @property
@@ -2295,7 +2408,9 @@ class VcfFrame:
         Parameters
         ----------
         other : VcfFrame
-            Other VcfFrame.
+            Other VcfFrame. Note that the 'chr' prefix in contig names (e.g.
+            'chr1' vs. '1') will be automatically added or removed as
+            necessary to match the contig names of ``self``.
         how : str, default: 'inner'
             Type of merge as defined in `pandas.DataFrame.merge`.
         format : str, default: 'GT'
@@ -2376,6 +2491,15 @@ class VcfFrame:
         1  chr1  101  .   T   C    .      .    .  GT:DP  0/1:29  1/1:30  0/0:24  0/1:31
         2  chr2  200  .   A   T    .      .    .  GT:DP   ./.:.   ./.:.  0/0:26  0/1:26
         """
+        if self.has_chr_prefix and other.has_chr_prefix:
+            pass
+        elif self.has_chr_prefix and not other.has_chr_prefix:
+            other = other.update_chr_prefix('add')
+        elif not self.has_chr_prefix and other.has_chr_prefix:
+            other = other.update_chr_prefix('remove')
+        else:
+            pass
+
         if self.sites_only and other.sites_only:
             df = pd.concat([self.df, other.df])
             merged = self.__class__([], df)

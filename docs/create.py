@@ -77,6 +77,7 @@ Additionally, fuc can be used to parse output data from the following programs:
 - Ensembl Variant Effect Predictor (VEP)
 - SnpEff
 - bcl2fastq and bcl2fastq2
+- Kallisto
 
 Your contributions (e.g. feature ideas, pull requests) are most welcome.
 
@@ -152,6 +153,9 @@ For getting help on a specific submodule (e.g. pyvcf):
 
    >>> from fuc import pyvcf
    >>> help(pyvcf)
+
+In Jupyter Notebook and Lab, you can see the documentation for a python
+function by hitting ``SHIFT + TAB``. Hit it twice to expand the view.
 
 CLI examples
 ============

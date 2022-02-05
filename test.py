@@ -99,7 +99,7 @@ class TestCli(unittest.TestCase):
         self.assertTrue('True' in result.stdout)
 
     def test_fucfind(self):
-        result = subprocess.run('fuc fuc-find "*.vcf"', shell=True, capture_output=True, text=True, check=True)
+        result = subprocess.run('fuc fuc-find "*.vcf" -r', shell=True, capture_output=True, text=True, check=True)
         self.assertTrue('1.vcf' in result.stdout)
 
     def test_qfcount(self):
