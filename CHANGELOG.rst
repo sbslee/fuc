@@ -4,6 +4,8 @@ Changelog
 0.31.0 (in development)
 -----------------------
 
+* Fix bug in :meth:`pykallisto.KallistoFrame.compute_fold_change` method.
+
 0.30.0 (2022-02-05)
 -------------------
 
