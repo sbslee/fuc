@@ -107,8 +107,8 @@ bam-depth
 .. code-block:: text
 
    $ fuc bam-depth -h
-   usage: fuc bam-depth [-h] [--bam PATH [PATH ...]] [--fn PATH] [--bed PATH]
-                        [--region TEXT] [--zero]
+   usage: fuc bam-depth [-h] [--bed PATH] [--region TEXT] [--zero]
+                        bams [bams ...]
    
    Compute read depth from SAM/BAM/CRAM files.
    
@@ -117,16 +117,17 @@ bam-depth
    close attention to the 'chr' string in contig names (e.g. 'chr1' vs. '1').
    Note also that --region requires the input files be indexed.
    
+   Positional arguments:
+     bams           One or more input BAM files. Alternatively, you can provide 
+                    a text file (.txt, .tsv, .csv, or .list) containing one BAM 
+                    file per line.
+   
    Optional arguments:
-     -h, --help            Show this help message and exit.
-     --bam PATH [PATH ...]
-                           One or more alignment files. Cannot be used with --fn.
-     --fn PATH             File containing one alignment file per line. Cannot 
-                           be used with --bam.
-     --bed PATH            BED file. Cannot be used with --region.
-     --region TEXT         Target region ('chrom:start-end'). Cannot be used 
-                           with --bed.
-     --zero                Output all positions including those with zero depth.
+     -h, --help     Show this help message and exit.
+     --bed PATH     BED file. Cannot be used with --region.
+     --region TEXT  Target region ('chrom:start-end'). Cannot be used 
+                    with --bed.
+     --zero         Output all positions including those with zero depth.
    
    [Example] To specify regions with a BED file:
      $ fuc bam-depth \

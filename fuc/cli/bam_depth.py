@@ -34,16 +34,11 @@ def create_parser(subparsers):
         help='Compute read depth from SAM/BAM/CRAM files.',
     )
     parser.add_argument(
-        '--bam',
-        metavar='PATH',
+        'bams',
         nargs='+',
-        help='One or more alignment files. Cannot be used with --fn.'
-    )
-    parser.add_argument(
-        '--fn',
-        metavar='PATH',
-        help='File containing one alignment file per line. Cannot \n'
-             'be used with --bam.'
+        help="One or more input BAM files. Alternatively, you can provide \n"
+             "a text file (.txt, .tsv, .csv, or .list) containing one BAM \n"
+             "file per line."
     )
     parser.add_argument(
         '--bed',
@@ -64,7 +59,6 @@ def create_parser(subparsers):
 
 def main(args):
     cf = api.pycov.CovFrame.from_bam(
-        bam=args.bam, fn=args.fn, bed=args.bed, region=args.region,
-        zero=args.zero
+        args.bams, bed=args.bed, region=args.region, zero=args.zero
     )
     sys.stdout.write(cf.to_string())

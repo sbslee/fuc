@@ -6,6 +6,7 @@ Changelog
 
 * Fix bug in :meth:`pykallisto.KallistoFrame.compute_fold_change` method.
 * Add new method :meth:`pyvcf.call` and new command :command:`vcf-call`.
+* Combine optional arguments ``bam`` and ``fn`` into single positional argument ``bams`` for :meth:`pycov.CovFrame.from_bam` method. The same goes for :command:`bam-depth` command (combine ``--bam`` and ``--fn`` into ``bams``).
 
 0.30.0 (2022-02-05)
 -------------------

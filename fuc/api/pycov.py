@@ -165,14 +165,11 @@ class CovFrame:
 
     @classmethod
     def from_bam(
-        cls, bam=None, fn=None, bed=None, region=None, zero=False,
-        map_qual=None, names=None
+        cls, bams, bed=None, region=None, zero=False, map_qual=None,
+        names=None
     ):
         """
         Construct CovFrame from one or more SAM/BAM/CRAM files.
-
-        Alignment files must be specified with either ``bam`` or ``fn``, but
-        it's an error to use both.
 
         By default, the method will count all reads within the alignment
         files. You can specify target regions with either ``bed`` or
@@ -188,10 +185,10 @@ class CovFrame:
 
         Parameters
         ----------
-        bam : str or list, optional
-            One or more alignment files.
-        fn : str, optional
-            File containing one alignment file per line.
+        bams : str or list
+            One or more input BAM files. Alternatively, you can provide a
+            text file (.txt, .tsv, .csv, or .list) containing one BAM file
+            per line.
         bed : str, optional
             BED file.
         region : str, optional
@@ -226,21 +223,7 @@ class CovFrame:
         >>> cf = pycov.CovFrame.from_bam([bam1, bam2])
         >>> cf = pycov.CovFrame.from_bam(bam, region='19:41497204-41524301')
         """
-        bam_files = []
-
-        if bam is None and fn is None:
-            raise ValueError(
-                "Either the 'bam' or 'fn' parameter must be provided.")
-        elif bam is not None and fn is not None:
-            raise ValueError(
-                "The 'bam' and 'fn' parameters cannot be used together.")
-        elif bam is not None and fn is None:
-            if isinstance(bam, str):
-                bam_files.append(bam)
-            else:
-                bam_files += bam
-        else:
-            bam_files += common.convert_file2list(fn)
+        bams = common.parse_list_or_file(bams)
 
         args = []
 
@@ -253,25 +236,25 @@ class CovFrame:
         if bed is not None:
             args += ['-b', bed]
 
-        args += bam_files
+        args += bams
         s = pysam.depth(*args)
         headers = ['Chromosome', 'Position']
         dtype = {'Chromosome': str,'Position': int}
-        for i, bam_file in enumerate(bam_files):
+        for i, bam in enumerate(bams):
             if names:
                 name = names[i]
             else:
-                samples = pybam.tag_sm(bam_file)
+                samples = pybam.tag_sm(bam)
                 if not samples:
-                    basename = Path(bam_file).stem
+                    basename = Path(bam).stem
                     message = (
-                        f'SM tags were not found for {bam_file}, will use '
+                        f'SM tags were not found for {bam}, will use '
                         f'file name as sample name ({basename})'
                     )
                     samples = [basename]
                     warnings.warn(message)
                 if len(samples) > 1:
-                    m = f'multiple sample names detected: {bam_file}'
+                    m = f'multiple sample names detected: {bam}'
                     raise ValueError(m)
                 name = samples[0]
             headers.append(name)
