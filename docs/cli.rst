@@ -1221,13 +1221,18 @@ vcf-call
    $ fuc vcf-call -h
    usage: fuc vcf-call [-h] [--regions TEXT [TEXT ...]] [--min-mq INT]
                        [--max-depth INT]
-                       fasta bam [bam ...]
+                       fasta bams [bams ...]
    
    Perform variant calling and filtering for BAM files.
    
+   This command will run a fully customizable, bcftools-based pipeline for
+   calling and filtering variants.
+   
    Positional arguments:
-     fasta                 FASTA file.
-     bam                   One or more BAM files.
+     fasta                 Reference FASTA file.
+     bams                  One or more input BAM files. Alternatively, you can 
+                           provide a text file (.txt, .tsv, .csv, or .list) 
+                           containing one BAM file per line.
    
    Optional arguments:
      -h, --help            Show this help message and exit.

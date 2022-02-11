@@ -149,9 +149,10 @@ def call(
     Parameters
     ----------
     fasta : str
-        FASTA file.
+        Reference FASTA file.
     bams : str or list
-        One or more BAM files.
+        One or more input BAM files. Alternatively, you can provide a text
+        file (.txt, .tsv, .csv, or .list) containing one BAM file per line.
     path : str, optional
         Output VCF file. Writes to stdout when ``path='-'``. If None is
         provided the result is returned as a string.
@@ -173,8 +174,7 @@ def call(
     str
         VcfFrame object.
     """
-    if isinstance(bams, str):
-        bams = [bams]
+    bams = common.parse_list_or_file(bams)
 
     # Parse target regions, if provided.
     if regions is not None:
@@ -201,17 +201,17 @@ def call(
         # Step 2: Call variants.
         args = [f'{t}/likelihoods.bcf', '-Oz', '-mv']
         results = bcftools.call(*args)
-        with open('calls.bcf', 'wb') as f:
+        with open(f'{t}/calls.bcf', 'wb') as f:
             f.write(results)
 
         # Step 3: Normalize indels.
-        args = ['calls.bcf', '-Ob', '-f', fasta]
+        args = [f'{t}/calls.bcf', '-Ob', '-f', fasta]
         results = bcftools.norm(*args)
-        with open('calls.normalized.bcf', 'wb') as f:
+        with open(f'{t}/calls.normalized.bcf', 'wb') as f:
             f.write(results)
 
         # Step 4: Filter variant.
-        args = ['calls.normalized.bcf', '-Ov', '--IndelGap', '5']
+        args = [f'{t}/calls.normalized.bcf', '-Ov', '--IndelGap', '5']
         results = bcftools.filter(*args)
 
         if path is None:

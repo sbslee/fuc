@@ -4,6 +4,9 @@ from .. import api
 
 description = f"""
 Perform variant calling and filtering for BAM files.
+
+This command will run a fully customizable, bcftools-based pipeline for
+calling and filtering variants.
 """
 
 epilog = f"""
@@ -21,12 +24,14 @@ def create_parser(subparsers):
     )
     parser.add_argument(
         'fasta',
-        help="FASTA file."
+        help="Reference FASTA file."
     )
     parser.add_argument(
-        'bam',
+        'bams',
         nargs='+',
-        help="One or more BAM files."
+        help="One or more input BAM files. Alternatively, you can \n"
+             "provide a text file (.txt, .tsv, .csv, or .list) \n"
+             "containing one BAM file per line."
     )
     parser.add_argument(
         '--regions',
@@ -61,6 +66,6 @@ def create_parser(subparsers):
 
 def main(args):
     api.pyvcf.call(
-        args.fasta, args.bam, path='-', regions=args.regions,
+        args.fasta, args.bams, path='-', regions=args.regions,
         min_mq=args.min_mq, max_depth=args.max_depth
     )
