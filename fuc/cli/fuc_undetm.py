@@ -20,8 +20,8 @@ def create_parser(subparsers):
         api.common._script_name(),
         description=description,
         epilog=epilog,
-        help='Compute top unknown barcodes using undertermined FASTQ '
-             'from bcl2fastq.',
+        help='Compute top unknown barcodes using undertermined FASTQ from \n'
+             'bcl2fastq.'
     )
     parser.add_argument(
         'fastq',

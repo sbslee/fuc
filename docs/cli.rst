@@ -37,13 +37,15 @@ For getting help on the fuc CLI:
        fuc-exist    Check whether certain files exist.
        fuc-find     Retrieve absolute paths of files whose name matches a 
                     specified pattern, optionally recursively.
-       fuc-undetm   Compute top unknown barcodes using undertermined FASTQ from bcl2fastq.
+       fuc-undetm   Compute top unknown barcodes using undertermined FASTQ from 
+                    bcl2fastq.
        maf-maf2vcf  Convert a MAF file to a VCF file.
        maf-oncoplt  Create an oncoplot with a MAF file.
        maf-sumplt   Create a summary plot with a MAF file.
        maf-vcf2maf  Convert a VCF file to a MAF file.
        ngs-bam2fq   Pipeline for converting BAM files to FASTQ files.
-       ngs-fq2bam   Pipeline for converting FASTQ files to analysis-ready BAM files.
+       ngs-fq2bam   Pipeline for converting FASTQ files to analysis-ready BAM 
+                    files.
        ngs-hc       Pipeline for germline short variant discovery.
        ngs-m2       Pipeline for somatic short variant discovery.
        ngs-pon      Pipeline for constructing a panel of normals (PoN).
@@ -54,6 +56,7 @@ For getting help on the fuc CLI:
        tabix-slice  Slice a GFF/BED/SAM/VCF file with Tabix.
        tbl-merge    Merge two table files.
        tbl-sum      Summarize a table file.
+       vcf-call     Perform variant calling and filtering for BAM files.
        vcf-filter   Filter a VCF file.
        vcf-index    Index a VCF file.
        vcf-merge    Merge two or more VCF files.
@@ -1209,6 +1212,42 @@ tbl-sum
    
    [Example] Summarize a table:
      $ fuc tbl-sum table.tsv
+
+vcf-call
+========
+
+.. code-block:: text
+
+   $ fuc vcf-call -h
+   usage: fuc vcf-call [-h] [--regions TEXT [TEXT ...]] [--min-mq INT]
+                       [--max-depth INT]
+                       fasta bam [bam ...]
+   
+   Perform variant calling and filtering for BAM files.
+   
+   Positional arguments:
+     fasta                 FASTA file.
+     bam                   One or more BAM files.
+   
+   Optional arguments:
+     -h, --help            Show this help message and exit.
+     --regions TEXT [TEXT ...]
+                           Only call variants in given regions. Each region must 
+                           have the format chrom:start-end and be a half-open 
+                           interval with (start, end]. This means, for example, 
+                           chr1:100-103 will extract positions 101, 102, and 
+                           103. Alternatively, you can provide a BED file 
+                           (compressed or uncompressed) to specify regions. Note 
+                           that the 'chr' prefix in contig names (e.g. 'chr1' 
+                           vs. '1') will be automatically added or removed as 
+                           necessary to match the input VCF's contig names.
+     --min-mq INT          Minimum mapping quality for an alignment to be used 
+                           (default: 1).
+     --max-depth INT       At a position, read maximally this number of reads 
+                           per input file (default: 250).
+   
+   [Example] Specify regions manually:
+     $ fuc vcf-call ref.fa in1.bam in2.bam -r chr1:100-200 chr2:300-400 > out.vcf
 
 vcf-filter
 ==========

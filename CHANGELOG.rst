@@ -5,6 +5,7 @@ Changelog
 -----------------------
 
 * Fix bug in :meth:`pykallisto.KallistoFrame.compute_fold_change` method.
+* Add new method :meth:`pyvcf.call` and new command :command:`vcf-call`.
 
 0.30.0 (2022-02-05)
 -------------------

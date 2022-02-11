@@ -54,7 +54,8 @@ def create_parser(subparsers):
         api.common._script_name(),
         description=description,
         epilog=epilog,
-        help='Pipeline for converting FASTQ files to analysis-ready BAM files.',
+        help='Pipeline for converting FASTQ files to analysis-ready BAM \n'
+             'files.'
     )
     parser.add_argument(
         'manifest',

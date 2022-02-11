@@ -58,9 +58,11 @@ the :class:`common.AnnFrame` class to import the data.
 
 import os
 import re
+import sys
 import gzip
 from copy import deepcopy
 import warnings
+import tempfile
 
 from . import pybed, common, pymaf
 
@@ -72,7 +74,7 @@ from Bio import bgzf
 import matplotlib.pyplot as plt
 from matplotlib_venn import venn2, venn3
 import seaborn as sns
-from pysam import VariantFile
+from pysam import VariantFile, bcftools
 from io import StringIO
 
 HEADERS = {
@@ -134,6 +136,91 @@ FORMAT_SPECIAL_KEYS = {
     '#AD_FRAC_REF': ['AD', lambda x: np.nan if sum([int(y) for y in x.split(',')]) == 0 else int(x.split(',')[0]) / sum([int(y) for y in x.split(',')]), True],
     '#AD_FRAC_ALT': ['AD', lambda x: np.nan if sum([int(y) for y in x.split(',')]) == 0 else sum([int(y) for y in x.split(',')[1:]]) / sum([int(y) for y in x.split(',')]), True],
 }
+
+def call(
+    fasta, bams, path=None, regions=None, min_mq=1, max_depth=250
+):
+    """
+    Perform variant calling and filtering for BAM files.
+
+    This method will run a fully customizable, bcftools-based pipeline for
+    calling and filtering variants.
+
+    Parameters
+    ----------
+    fasta : str
+        FASTA file.
+    bams : str or list
+        One or more BAM files.
+    path : str, optional
+        Output VCF file. Writes to stdout when ``path='-'``. If None is
+        provided the result is returned as a string.
+    regions : str, list, or pybed.BedFrame
+        Only call variants in given regions. Each region must have the format
+        chrom:start-end and be a half-open interval with (start, end]. This
+        means, for example, chr1:100-103 will extract positions 101, 102, and
+        103. Alternatively, you can provide a BED file (compressed or
+        uncompressed) to specify regions. Note that the 'chr' prefix in
+        contig names (e.g. 'chr1' vs. '1') will be automatically added or
+        removed as necessary to match the input VCF's contig names.
+    min_mq : int, default: 1
+        Minimum mapping quality for an alignment to be used.
+    max_depth : int, default: 250
+        At a position, read maximally this number of reads per input file.
+
+    Returns
+    -------
+    str
+        VcfFrame object.
+    """
+    if isinstance(bams, str):
+        bams = [bams]
+
+    # Parse target regions, if provided.
+    if regions is not None:
+        if isinstance(regions, str):
+            regions = [regions]
+        if '.bed' in regions[0]:
+            parsed_regions = ['-R', regions[0]]
+        else:
+            parsed_regions = ['-r'] + regions
+
+    with tempfile.TemporaryDirectory() as t:
+        # Step 1: Get genotype likelihoods.
+        args = ['-Ou', '-a', 'AD']
+        args += ['-q', str(min_mq)]
+        args += ['--max-depth', str(max_depth)]
+        args += ['-f', fasta]
+        if parsed_regions is not None:
+            args += parsed_regions
+        args += bams
+        results = bcftools.mpileup(*args)
+        with open(f'{t}/likelihoods.bcf', 'wb') as f:
+            f.write(results)
+
+        # Step 2: Call variants.
+        args = [f'{t}/likelihoods.bcf', '-Oz', '-mv']
+        results = bcftools.call(*args)
+        with open('calls.bcf', 'wb') as f:
+            f.write(results)
+
+        # Step 3: Normalize indels.
+        args = ['calls.bcf', '-Ob', '-f', fasta]
+        results = bcftools.norm(*args)
+        with open('calls.normalized.bcf', 'wb') as f:
+            f.write(results)
+
+        # Step 4: Filter variant.
+        args = ['calls.normalized.bcf', '-Ov', '--IndelGap', '5']
+        results = bcftools.filter(*args)
+
+        if path is None:
+            return results
+        elif path == '-':
+            sys.stdout.write(results)
+        else:
+            with open(path, 'w') as f:
+                f.write(results)
 
 def rescue_filtered_variants(vfs, format='GT'):
     """
