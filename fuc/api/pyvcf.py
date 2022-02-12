@@ -156,7 +156,7 @@ def call(
     path : str, optional
         Output VCF file. Writes to stdout when ``path='-'``. If None is
         provided the result is returned as a string.
-    regions : str, list, or pybed.BedFrame
+    regions : str, list, or pybed.BedFrame, optional
         Only call variants in given regions. Each region must have the format
         chrom:start-end and be a half-open interval with (start, end]. This
         means, for example, chr1:100-103 will extract positions 101, 102, and
