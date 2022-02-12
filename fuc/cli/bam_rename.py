@@ -5,7 +5,7 @@ from .. import api
 
 import pysam
 
-description = f"""
+description = """
 Rename the sample in a SAM/BAM/CRAM file.
 """
 

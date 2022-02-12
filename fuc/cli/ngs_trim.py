@@ -6,7 +6,7 @@ from .. import api
 
 import pandas as pd
 
-description = f"""
+description = """
 Pipeline for trimming adapters from FASTQ files.
 
 External dependencies:

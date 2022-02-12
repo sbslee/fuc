@@ -141,10 +141,9 @@ def call(
     fasta, bams, path=None, regions=None, min_mq=1, max_depth=250
 ):
     """
-    Call variants (SNVs/indels) from BAM files.
+    Call SNVs and indels from BAM files.
 
-    This method will run a fully customizable, bcftools-based pipeline for
-    calling and filtering variants.
+    Under the hood, the method utilizes the bcftool program to call variants.
 
     Parameters
     ----------
@@ -157,13 +156,17 @@ def call(
         Output VCF file. Writes to stdout when ``path='-'``. If None is
         provided the result is returned as a string.
     regions : str, list, or pybed.BedFrame, optional
-        Only call variants in given regions. Each region must have the format
-        chrom:start-end and be a half-open interval with (start, end]. This
-        means, for example, chr1:100-103 will extract positions 101, 102, and
-        103. Alternatively, you can provide a BED file (compressed or
-        uncompressed) to specify regions. Note that the 'chr' prefix in
-        contig names (e.g. 'chr1' vs. '1') will be automatically added or
-        removed as necessary to match the input VCF's contig names.
+        By default (``regions=None``), the method looks at each genomic
+        position with coverage in BAM files, which can be excruciatingly slow
+        for large files (e.g. whole genome sequencing). Therefore, use this
+        argument to only call variants in given regions. Each region must
+        have the format chrom:start-end and be a half-open interval with
+        (start, end]. This means, for example, chr1:100-103 will extract
+        positions 101, 102, and 103. Alternatively, you can provide a BED
+        file (compressed or uncompressed) or a :class:`pybed.BedFrame` object
+        to specify regions. Note that the 'chr' prefix in contig names (e.g.
+        'chr1' vs. '1') will be automatically added or removed as necessary
+        to match the input VCF's contig names.
     min_mq : int, default: 1
         Minimum mapping quality for an alignment to be used.
     max_depth : int, default: 250
@@ -174,6 +177,7 @@ def call(
     str
         VcfFrame object.
     """
+    # Parse input BAM files.
     bams = common.parse_list_or_file(bams)
 
     # Parse target regions, if provided.

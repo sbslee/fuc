@@ -2,7 +2,7 @@ import sys
 
 from .. import api
 
-description = f"""
+description = """
 Slice a VCF file for specified regions.
 """
 

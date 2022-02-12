@@ -2,7 +2,7 @@ import gzip
 
 from .. import api
 
-description = f"""
+description = """
 Compute top unknown barcodes using undertermined FASTQ from bcl2fastq.
 
 This command will compute top unknown barcodes using undertermined FASTQ from

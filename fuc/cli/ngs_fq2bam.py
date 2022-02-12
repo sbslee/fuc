@@ -6,7 +6,7 @@ from .. import api
 
 import pandas as pd
 
-description = f"""
+description = """
 Pipeline for converting FASTQ files to analysis-ready BAM files.
 
 Here, "analysis-ready" means that the final BAM files are: 1) aligned to a

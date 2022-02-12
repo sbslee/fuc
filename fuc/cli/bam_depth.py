@@ -12,13 +12,13 @@ command.
 """
 
 epilog = f"""
-[Example] Specify regions with a BED file:
-  $ fuc {api.common._script_name()} 1.bam 2.bam \\
-  --regions in.bed > out.tsv
-
 [Example] Specify regions manually:
+  $ fuc {api.common._script_name()} 1.bam 2.bam \\
+  -r chr1:100-200 chr2:400-500 > out.tsv
+
+[Example] Specify regions with a BED file:
   $ fuc {api.common._script_name()} bam.list \\
-  --regions chr1:100-200 chr2:400-500 > out.tsv
+  -r in.bed > out.tsv
 """
 
 def create_parser(subparsers):
@@ -27,7 +27,8 @@ def create_parser(subparsers):
         api.common._script_name(),
         description=description,
         epilog=epilog,
-        help="Compute per-base read depth from BAM files."
+        help=
+"""Compute per-base read depth from BAM files."""
     )
     parser.add_argument(
         'bams',
@@ -38,6 +39,7 @@ provide a text file (.txt, .tsv, .csv, or .list)
 containing one BAM file per line."""
     )
     parser.add_argument(
+        '-r',
         '--regions',
         nargs='+',
         metavar='TEXT',

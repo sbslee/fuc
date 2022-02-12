@@ -2,7 +2,7 @@ import sys
 
 from .. import api
 
-description = f"""
+description = """
 Merge two or more VCF files.
 """
 

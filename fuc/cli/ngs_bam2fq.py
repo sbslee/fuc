@@ -6,7 +6,7 @@ from .. import api
 
 import pandas as pd
 
-description = f"""
+description = """
 Pipeline for converting BAM files to FASTQ files.
 
 This pipeline will assume input BAM files consist of paired-end reads

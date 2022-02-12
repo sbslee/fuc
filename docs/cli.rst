@@ -56,7 +56,7 @@ For getting help on the fuc CLI:
        tabix-slice  Slice a GFF/BED/SAM/VCF file with Tabix.
        tbl-merge    Merge two table files.
        tbl-sum      Summarize a table file.
-       vcf-call     Call variants (SNVs/indels) from BAM files.
+       vcf-call     Call SNVs and indels from BAM files.
        vcf-filter   Filter a VCF file.
        vcf-index    Index a VCF file.
        vcf-merge    Merge two or more VCF files.
@@ -107,7 +107,7 @@ bam-depth
 .. code-block:: text
 
    $ fuc bam-depth -h
-   usage: fuc bam-depth [-h] [--regions TEXT [TEXT ...]] [--zero] bams [bams ...]
+   usage: fuc bam-depth [-h] [-r TEXT [TEXT ...]] [--zero] bams [bams ...]
    
    Compute per-base read depth from BAM files.
    
@@ -121,7 +121,7 @@ bam-depth
    
    Optional arguments:
      -h, --help            Show this help message and exit.
-     --regions TEXT [TEXT ...]
+     -r TEXT [TEXT ...], --regions TEXT [TEXT ...]
                            By default, the command counts all reads in BAM
                            files, which can be excruciatingly slow for large
                            files (e.g. whole genome sequencing). Therefore, use
@@ -137,13 +137,13 @@ bam-depth
                            to match the input BAM's contig names.
      --zero                Output all positions including those with zero depth.
    
-   [Example] Specify regions with a BED file:
-     $ fuc bam-depth 1.bam 2.bam \
-     --regions in.bed > out.tsv
-   
    [Example] Specify regions manually:
+     $ fuc bam-depth 1.bam 2.bam \
+     -r chr1:100-200 chr2:400-500 > out.tsv
+   
+   [Example] Specify regions with a BED file:
      $ fuc bam-depth bam.list \
-     --regions chr1:100-200 chr2:400-500 > out.tsv
+     -r in.bed > out.tsv
 
 bam-head
 ========
@@ -1226,40 +1226,47 @@ vcf-call
 .. code-block:: text
 
    $ fuc vcf-call -h
-   usage: fuc vcf-call [-h] [--regions TEXT [TEXT ...]] [--min-mq INT]
-                       [--max-depth INT]
+   usage: fuc vcf-call [-h] [-r TEXT [TEXT ...]] [--min-mq INT] [--max-depth INT]
                        fasta bams [bams ...]
    
-   Call variants (SNVs/indels) from BAM files.
+   Call SNVs and indels from BAM files.
    
-   This command will run a fully customizable, bcftools-based pipeline for
-   calling and filtering variants.
+   Under the hood, the command utilizes the bcftool program to call variants.
    
    Positional arguments:
      fasta                 Reference FASTA file.
-     bams                  One or more input BAM files. Alternatively, you can 
-                           provide a text file (.txt, .tsv, .csv, or .list) 
+     bams                  One or more input BAM files. Alternatively, you can
+                           provide a text file (.txt, .tsv, .csv, or .list)
                            containing one BAM file per line.
    
    Optional arguments:
      -h, --help            Show this help message and exit.
-     --regions TEXT [TEXT ...]
-                           Only call variants in given regions. Each region must 
-                           have the format chrom:start-end and be a half-open 
-                           interval with (start, end]. This means, for example, 
-                           chr1:100-103 will extract positions 101, 102, and 
-                           103. Alternatively, you can provide a BED file 
-                           (compressed or uncompressed) to specify regions. Note 
-                           that the 'chr' prefix in contig names (e.g. 'chr1' 
-                           vs. '1') will be automatically added or removed as 
-                           necessary to match the input VCF's contig names.
-     --min-mq INT          Minimum mapping quality for an alignment to be used 
+     -r TEXT [TEXT ...], --regions TEXT [TEXT ...]
+                           By default, the command looks at each genomic
+                           position with coverage in BAM files, which can be
+                           excruciatingly slow for large files (e.g. whole
+                           genome sequencing). Therefore, use this argument to
+                           only call variants in given regions. Each region must
+                           have the format chrom:start-end and be a half-open
+                           interval with (start, end]. This means, for example,
+                           chr1:100-103 will extract positions 101, 102, and
+                           103. Alternatively, you can provide a BED file
+                           (compressed or uncompressed) to specify regions. Note
+                           that the 'chr' prefix in contig names (e.g. 'chr1'
+                           vs. '1') will be automatically added or removed as
+                           necessary to match the input BAM's contig names.
+     --min-mq INT          Minimum mapping quality for an alignment to be used
                            (default: 1).
-     --max-depth INT       At a position, read maximally this number of reads 
+     --max-depth INT       At a position, read maximally this number of reads
                            per input file (default: 250).
    
    [Example] Specify regions manually:
-     $ fuc vcf-call ref.fa in1.bam in2.bam -r chr1:100-200 chr2:300-400 > out.vcf
+     $ fuc vcf-call ref.fa 1.bam 2.bam \
+     -r chr1:100-200 chr2:400-500 > out.vcf
+   
+   [Example] Specify regions with a BED file:
+     $ fuc vcf-call ref.fa bam.list \
+     -r in.bed > out.vcf
 
 vcf-filter
 ==========

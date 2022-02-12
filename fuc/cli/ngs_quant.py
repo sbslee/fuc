@@ -6,7 +6,7 @@ from .. import api
 
 import pandas as pd
 
-description = f"""
+description = """
 Pipeline for running RNAseq quantification from FASTQ files with Kallisto.
 
 External dependencies:

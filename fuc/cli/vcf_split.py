@@ -4,7 +4,7 @@ import shutil
 
 from .. import api
 
-description = f"""
+description = """
 Split a VCF file by individual.
 """
 

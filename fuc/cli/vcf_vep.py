@@ -2,7 +2,7 @@ import sys
 
 from .. import api
 
-description = f"""
+description = """
 Filter a VCF file by annotations from Ensembl VEP.
 """
 

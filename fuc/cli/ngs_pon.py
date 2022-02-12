@@ -6,7 +6,7 @@ from .. import api
 
 import pandas as pd
 
-description = f"""
+description = """
 Pipeline for constructing a panel of normals (PoN).
 
 Dependencies:
