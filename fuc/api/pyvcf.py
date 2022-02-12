@@ -64,7 +64,7 @@ from copy import deepcopy
 import warnings
 import tempfile
 
-from . import pybed, common, pymaf
+from . import pybed, common, pymaf, pybam
 
 import numpy as np
 import pandas as pd
@@ -138,7 +138,7 @@ FORMAT_SPECIAL_KEYS = {
 }
 
 def call(
-    fasta, bams, path=None, regions=None, min_mq=1, max_depth=250
+    fasta, bams, regions=None, path=None, min_mq=1, max_depth=250
 ):
     """
     Call SNVs and indels from BAM files.
@@ -152,9 +152,6 @@ def call(
     bams : str or list
         One or more input BAM files. Alternatively, you can provide a text
         file (.txt, .tsv, .csv, or .list) containing one BAM file per line.
-    path : str, optional
-        Output VCF file. Writes to stdout when ``path='-'``. If None is
-        provided the result is returned as a string.
     regions : str, list, or pybed.BedFrame, optional
         By default (``regions=None``), the method looks at each genomic
         position with coverage in BAM files, which can be excruciatingly slow
@@ -167,6 +164,9 @@ def call(
         to specify regions. Note that the 'chr' prefix in contig names (e.g.
         'chr1' vs. '1') will be automatically added or removed as necessary
         to match the input VCF's contig names.
+    path : str, optional
+        Output VCF file. Writes to stdout when ``path='-'``. If None is
+        provided the result is returned as a string.
     min_mq : int, default: 1
         Minimum mapping quality for an alignment to be used.
     max_depth : int, default: 250
@@ -180,14 +180,28 @@ def call(
     # Parse input BAM files.
     bams = common.parse_list_or_file(bams)
 
+    # Check the 'chr' prefix.
+    if all([pybam.has_chr_prefix(x) for x in bams]):
+        chr_prefix = 'chr'
+    else:
+        chr_prefix = ''
+
     # Parse target regions, if provided.
     if regions is not None:
         if isinstance(regions, str):
             regions = [regions]
-        if '.bed' in regions[0]:
-            parsed_regions = ['-R', regions[0]]
+        elif isinstance(regions, list):
+            pass
+        elif isinstance(regions, pybed.BedFrame):
+            regions = bf.to_regions()
         else:
-            parsed_regions = ['-r'] + regions
+            raise TypeError("Incorrect type of argument 'regions'")
+        if '.bed' in regions[0]:
+            bf = pybed.BedFrame.from_file(regions[0])
+            regions = bf.to_regions()
+        else:
+            regions = common.sort_regions(regions)
+        regions = [chr_prefix + x.replace('chr', '') for x in regions]
 
     with tempfile.TemporaryDirectory() as t:
         # Step 1: Get genotype likelihoods.
@@ -195,10 +209,9 @@ def call(
         args += ['-q', str(min_mq)]
         args += ['--max-depth', str(max_depth)]
         args += ['-f', fasta]
-        if parsed_regions is not None:
-            args += parsed_regions
-        args += bams
-        results = bcftools.mpileup(*args)
+        if regions is not None:
+            args += ['-r', ','.join(regions)]
+        results = bcftools.mpileup(*(args + bams))
         with open(f'{t}/likelihoods.bcf', 'wb') as f:
             f.write(results)
 

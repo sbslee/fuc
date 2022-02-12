@@ -81,6 +81,6 @@ per input file (default: 250)."""
 
 def main(args):
     api.pyvcf.call(
-        args.fasta, args.bams, path='-', regions=args.regions,
+        args.fasta, args.bams, regions=args.regions, path='-',
         min_mq=args.min_mq, max_depth=args.max_depth
     )
