@@ -113,7 +113,7 @@ For getting help on the fuc CLI:
    positional arguments:
      COMMAND
        bam-aldepth  Compute allelic depth from a SAM/BAM/CRAM file.
-       bam-depth    Compute read depth from SAM/BAM/CRAM files.
+       bam-depth    Compute per-base read depth from BAM files.
        bam-head     Print the header of a SAM/BAM/CRAM file.
        bam-index    Index a SAM/BAM/CRAM file.
        bam-rename   Rename the sample in a SAM/BAM/CRAM file.
@@ -150,7 +150,7 @@ For getting help on the fuc CLI:
        tabix-slice  Slice a GFF/BED/SAM/VCF file with Tabix.
        tbl-merge    Merge two table files.
        tbl-sum      Summarize a table file.
-       vcf-call     Perform variant calling and filtering for BAM files.
+       vcf-call     Call variants (SNVs/indels) from BAM files.
        vcf-filter   Filter a VCF file.
        vcf-index    Index a VCF file.
        vcf-merge    Merge two or more VCF files.

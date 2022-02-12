@@ -95,7 +95,7 @@ class CovFrame:
     See Also
     --------
     CovFrame.from_bam
-        Construct CovFrame from one or more SAM/BAM/CRAM files.
+        Construct CovFrame from BAM files.
     CovFrame.from_dict
         Construct CovFrame from dict of array-like or dicts.
     CovFrame.from_file
@@ -165,23 +165,13 @@ class CovFrame:
 
     @classmethod
     def from_bam(
-        cls, bams, bed=None, region=None, zero=False, map_qual=None,
-        names=None
+        cls, bams, regions=None, zero=False, map_qual=None, names=None
     ):
         """
         Construct CovFrame from BAM files.
 
-        By default, the method will count all reads within the alignment
-        files. You can specify target regions with either ``bed`` or
-        ``region``, but not both. When you do this, pay close attention to
-        the 'chr' string in contig names (e.g. 'chr1' vs. '1'). Note also
-        that ``region`` requires the input files be indexed.
-
         Under the hood, the method computes read depth using the
         :command:`samtools depth` command.
-
-        Sample name is extracted from the SM tag. If the tag is missing, the
-        method will set the filename as sample name.
 
         Parameters
         ----------
@@ -189,17 +179,28 @@ class CovFrame:
             One or more input BAM files. Alternatively, you can provide a
             text file (.txt, .tsv, .csv, or .list) containing one BAM file
             per line.
-        bed : str, optional
-            BED file.
-        region : str, optional
-            Target region ('chrom:start-end').
+        regions : str, list, or pybed.BedFrame, optional
+            By default (``regions=None``), the method counts all reads in BAM
+            files, which can be excruciatingly slow for large files (e.g.
+            whole genome sequencing). Therefore, use this argument to only
+            output positions in given regions. Each region must have the
+            format chrom:start-end and be a half-open interval with (start,
+            end]. This means, for example, chr1:100-103 will extract
+            positions 101, 102, and 103. Alternatively, you can provide a BED
+            file (compressed or uncompressed) or a :class:`pybed.BedFrame`
+            object to specify regions. Note that the 'chr' prefix in contig
+            names (e.g. 'chr1' vs. '1') will be automatically added or
+            removed as necessary to match the input BAM's contig names.
         zero : bool, default: False
-            If True, output all positions (including those with zero depth).
+            If True, output all positions including those with zero depth.
         map_qual: int, optional
             Only count reads with mapping quality greater than or equal to
             this number.
         names : list, optional
-            Use these as sample names instead of the SM tags.
+            By default (``names=None``), sample name is extracted using SM
+            tag in BAM files. If the tag is missing, the method will set the
+            filename as sample name. Use this argument to manually provide
+            sample names.
 
         Returns
         -------
@@ -223,23 +224,45 @@ class CovFrame:
         >>> cf = pycov.CovFrame.from_bam([bam1, bam2])
         >>> cf = pycov.CovFrame.from_bam(bam, region='19:41497204-41524301')
         """
+        # Parse input BAM files.
         bams = common.parse_list_or_file(bams)
 
-        args = []
+        # Check the 'chr' prefix.
+        if all([pybam.has_chr_prefix(x) for x in bams]):
+            chr_prefix = 'chr'
+        else:
+            chr_prefix = ''
 
+        # Run the 'samtools depth' command.
+        args = []
         if zero:
             args += ['-a']
-        if region is not None:
-            args += ['-r', region]
         if map_qual is not None:
             args += ['-Q', str(map_qual)]
-        if bed is not None:
-            args += ['-b', bed]
+        results = ''
+        if regions is None:
+            results += pysam.depth(*(bams + args))
+        else:
+            if isinstance(regions, str):
+                regions = [regions]
+            elif isinstance(regions, list):
+                pass
+            elif isinstance(regions, pybed.BedFrame):
+                regions = bf.to_regions()
+            else:
+                raise TypeError("Incorrect type of argument 'regions'")
+            if '.bed' in regions[0]:
+                bf = pybed.BedFrame.from_file(regions[0])
+                regions = bf.to_regions()
+            else:
+                regions = common.sort_regions(regions)
+            for region in regions:
+                region = chr_prefix + region.replace('chr', '')
+                results += pysam.depth(*(bams + args + ['-r', region]))
 
-        args += bams
-        s = pysam.depth(*args)
         headers = ['Chromosome', 'Position']
         dtype = {'Chromosome': str,'Position': int}
+
         for i, bam in enumerate(bams):
             if names:
                 name = names[i]
@@ -259,8 +282,12 @@ class CovFrame:
                 name = samples[0]
             headers.append(name)
             dtype[name] = int
-        df = pd.read_csv(StringIO(s), sep='\t', header=None,
-                         names=headers, dtype=dtype)
+
+        df = pd.read_csv(
+            StringIO(results), sep='\t', header=None,
+            names=headers, dtype=dtype
+        )
+
         return cls(df)
 
     @classmethod
@@ -283,7 +310,7 @@ class CovFrame:
         CovFrame
             CovFrame object creation using constructor.
         CovFrame.from_bam
-            Construct CovFrame from one or more SAM/BAM/CRAM files.
+            Construct CovFrame from BAM files.
         CovFrame.from_file
             Construct CovFrame from a text file containing read depth data.
 
@@ -333,7 +360,7 @@ class CovFrame:
         CovFrame
             CovFrame object creation using constructor.
         CovFrame.from_bam
-            Construct CovFrame from one or more SAM/BAM/CRAM files.
+            Construct CovFrame from BAM files.
         CovFrame.from_dict
             Construct CovFrame from dict of array-like or dicts.
 

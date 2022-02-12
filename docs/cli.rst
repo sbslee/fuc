@@ -19,7 +19,7 @@ For getting help on the fuc CLI:
    positional arguments:
      COMMAND
        bam-aldepth  Compute allelic depth from a SAM/BAM/CRAM file.
-       bam-depth    Compute read depth from SAM/BAM/CRAM files.
+       bam-depth    Compute per-base read depth from BAM files.
        bam-head     Print the header of a SAM/BAM/CRAM file.
        bam-index    Index a SAM/BAM/CRAM file.
        bam-rename   Rename the sample in a SAM/BAM/CRAM file.
@@ -56,7 +56,7 @@ For getting help on the fuc CLI:
        tabix-slice  Slice a GFF/BED/SAM/VCF file with Tabix.
        tbl-merge    Merge two table files.
        tbl-sum      Summarize a table file.
-       vcf-call     Perform variant calling and filtering for BAM files.
+       vcf-call     Call variants (SNVs/indels) from BAM files.
        vcf-filter   Filter a VCF file.
        vcf-index    Index a VCF file.
        vcf-merge    Merge two or more VCF files.
@@ -107,37 +107,43 @@ bam-depth
 .. code-block:: text
 
    $ fuc bam-depth -h
-   usage: fuc bam-depth [-h] [--bed PATH] [--region TEXT] [--zero]
-                        bams [bams ...]
+   usage: fuc bam-depth [-h] [--regions TEXT [TEXT ...]] [--zero] bams [bams ...]
    
-   Compute read depth from SAM/BAM/CRAM files.
+   Compute per-base read depth from BAM files.
    
-   By default, the command will count all reads within the alignment files. You
-   can specify regions of interest with --bed or --region. When you do this, pay
-   close attention to the 'chr' string in contig names (e.g. 'chr1' vs. '1').
-   Note also that --region requires the input files be indexed.
+   Under the hood, the command computes read depth using the 'samtools depth'
+   command.
    
    Positional arguments:
-     bams           One or more input BAM files. Alternatively, you can provide 
-                    a text file (.txt, .tsv, .csv, or .list) containing one BAM 
-                    file per line.
+     bams                  One or more input BAM files. Alternatively, you can
+                           provide a text file (.txt, .tsv, .csv, or .list)
+                           containing one BAM file per line.
    
    Optional arguments:
-     -h, --help     Show this help message and exit.
-     --bed PATH     BED file. Cannot be used with --region.
-     --region TEXT  Target region ('chrom:start-end'). Cannot be used 
-                    with --bed.
-     --zero         Output all positions including those with zero depth.
+     -h, --help            Show this help message and exit.
+     --regions TEXT [TEXT ...]
+                           By default, the command counts all reads in BAM
+                           files, which can be excruciatingly slow for large
+                           files (e.g. whole genome sequencing). Therefore, use
+                           this argument to only output positions in given
+                           regions. Each region must have the format
+                           chrom:start-end and be a half-open interval with
+                           (start, end]. This means, for example, chr1:100-103
+                           will extract positions 101, 102, and 103.
+                           Alternatively, you can provide a BED file (compressed
+                           or uncompressed) to specify regions. Note that the
+                           'chr' prefix in contig names (e.g. 'chr1' vs. '1')
+                           will be automatically added or removed as necessary
+                           to match the input BAM's contig names.
+     --zero                Output all positions including those with zero depth.
    
-   [Example] To specify regions with a BED file:
-     $ fuc bam-depth \
-     --bam 1.bam 2.bam \
-     --bed in.bed > out.tsv
+   [Example] Specify regions with a BED file:
+     $ fuc bam-depth 1.bam 2.bam \
+     --regions in.bed > out.tsv
    
-   [Example] To specify regions manually:
-     $ fuc bam-depth \
-     --fn bam.list \
-     --region chr1:100-200 > out.tsv
+   [Example] Specify regions manually:
+     $ fuc bam-depth bam.list \
+     --regions chr1:100-200 chr2:400-500 > out.tsv
 
 bam-head
 ========
@@ -1224,7 +1230,7 @@ vcf-call
                        [--max-depth INT]
                        fasta bams [bams ...]
    
-   Perform variant calling and filtering for BAM files.
+   Call variants (SNVs/indels) from BAM files.
    
    This command will run a fully customizable, bcftools-based pipeline for
    calling and filtering variants.
