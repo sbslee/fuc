@@ -141,7 +141,7 @@ def call(
     fasta, bams, path=None, regions=None, min_mq=1, max_depth=250
 ):
     """
-    Perform variant calling and filtering for BAM files.
+    Call variants (SNVs/indels) from BAM files.
 
     This method will run a fully customizable, bcftools-based pipeline for
     calling and filtering variants.

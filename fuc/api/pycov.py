@@ -169,7 +169,7 @@ class CovFrame:
         names=None
     ):
         """
-        Construct CovFrame from one or more SAM/BAM/CRAM files.
+        Construct CovFrame from BAM files.
 
         By default, the method will count all reads within the alignment
         files. You can specify target regions with either ``bed`` or

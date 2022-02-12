@@ -3,7 +3,7 @@ import sys
 from .. import api
 
 description = f"""
-Perform variant calling and filtering for BAM files.
+Call variants (SNVs/indels) from BAM files.
 
 This command will run a fully customizable, bcftools-based pipeline for
 calling and filtering variants.
@@ -20,7 +20,7 @@ def create_parser(subparsers):
         api.common._script_name(),
         description=description,
         epilog=epilog,
-        help='Perform variant calling and filtering for BAM files.',
+        help='Call variants (SNVs/indels) from BAM files.',
     )
     parser.add_argument(
         'fasta',
