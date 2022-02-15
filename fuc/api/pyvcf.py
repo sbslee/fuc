@@ -12,45 +12,117 @@ line (prefixed with '#'), and genotype lines that begin with a chromosome
 identifier (e.g. 'chr1'). See the VCF specification above for an example
 VCF file.
 
-Genotype lines have nine required fields for storing variant information
-and variable-length fields for storing sample genotype data. For some
-fields, missing values are tolerated and can be specified with a dot ('.').
-The nine required fields are:
+Genotype lines usually consist of nine columns for storing variant
+information (all fixed and mandatory except FORMAT) plus additional columns
+for storing sample genotype data. For some columns, missing values are
+allowed and can be specified with a dot ('.'). The first nine columns are:
 
-+-----+--------+------------------------------------+------------------------+
-| No. | Name   | Description                        | Examples               |
-+=====+========+====================================+========================+
-| 1   | CHROM  | Chromosome or contig identifier    | 'chr2', '2', 'chrM'    |
-+-----+--------+------------------------------------+------------------------+
-| 2   | POS    | 1-based reference position         | 10041, 23042           |
-+-----+--------+------------------------------------+------------------------+
-| 3   | ID     | ';'-separated variant identifiers  | '.', 'rs35', 'rs9;rs53'|
-+-----+--------+------------------------------------+------------------------+
-| 4   | REF    | Reference allele                   | 'A', 'GT'              |
-+-----+--------+------------------------------------+------------------------+
-| 5   | ALT    | ','-separated alternate alleles    | 'T', 'ACT', 'C,T'      |
-+-----+--------+------------------------------------+------------------------+
-| 6   | QUAL   | Phred-scaled quality score for ALT | '.', 67, 12            |
-+-----+--------+------------------------------------+------------------------+
-| 7   | FILTER | ';'-separated filters that failed  | '.', 'PASS', 'q10;s50' |
-+-----+--------+------------------------------------+------------------------+
-| 8   | INFO   | ';'-separated information fields   | '.', 'DP=14;AF=0.5;DB' |
-+-----+--------+------------------------------------+------------------------+
-| 9   | FORMAT | ':'-separated genotype fields      | 'GT', 'GT:AD:DP'       |
-+-----+--------+------------------------------------+------------------------+
+.. list-table::
+   :header-rows: 1
 
-You will sometimes come across VCFs that have only eight columns, and contain
-no FORMAT or sample-specific information. These are called "sites-only" VCFs,
-and represent variation that has been observed in a population. Generally,
-information about the population of origin should be included in the header.
+   * - No.
+     - Column
+     - Description
+     - Required
+     - Missing
+     - Examples
+   * - 1
+     - CHROM
+     - Chromosome or contig identifier
+     - ✅
+     - ❌
+     - 'chr2', '2', 'chrM'
+   * - 2
+     - POS
+     - 1-based reference position
+     - ✅
+     - ❌
+     - 10041, 23042
+   * - 3
+     - ID
+     - ';'-separated variant identifiers
+     - ✅
+     - ✅
+     - '.', 'rs35', 'rs9;rs53'
+   * - 4
+     - REF
+     - Reference allele
+     - ✅
+     - ❌
+     - 'A', 'GT'
+   * - 5
+     - ALT
+     - ','-separated alternate alleles
+     - ✅
+     - ❌
+     - 'T', 'ACT', 'C,T'
+   * - 6
+     - QUAL
+     - Phred-scaled quality score for ALT
+     - ✅
+     - ✅
+     - '.', 67, 12
+   * - 7
+     - FILTER
+     - ';'-separated filters that failed
+     - ✅
+     - ✅
+     - '.', 'PASS', 'q10;s50'
+   * - 8
+     - INFO
+     - ';'-separated information fields
+     - ✅
+     - ✅
+     - '.', 'DP=14;AF=0.5;DB'
+   * - 9
+     - FORMAT
+     - ':'-separated genotype fields
+     - ❌
+     - ❌
+     - 'GT', 'GT:AD:DP'
 
-There are several common, reserved genotype keywords that are standards
-across the community. Currently, the pyvcf submodule is aware of the
-following:
+You will sometimes come across VCF files that have only eight columns, and
+do not contain the FORMAT column or sample-specific information. These are
+called "sites-only" VCF files, and normally represent genetic variation that
+has been observed in a large population. Generally, information about the
+population of origin should be included in the header.
 
-* AD - Total read depth for each allele (R, Integer)
-* AF - Allele fraction of the event in the tumor (1, Float)
-* DP - Read depth (1, Integer)
+There are several reserved keywords in the INFO and FORMAT columns that are
+standards across the community. Popular keywords are listed below:
+
+.. list-table::
+   :header-rows: 1
+
+   * - Column
+     - Key
+     - Number
+     - Type
+     - Description
+   * - INFO
+     - AC
+     - A
+     - Integer
+     - Allele count in genotypes, for each ALT allele, in the same order as listed
+   * - INFO
+     - AF
+     - A
+     - Float
+     - Allele frequency for each ALT allele in the same order as listed (estimated from primary data, not called genotypes)
+   * - FORMAT
+     - AD
+     - R
+     - Integer
+     - Total read depth for each allele
+   * - FORMAT
+     - AF
+     - 1
+     - Float
+     - Allele fraction of the event in the tumor
+   * - FORMAT
+     - DP
+     - 1
+     - Integer
+     - Read depth
 
 If sample annotation data are available for a given VCF file, use
 the :class:`common.AnnFrame` class to import the data.
@@ -845,9 +917,9 @@ def row_phased(r):
         return '|' in g.split(':')[0]
     return r[9:].apply(one_gt).all()
 
-def row_updateinfo(r, key, value):
+def row_updateinfo(r, key, value, force=True, missing=False):
     """
-    Update INFO data in the row that match the given key.
+    Update INFO field matching specified key.
 
     Parameters
     ----------
@@ -857,6 +929,12 @@ def row_updateinfo(r, key, value):
         INFO key.
     value : str
         New value to be assigned.
+    force : bool, default: True
+        If True, overwrite any existing data.
+    missing : bool, default: False
+        By default (``missing=False``), the method will not update INFO field
+        if there is missing value ('.'). Setting ``missing=True`` will stop
+        this behavior.
 
     Returns
     -------
@@ -868,36 +946,62 @@ def row_updateinfo(r, key, value):
 
     >>> from fuc import pyvcf
     >>> data = {
-    ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1'],
-    ...     'POS': [100, 101, 102, 103],
-    ...     'ID': ['.', '.', '.', '.'],
-    ...     'REF': ['G', 'T', 'A', 'C'],
-    ...     'ALT': ['A', 'C', 'T', 'A'],
-    ...     'QUAL': ['.', '.', '.', '.'],
-    ...     'FILTER': ['.', '.', '.', '.'],
-    ...     'INFO': ['DB;AC=0', 'DB;H2;AC=1', 'DB;H2;AC=1', '.'],
-    ...     'FORMAT': ['GT', 'GT', 'GT', 'GT'],
-    ...     'Steven': ['0/0', '0/1', '0/1', '0/0'],
+    ...     'CHROM': ['chr1', 'chr1', 'chr1'],
+    ...     'POS': [100, 101, 102],
+    ...     'ID': ['.', '.', '.'],
+    ...     'REF': ['G', 'T', 'A'],
+    ...     'ALT': ['A', 'C', 'T'],
+    ...     'QUAL': ['.', '.', '.'],
+    ...     'FILTER': ['.', '.', '.'],
+    ...     'INFO': ['DB;AC=1', 'DB', '.'],
+    ...     'FORMAT': ['GT', 'GT', 'GT'],
+    ...     'A': ['0/1', '1/1', '0/0'],
+    ...     'B': ['0/0', '0/1', '0/1'],
     ... }
     >>> vf = pyvcf.VcfFrame.from_dict([], data)
     >>> vf.df
-      CHROM  POS ID REF ALT QUAL FILTER        INFO FORMAT Steven
-    0  chr1  100  .   G   A    .      .     DB;AC=0     GT    0/0
-    1  chr1  101  .   T   C    .      .  DB;H2;AC=1     GT    0/1
-    2  chr1  102  .   A   T    .      .  DB;H2;AC=1     GT    0/1
-    3  chr1  103  .   C   A    .      .           .     GT    0/0
-    >>> vf.df.apply(pyvcf.row_updateinfo, args=('AC', '4'), axis=1)
-    0       DB;AC=4
-    1    DB;H2;AC=4
-    2    DB;H2;AC=4
-    3             .
-    dtype: object
+      CHROM  POS ID REF ALT QUAL FILTER     INFO FORMAT    A    B
+    0  chr1  100  .   G   A    .      .  DB;AC=1     GT  0/1  0/0
+    1  chr1  101  .   T   C    .      .       DB     GT  1/1  0/1
+    2  chr1  102  .   A   T    .      .        .     GT  0/0  0/1
+    >>> pyvcf.row_updateinfo(vf.df.iloc[0, :], 'AC', '100')
+    'DB;AC=100'
+    >>> pyvcf.row_updateinfo(vf.df.iloc[0, :], 'AC', '100', force=False)
+    'DB;AC=1'
+    >>> pyvcf.row_updateinfo(vf.df.iloc[1, :], 'AC', '100')
+    'DB;AC=100'
+    >>> pyvcf.row_updateinfo(vf.df.iloc[1, :], 'AC', '100', force=False)
+    'DB;AC=100'
+    >>> pyvcf.row_updateinfo(vf.df.iloc[2, :], 'AC', '100')
+    '.'
+    >>> pyvcf.row_updateinfo(vf.df.iloc[2, :], 'AC', '100', force=False)
+    '.'
+    >>> pyvcf.row_updateinfo(vf.df.iloc[2, :], 'AC', '100', missing=True)
+    'AC=100'
     """
+    data = f'{key}={value}'
+
+    if not missing and r.INFO == '.':
+        return r.INFO
+
     fields = r.INFO.split(';')
+    found = False
+
     for i, field in enumerate(fields):
         if field.startswith(f'{key}='):
-            fields[i] = field[:len(key)+1] + value
+            found = True
+            if force:
+                fields[i] = data
+            else:
+                pass
             break
+
+    if not found:
+        if r.INFO == '.':
+            fields = [data]
+        else:
+            fields.append(data)
+
     return ';'.join(fields)
 
 def row_missval(r):
@@ -1594,6 +1698,36 @@ class VcfFrame:
         df = self.df.apply(outfunc, axis=1)
         vf = self.__class__(self.copy_meta(), df)
         return vf
+
+    def add_info_ac(self, force=True):
+        """
+        Add the AC field to the INFO column.
+
+        Parameters
+        ----------
+        force : bool, default: True
+            If True, overwrite any existing data.
+
+        Returns
+        -------
+        VcfFrame
+            Updated VcfFrame.
+        """
+        def one_row(r):
+            data = []
+            for i, allele in enumerate(r.ALT.split(',')):
+                count = r[9:].apply(lambda x: x.split('/').count(str(i)))
+                data.append(str(sum(count)))
+            data = 'AC=' + ','.join(data)
+            if r.INFO == '.':
+                r.INFO = data
+            else:
+                r.INFO += ';' + data
+            return r
+
+        df = self.df.apply(one_row, axis=1)
+
+        return self.__class__(self.copy_meta(), df)
 
     def add_flag(self, flag, order='last', index=None):
         """
