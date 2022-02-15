@@ -104,6 +104,11 @@ standards across the community. Popular keywords are listed below:
      - Integer
      - Allele count in genotypes, for each ALT allele, in the same order as listed
    * - INFO
+     - AN
+     - 1
+     - Integer
+     - Total number of alleles in called genotypes
+   * - INFO
      - AF
      - A
      - Float
@@ -452,9 +457,50 @@ def gt_miss(g):
     """
     return '.' in g.split(':')[0]
 
+def gt_ploidy(g):
+    """
+    For given genotype, determine its ploidy.
+
+    Parameters
+    ----------
+    g : str
+        Sample genotype.
+
+    Returns
+    -------
+    int
+        Ploidy number.
+
+    Examples
+    --------
+
+    >>> from fuc import pyvcf
+    >>> pyvcf.gt_ploidy('1')
+    1
+    >>> pyvcf.gt_ploidy('.')
+    1
+    >>> pyvcf.gt_ploidy('0/1')
+    2
+    >>> pyvcf.gt_ploidy('./.')
+    2
+    >>> pyvcf.gt_ploidy('0|1')
+    2
+    >>> pyvcf.gt_ploidy('1|0|1')
+    3
+    >>> pyvcf.gt_ploidy('0/./1/1')
+    4
+    """
+    gt = g.split(':')[0]
+    if '/' in gt:
+        return gt.count('/') + 1
+    elif '|' in gt:
+        return gt.count('|') + 1
+    else:
+        return 1
+
 def gt_polyp(g):
     """
-    Return True if sample genotype has a polyploid call.
+    For given genotype, return True if it's polyploid.
 
     Parameters
     ----------
@@ -464,7 +510,7 @@ def gt_polyp(g):
     Returns
     -------
     bool
-        True if sample genotype has a polyploid call.
+        True if genotype is polyploid.
 
     Examples
     --------
@@ -481,11 +527,7 @@ def gt_polyp(g):
     >>> pyvcf.gt_polyp('0/./1/1')
     True
     """
-    gt = g.split(':')[0]
-    if '/' in gt:
-        return gt.count('/') > 1
-    else:
-        return gt.count('|') > 1
+    return gt_ploidy(g) > 2
 
 def gt_hasvar(g):
     """
@@ -818,6 +860,106 @@ def row_hasindel(r):
     ref_has = len(r['REF']) > 1
     alt_has = max([len(x) for x in r['ALT'].split(',')]) > 1
     return ref_has or alt_has
+
+
+def row_compute_info(r, key, decimals=3):
+    """
+    For given row, compute AC/AN/AF in INFO column.
+
+    Parameters
+    ----------
+    r : pandas.Series
+        VCF row.
+    key : {'AC', 'AN', 'AF'}
+        INFO key.
+    decimals : int, default: 3
+        Number of decimals to display for AF.
+
+    Returns
+    -------
+    str
+        Requested INFO data.
+
+    Example
+    -------
+
+    >>> from fuc import pyvcf
+    >>> data = {
+    ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chrX'],
+    ...     'POS': [100, 101, 102, 100],
+    ...     'ID': ['.', '.', '.', '.'],
+    ...     'REF': ['G', 'T', 'A', 'A'],
+    ...     'ALT': ['A', 'C', 'T,G', 'G'],
+    ...     'QUAL': ['.', '.', '.', '.'],
+    ...     'FILTER': ['.', '.', '.', '.'],
+    ...     'INFO': ['.', '.', '.', '.'],
+    ...     'FORMAT': ['GT', 'GT', 'GT', 'GT'],
+    ...     'A': ['0/1', '0/0', '0/1', '0'],
+    ...     'B': ['1/1', './.', '0/0', '0/1'],
+    ...     'C': ['0/0', '0/0', '1/2', '1'],
+    ... }
+    >>> vf = pyvcf.VcfFrame.from_dict([], data)
+    >>> vf.df
+      CHROM  POS ID REF  ALT QUAL FILTER INFO FORMAT    A    B    C
+    0  chr1  100  .   G    A    .      .    .     GT  0/1  1/1  0/0
+    1  chr1  101  .   T    C    .      .    .     GT  0/0  ./.  0/0
+    2  chr1  102  .   A  T,G    .      .    .     GT  0/1  0/0  1/2
+    3  chrX  100  .   A    G    .      .    .     GT    0  0/1    1
+    >>> pyvcf.row_compute_info(vf.df.iloc[0, :], 'AC')
+    '3'
+    >>> pyvcf.row_compute_info(vf.df.iloc[0, :], 'AN')
+    '6'
+    >>> pyvcf.row_compute_info(vf.df.iloc[0, :], 'AF')
+    '0.500'
+    >>> pyvcf.row_compute_info(vf.df.iloc[1, :], 'AC')
+    '0'
+    >>> pyvcf.row_compute_info(vf.df.iloc[1, :], 'AN')
+    '4'
+    >>> pyvcf.row_compute_info(vf.df.iloc[1, :], 'AF')
+    '0.000'
+    >>> pyvcf.row_compute_info(vf.df.iloc[2, :], 'AC')
+    '2,1'
+    >>> pyvcf.row_compute_info(vf.df.iloc[2, :], 'AN')
+    '6'
+    >>> pyvcf.row_compute_info(vf.df.iloc[2, :], 'AF')
+    '0.333,0.167'
+    >>> pyvcf.row_compute_info(vf.df.iloc[3, :], 'AC')
+    '2'
+    >>> pyvcf.row_compute_info(vf.df.iloc[3, :], 'AN')
+    '4'
+    >>> pyvcf.row_compute_info(vf.df.iloc[3, :], 'AF')
+    '0.500'
+    """
+    def get_ac(r):
+        counts = []
+        for i, allele in enumerate(r.ALT.split(',')):
+            count = r[9:].apply(lambda x: x.split('/').count(str(i+1)))
+            counts.append(sum(count))
+        return counts
+
+    def get_an(r):
+        def one_gt(g):
+            if '.' in g:
+                return 0
+            else:
+                return gt_ploidy(g)
+        return r[9:].apply(one_gt).sum()
+
+    def get_af(r):
+        return [x / get_an(r) for x in get_ac(r)]
+
+    methods = {'AC': get_ac, 'AN': get_an, 'AF': get_af}
+
+    results = methods[key](r)
+
+    if key == 'AC':
+        results = ','.join([str(x) for x in results])
+    elif key == 'AN':
+        results = str(results)
+    else:
+        results = ','.join([f'{x:.{decimals}f}' for x in results])
+
+    return results
 
 def row_parseinfo(r, key):
     """
@@ -1699,36 +1841,6 @@ class VcfFrame:
         vf = self.__class__(self.copy_meta(), df)
         return vf
 
-    def add_info_ac(self, force=True):
-        """
-        Add the AC field to the INFO column.
-
-        Parameters
-        ----------
-        force : bool, default: True
-            If True, overwrite any existing data.
-
-        Returns
-        -------
-        VcfFrame
-            Updated VcfFrame.
-        """
-        def one_row(r):
-            data = []
-            for i, allele in enumerate(r.ALT.split(',')):
-                count = r[9:].apply(lambda x: x.split('/').count(str(i)))
-                data.append(str(sum(count)))
-            data = 'AC=' + ','.join(data)
-            if r.INFO == '.':
-                r.INFO = data
-            else:
-                r.INFO += ';' + data
-            return r
-
-        df = self.df.apply(one_row, axis=1)
-
-        return self.__class__(self.copy_meta(), df)
-
     def add_flag(self, flag, order='last', index=None):
         """
         Add the given flag to the INFO field.
@@ -2035,6 +2147,60 @@ class VcfFrame:
 
         vf = self.__class__(self.copy_meta(), df)
         return vf
+
+    def compute_info(self, key):
+        """
+        Compute AC/AN/AF in INFO column.
+
+        The method will ignore and overwrite any existing data for selected
+        key.
+
+        Returns
+        -------
+        VcfFrame
+            Updated VcfFrame.
+        key : {'AC', 'AN', 'AF'}
+            INFO key.
+
+        Example
+        -------
+
+        >>> from fuc import pyvcf
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102],
+        ...     'ID': ['.', '.', '.'],
+        ...     'REF': ['G', 'T', 'A'],
+        ...     'ALT': ['A', 'C', 'T,G'],
+        ...     'QUAL': ['.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.'],
+        ...     'INFO': ['AC=100', 'MQ=59', '.'],
+        ...     'FORMAT': ['GT', 'GT', 'GT'],
+        ...     'A': ['0/1', '0/0', '0/1'],
+        ...     'B': ['1/1', '0/1', '0/0'],
+        ...     'C': ['0/0', '0/0', '1/2'],
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF  ALT QUAL FILTER    INFO FORMAT    A    B    C
+        0  chr1  100  .   G    A    .      .  AC=100     GT  0/1  1/1  0/0
+        1  chr1  101  .   T    C    .      .   MQ=59     GT  0/0  0/1  0/0
+        2  chr1  102  .   A  T,G    .      .       .     GT  0/1  0/0  1/2
+        >>> vf = vf.add_info_ac()
+        >>> vf.df
+          CHROM  POS ID REF  ALT QUAL FILTER        INFO FORMAT    A    B    C
+        0  chr1  100  .   G    A    .      .        AC=3     GT  0/1  1/1  0/0
+        1  chr1  101  .   T    C    .      .  MQ=59;AC=5     GT  0/0  0/1  0/0
+        2  chr1  102  .   A  T,G    .      .      AC=3,2     GT  0/1  0/0  1/2
+        """
+        def one_row(r, key):
+            data = row_compute_info(r, key)
+            r.INFO = row_updateinfo(r, key, data, missing=True)
+            return r
+
+        df = self.df.apply(one_row, args=(key,), axis=1)
+
+        return self.__class__(self.copy_meta(), df)
 
     @classmethod
     def from_dict(cls, meta, data):

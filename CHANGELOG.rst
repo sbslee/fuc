@@ -11,6 +11,9 @@ Changelog
 * Update :meth:`pycov.CovFrame.from_bam` method and :command:`bam-depth` command to automatically handle the 'chr' string.
 * Rename :meth:`pyvcf.VcfFrame.variants` method to :meth:`pyvcf.VcfFrame.to_variants`.
 * Add new optional arguments ``force`` and ``missing`` to :meth:`pyvcf.row_updateinfo` method.
+* Add new method :meth:`pyvcf.gt_ploidy`.
+* Update :meth:`pyvcf.gt_polyp` method to use :meth:`pyvcf.gt_ploidy` method internally.
+* :issue:`53`: Add new methods :meth:`pyvcf.row_compute_info` and :meth:`pyvcf.VcfFrame.compute_info`.
 
 0.30.0 (2022-02-05)
 -------------------
