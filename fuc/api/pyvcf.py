@@ -13,9 +13,10 @@ identifier (e.g. 'chr1'). See the VCF specification above for an example
 VCF file.
 
 Genotype lines usually consist of nine columns for storing variant
-information (all fixed and mandatory except FORMAT) plus additional columns
-for storing sample genotype data. For some columns, missing values are
-allowed and can be specified with a dot ('.'). The first nine columns are:
+information (all fixed and mandatory except for the FORMAT column) plus
+additional sample-specific columns for expressing individual genotype calls
+(e.g. '0/1'). Missing values are allowed in some cases and can be specified
+with a dot ('.'). The first nine columns are:
 
 .. list-table::
    :header-rows: 1
@@ -422,7 +423,7 @@ def rescue_filtered_variants(vfs, format='GT'):
 
 def gt_miss(g):
     """
-    Return True if sample genotype is missing.
+    For given genotype, return True if it has missing value.
 
     Parameters
     ----------
@@ -432,7 +433,7 @@ def gt_miss(g):
     Returns
     -------
     bool
-        True if sample genotype is missing.
+        True if genotype is missing.
 
     Examples
     --------
@@ -459,7 +460,7 @@ def gt_miss(g):
 
 def gt_ploidy(g):
     """
-    For given genotype, determine its ploidy.
+    For given genotype, return its ploidy number.
 
     Parameters
     ----------
@@ -500,7 +501,7 @@ def gt_ploidy(g):
 
 def gt_polyp(g):
     """
-    For given genotype, return True if it's polyploid.
+    For given genotype, return True if it is polyploid.
 
     Parameters
     ----------
@@ -531,7 +532,7 @@ def gt_polyp(g):
 
 def gt_hasvar(g):
     """
-    Return True if sample genotype has at least one variant call.
+    For given genotype, return True if it has variation.
 
     Parameters
     ----------
@@ -541,7 +542,7 @@ def gt_hasvar(g):
     Returns
     -------
     bool
-        True if sample genotype has a variant call.
+        True if genotype has variation.
 
     Examples
     --------
@@ -572,7 +573,7 @@ def gt_hasvar(g):
 
 def gt_unphase(g):
     """
-    Return unphased sample genotype.
+    For given genotype, return its unphased form.
 
     Parameters
     ----------
@@ -620,7 +621,7 @@ def gt_unphase(g):
 
 def gt_het(g):
     """
-    Return True if genotype call is heterozygous.
+    For given genotype, return True if it is heterozygous.
 
     Parameters
     ----------
@@ -630,7 +631,7 @@ def gt_het(g):
     Returns
     -------
     bool
-        True if genotype call is heterozygous.
+        True if genotype is heterozygous.
 
     Examples
     --------
@@ -657,7 +658,7 @@ def gt_het(g):
 
 def gt_pseudophase(g):
     """
-    Return pseudophased genotype call.
+    For given genotype, return its pseudophased form.
 
     Parameters
     ----------
@@ -815,7 +816,7 @@ def merge(
 
 def row_hasindel(r):
     """
-    Return True if the row has an indel.
+    For given row, return True if it has indel.
 
     Parameters
     ----------
@@ -862,9 +863,9 @@ def row_hasindel(r):
     return ref_has or alt_has
 
 
-def row_compute_info(r, key, decimals=3):
+def row_computeinfo(r, key, decimals=3):
     """
-    For given row, compute AC/AN/AF in INFO column.
+    For given row, return AC/AN/AF calculation in INFO column.
 
     Parameters
     ----------
@@ -893,47 +894,54 @@ def row_compute_info(r, key, decimals=3):
     ...     'QUAL': ['.', '.', '.', '.'],
     ...     'FILTER': ['.', '.', '.', '.'],
     ...     'INFO': ['.', '.', '.', '.'],
-    ...     'FORMAT': ['GT', 'GT', 'GT', 'GT'],
-    ...     'A': ['0/1', '0/0', '0/1', '0'],
-    ...     'B': ['1/1', './.', '0/0', '0/1'],
-    ...     'C': ['0/0', '0/0', '1/2', '1'],
+    ...     'FORMAT': ['GT:DP', 'GT', 'GT', 'GT'],
+    ...     'A': ['1|0:29', '0|0', '1|0', '0'],
+    ...     'B': ['1/1:34', './.', '0/0', '0/1'],
+    ...     'C': ['0/0:23', '0/0', '1/2', '1'],
     ... }
     >>> vf = pyvcf.VcfFrame.from_dict([], data)
     >>> vf.df
-      CHROM  POS ID REF  ALT QUAL FILTER INFO FORMAT    A    B    C
-    0  chr1  100  .   G    A    .      .    .     GT  0/1  1/1  0/0
-    1  chr1  101  .   T    C    .      .    .     GT  0/0  ./.  0/0
-    2  chr1  102  .   A  T,G    .      .    .     GT  0/1  0/0  1/2
-    3  chrX  100  .   A    G    .      .    .     GT    0  0/1    1
-    >>> pyvcf.row_compute_info(vf.df.iloc[0, :], 'AC')
+      CHROM  POS ID REF  ALT QUAL FILTER INFO FORMAT       A       B       C
+    0  chr1  100  .   G    A    .      .    .  GT:DP  1|0:29  1/1:34  0/0:23
+    1  chr1  101  .   T    C    .      .    .     GT     0|0     ./.     0/0
+    2  chr1  102  .   A  T,G    .      .    .     GT     1|0     0/0     1/2
+    3  chrX  100  .   A    G    .      .    .     GT       0     0/1       1
+    >>> pyvcf.row_computeinfo(vf.df.iloc[0, :], 'AC')
     '3'
-    >>> pyvcf.row_compute_info(vf.df.iloc[0, :], 'AN')
+    >>> pyvcf.row_computeinfo(vf.df.iloc[0, :], 'AN')
     '6'
-    >>> pyvcf.row_compute_info(vf.df.iloc[0, :], 'AF')
+    >>> pyvcf.row_computeinfo(vf.df.iloc[0, :], 'AF')
     '0.500'
-    >>> pyvcf.row_compute_info(vf.df.iloc[1, :], 'AC')
+    >>> pyvcf.row_computeinfo(vf.df.iloc[1, :], 'AC')
     '0'
-    >>> pyvcf.row_compute_info(vf.df.iloc[1, :], 'AN')
+    >>> pyvcf.row_computeinfo(vf.df.iloc[1, :], 'AN')
     '4'
-    >>> pyvcf.row_compute_info(vf.df.iloc[1, :], 'AF')
+    >>> pyvcf.row_computeinfo(vf.df.iloc[1, :], 'AF')
     '0.000'
-    >>> pyvcf.row_compute_info(vf.df.iloc[2, :], 'AC')
+    >>> pyvcf.row_computeinfo(vf.df.iloc[2, :], 'AC')
     '2,1'
-    >>> pyvcf.row_compute_info(vf.df.iloc[2, :], 'AN')
+    >>> pyvcf.row_computeinfo(vf.df.iloc[2, :], 'AN')
     '6'
-    >>> pyvcf.row_compute_info(vf.df.iloc[2, :], 'AF')
+    >>> pyvcf.row_computeinfo(vf.df.iloc[2, :], 'AF')
     '0.333,0.167'
-    >>> pyvcf.row_compute_info(vf.df.iloc[3, :], 'AC')
+    >>> pyvcf.row_computeinfo(vf.df.iloc[3, :], 'AC')
     '2'
-    >>> pyvcf.row_compute_info(vf.df.iloc[3, :], 'AN')
+    >>> pyvcf.row_computeinfo(vf.df.iloc[3, :], 'AN')
     '4'
-    >>> pyvcf.row_compute_info(vf.df.iloc[3, :], 'AF')
+    >>> pyvcf.row_computeinfo(vf.df.iloc[3, :], 'AF')
     '0.500'
     """
     def get_ac(r):
+        def one_gt(g, i):
+            gt = g.split(':')[0]
+            if '/' in gt:
+                l = gt.split('/')
+            else:
+                l = gt.split('|')
+            return l.count(str(i + 1))
         counts = []
         for i, allele in enumerate(r.ALT.split(',')):
-            count = r[9:].apply(lambda x: x.split('/').count(str(i+1)))
+            count = r[9:].apply(one_gt, args=(i, ))
             counts.append(sum(count))
         return counts
 
@@ -963,7 +971,7 @@ def row_compute_info(r, key, decimals=3):
 
 def row_parseinfo(r, key):
     """
-    Return INFO data in the row that match the given key.
+    For given row, return requested data in INFO column.
 
     Parameters
     ----------
@@ -1015,7 +1023,7 @@ def row_parseinfo(r, key):
 
 def row_phased(r):
     """
-    Return True if every genotype in the row is haplotype phased.
+    For given row, return True if all genotypes are phased.
 
     Parameters
     ----------
@@ -1061,7 +1069,7 @@ def row_phased(r):
 
 def row_updateinfo(r, key, value, force=True, missing=False):
     """
-    Update INFO field matching specified key.
+    For given row, return updated data in INFO column.
 
     Parameters
     ----------
@@ -1148,7 +1156,7 @@ def row_updateinfo(r, key, value, force=True, missing=False):
 
 def row_missval(r):
     """
-    Return the correctly formatted missing value for the row.
+    For given row, return formatted missing genotype.
 
     Parameters
     ----------
@@ -2167,34 +2175,50 @@ class VcfFrame:
 
         >>> from fuc import pyvcf
         >>> data = {
-        ...     'CHROM': ['chr1', 'chr1', 'chr1'],
-        ...     'POS': [100, 101, 102],
-        ...     'ID': ['.', '.', '.'],
-        ...     'REF': ['G', 'T', 'A'],
-        ...     'ALT': ['A', 'C', 'T,G'],
-        ...     'QUAL': ['.', '.', '.'],
-        ...     'FILTER': ['.', '.', '.'],
-        ...     'INFO': ['AC=100', 'MQ=59', '.'],
-        ...     'FORMAT': ['GT', 'GT', 'GT'],
-        ...     'A': ['0/1', '0/0', '0/1'],
-        ...     'B': ['1/1', '0/1', '0/0'],
-        ...     'C': ['0/0', '0/0', '1/2'],
+        ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chrX'],
+        ...     'POS': [100, 101, 102, 100],
+        ...     'ID': ['.', '.', '.', '.'],
+        ...     'REF': ['G', 'T', 'A', 'C'],
+        ...     'ALT': ['A', 'C', 'T,G', 'A'],
+        ...     'QUAL': ['.', '.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.', '.'],
+        ...     'INFO': ['AC=100', 'MQ=59', '.', '.'],
+        ...     'FORMAT': ['GT:DP', 'GT', 'GT', 'GT'],
+        ...     'A': ['1|0:34', '0|0', '1|0', '0'],
+        ...     'B': ['1/1:23', '0/1', '0/0', '0/0'],
+        ...     'C': ['0/0:28', './.', '1/2', '1'],
         ... }
         >>> vf = pyvcf.VcfFrame.from_dict([], data)
         >>> vf.df
-          CHROM  POS ID REF  ALT QUAL FILTER    INFO FORMAT    A    B    C
-        0  chr1  100  .   G    A    .      .  AC=100     GT  0/1  1/1  0/0
-        1  chr1  101  .   T    C    .      .   MQ=59     GT  0/0  0/1  0/0
-        2  chr1  102  .   A  T,G    .      .       .     GT  0/1  0/0  1/2
-        >>> vf = vf.add_info_ac()
+          CHROM  POS ID REF  ALT QUAL FILTER    INFO FORMAT       A       B       C
+        0  chr1  100  .   G    A    .      .  AC=100  GT:DP  1|0:34  1/1:23  0/0:28
+        1  chr1  101  .   T    C    .      .   MQ=59     GT     0|0     0/1     ./.
+        2  chr1  102  .   A  T,G    .      .       .     GT     1|0     0/0     1/2
+        3  chrX  100  .   C    A    .      .       .     GT       0     0/0       1
+        >>> vf = vf.compute_info('AC')
         >>> vf.df
-          CHROM  POS ID REF  ALT QUAL FILTER        INFO FORMAT    A    B    C
-        0  chr1  100  .   G    A    .      .        AC=3     GT  0/1  1/1  0/0
-        1  chr1  101  .   T    C    .      .  MQ=59;AC=5     GT  0/0  0/1  0/0
-        2  chr1  102  .   A  T,G    .      .      AC=3,2     GT  0/1  0/0  1/2
+          CHROM  POS ID REF  ALT QUAL FILTER        INFO FORMAT       A       B       C
+        0  chr1  100  .   G    A    .      .        AC=1  GT:DP  1|0:34  1/1:23  0/0:28
+        1  chr1  101  .   T    C    .      .  MQ=59;AC=1     GT     0|0     0/1     ./.
+        2  chr1  102  .   A  T,G    .      .      AC=1,1     GT     1|0     0/0     1/2
+        3  chrX  100  .   C    A    .      .        AC=1     GT       0     0/0       1
+        >>> vf = vf.compute_info('AN')
+        >>> vf.df
+          CHROM  POS ID REF  ALT QUAL FILTER             INFO FORMAT       A       B       C
+        0  chr1  100  .   G    A    .      .        AC=1;AN=6  GT:DP  1|0:34  1/1:23  0/0:28
+        1  chr1  101  .   T    C    .      .  MQ=59;AC=1;AN=4     GT     0|0     0/1     ./.
+        2  chr1  102  .   A  T,G    .      .      AC=1,1;AN=6     GT     1|0     0/0     1/2
+        3  chrX  100  .   C    A    .      .        AC=1;AN=4     GT       0     0/0       1
+        >>> vf = vf.compute_info('AF')
+        >>> vf.df
+          CHROM  POS ID REF  ALT QUAL FILTER                        INFO FORMAT       A       B       C
+        0  chr1  100  .   G    A    .      .          AC=1;AN=6;AF=0.167  GT:DP  1|0:34  1/1:23  0/0:28
+        1  chr1  101  .   T    C    .      .    MQ=59;AC=1;AN=4;AF=0.250     GT     0|0     0/1     ./.
+        2  chr1  102  .   A  T,G    .      .  AC=1,1;AN=6;AF=0.167,0.167     GT     1|0     0/0     1/2
+        3  chrX  100  .   C    A    .      .          AC=1;AN=4;AF=0.250     GT       0     0/0       1
         """
         def one_row(r, key):
-            data = row_compute_info(r, key)
+            data = row_computeinfo(r, key)
             r.INFO = row_updateinfo(r, key, data, missing=True)
             return r
 

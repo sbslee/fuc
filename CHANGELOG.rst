@@ -13,7 +13,7 @@ Changelog
 * Add new optional arguments ``force`` and ``missing`` to :meth:`pyvcf.row_updateinfo` method.
 * Add new method :meth:`pyvcf.gt_ploidy`.
 * Update :meth:`pyvcf.gt_polyp` method to use :meth:`pyvcf.gt_ploidy` method internally.
-* :issue:`53`: Add new methods :meth:`pyvcf.row_compute_info` and :meth:`pyvcf.VcfFrame.compute_info`.
+* :issue:`53`: Add new methods to compute AC/AN/AF in the INFO column: :meth:`pyvcf.row_computeinfo` and :meth:`pyvcf.VcfFrame.compute_info`.
 
 0.30.0 (2022-02-05)
 -------------------
