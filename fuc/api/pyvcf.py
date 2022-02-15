@@ -2344,6 +2344,70 @@ class VcfFrame:
         """Return a copy of the VcfFrame."""
         return self.__class__(self.copy_meta(), self.copy_df())
 
+    def to_bed(self):
+        """Write BedFrame from the VcfFrame.
+
+        Returns
+        -------
+        BedFrame
+            BedFrame.
+
+        Examples
+        --------
+        Assume we have the following data:
+
+        >>> from fuc import pyvcf
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102, 103, 104],
+        ...     'ID': ['.', '.', '.', '.', '.'],
+        ...     'REF': ['A', 'A', 'C', 'C', 'ACGT'],
+        ...     'ALT': ['C', 'T,G', 'G', 'A,G,CT', 'A'],
+        ...     'QUAL': ['.', '.', '.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.', '.', '.'],
+        ...     'INFO': ['.', '.', '.', '.', '.'],
+        ...     'FORMAT': ['GT:DP', 'GT:DP', 'GT:DP', 'GT:DP', 'GT:DP'],
+        ...     'Steven': ['0/1:32', './.:.', '0/1:27', '0/2:34', '0/0:31'],
+        ...     'Sara': ['0/0:28', '1/2:30', '1/1:29', '1/2:38', '0/1:27'],
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID   REF     ALT QUAL FILTER INFO FORMAT  Steven    Sara
+        0  chr1  100  .     A       C    .      .    .  GT:DP  0/1:32  0/0:28
+        1  chr1  101  .     A     T,G    .      .    .  GT:DP   ./.:.  1/2:30
+        2  chr1  102  .     C       G    .      .    .  GT:DP  0/1:27  1/1:29
+        3  chr1  103  .     C  A,G,CT    .      .    .  GT:DP  0/2:34  1/2:38
+        4  chr1  104  .  ACGT       A    .      .    .  GT:DP  0/0:31  0/1:27
+
+        We can construct BedFrame from the VcfFrame:
+
+        >>> bf = vf.to_bed()
+        >>> bf.gr.df
+          Chromosome  Start  End
+        0       chr1    100  100
+        1       chr1    101  101
+        2       chr1    102  102
+        3       chr1    103  103
+        4       chr1    103  104
+        5       chr1    105  107
+        """
+        def one_row(r):
+            if len(r.REF) == len(r.ALT) == 1:
+                start = r.POS
+                end = r.POS
+            elif len(r.REF) > len(r.ALT):
+                start = r.POS + 1
+                end = r.POS + len(r.REF) - len(r.ALT)
+            else:
+                start = r.POS
+                end = r.POS + 1
+            return pd.Series([r.CHROM, start, end])
+        df = self.expand().df.apply(one_row, axis=1)
+        df.columns = ['Chromosome', 'Start', 'End']
+        df = df.drop_duplicates()
+        bf = pybed.BedFrame.from_frame([], df)
+        return bf
+
     def to_file(self, fn, compression=False):
         """
         Write VcfFrame to a VCF file.
@@ -2424,6 +2488,44 @@ class VcfFrame:
         s += self.df.rename(columns={'CHROM': '#CHROM'}
             ).to_csv(index=False, sep='\t')
         return s
+
+    def to_variants(self):
+        """
+        List unique variants in VcfFrame.
+
+        Returns
+        -------
+        list
+            List of unique variants.
+
+        Examples
+        --------
+
+        >>> from fuc import pyvcf
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr2'],
+        ...     'POS': [100, 101],
+        ...     'ID': ['.', '.'],
+        ...     'REF': ['G', 'T'],
+        ...     'ALT': ['A', 'A,C'],
+        ...     'QUAL': ['.', '.'],
+        ...     'FILTER': ['.', '.'],
+        ...     'INFO': ['.', '.'],
+        ...     'FORMAT': ['GT', 'GT'],
+        ...     'A': ['0/1', '1/2']
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.variants()
+        ['chr1-100-G-A', 'chr2-101-T-A', 'chr2-101-T-C']
+        """
+        def one_row(r):
+            result = []
+            for alt in r.ALT.split(','):
+                result.append(f'{r.CHROM}-{r.POS}-{r.REF}-{alt}')
+            return ','.join(result)
+        s = self.df.apply(one_row, axis=1)
+        s = ','.join(s)
+        return s.split(',')
 
     def strip(self, format='GT', metadata=False):
         """
@@ -4970,70 +5072,6 @@ class VcfFrame:
             df = df[df.POS <= end]
         return self.__class__(self.copy_meta(), df)
 
-    def to_bed(self):
-        """Write BedFrame from the VcfFrame.
-
-        Returns
-        -------
-        BedFrame
-            BedFrame.
-
-        Examples
-        --------
-        Assume we have the following data:
-
-        >>> from fuc import pyvcf
-        >>> data = {
-        ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1', 'chr1'],
-        ...     'POS': [100, 101, 102, 103, 104],
-        ...     'ID': ['.', '.', '.', '.', '.'],
-        ...     'REF': ['A', 'A', 'C', 'C', 'ACGT'],
-        ...     'ALT': ['C', 'T,G', 'G', 'A,G,CT', 'A'],
-        ...     'QUAL': ['.', '.', '.', '.', '.'],
-        ...     'FILTER': ['.', '.', '.', '.', '.'],
-        ...     'INFO': ['.', '.', '.', '.', '.'],
-        ...     'FORMAT': ['GT:DP', 'GT:DP', 'GT:DP', 'GT:DP', 'GT:DP'],
-        ...     'Steven': ['0/1:32', './.:.', '0/1:27', '0/2:34', '0/0:31'],
-        ...     'Sara': ['0/0:28', '1/2:30', '1/1:29', '1/2:38', '0/1:27'],
-        ... }
-        >>> vf = pyvcf.VcfFrame.from_dict([], data)
-        >>> vf.df
-          CHROM  POS ID   REF     ALT QUAL FILTER INFO FORMAT  Steven    Sara
-        0  chr1  100  .     A       C    .      .    .  GT:DP  0/1:32  0/0:28
-        1  chr1  101  .     A     T,G    .      .    .  GT:DP   ./.:.  1/2:30
-        2  chr1  102  .     C       G    .      .    .  GT:DP  0/1:27  1/1:29
-        3  chr1  103  .     C  A,G,CT    .      .    .  GT:DP  0/2:34  1/2:38
-        4  chr1  104  .  ACGT       A    .      .    .  GT:DP  0/0:31  0/1:27
-
-        We can construct BedFrame from the VcfFrame:
-
-        >>> bf = vf.to_bed()
-        >>> bf.gr.df
-          Chromosome  Start  End
-        0       chr1    100  100
-        1       chr1    101  101
-        2       chr1    102  102
-        3       chr1    103  103
-        4       chr1    103  104
-        5       chr1    105  107
-        """
-        def one_row(r):
-            if len(r.REF) == len(r.ALT) == 1:
-                start = r.POS
-                end = r.POS
-            elif len(r.REF) > len(r.ALT):
-                start = r.POS + 1
-                end = r.POS + len(r.REF) - len(r.ALT)
-            else:
-                start = r.POS
-                end = r.POS + 1
-            return pd.Series([r.CHROM, start, end])
-        df = self.expand().df.apply(one_row, axis=1)
-        df.columns = ['Chromosome', 'Start', 'End']
-        df = df.drop_duplicates()
-        bf = pybed.BedFrame.from_frame([], df)
-        return bf
-
     def extract_format(self, k, func=None, as_nan=False):
         """
         Extract data for the specified FORMAT key.
@@ -6070,41 +6108,3 @@ class VcfFrame:
             af = float(field.split(',')[j+1])
 
         return af
-
-    def variants(self):
-        """
-        List unique variants in VcfFrame.
-
-        Returns
-        -------
-        list
-            List of unique variants.
-
-        Examples
-        --------
-
-        >>> from fuc import pyvcf
-        >>> data = {
-        ...     'CHROM': ['chr1', 'chr2'],
-        ...     'POS': [100, 101],
-        ...     'ID': ['.', '.'],
-        ...     'REF': ['G', 'T'],
-        ...     'ALT': ['A', 'A,C'],
-        ...     'QUAL': ['.', '.'],
-        ...     'FILTER': ['.', '.'],
-        ...     'INFO': ['.', '.'],
-        ...     'FORMAT': ['GT', 'GT'],
-        ...     'A': ['0/1', '1/2']
-        ... }
-        >>> vf = pyvcf.VcfFrame.from_dict([], data)
-        >>> vf.variants()
-        ['chr1-100-G-A', 'chr2-101-T-A', 'chr2-101-T-C']
-        """
-        def one_row(r):
-            result = []
-            for alt in r.ALT.split(','):
-                result.append(f'{r.CHROM}-{r.POS}-{r.REF}-{alt}')
-            return ','.join(result)
-        s = self.df.apply(one_row, axis=1)
-        s = ','.join(s)
-        return s.split(',')

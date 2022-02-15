@@ -9,6 +9,7 @@ Changelog
 * Combine optional arguments ``bam`` and ``fn`` into single positional argument ``bams`` for :meth:`pycov.CovFrame.from_bam` method. The same goes for :command:`bam-depth` command (combine ``--bam`` and ``--fn`` into ``bams``).
 * Combine optional arguments ``bed`` and ``region`` into single optional argument ``regions`` for :meth:`pycov.CovFrame.from_bam` method. The same goes for :command:`bam-depth` command (combine ``--bed`` and ``--region`` into ``--regions``).
 * Update :meth:`pycov.CovFrame.from_bam` method and :command:`bam-depth` command to automatically handle the 'chr' string.
+* Rename :meth:`pyvcf.VcfFrame.variants` method to :meth:`pyvcf.VcfFrame.to_variants`.
 
 0.30.0 (2022-02-05)
 -------------------
