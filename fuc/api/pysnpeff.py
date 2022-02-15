@@ -31,7 +31,8 @@ For each annotation, SnpEff provides the following data:
 """
 
 def row_firstann(r):
-    """Return the first SnpEff annotation for the row."""
+    """
+    Return the first SnpEff annotation for the row."""
     ann = [x for x in r.INFO.split(';') if 'ANN=' in x]
     if not ann:
         return ''
@@ -39,7 +40,8 @@ def row_firstann(r):
     return ann
 
 def filter_ann(vf, targets, include=True):
-    """Filter out rows based on the SnpEff annotations.
+    """
+    Filter out rows based on the SnpEff annotations.
 
     Parameters
     ----------
@@ -71,7 +73,8 @@ def filter_ann(vf, targets, include=True):
     return vf
 
 def parseann(vf, idx, sep=' | '):
-    """Parse SnpEff annotations.
+    """
+    Parse SnpEff annotations.
 
     Parameters
     ----------

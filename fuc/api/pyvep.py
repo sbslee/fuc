@@ -156,7 +156,8 @@ SEVERITIY = [
 ]
 
 def row_firstann(r):
-    """Return the first result in the row.
+    """
+    Return the first result in the row.
 
     Parameters
     ----------
@@ -208,7 +209,8 @@ def row_firstann(r):
     return results.split(',')[0]
 
 def row_mostsevere(r):
-    """Return result with the most severe consequence in the row.
+    """
+    Return result with the most severe consequence in the row.
 
     Parameters
     ----------
@@ -260,7 +262,8 @@ def row_mostsevere(r):
     return sorted(results.split(','), key=f)[0]
 
 def parseann(vf, targets, sep=' | ', as_series=False):
-    """Parse variant annotations in VcfFrame.
+    """
+    Parse variant annotations in VcfFrame.
 
     If there are multiple results per row, the method will use the first
     one for extracting requested data.
@@ -391,7 +394,8 @@ def to_frame(vf, as_zero=False):
     return df
 
 def pick_result(vf, mode='mostsevere'):
-    """Return a new VcfFrame after picking one result per row.
+    """
+    Return a new VcfFrame after picking one result per row.
 
     Parameters
     ----------
@@ -456,7 +460,8 @@ def pick_result(vf, mode='mostsevere'):
     return new_vf
 
 def annot_names(vf):
-    """Return the list of avaialble consequence annotations in the VcfFrame.
+    """
+    Return the list of avaialble consequence annotations in the VcfFrame.
 
     Parameters
     ----------

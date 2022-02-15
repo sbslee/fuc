@@ -30,7 +30,8 @@ class FqFrame:
 
     @classmethod
     def from_file(cls, fn):
-        """Construct FqFrame from a FASTQ file.
+        """
+        Construct FqFrame from a FASTQ file.
 
         Parameters
         ----------

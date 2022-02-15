@@ -48,7 +48,8 @@ HEADERS = [
 ]
 
 class BedFrame:
-    """Class for storing BED data.
+    """
+    Class for storing BED data.
 
     Parameters
     ----------

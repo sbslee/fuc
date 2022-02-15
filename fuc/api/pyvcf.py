@@ -381,7 +381,8 @@ def gt_miss(g):
     return '.' in g.split(':')[0]
 
 def gt_polyp(g):
-    """Return True if sample genotype has a polyploid call.
+    """
+    Return True if sample genotype has a polyploid call.
 
     Parameters
     ----------
@@ -1534,7 +1535,8 @@ class VcfFrame:
         return self.__class__(self.copy_meta(), df)
 
     def add_dp(self):
-        """Compute DP using AD and add it to the FORMAT field.
+        """
+        Compute DP using AD and add it to the FORMAT field.
 
         Returns
         -------
@@ -1594,7 +1596,8 @@ class VcfFrame:
         return vf
 
     def add_flag(self, flag, order='last', index=None):
-        """Add the given flag to the INFO field.
+        """
+        Add the given flag to the INFO field.
 
         The default behavior is to add the flag to all rows in the VcfFrame.
 
@@ -1697,7 +1700,8 @@ class VcfFrame:
         return vf
 
     def cfilter_empty(self, opposite=False, as_list=False):
-        """Remove samples whose genotype calls are all missing.
+        """
+        Remove samples whose genotype calls are all missing.
 
         Parameters
         ----------
@@ -1773,7 +1777,8 @@ class VcfFrame:
         return self.subset(l)
 
     def collapse(self):
-        """Collapse duplicate records in the VcfFrame.
+        """
+        Collapse duplicate records in the VcfFrame.
 
         Duplicate records have the identical values for CHROM, POS, and REF.
         They can result from merging two VCF files.
@@ -2345,12 +2350,13 @@ class VcfFrame:
         return self.__class__(self.copy_meta(), self.copy_df())
 
     def to_bed(self):
-        """Write BedFrame from the VcfFrame.
+        """
+        Convert VcfFrame to BedFrame.
 
         Returns
         -------
         BedFrame
-            BedFrame.
+            BedFrame obejct.
 
         Examples
         --------
@@ -3469,7 +3475,8 @@ class VcfFrame:
         return vf
 
     def expand(self):
-        """Expand each multiallelic locus to multiple rows.
+        """
+        Expand each multiallelic locus to multiple rows.
 
         Only the GT subfield of FORMAT will be retained.
 
@@ -3806,7 +3813,8 @@ class VcfFrame:
         return self.__class__(self.copy_meta(), self.df[i])
 
     def filter_flagall(self, flags, opposite=False, as_index=False):
-        """Select rows if all of the given INFO flags are present.
+        """
+        Select rows if all of the given INFO flags are present.
 
         Parameters
         ----------
@@ -3889,7 +3897,8 @@ class VcfFrame:
         return self.__class__(self.copy_meta(), self.df[i])
 
     def filter_flagany(self, flags, opposite=False, as_index=False):
-        """Select rows if any one of the given INFO flags is present.
+        """
+        Select rows if any one of the given INFO flags is present.
 
         Parameters
         ----------
@@ -4047,7 +4056,8 @@ class VcfFrame:
         return self.__class__(self.copy_meta(), self.df[i])
 
     def filter_pass(self, opposite=False, as_index=False):
-        """Select rows with PASS in the FILTER field.
+        """
+        Select rows with PASS in the FILTER field.
 
         Parameters
         ----------
@@ -4268,7 +4278,8 @@ class VcfFrame:
         return self.__class__(self.copy_meta(), self.df[i])
 
     def filter_qual(self, threshold, opposite=False, as_index=False):
-        """Select rows with minimum QUAL value.
+        """
+        Select rows with minimum QUAL value.
 
         Parameters
         ----------
@@ -4348,7 +4359,8 @@ class VcfFrame:
         return self.__class__(self.copy_meta(), self.df[i])
 
     def filter_sampall(self, samples=None, opposite=False, as_index=False):
-        """Select rows if all of the given samples have the variant.
+        """
+        Select rows if all of the given samples have the variant.
 
         The default behavior is to use all samples in the VcfFrame.
 
@@ -4544,7 +4556,8 @@ class VcfFrame:
         return self.__class__(self.copy_meta(), self.df[i])
 
     def filter_sampnum(self, threshold, opposite=False, as_index=False):
-        """Select rows if the variant is prevalent enough.
+        """
+        Select rows if the variant is prevalent enough.
 
         Parameters
         ----------
