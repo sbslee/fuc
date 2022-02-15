@@ -415,6 +415,7 @@ def pick_result(vf, mode='mostsevere'):
     Examples
     --------
 
+    >>> from fuc import pyvep, pyvcf
     >>> meta = [
     ...     '##fileformat=VCFv4.1',
     ...     '##VEP="v104" time="2021-05-20 10:50:12" cache="/net/isilonP/public/ro/ensweb-data/latest/tools/grch37/e104/vep/cache/homo_sapiens/104_GRCh37" db="homo_sapiens_core_104_37@hh-mysql-ens-grch37-web" 1000genomes="phase3" COSMIC="92" ClinVar="202012" HGMD-PUBLIC="20204" assembly="GRCh37.p13" dbSNP="154" gencode="GENCODE 19" genebuild="2011-04" gnomAD="r2.1" polyphen="2.2.2" regbuild="1.0" sift="sift5.2.2"',
@@ -441,16 +442,16 @@ def pick_result(vf, mode='mostsevere'):
     >>> vf1 = pyvep.pick_result(vf, mode='mostsevere')
     >>> vf2 = pyvep.pick_result(vf, mode='firstann')
     >>> vf1.df.INFO
-    0    CSQ=C|missense_variant|MODERATE|SPEN|ENSG00000...
-    1    CSQ=T|missense_variant|MODERATE|NRAS|ENSG00000...
-    2    CSQ=A|stop_gained&NMD_transcript_variant|HIGH|...
-    3    CSQ=-|inframe_deletion|MODERATE|HRAS|ENSG00000...
+    0    CSQ=C|missense_variant|MODERATE|SPEN|ENSG00000065526|Transcript|ENST00000375759.3|protein_coding|12/15||||10322|10118|3373|Q/P|cAg/cCg|||1||HGNC|17575|||||tolerated_low_confidence(0.08)|possibly_damaging(0.718)||||||||||
+    1           CSQ=T|missense_variant|MODERATE|NRAS|ENSG00000213281|Transcript|ENST00000369535.4|protein_coding|3/7||||502|248|83|A/D|gCc/gAc|COSV99795232||-1||HGNC|7989|||||deleterious(0.02)|probably_damaging(0.946)|||1|1||||||
+    2                        CSQ=A|stop_gained&NMD_transcript_variant|HIGH|NTRK1|ENSG00000198400|Transcript|ENST00000497019.2|nonsense_mediated_decay|10/16||||1183|1032|344|W/*|tgG/tgA|COSV62328771||1||HGNC|8031|||||||||1|1||||||
+    3                                         CSQ=-|inframe_deletion|MODERATE|HRAS|ENSG00000174775|Transcript|ENST00000311189.7|protein_coding|2/6||||198-200|26-28|9-10|VG/G|gTGGgc/ggc|rs1164486792||-1||HGNC|5173||||||||||1||||||
     Name: INFO, dtype: object
     >>> vf2.df.INFO
-    0    CSQ=C|downstream_gene_variant|MODIFIER|ZBTB17|...
-    1    CSQ=T|downstream_gene_variant|MODIFIER|CSDE1|E...
-    2    CSQ=A|missense_variant|MODERATE|NTRK1|ENSG0000...
-    3    CSQ=-|upstream_gene_variant|MODIFIER|LRRC56|EN...
+    0                                                                       CSQ=C|downstream_gene_variant|MODIFIER|ZBTB17|ENSG00000116809|Transcript|ENST00000375733.2|protein_coding|||||||||||4617|-1||HGNC|12936||||||||||||||||
+    1                                                          CSQ=T|downstream_gene_variant|MODIFIER|CSDE1|ENSG00000009307|Transcript|ENST00000261443.5|protein_coding||||||||||COSV99795232|3453|-1||HGNC|29905|||||||||1|1||||||
+    2    CSQ=A|missense_variant|MODERATE|NTRK1|ENSG00000198400|Transcript|ENST00000358660.3|protein_coding|10/16||||1296|1255|419|A/T|Gcc/Acc|COSV62328771||1||HGNC|8031|||||deleterious(0.01)|probably_damaging(0.999)|||1|1||||||
+    3                                                             CSQ=-|upstream_gene_variant|MODIFIER|LRRC56|ENSG00000161328|Transcript|ENST00000270115.7|protein_coding||||||||||rs1164486792|3230|1||HGNC|25430||||||||||1||||||
     Name: INFO, dtype: object
     """
     funcs = {'mostsevere': row_mostsevere, 'firstann': row_firstann}
