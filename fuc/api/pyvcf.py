@@ -3741,11 +3741,10 @@ class VcfFrame:
         Returns
         -------
         VcfFrame
-            Filtered VcfFrame.
+            Subsetted VcfFrame.
 
         Examples
         --------
-        Assume we have the following data:
 
         >>> from fuc import pyvcf
         >>> data = {
@@ -3758,41 +3757,45 @@ class VcfFrame:
         ...     'FILTER': ['.', '.', '.', '.'],
         ...     'INFO': ['.', '.', '.', '.'],
         ...     'FORMAT': ['GT', 'GT', 'GT', 'GT'],
-        ...     'Steven': ['0/1', '1/1', '1/1', '1/1'],
-        ...     'Rachel': ['./.', './.', './.', './.'],
-        ...     'John': ['0/0', './.', '0/0', '0/0'],
-        ...     'Sara': ['./.', './.', './.', './.'],
+        ...     'A': ['0/0', '0/0', '0/0', '0/0'],
+        ...     'B': ['./.', '0/0', '0/0', '0/0'],
+        ...     'C': ['./.', './.', '0/0', '0/0'],
+        ...     'D': ['./.', './.', './.', '0/0'],
+        ...     'E': ['./.', './.', './.', './.'],
         ... }
         >>> vf = pyvcf.VcfFrame.from_dict([], data)
         >>> vf.df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven Rachel John Sara
-        0  chr1  100  .   G   A    .      .    .     GT    0/1    ./.  0/0  ./.
-        1  chr1  101  .   T   C    .      .    .     GT    1/1    ./.  ./.  ./.
-        2  chr1  102  .   G   C    .      .    .     GT    1/1    ./.  0/0  ./.
-        3  chr1  103  .   T   C    .      .    .     GT    1/1    ./.  0/0  ./.
-
-        We can remove samples whose genotypes are all missing:
-
-        >>> vf.cfilter_empty().df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven John
-        0  chr1  100  .   G   A    .      .    .     GT    0/1  0/0
-        1  chr1  101  .   T   C    .      .    .     GT    1/1  ./.
-        2  chr1  102  .   G   C    .      .    .     GT    1/1  0/0
-        3  chr1  103  .   T   C    .      .    .     GT    1/1  0/0
-
-        We can also select those samples:
-
-        >>> vf.cfilter_empty(opposite=True).df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Rachel Sara
-        0  chr1  100  .   G   A    .      .    .     GT    ./.  ./.
-        1  chr1  101  .   T   C    .      .    .     GT    ./.  ./.
-        2  chr1  102  .   G   C    .      .    .     GT    ./.  ./.
-        3  chr1  103  .   T   C    .      .    .     GT    ./.  ./.
-
-        Finally, we can return a list of sample names from the filtering:
-
-        >>> vf.cfilter_empty(as_list=True)
-        ['Steven', 'John']
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    B    C    D    E
+        0  chr1  100  .   G   A    .      .    .     GT  0/0  ./.  ./.  ./.  ./.
+        1  chr1  101  .   T   C    .      .    .     GT  0/0  0/0  ./.  ./.  ./.
+        2  chr1  102  .   G   C    .      .    .     GT  0/0  0/0  0/0  ./.  ./.
+        3  chr1  103  .   T   C    .      .    .     GT  0/0  0/0  0/0  0/0  ./.
+        >>> vf.empty_samples().df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    B    C    D
+        0  chr1  100  .   G   A    .      .    .     GT  0/0  ./.  ./.  ./.
+        1  chr1  101  .   T   C    .      .    .     GT  0/0  0/0  ./.  ./.
+        2  chr1  102  .   G   C    .      .    .     GT  0/0  0/0  0/0  ./.
+        3  chr1  103  .   T   C    .      .    .     GT  0/0  0/0  0/0  0/0
+        >>> vf.empty_samples(threshold=2).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    B
+        0  chr1  100  .   G   A    .      .    .     GT  0/0  ./.
+        1  chr1  101  .   T   C    .      .    .     GT  0/0  0/0
+        2  chr1  102  .   G   C    .      .    .     GT  0/0  0/0
+        3  chr1  103  .   T   C    .      .    .     GT  0/0  0/0
+        >>> vf.empty_samples(threshold=0.5).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    A    B
+        0  chr1  100  .   G   A    .      .    .     GT  0/0  ./.
+        1  chr1  101  .   T   C    .      .    .     GT  0/0  0/0
+        2  chr1  102  .   G   C    .      .    .     GT  0/0  0/0
+        3  chr1  103  .   T   C    .      .    .     GT  0/0  0/0
+        >>> vf.empty_samples(threshold=0.5, opposite=True).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT    C    D    E
+        0  chr1  100  .   G   A    .      .    .     GT  ./.  ./.  ./.
+        1  chr1  101  .   T   C    .      .    .     GT  ./.  ./.  ./.
+        2  chr1  102  .   G   C    .      .    .     GT  0/0  ./.  ./.
+        3  chr1  103  .   T   C    .      .    .     GT  0/0  0/0  ./.
+        >>> vf.empty_samples(threshold=0.5, opposite=True, as_list=True)
+        ['C', 'D', 'E']
         """
         total = self.shape[0]
 
@@ -3814,7 +3817,17 @@ class VcfFrame:
 
         s = self.df.iloc[:, 9:].apply(one_col, axis=0) < threshold
 
-        return self.subset(s[s].index.to_list())
+        if opposite:
+            s = s[s == False]
+        else:
+            s = s[s == True]
+
+        l = s.index.to_list()
+
+        if as_list:
+            return l
+
+        return self.subset(l)
 
     def expand(self):
         """
