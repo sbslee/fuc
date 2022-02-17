@@ -865,7 +865,7 @@ def row_hasindel(r):
 
 def row_computeinfo(r, key, decimals=3):
     """
-    For given row, return AC/AN/AF calculation in INFO column.
+    For given row, return AC/AN/AF calculation for INFO column.
 
     Parameters
     ----------
@@ -971,7 +971,7 @@ def row_computeinfo(r, key, decimals=3):
 
 def row_parseinfo(r, key):
     """
-    For given row, return requested data in INFO column.
+    For given row, return requested data from INFO column.
 
     Parameters
     ----------
@@ -1069,7 +1069,7 @@ def row_phased(r):
 
 def row_updateinfo(r, key, value, force=True, missing=False):
     """
-    For given row, return updated data in INFO column.
+    For given row, return updated data from INFO column.
 
     Parameters
     ----------
@@ -2081,7 +2081,7 @@ class VcfFrame:
 
     def compute_info(self, key):
         """
-        Compute AC/AN/AF in INFO column.
+        Compute AC/AN/AF for INFO column.
 
         The method will ignore and overwrite any existing data for selected
         key.

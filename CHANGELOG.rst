@@ -14,7 +14,7 @@ Changelog
 * Add new method :meth:`pyvcf.gt_ploidy`.
 * Update :meth:`pyvcf.gt_polyp` method to use :meth:`pyvcf.gt_ploidy` method internally.
 * :issue:`53`: Add new methods to compute AC/AN/AF in the INFO column: :meth:`pyvcf.row_computeinfo` and :meth:`pyvcf.VcfFrame.compute_info`.
-* :issue:`54: Update :meth:`pyvcf.VcfFrame.cfilter_empty` method so that users can control missingness threshold for filtering samples.
+* :issue:`54`: Update :meth:`pyvcf.VcfFrame.cfilter_empty` method so that users can control missingness threshold for filtering samples.
 * Rename :meth:`pyvcf.VcfFrame.cfilter_empty` method to :meth:`pyvcf.VcfFrame.empty_samples`.
 
 0.30.0 (2022-02-05)
