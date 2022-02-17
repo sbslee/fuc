@@ -1953,83 +1953,6 @@ class VcfFrame:
         vf = self.__class__(self.copy_meta(), df)
         return vf
 
-    def cfilter_empty(self, opposite=False, as_list=False):
-        """
-        Remove samples whose genotype calls are all missing.
-
-        Parameters
-        ----------
-        opposite : bool, default: False
-            If True, return samples that don't meet the said criteria.
-        as_list : bool, default: False
-             If True, return a list of sample names instead of a VcfFrame.
-
-        Returns
-        -------
-        VcfFrame
-            Filtered VcfFrame.
-
-        Examples
-        --------
-        Assume we have the following data:
-
-        >>> data = {
-        ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1'],
-        ...     'POS': [100, 101, 102, 103],
-        ...     'ID': ['.', '.', '.', '.'],
-        ...     'REF': ['G', 'T', 'G', 'T'],
-        ...     'ALT': ['A', 'C', 'C', 'C'],
-        ...     'QUAL': ['.', '.', '.', '.'],
-        ...     'FILTER': ['.', '.', '.', '.'],
-        ...     'INFO': ['.', '.', '.', '.'],
-        ...     'FORMAT': ['GT', 'GT', 'GT', 'GT'],
-        ...     'Steven': ['0/1', '1/1', '1/1', '1/1'],
-        ...     'Rachel': ['./.', './.', './.', './.'],
-        ...     'John': ['0/0', './.', '0/0', '0/0'],
-        ...     'Sara': ['./.', './.', './.', './.'],
-        ... }
-        >>> vf = pyvcf.VcfFrame.from_dict([], data)
-        >>> vf.df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven Rachel John Sara
-        0  chr1  100  .   G   A    .      .    .     GT    0/1    ./.  0/0  ./.
-        1  chr1  101  .   T   C    .      .    .     GT    1/1    ./.  ./.  ./.
-        2  chr1  102  .   G   C    .      .    .     GT    1/1    ./.  0/0  ./.
-        3  chr1  103  .   T   C    .      .    .     GT    1/1    ./.  0/0  ./.
-
-        We can remove samples whose genotypes are all missing:
-
-        >>> vf.cfilter_empty().df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven John
-        0  chr1  100  .   G   A    .      .    .     GT    0/1  0/0
-        1  chr1  101  .   T   C    .      .    .     GT    1/1  ./.
-        2  chr1  102  .   G   C    .      .    .     GT    1/1  0/0
-        3  chr1  103  .   T   C    .      .    .     GT    1/1  0/0
-
-        We can also select those samples:
-
-        >>> vf.cfilter_empty(opposite=True).df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Rachel Sara
-        0  chr1  100  .   G   A    .      .    .     GT    ./.  ./.
-        1  chr1  101  .   T   C    .      .    .     GT    ./.  ./.
-        2  chr1  102  .   G   C    .      .    .     GT    ./.  ./.
-        3  chr1  103  .   T   C    .      .    .     GT    ./.  ./.
-
-        Finally, we can return a list of sample names from the filtering:
-
-        >>> vf.cfilter_empty(as_list=True)
-        ['Steven', 'John']
-        """
-        f = lambda r: r[9:].apply(gt_miss)
-        s = self.df.apply(f, axis=1).all()
-        if opposite:
-            s = s[s == True]
-        else:
-            s = s[s == False]
-        l = s.index.to_list()
-        if as_list:
-            return l
-        return self.subset(l)
-
     def collapse(self):
         """
         Collapse duplicate records in the VcfFrame.
@@ -3798,6 +3721,101 @@ class VcfFrame:
         vf = self.__class__(self.copy_meta(), df)
         return vf
 
+    def empty_samples(self, threshold=0, opposite=False, as_list=False):
+        """
+        Remove samples with high missingness.
+
+        Samples with missingness >= threshold will be removed.
+
+        Parameters
+        ----------
+        threshold : int or float, default: 0
+            Number or fraction of missing variants. By default
+            (``threshold=0``), only samples with 100% missingness will be
+            removed.
+        opposite : bool, default: False
+            If True, return samples that don't meet the said criteria.
+        as_list : bool, default: False
+             If True, return a list of sample names instead of a VcfFrame.
+
+        Returns
+        -------
+        VcfFrame
+            Filtered VcfFrame.
+
+        Examples
+        --------
+        Assume we have the following data:
+
+        >>> from fuc import pyvcf
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102, 103],
+        ...     'ID': ['.', '.', '.', '.'],
+        ...     'REF': ['G', 'T', 'G', 'T'],
+        ...     'ALT': ['A', 'C', 'C', 'C'],
+        ...     'QUAL': ['.', '.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.', '.'],
+        ...     'INFO': ['.', '.', '.', '.'],
+        ...     'FORMAT': ['GT', 'GT', 'GT', 'GT'],
+        ...     'Steven': ['0/1', '1/1', '1/1', '1/1'],
+        ...     'Rachel': ['./.', './.', './.', './.'],
+        ...     'John': ['0/0', './.', '0/0', '0/0'],
+        ...     'Sara': ['./.', './.', './.', './.'],
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven Rachel John Sara
+        0  chr1  100  .   G   A    .      .    .     GT    0/1    ./.  0/0  ./.
+        1  chr1  101  .   T   C    .      .    .     GT    1/1    ./.  ./.  ./.
+        2  chr1  102  .   G   C    .      .    .     GT    1/1    ./.  0/0  ./.
+        3  chr1  103  .   T   C    .      .    .     GT    1/1    ./.  0/0  ./.
+
+        We can remove samples whose genotypes are all missing:
+
+        >>> vf.cfilter_empty().df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven John
+        0  chr1  100  .   G   A    .      .    .     GT    0/1  0/0
+        1  chr1  101  .   T   C    .      .    .     GT    1/1  ./.
+        2  chr1  102  .   G   C    .      .    .     GT    1/1  0/0
+        3  chr1  103  .   T   C    .      .    .     GT    1/1  0/0
+
+        We can also select those samples:
+
+        >>> vf.cfilter_empty(opposite=True).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Rachel Sara
+        0  chr1  100  .   G   A    .      .    .     GT    ./.  ./.
+        1  chr1  101  .   T   C    .      .    .     GT    ./.  ./.
+        2  chr1  102  .   G   C    .      .    .     GT    ./.  ./.
+        3  chr1  103  .   T   C    .      .    .     GT    ./.  ./.
+
+        Finally, we can return a list of sample names from the filtering:
+
+        >>> vf.cfilter_empty(as_list=True)
+        ['Steven', 'John']
+        """
+        total = self.shape[0]
+
+        if not threshold:
+            threshold = total
+
+        if isinstance(threshold, int):
+            use_fraction = False
+        elif isinstance(threshold, float):
+            use_fraction = True
+        else:
+            raise TypeError("Incorrect argument type 'threshold'")
+
+        def one_col(c):
+            data = sum(c.apply(gt_miss))
+            if use_fraction:
+                data /= total
+            return data
+
+        s = self.df.iloc[:, 9:].apply(one_col, axis=0) < threshold
+
+        return self.subset(s[s].index.to_list())
+
     def expand(self):
         """
         Expand each multiallelic locus to multiple rows.
@@ -3876,7 +3894,9 @@ class VcfFrame:
 
     def filter_bed(self, bed, opposite=False, as_index=False):
         """
-        Select rows that overlap with the given BED data.
+        Filter rows intersecting with given BED.
+
+        Only variants intersecting with given BED data will remain.
 
         Parameters
         ----------
@@ -3968,7 +3988,9 @@ class VcfFrame:
 
     def filter_empty(self, threshold=0, opposite=False, as_index=False):
         """
-        Remove rows with missing genotype calls.
+        Filter rows with high missingness.
+
+        Variants with missingness >= threshold will be removed.
 
         Parameters
         ----------
@@ -4063,82 +4085,11 @@ class VcfFrame:
             return self.__class__(self.copy_meta(), self.copy_df())
         return self.__class__(self.copy_meta(), self.df[i])
 
-    def filter_indel(self, opposite=False, as_index=False):
-        """
-        Remove rows with an indel.
-
-        Parameters
-        ----------
-        opposite : bool, default: False
-            If True, return rows that don't meet the said criteria.
-        as_index : bool, default: False
-            If True, return boolean index array instead of VcfFrame.
-
-        Returns
-        -------
-        VcfFrame or pandas.Series
-            Filtered VcfFrame or boolean index array.
-
-        Examples
-        --------
-        Assume we have the following data:
-
-        >>> from fuc import pyvcf
-        >>> data = {
-        ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1'],
-        ...     'POS': [100, 101, 102, 103],
-        ...     'ID': ['.', '.', '.', '.'],
-        ...     'REF': ['G', 'CT', 'A', 'C'],
-        ...     'ALT': ['A', 'C', 'C,AT', 'A'],
-        ...     'QUAL': ['.', '.', '.', '.'],
-        ...     'FILTER': ['.', '.', '.', '.'],
-        ...     'INFO': ['.', '.', '.', '.'],
-        ...     'FORMAT': ['GT', 'GT', 'GT', 'GT'],
-        ...     'Steven': ['0/1', '0/1', '1/2', '0/1'],
-        ... }
-        >>> vf = pyvcf.VcfFrame.from_dict([], data)
-        >>> vf.df
-          CHROM  POS ID REF   ALT QUAL FILTER INFO FORMAT Steven
-        0  chr1  100  .   G     A    .      .    .     GT    0/1
-        1  chr1  101  .  CT     C    .      .    .     GT    0/1
-        2  chr1  102  .   A  C,AT    .      .    .     GT    1/2
-        3  chr1  103  .   C     A    .      .    .     GT    0/1
-
-        We can remove rows with an indel:
-
-        >>> vf.filter_indel().df
-          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
-        0  chr1  100  .   G   A    .      .    .     GT    0/1
-        1  chr1  103  .   C   A    .      .    .     GT    0/1
-
-        We can also select those rows:
-
-        >>> vf.filter_indel(opposite=True).df
-          CHROM  POS ID REF   ALT QUAL FILTER INFO FORMAT Steven
-        0  chr1  101  .  CT     C    .      .    .     GT    0/1
-        1  chr1  102  .   A  C,AT    .      .    .     GT    1/2
-
-        Finally, we can return boolean index array from the filtering:
-
-        >>> vf.filter_indel(as_index=True)
-        0     True
-        1    False
-        2    False
-        3     True
-        dtype: bool
-        """
-        i = ~self.df.apply(row_hasindel, axis=1)
-        if opposite:
-            i = ~i
-        if as_index:
-            return i
-        if i.empty:
-            return self.__class__(self.copy_meta(), self.copy_df())
-        return self.__class__(self.copy_meta(), self.df[i])
-
     def filter_flagall(self, flags, opposite=False, as_index=False):
         """
-        Select rows if all of the given INFO flags are present.
+        Filter rows with all given INFO flags.
+
+        Only variants with all given INFO flags will remain.
 
         Parameters
         ----------
@@ -4222,7 +4173,9 @@ class VcfFrame:
 
     def filter_flagany(self, flags, opposite=False, as_index=False):
         """
-        Select rows if any one of the given INFO flags is present.
+        Filter rows with any given INFO flags.
+
+        Only variants with any given INFO flags will remain.
 
         Parameters
         ----------
@@ -4304,9 +4257,86 @@ class VcfFrame:
             return self.__class__(self.copy_meta(), self.copy_df())
         return self.__class__(self.copy_meta(), self.df[i])
 
+    def filter_indel(self, opposite=False, as_index=False):
+        """
+        Filter rows with indel.
+
+        Variants with indel will be removed.
+
+        Parameters
+        ----------
+        opposite : bool, default: False
+            If True, return rows that don't meet the said criteria.
+        as_index : bool, default: False
+            If True, return boolean index array instead of VcfFrame.
+
+        Returns
+        -------
+        VcfFrame or pandas.Series
+            Filtered VcfFrame or boolean index array.
+
+        Examples
+        --------
+        Assume we have the following data:
+
+        >>> from fuc import pyvcf
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102, 103],
+        ...     'ID': ['.', '.', '.', '.'],
+        ...     'REF': ['G', 'CT', 'A', 'C'],
+        ...     'ALT': ['A', 'C', 'C,AT', 'A'],
+        ...     'QUAL': ['.', '.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.', '.'],
+        ...     'INFO': ['.', '.', '.', '.'],
+        ...     'FORMAT': ['GT', 'GT', 'GT', 'GT'],
+        ...     'Steven': ['0/1', '0/1', '1/2', '0/1'],
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF   ALT QUAL FILTER INFO FORMAT Steven
+        0  chr1  100  .   G     A    .      .    .     GT    0/1
+        1  chr1  101  .  CT     C    .      .    .     GT    0/1
+        2  chr1  102  .   A  C,AT    .      .    .     GT    1/2
+        3  chr1  103  .   C     A    .      .    .     GT    0/1
+
+        We can remove rows with an indel:
+
+        >>> vf.filter_indel().df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
+        0  chr1  100  .   G   A    .      .    .     GT    0/1
+        1  chr1  103  .   C   A    .      .    .     GT    0/1
+
+        We can also select those rows:
+
+        >>> vf.filter_indel(opposite=True).df
+          CHROM  POS ID REF   ALT QUAL FILTER INFO FORMAT Steven
+        0  chr1  101  .  CT     C    .      .    .     GT    0/1
+        1  chr1  102  .   A  C,AT    .      .    .     GT    1/2
+
+        Finally, we can return boolean index array from the filtering:
+
+        >>> vf.filter_indel(as_index=True)
+        0     True
+        1    False
+        2    False
+        3     True
+        dtype: bool
+        """
+        i = ~self.df.apply(row_hasindel, axis=1)
+        if opposite:
+            i = ~i
+        if as_index:
+            return i
+        if i.empty:
+            return self.__class__(self.copy_meta(), self.copy_df())
+        return self.__class__(self.copy_meta(), self.df[i])
+
     def filter_multialt(self, opposite=False, as_index=False):
         """
-        Remove rows with multiple ALT alleles.
+        Filter rows with multiple ALT alleles.
+
+        Variants with multiple ALT alleles will be removed.
 
         Parameters
         ----------
@@ -4381,7 +4411,9 @@ class VcfFrame:
 
     def filter_pass(self, opposite=False, as_index=False):
         """
-        Select rows with PASS in the FILTER field.
+        Filter rows with PASS in FILTER column.
+
+        Only variants with PASS in the FILTER column will remain.
 
         Parameters
         ----------
@@ -4455,7 +4487,9 @@ class VcfFrame:
 
     def filter_phased(self, opposite=False, as_index=False):
         """
-        Remove rows with phased genotypes.
+        Filter rows with phased genotypes.
+
+        Variants with phased genotypes will be removed.
 
         Parameters
         ----------
@@ -4529,7 +4563,9 @@ class VcfFrame:
 
     def filter_polyp(self, opposite=False, as_index=False):
         """
-        Remove rows with a polyploid genotype call.
+        Filter rows with polyploid genotypes.
+
+        Variants with polyploid genotypes will be removed.
 
         Parameters
         ----------
@@ -4603,7 +4639,9 @@ class VcfFrame:
 
     def filter_qual(self, threshold, opposite=False, as_index=False):
         """
-        Select rows with minimum QUAL value.
+        Filter rows with low QUAL values.
+
+        Only variants with QUAL >= threashold will remain.
 
         Parameters
         ----------
@@ -4684,9 +4722,10 @@ class VcfFrame:
 
     def filter_sampall(self, samples=None, opposite=False, as_index=False):
         """
-        Select rows if all of the given samples have the variant.
+        Filter rows where all given samples have variant.
 
-        The default behavior is to use all samples in the VcfFrame.
+        Only variants where all given samples have variant. The default
+        behavior is to use all samples in the VcfFrame.
 
         Parameters
         ----------
@@ -4783,9 +4822,10 @@ class VcfFrame:
 
     def filter_sampany(self, samples=None, opposite=False, as_index=False):
         """
-        Select rows if any one of the given samples has the variant.
+        Filter rows where any given samples have variant.
 
-        The default behavior is to use all samples in the VcfFrame.
+        Only variants where any given samples have variant will remain. The
+        default behavior is to use all samples in the VcfFrame.
 
         Parameters
         ----------
@@ -4881,7 +4921,9 @@ class VcfFrame:
 
     def filter_sampnum(self, threshold, opposite=False, as_index=False):
         """
-        Select rows if the variant is prevalent enough.
+        Filter rows with high variant prevalence.
+
+        Only variants with variant prevalence >= threshold will remian.
 
         Parameters
         ----------
@@ -4969,7 +5011,9 @@ class VcfFrame:
 
     def filter_vcf(self, vcf, opposite=False, as_index=False):
         """
-        Select rows that overlap with the other VCF.
+        Filter rows intersecting with given VCF.
+
+        Only variants intersecting with given VCF data will remain.
 
         Parameters
         ----------
