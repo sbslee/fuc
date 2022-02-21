@@ -16,6 +16,7 @@ Changelog
 * :issue:`53`: Add new methods to compute AC/AN/AF in the INFO column: :meth:`pyvcf.row_computeinfo` and :meth:`pyvcf.VcfFrame.compute_info`.
 * :issue:`54`: Update :meth:`pyvcf.VcfFrame.cfilter_empty` method so that users can control missingness threshold for filtering samples.
 * Rename :meth:`pyvcf.VcfFrame.cfilter_empty` method to :meth:`pyvcf.VcfFrame.empty_samples`.
+* Update :meth:`common.sort_regions` method to support regions containing an ALT contig (e.g. chr16_KI270854v1_alt).
 
 0.30.0 (2022-02-05)
 -------------------
