@@ -3,7 +3,7 @@ import sys
 from .. import api
 
 description = """
-Count allelic depth from a SAM/BAM/CRAM file.
+Count allelic depth from a BAM file.
 """
 
 epilog = f"""
@@ -20,17 +20,20 @@ def create_parser(subparsers):
         api.common._script_name(),
         description=description,
         epilog=epilog,
-        help='Compute allelic depth from a SAM/BAM/CRAM file.',
+        help=
+"""Compute allelic depth from a BAM file."""
     )
     parser.add_argument(
         'bam',
-        help='Alignment file.'
+        help=
+"""Input alignment file."""
     )
     parser.add_argument(
         'sites',
-        help='TSV file containing two columns, chromosome and position. \n'
-             'This can also be a BED or VCF file (compressed or \n'
-             'uncompressed) Input type will be detected automatically.'
+        help=
+"""TSV file containing two columns, chromosome and position. This
+can also be a BED or VCF file (compressed or uncompressed). 
+Input type will be detected automatically."""
     )
 
 def main(args):

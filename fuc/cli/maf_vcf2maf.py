@@ -17,9 +17,14 @@ def create_parser(subparsers):
         api.common._script_name(),
         description=description,
         epilog=epilog,
-        help='Convert a VCF file to a MAF file.',
+        help=
+"""Convert a VCF file to a MAF file."""
     )
-    parser.add_argument('vcf', help='Annotated VCF file.')
+    parser.add_argument(
+        'vcf',
+        help=
+"""Annotated VCF file."""
+    )
 
 def main(args):
     mf = api.pymaf.MafFrame.from_vcf(args.vcf)

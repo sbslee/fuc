@@ -54,73 +54,86 @@ def create_parser(subparsers):
         api.common._script_name(),
         description=description,
         epilog=epilog,
-        help='Pipeline for converting FASTQ files to analysis-ready BAM \n'
-             'files.'
+        help=
+"""Pipeline for converting FASTQ files to analysis-ready BAM
+files."""
     )
     parser.add_argument(
         'manifest',
-        help='Sample manifest CSV file.'
+        help=
+"""Sample manifest CSV file."""
     )
     parser.add_argument(
         'fasta',
-        help='Reference FASTA file.'
+        help=
+"""Reference FASTA file."""
     )
     parser.add_argument(
         'output',
         type=os.path.abspath,
-        help='Output directory.'
+        help=
+"""Output directory."""
     )
     parser.add_argument(
         'qsub',
         type=str,
-        help='SGE resoruce to request for qsub.'
+        help=
+"""SGE resoruce to request for qsub."""
     )
     parser.add_argument(
         'java',
-        help='Java resoruce to request for GATK.'
+        help=
+"""Java resoruce to request for GATK."""
     )
     parser.add_argument(
         'vcf',
         type=str,
         nargs='+',
-        help='One or more reference VCF files containing known variant \n'
-             'sites (e.g. 1000 Genomes Project).'
+        help=
+"""One or more reference VCF files containing known variant
+sites (e.g. 1000 Genomes Project)."""
     )
     parser.add_argument(
         '--bed',
         metavar='PATH',
         type=str,
-        help='BED file.'
+        help=
+"""BED file."""
     )
     parser.add_argument(
         '--thread',
         metavar='INT',
         type=int,
         default=1,
-        help='Number of threads to use (default: 1).'
+        help=
+"""Number of threads to use (default: 1)."""
     )
     parser.add_argument(
         '--platform',
         metavar='TEXT',
         type=str,
         default='Illumina',
-        help="Sequencing platform (default: 'Illumina')."
+        help=
+"""Sequencing platform (default: 'Illumina')."""
     )
     parser.add_argument(
         '--job',
         metavar='TEXT',
         type=str,
-        help='Job submission ID for SGE.'
+        help=
+"""Job submission ID for SGE."""
     )
     parser.add_argument(
         '--force',
         action='store_true',
-        help='Overwrite the output directory if it already exists.'
+        help=
+"""Overwrite the output directory if it already exists."""
     )
     parser.add_argument(
         '--keep',
         action='store_true',
-        help='Keep temporary files.'
+        help=
+"""Keep temporary files."""
     )
 
 def main(args):

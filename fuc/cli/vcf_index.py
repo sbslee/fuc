@@ -28,14 +28,16 @@ def create_parser(subparsers):
     )
     parser.add_argument(
         'vcf',
-        help='Input VCF file to be indexed. When an uncompressed file is \n'
-             'given, the command will automatically create a BGZF \n'
-             'compressed copy of the file (.gz) before indexing.'
+        help=
+"""Input VCF file to be indexed. When an uncompressed file is
+given, the command will automatically create a BGZF
+compressed copy of the file (.gz) before indexing."""
     )
     parser.add_argument(
         '--force',
         action='store_true',
-        help='Force to overwrite the index file if it is already present.'
+        help=
+"""Force to overwrite the index file if it is already present."""
     )
 
 def main(args):

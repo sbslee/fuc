@@ -25,16 +25,19 @@ def create_parser(subparsers):
         api.common._script_name(),
         description=description,
         epilog=epilog,
-        help='Slice a GFF/BED/SAM/VCF file with Tabix.',
+        help=
+"""Slice a GFF/BED/SAM/VCF file with Tabix."""
     )
     parser.add_argument(
         'file',
-        help='File to be sliced.'
+        help=
+"""File to be sliced."""
     )
     parser.add_argument(
         'regions',
         nargs='+',
-        help='One or more regions.'
+        help=
+"""One or more regions."""
     )
 
 def main(args):

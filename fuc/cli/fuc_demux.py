@@ -36,22 +36,26 @@ def create_parser(subparsers):
     parser = api.common._add_parser(
         subparsers,
         api.common._script_name(),
-        help='Parse the Reports directory from bcl2fastq.',
         description=description,
+        help=
+"""Parse the Reports directory from bcl2fastq."""
     )
     parser.add_argument(
         'reports',
-        help='Reports directory.'
+        help=
+"""Input Reports directory."""
     )
     parser.add_argument(
         'output',
-        help='Output directory (will be created).'
+        help=
+"""Output directory (will be created)."""
     )
     parser.add_argument(
         '--sheet',
         metavar='PATH',
-        help='SampleSheet.csv file. Used for sorting and/or subsetting \n'
-             'samples.'
+        help=
+"""SampleSheet.csv file. Used for sorting and/or subsetting
+samples."""
     )
 
 def main(args):

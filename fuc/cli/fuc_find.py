@@ -25,25 +25,29 @@ def create_parser(subparsers):
         api.common._script_name(),
         description=description,
         epilog=epilog,
-        help='Retrieve absolute paths of files whose name matches a \n'
-             'specified pattern, optionally recursively.',
+        help=
+"""Retrieve absolute paths of files whose name matches a
+specified pattern, optionally recursively."""
     )
     parser.add_argument(
         'pattern',
-        help='Filename pattern.'
+        help=
+"""Filename pattern."""
     )
     parser.add_argument(
         '-r',
         '--recursive',
         action='store_true',
-        help='Turn on recursive retrieving.'
+        help=
+"""Turn on recursive retrieving."""
     )
     parser.add_argument(
         '-d',
         '--directory',
         metavar='PATH',
         default=os.getcwd(),
-        help='Directory to search in (default: current directory).'
+        help=
+"""Directory to search in (default: current directory)."""
     )
 
 def main(args):

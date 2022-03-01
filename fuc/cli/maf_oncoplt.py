@@ -23,22 +23,26 @@ def create_parser(subparsers):
         api.common._script_name(),
         description=description,
         epilog=epilog,
-        help='Create an oncoplot with a MAF file.',
+        help=
+"""Create an oncoplot with a MAF file."""
     )
     parser.add_argument(
         'maf',
-        help='MAF file.'
+        help=
+"""Input MAF file."""
     )
     parser.add_argument(
         'out',
-        help='Output image file.'
+        help=
+"""Output image file."""
     )
     parser.add_argument(
         '--count',
         metavar='INT',
         type=int,
         default=10,
-        help='Number of top mutated genes to display (default: 10).'
+        help=
+"""Number of top mutated genes to display (default: 10)."""
     )
     parser.add_argument(
         '--figsize',
@@ -46,28 +50,32 @@ def create_parser(subparsers):
         type=float,
         default=[15, 10],
         nargs=2,
-        help='Width, height in inches (default: [15, 10]).'
+        help=
+"""Width, height in inches (default: [15, 10])."""
     )
     parser.add_argument(
         '--label_fontsize',
         metavar='FLOAT',
         type=float,
         default=15,
-        help='Font size of labels (default: 15).'
+        help=
+"""Font size of labels (default: 15)."""
     )
     parser.add_argument(
         '--ticklabels_fontsize',
         metavar='FLOAT',
         type=float,
         default=15,
-        help='Font size of tick labels (default: 15).'
+        help=
+"""Font size of tick labels (default: 15)."""
     )
     parser.add_argument(
         '--legend_fontsize',
         metavar='FLOAT',
         type=float,
         default=15,
-        help='Font size of legend texts (default: 15).'
+        help=
+"""Font size of legend texts (default: 15)."""
     )
 
 def main(args):

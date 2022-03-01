@@ -20,10 +20,19 @@ def create_parser(subparsers):
         api.common._script_name(),
         description=description,
         epilog=epilog,
-        help='Compare the contents of two files.',
+        help=
+"""Compare the contents of two files."""
     )
-    parser.add_argument('left', help='Left file.')
-    parser.add_argument('right', help='Right file.')
+    parser.add_argument(
+        'left',
+        help=
+"""Input left file."""
+    )
+    parser.add_argument(
+        'right',
+        help=
+"""Input right file."""
+    )
 
 def main(args):
     print(filecmp.cmp(args.left, args.right))

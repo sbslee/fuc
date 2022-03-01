@@ -5,7 +5,7 @@ from .. import api
 import pysam
 
 description = """
-Print the header of a SAM/BAM/CRAM file.
+Print the header of a BAM file.
 """
 
 epilog = f"""
@@ -19,11 +19,13 @@ def create_parser(subparsers):
         api.common._script_name(),
         description=description,
         epilog=epilog,
-        help='Print the header of a SAM/BAM/CRAM file.',
+        help=
+"""Print the header of a BAM file."""
     )
     parser.add_argument(
         'bam',
-        help='Alignment file.'
+        help=
+"""Input alignment file."""
     )
 
 def main(args):

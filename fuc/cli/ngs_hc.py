@@ -45,92 +45,107 @@ def create_parser(subparsers):
         api.common._script_name(),
         description=description,
         epilog=epilog,
-        help='Pipeline for germline short variant discovery.',
+        help=
+"""Pipeline for germline short variant discovery."""
     )
     parser.add_argument(
         'manifest',
-        help='Sample manifest CSV file.'
+        help=
+"""Sample manifest CSV file."""
     )
     parser.add_argument(
         'fasta',
-        help='Reference FASTA file.'
+        help=
+"""Reference FASTA file."""
     )
     parser.add_argument(
         'output',
         type=os.path.abspath,
-        help='Output directory.'
+        help=
+"""Output directory."""
     )
     parser.add_argument(
         'qsub',
         type=str,
-        help='SGE resoruce to request for qsub.'
+        help=
+"""SGE resoruce to request for qsub."""
     )
     parser.add_argument(
         'java1',
         type=str,
-        help='Java resoruce to request for single-sample variant calling.'
+        help=
+"""Java resoruce to request for single-sample variant calling."""
     )
     parser.add_argument(
         'java2',
         type=str,
-        help='Java resoruce to request for joint variant calling.'
+        help=
+"""Java resoruce to request for joint variant calling."""
     )
     parser.add_argument(
         '--bed',
         metavar='PATH',
         type=str,
-        help='BED file.'
+        help=
+"""BED file."""
     )
     parser.add_argument(
         '--dbsnp',
         metavar='PATH',
         type=str,
-        help='VCF file from dbSNP.'
+        help=
+"""VCF file from dbSNP."""
     )
     parser.add_argument(
         '--thread',
         metavar='INT',
         type=int,
         default=1,
-        help='Number of threads to use (default: 1).'
+        help=
+"""Number of threads to use (default: 1)."""
     )
     parser.add_argument(
         '--batch',
         metavar='INT',
         type=int,
         default=0,
-        help='Batch size used for GenomicsDBImport (default: 0). This \n'
-             'controls the number of samples for which readers are \n'
-             'open at once and therefore provides a way to minimize \n'
-             'memory consumption. The size of 0 means no batching (i.e. \n'
-             'readers for all samples will be opened at once).'
+        help=
+"""Batch size used for GenomicsDBImport (default: 0). This
+controls the number of samples for which readers are
+open at once and therefore provides a way to minimize
+memory consumption. The size of 0 means no batching (i.e.
+readers for all samples will be opened at once)."""
     )
     parser.add_argument(
         '--job',
         metavar='TEXT',
         type=str,
-        help='Job submission ID for SGE.'
+        help=
+"""Job submission ID for SGE."""
     )
     parser.add_argument(
         '--force',
         action='store_true',
-        help='Overwrite the output directory if it already exists.'
+        help=
+"""Overwrite the output directory if it already exists."""
     )
     parser.add_argument(
         '--keep',
         action='store_true',
-        help='Keep temporary files.'
+        help=
+"""Keep temporary files."""
     )
     parser.add_argument(
         '--posix',
         action='store_true',
-        help='Set GenomicsDBImport to allow for optimizations to improve \n'
-             'the usability and performance for shared Posix Filesystems \n'
-             '(e.g. NFS, Lustre). If set, file level locking is disabled \n'
-             'and file system writes are minimized by keeping a higher \n'
-             'number of file descriptors open for longer periods of time. \n'
-             'Use with --batch if keeping a large number of file \n'
-             'descriptors open is an issue.'
+        help=
+"""Set GenomicsDBImport to allow for optimizations to improve
+the usability and performance for shared Posix Filesystems
+(e.g. NFS, Lustre). If set, file level locking is disabled
+and file system writes are minimized by keeping a higher
+number of file descriptors open for longer periods of time.
+Use with --batch if keeping a large number of file
+descriptors open is an issue."""
     )
 
 def main(args):

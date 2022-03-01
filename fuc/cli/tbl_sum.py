@@ -18,63 +18,72 @@ def create_parser(subparsers):
         api.common._script_name(),
         description=description,
         epilog=epilog,
-        help='Summarize a table file.',
+        help=
+"""Summarize a table file."""
     )
     parser.add_argument(
         'table_file',
-        help='Table file.'
+        help=
+"""Table file."""
     )
     parser.add_argument(
         '--sep',
         metavar='TEXT',
         default='\t',
-        help="Delimiter to use (default: '\\t')."
+        help=
+"""Delimiter to use (default: '\\t')."""
     )
     parser.add_argument(
         '--skiprows',
         metavar='TEXT',
-        help='Comma-separated line numbers to skip (0-indexed) or \n'
-             'number of lines to skip at the start of the file \n'
-             '(e.g. `--skiprows 1,` will skip the second line, \n'
-             '`--skiprows 2,4` will skip the third and fifth lines, \n'
-             'and `--skiprows 10` will skip the first 10 lines).'
+        help=
+"""Comma-separated line numbers to skip (0-indexed) or
+number of lines to skip at the start of the file
+(e.g. `--skiprows 1,` will skip the second line,
+`--skiprows 2,4` will skip the third and fifth lines,
+and `--skiprows 10` will skip the first 10 lines)."""
     )
     parser.add_argument(
         '--na_values',
         metavar='TEXT',
         nargs='+',
-        help='Additional strings to recognize as NA/NaN (by \n'
-             "default, the following values are interpreted \n"
-             "as NaN: '', '#N/A', '#N/A N/A', '#NA', '-1.#IND', \n"
-             "'-1.#QNAN', '-NaN', '-nan', '1.#IND', '1.#QNAN', \n"
-             "'<NA>', 'N/A', 'NA', 'NULL', 'NaN', 'n/a', 'nan', \n"
-             "'null')."
+        help=
+"""Additional strings to recognize as NA/NaN (by
+default, the following values are interpreted
+as NaN: '', '#N/A', '#N/A N/A', '#NA', '-1.#IND',
+'-1.#QNAN', '-NaN', '-nan', '1.#IND', '1.#QNAN',
+'<NA>', 'N/A', 'NA', 'NULL', 'NaN', 'n/a', 'nan',
+'null')."""
     )
     parser.add_argument(
         '--keep_default_na',
         action='store_false',
-        help='Whether or not to include the default NaN values when \n'
-             "parsing the data (see 'pandas.read_table' for details)."
+        help=
+"""Whether or not to include the default NaN values when
+parsing the data (see 'pandas.read_table' for details)."""
     )
     parser.add_argument(
         '--expr',
         metavar='TEXT',
-        help='Query the columns of a pandas.DataFrame with a \n'
-             """boolean expression (e.g. `--query "A == 'yes'"`)."""
+        help=
+"""Query the columns of a pandas.DataFrame with a
+boolean expression (e.g. `--query "A == 'yes'"`)."""
     )
     parser.add_argument(
         '--columns',
         metavar='TEXT',
         nargs='+',
-        help='Columns to be summarized (by default, all columns \n'
-             'will be included).'
+        help=
+"""Columns to be summarized (by default, all columns
+will be included)."""
     )
     parser.add_argument(
         '--dtypes',
         metavar='PATH',
-        help="File of column names and their data types (either \n"
-             "'categorical' or 'numeric'); one tab-delimited pair of \n"
-             "column name and data type per line."
+        help=
+"""File of column names and their data types (either
+'categorical' or 'numeric'); one tab-delimited pair of
+column name and data type per line."""
     )
 
 def main(args):

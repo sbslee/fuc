@@ -24,23 +24,27 @@ def create_parser(subparsers):
         api.common._script_name(),
         description=description,
         epilog=epilog,
-        help='Filter sequence records in a FASTA file',
+        help=
+"""Filter sequence records in a FASTA file."""
     )
     parser.add_argument(
         'fasta',
-        help='FASTA file (compressed or uncompressed).'
+        help=
+"""Input FASTA file (compressed or uncompressed)."""
     )
     parser.add_argument(
         '--contigs',
         metavar='TEXT',
         nargs='+',
-        help='One or more contigs to be selected. Alternatively, you can \n'
-             'provide a file containing one contig per line. '
+        help=
+"""One or more contigs to be selected. Alternatively, you can
+provide a file containing one contig per line."""
     )
     parser.add_argument(
         '--exclude',
         action='store_true',
-        help='Exclude specified contigs.'
+        help=
+"""Exclude specified contigs."""
     )
 
 def main(args):

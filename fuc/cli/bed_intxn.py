@@ -17,9 +17,15 @@ def create_parser(subparsers):
         api.common._script_name(),
         description=description,
         epilog=epilog,
-        help='Find the intersection of BED files.',
+        help=
+"""Find the intersection of BED files."""
     )
-    parser.add_argument('bed', help='BED files.', nargs='+')
+    parser.add_argument(
+        'bed',
+        nargs='+',
+        help=
+"""Input BED files."""
+    )
 
 def main(args):
     bfs = [api.pybed.BedFrame.from_file(x) for x in args.bed]

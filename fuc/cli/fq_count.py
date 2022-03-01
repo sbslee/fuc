@@ -21,12 +21,14 @@ def create_parser(subparsers):
         api.common._script_name(),
         description=description,
         epilog=epilog,
-        help='Count sequence reads in FASTQ files.',
+        help=
+"""Count sequence reads in FASTQ files."""
     )
     parser.add_argument(
         'fastq',
         nargs='*',
-        help='FASTQ files (compressed or uncompressed) (default: stdin).'
+        help=
+"""Input FASTQ files (compressed or uncompressed) (default: stdin)."""
     )
 
 def main(args):

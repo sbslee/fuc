@@ -19,11 +19,13 @@ def create_parser(subparsers):
         api.common._script_name(),
         description=description,
         epilog=epilog,
-        help='Summarize a FASTQ file.',
+        help=
+"""Summarize a FASTQ file."""
     )
     parser.add_argument(
         'fastq',
-        help='FASTQ file (zipped or unqzipped).'
+        help=
+"""Input FASTQ file (compressed or uncompressed)."""
     )
 
 def main(args):

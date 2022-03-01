@@ -25,36 +25,41 @@ def create_parser(subparsers):
     parser.add_argument(
         'vcf_files',
         nargs='+',
-        help="VCF files (compressed or uncompressed). Note that the 'chr'\n"
-             "prefix in contig names (e.g. 'chr1' vs. '1') will be \n"
-             "automatically added or removed as necessary to match the \n"
-             "contig names of the first VCF."
+        help=
+"""VCF files (compressed or uncompressed). Note that the 'chr'
+prefix in contig names (e.g. 'chr1' vs. '1') will be
+automatically added or removed as necessary to match the
+contig names of the first VCF."""
     )
     parser.add_argument(
         '--how',
         metavar='TEXT',
         default='inner',
-        help="Type of merge as defined in pandas.DataFrame.merge \n"
-             "(default: 'inner')."
+        help=
+"""Type of merge as defined in pandas.DataFrame.merge
+(default: 'inner')."""
     )
     parser.add_argument(
         '--format',
         metavar='TEXT',
         default='GT',
-        help="FORMAT subfields to be retained (e.g. 'GT:AD:DP') \n"
-             "(default: 'GT')."
+        help=
+"""FORMAT subfields to be retained (e.g. 'GT:AD:DP')
+(default: 'GT')."""
     )
     parser.add_argument(
         '--sort',
         action='store_false',
-        help='Use this flag to turn off sorting of records \n'
-             '(default: True).'
+        help=
+"""Use this flag to turn off sorting of records
+(default: True)."""
     )
     parser.add_argument(
         '--collapse',
         action='store_true',
-        help='Use this flag to collapse duplicate records \n'
-             '(default: False).'
+        help=
+"""Use this flag to collapse duplicate records
+(default: False)."""
     )
 
 def main(args):

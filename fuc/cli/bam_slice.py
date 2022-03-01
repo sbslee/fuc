@@ -5,7 +5,7 @@ from .. import api
 import pysam
 
 description = """
-Slice an alignment file (SAM/BAM/CRAM).
+Slice a BAM file.
 """
 
 epilog = f"""
@@ -25,38 +25,43 @@ def create_parser(subparsers):
         api.common._script_name(),
         description=description,
         epilog=epilog,
-        help='Slice a SAM/BAM/CRAM file.',
+        help=
+"""Slice a BAM file."""
     )
     parser.add_argument(
         'bam',
-        help="Input alignment file must be already indexed (.bai) to allow \n"
-             "random access. You can index an alignment file with the \n"
-             "bam-index command."
+        help=
+"""Input alignment file must be already indexed (.bai) to allow
+random access. You can index an alignment file with the
+bam-index command."""
     )
     parser.add_argument(
         'regions',
         nargs='+',
-        help="One or more regions to be sliced. Each region must have the \n"
-             "format chrom:start-end and be a half-open interval with \n"
-             "(start, end]. This means, for example, chr1:100-103 will \n"
-             "extract positions 101, 102, and 103. Alternatively, you can \n"
-             "provide a BED file (compressed or uncompressed) to specify \n"
-             "regions. Note that the 'chr' prefix in contig names (e.g. \n"
-             "'chr1' vs. '1') will be automatically added or removed as \n"
-             "necessary to match the input BED's contig names."
+        help=
+"""One or more regions to be sliced. Each region must have the
+format chrom:start-end and be a half-open interval with
+(start, end]. This means, for example, chr1:100-103 will
+extract positions 101, 102, and 103. Alternatively, you can
+provide a BED file (compressed or uncompressed) to specify
+regions. Note that the 'chr' prefix in contig names (e.g.
+'chr1' vs. '1') will be automatically added or removed as
+necessary to match the input BED's contig names."""
     )
     parser.add_argument(
         '--format',
         metavar='TEXT',
         default='BAM',
         choices=['SAM', 'BAM', 'CRAM'],
-        help="Output format (default: 'BAM') (choices: 'SAM', 'BAM', \n"
-             "'CRAM')."
+        help=
+"""Output format (default: 'BAM') (choices: 'SAM', 'BAM',
+'CRAM')."""
     )
     parser.add_argument(
         '--fasta',
         metavar='PATH',
-        help="FASTA file. Required when --format is 'CRAM'."
+        help=
+"""FASTA file. Required when --format is 'CRAM'."""
     )
 
 def main(args):

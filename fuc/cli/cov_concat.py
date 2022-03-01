@@ -22,21 +22,23 @@ def create_parser(subparsers):
         api.common._script_name(),
         description=description,
         epilog=epilog,
-        help='Concatenate depth of coverage files.',
+        help=
+"""Concatenate depth of coverage files."""
     )
     parser.add_argument(
         'tsv',
-        metavar='PATH',
         nargs='+',
-        help='One or more TSV files.'
+        help=
+"""Input TSV files."""
     )
     parser.add_argument(
         '--axis',
         metavar='INT',
         default=0,
         type=int,
-        help='The axis to concatenate along (default: 0) (choices: \n'
-             '0, 1 where 0 is index and 1 is columns).'
+        help=
+"""The axis to concatenate along (default: 0) (choices:
+0, 1 where 0 is index and 1 is columns)."""
     )
 
 def main(args):

@@ -6,7 +6,7 @@ from .. import api
 import pysam
 
 description = """
-Rename the sample in a SAM/BAM/CRAM file.
+Rename the sample in a BAM file.
 """
 
 epilog = f"""
@@ -20,10 +20,19 @@ def create_parser(subparsers):
         api.common._script_name(),
         description=description,
         epilog=epilog,
-        help='Rename the sample in a SAM/BAM/CRAM file.',
+        help=
+"""Rename the sample in a BAM file."""
     )
-    parser.add_argument('bam', help='Alignment file.')
-    parser.add_argument('name', help='New sample name.')
+    parser.add_argument(
+        'bam',
+        help=
+"""Input alignment file."""
+    )
+    parser.add_argument(
+        'name',
+        help=
+"""New sample name."""
+    )
 
 def main(args):
     # Detect the input format.

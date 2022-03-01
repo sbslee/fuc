@@ -16,25 +16,29 @@ def create_parser(subparsers):
         subparsers,
         api.common._script_name(),
         description=description,
-        help='Summarize a BED file.',
+        help=
+"""Summarize a BED file."""
     )
     parser.add_argument(
         'bed',
-        help='BED file.'
+        help=
+"""Input BED file."""
     )
     parser.add_argument(
         '--bases',
         metavar='INT',
         type=int,
         default=1,
-        help='Number to divide covered base pairs (default: 1).'
+        help=
+"""Number to divide covered base pairs (default: 1)."""
     )
     parser.add_argument(
         '--decimals',
         metavar='INT',
         type=int,
         default=0,
-        help='Number of decimals (default: 0).'
+        help=
+"""Number of decimals (default: 0)."""
     )
 
 def main(args):

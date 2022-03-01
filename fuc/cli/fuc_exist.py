@@ -27,10 +27,15 @@ def create_parser(subparsers):
         api.common._script_name(),
         description=description,
         epilog=epilog,
-        help='Check whether certain files exist.',
+        help=
+"""Check whether certain files exist."""
     )
-    parser.add_argument('files', nargs='*',
-        help='Files and directories to be tested (default: stdin).')
+    parser.add_argument(
+        'files',
+        nargs='*',
+        help=
+"""Files and directories to be tested (default: stdin)."""
+    )
 
 def main(args):
     if args.files:
