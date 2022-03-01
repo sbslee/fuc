@@ -2,7 +2,7 @@ import gzip
 
 from .. import api
 
-description = f"""
+description = """
 Compute top unknown barcodes using undertermined FASTQ from bcl2fastq.
 
 This command will compute top unknown barcodes using undertermined FASTQ from
@@ -20,19 +20,22 @@ def create_parser(subparsers):
         api.common._script_name(),
         description=description,
         epilog=epilog,
-        help='Compute top unknown barcodes using undertermined FASTQ '
-             'from bcl2fastq.',
+        help=
+"""Compute top unknown barcodes using undertermined FASTQ from
+bcl2fastq."""
     )
     parser.add_argument(
         'fastq',
-        help='Undertermined FASTQ (compressed or uncompressed).'
+        help=
+"""Undertermined FASTQ (compressed or uncompressed)."""
     )
     parser.add_argument(
         '--count',
         metavar='INT',
         type=int,
         default=30,
-        help='Number of top unknown barcodes to return (default: 30).'
+        help=
+"""Number of top unknown barcodes to return (default: 30)."""
     )
 
 def main(args):

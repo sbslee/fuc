@@ -33,38 +33,44 @@ def create_parser(subparsers):
         api.common._script_name(),
         description=description,
         epilog=epilog,
-        help='Rename the samples in a VCF file.',
+        help=
+"""Rename the samples in a VCF file."""
     )
     parser.add_argument(
         'vcf',
-        help='VCF file (compressed or uncompressed).'
+        help=
+"""VCF file (compressed or uncompressed)."""
     )
     parser.add_argument(
         'names',
-        help='Text file containing information for renaming the samples.'
+        help=
+"""Text file containing information for renaming the samples."""
     )
     parser.add_argument(
         '--mode',
         metavar='TEXT',
         default='MAP',
         choices=['MAP', 'INDEX', 'RANGE'],
-        help="Renaming mode (default: 'MAP') (choices: 'MAP', \n"
-             "'INDEX', 'RANGE')."
+        help=
+"""Renaming mode (default: 'MAP') (choices: 'MAP',
+'INDEX', 'RANGE')."""
     )
     parser.add_argument(
         '--range',
         metavar='INT',
         type=int,
         nargs=2,
-        help="Index range to use when renaming the samples. \n"
-             "Applicable only with the 'RANGE' mode."
+        help=
+"""Index range to use when renaming the samples.
+Applicable only with the 'RANGE' mode."""
     )
     parser.add_argument(
         '--sep',
         metavar='TEXT',
         default='\t',
-        help="Delimiter to use for reading the 'names' file \n"
-             "(default: '\\t')."
+        help=
+"""Delimiter to use for reading the 'names' file 
+(default: '\\t')."""
     )
 
 def main(args):

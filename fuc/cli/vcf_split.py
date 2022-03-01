@@ -4,7 +4,7 @@ import shutil
 
 from .. import api
 
-description = f"""
+description = """
 Split a VCF file by individual.
 """
 
@@ -19,28 +19,33 @@ def create_parser(subparsers):
         api.common._script_name(),
         description=description,
         epilog=epilog,
-        help='Split a VCF file by individual.',
+        help=
+"""Split a VCF file by individual."""
     )
     parser.add_argument(
         'vcf',
-        help="VCF file to be split."
+        help=
+"""VCF file to be split."""
     )
     parser.add_argument(
         'output',
         type=os.path.abspath,
-        help='Output directory.'
+        help=
+"""Output directory."""
     )
     parser.add_argument(
         '--clean',
         action='store_false',
-        help="By default, the command will only return variants present in \n"
-             "each individual. Use the tag to stop this behavior and make \n"
-             "sure that all individuals have the same number of variants."
+        help=
+"""By default, the command will only return variants present in
+each individual. Use the tag to stop this behavior and make
+sure that all individuals have the same number of variants."""
     )
     parser.add_argument(
         '--force',
         action='store_true',
-        help='Overwrite the output directory if it already exists.'
+        help=
+"""Overwrite the output directory if it already exists."""
     )
 
 def main(args):

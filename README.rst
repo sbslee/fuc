@@ -46,10 +46,10 @@ Currently, fuc can be used to analyze, summarize, visualize, and manipulate the 
 
 Additionally, fuc can be used to parse output data from the following programs:
 
-- Ensembl Variant Effect Predictor (VEP)
-- SnpEff
-- bcl2fastq and bcl2fastq2
-- Kallisto
+- `Ensembl Variant Effect Predictor (VEP) <https://asia.ensembl.org/info/docs/tools/vep/index.html>`__
+- `SnpEff <http://pcingola.github.io/SnpEff/>`__
+- `bcl2fastq and bcl2fastq2 <https://sapac.support.illumina.com/sequencing/sequencing_software/bcl2fastq-conversion-software.html>`__
+- `Kallisto <https://pachterlab.github.io/kallisto/>`__
 
 Your contributions (e.g. feature ideas, pull requests) are most welcome.
 
@@ -112,42 +112,45 @@ For getting help on the fuc CLI:
    
    positional arguments:
      COMMAND
-       bam-aldepth  Compute allelic depth from a SAM/BAM/CRAM file.
-       bam-depth    Compute read depth from SAM/BAM/CRAM files.
-       bam-head     Print the header of a SAM/BAM/CRAM file.
-       bam-index    Index a SAM/BAM/CRAM file.
-       bam-rename   Rename the sample in a SAM/BAM/CRAM file.
-       bam-slice    Slice a SAM/BAM/CRAM file.
+       bam-aldepth  Compute allelic depth from a BAM file.
+       bam-depth    Compute per-base read depth from BAM files.
+       bam-head     Print the header of a BAM file.
+       bam-index    Index a BAM file.
+       bam-rename   Rename the sample in a BAM file.
+       bam-slice    Slice a BAM file.
        bed-intxn    Find the intersection of BED files.
        bed-sum      Summarize a BED file.
        cov-concat   Concatenate depth of coverage files.
        cov-rename   Rename the samples in a depth of coverage file.
-       fa-filter    Filter sequence records in a FASTA file
+       fa-filter    Filter sequence records in a FASTA file.
        fq-count     Count sequence reads in FASTQ files.
        fq-sum       Summarize a FASTQ file.
        fuc-bgzip    Write a BGZF compressed file.
        fuc-compf    Compare the contents of two files.
        fuc-demux    Parse the Reports directory from bcl2fastq.
        fuc-exist    Check whether certain files exist.
-       fuc-find     Retrieve absolute paths of files whose name matches a 
+       fuc-find     Retrieve absolute paths of files whose name matches a
                     specified pattern, optionally recursively.
-       fuc-undetm   Compute top unknown barcodes using undertermined FASTQ from bcl2fastq.
+       fuc-undetm   Compute top unknown barcodes using undertermined FASTQ from
+                    bcl2fastq.
        maf-maf2vcf  Convert a MAF file to a VCF file.
        maf-oncoplt  Create an oncoplot with a MAF file.
        maf-sumplt   Create a summary plot with a MAF file.
        maf-vcf2maf  Convert a VCF file to a MAF file.
        ngs-bam2fq   Pipeline for converting BAM files to FASTQ files.
-       ngs-fq2bam   Pipeline for converting FASTQ files to analysis-ready BAM files.
+       ngs-fq2bam   Pipeline for converting FASTQ files to analysis-ready BAM
+                    files.
        ngs-hc       Pipeline for germline short variant discovery.
        ngs-m2       Pipeline for somatic short variant discovery.
        ngs-pon      Pipeline for constructing a panel of normals (PoN).
-       ngs-quant    Pipeline for running RNAseq quantification from FASTQ files 
+       ngs-quant    Pipeline for running RNAseq quantification from FASTQ files
                     with Kallisto.
        ngs-trim     Pipeline for trimming adapters from FASTQ files.
        tabix-index  Index a GFF/BED/SAM/VCF file with Tabix.
        tabix-slice  Slice a GFF/BED/SAM/VCF file with Tabix.
        tbl-merge    Merge two table files.
        tbl-sum      Summarize a table file.
+       vcf-call     Call SNVs and indels from BAM files.
        vcf-filter   Filter a VCF file.
        vcf-index    Index a VCF file.
        vcf-merge    Merge two or more VCF files.

@@ -33,15 +33,18 @@ def create_parser(subparsers):
         api.common._script_name(),
         description=description,
         epilog=epilog,
-        help='Rename the samples in a depth of coverage file.',
+        help=
+"""Rename the samples in a depth of coverage file."""
     )
     parser.add_argument(
         'tsv',
-        help='TSV file (compressed or uncompressed).'
+        help=
+"""TSV file (compressed or uncompressed)."""
     )
     parser.add_argument(
         'names',
-        help='Text file containing information for renaming the samples.'
+        help=
+"""Text file containing information for renaming the samples."""
     )
     parser.add_argument(
         '--mode',
@@ -56,15 +59,17 @@ def create_parser(subparsers):
         metavar='INT',
         type=int,
         nargs=2,
-        help="Index range to use when renaming the samples. \n"
-             "Applicable only with the 'RANGE' mode."
+        help=
+"""Index range to use when renaming the samples.
+Applicable only with the 'RANGE' mode."""
     )
     parser.add_argument(
         '--sep',
         metavar='TEXT',
         default='\t',
-        help="Delimiter to use when reading the names file \n"
-             "(default: '\\t')."
+        help=
+"""Delimiter to use when reading the names file
+(default: '\\t')."""
     )
 
 def main(args):

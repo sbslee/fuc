@@ -74,10 +74,10 @@ Currently, fuc can be used to analyze, summarize, visualize, and manipulate the 
 
 Additionally, fuc can be used to parse output data from the following programs:
 
-- Ensembl Variant Effect Predictor (VEP)
-- SnpEff
-- bcl2fastq and bcl2fastq2
-- Kallisto
+- `Ensembl Variant Effect Predictor (VEP) <https://asia.ensembl.org/info/docs/tools/vep/index.html>`__
+- `SnpEff <http://pcingola.github.io/SnpEff/>`__
+- `bcl2fastq and bcl2fastq2 <https://sapac.support.illumina.com/sequencing/sequencing_software/bcl2fastq-conversion-software.html>`__
+- `Kallisto <https://pachterlab.github.io/kallisto/>`__
 
 Your contributions (e.g. feature ideas, pull requests) are most welcome.
 

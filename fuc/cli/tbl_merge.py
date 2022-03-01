@@ -32,47 +32,55 @@ def create_parser(subparsers):
         api.common._script_name(),
         description=description,
         epilog=epilog,
-        help='Merge two table files.',
+        help=
+"""Merge two table files."""
     )
     parser.add_argument(
         'left',
-        help='Left file.'
+        help=
+"""Input left file."""
     )
     parser.add_argument(
         'right',
-        help='Right file.'
+        help=
+"""Input right file."""
     )
     parser.add_argument(
         '--how',
         metavar='TEXT',
         choices=CHOICES,
         default='inner',
-        help="Type of merge to be performed (default: 'inner') \n"
-             "(choices: 'left', 'right', 'outer', 'inner', 'cross')."
+        help=
+"""Type of merge to be performed (default: 'inner')
+(choices: 'left', 'right', 'outer', 'inner', 'cross')."""
     )
     parser.add_argument(
         '--on',
         metavar='TEXT',
         nargs='+',
-        help='Column names to join on.'
+        help=
+"""Column names to join on."""
     )
     parser.add_argument(
         '--lsep',
         metavar='TEXT',
         default='\t',
-        help="Delimiter to use for the left file (default: '\\t')."
+        help=
+"""Delimiter to use for the left file (default: '\\t')."""
     )
     parser.add_argument(
         '--rsep',
         metavar='TEXT',
         default='\t',
-        help="Delimiter to use for the right file (default: '\\t')."
+        help=
+"""Delimiter to use for the right file (default: '\\t')."""
     )
     parser.add_argument(
         '--osep',
         metavar='TEXT',
         default='\t',
-        help="Delimiter to use for the output file (default: '\\t')."
+        help=
+"""Delimiter to use for the output file (default: '\\t')."""
     )
     return parser
 

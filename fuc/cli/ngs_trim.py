@@ -6,7 +6,7 @@ from .. import api
 
 import pandas as pd
 
-description = f"""
+description = """
 Pipeline for trimming adapters from FASTQ files.
 
 External dependencies:
@@ -34,39 +34,46 @@ def create_parser(subparsers):
         api.common._script_name(),
         description=description,
         epilog=epilog,
-        help='Pipeline for trimming adapters from FASTQ files.',
+        help=
+"""Pipeline for trimming adapters from FASTQ files."""
     )
     parser.add_argument(
         'manifest',
-        help='Sample manifest CSV file.'
+        help=
+"""Sample manifest CSV file."""
     )
     parser.add_argument(
         'output',
         type=os.path.abspath,
-        help='Output directory.'
+        help=
+"""Output directory."""
     )
     parser.add_argument(
         'qsub',
         type=str,
-        help='SGE resoruce to request for qsub.'
+        help=
+"""SGE resoruce to request for qsub."""
     )
     parser.add_argument(
         '--thread',
         metavar='INT',
         type=int,
         default=1,
-        help='Number of threads to use (default: 1).'
+        help=
+"""Number of threads to use (default: 1)."""
     )
     parser.add_argument(
         '--job',
         metavar='TEXT',
         type=str,
-        help='Job submission ID for SGE.'
+        help=
+"""Job submission ID for SGE."""
     )
     parser.add_argument(
         '--force',
         action='store_true',
-        help='Overwrite the output directory if it already exists.'
+        help=
+"""Overwrite the output directory if it already exists."""
     )
 
 def main(args):

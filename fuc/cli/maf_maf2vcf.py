@@ -44,33 +44,39 @@ def create_parser(subparsers):
         api.common._script_name(),
         description=description,
         epilog=epilog,
-        help='Convert a MAF file to a VCF file.',
+        help=
+"""Convert a MAF file to a VCF file."""
     )
     parser.add_argument(
         'maf',
-        help='MAF file (compressed or uncompressed).'
+        help=
+"""MAF file (compressed or uncompressed)."""
     )
     parser.add_argument(
         '--fasta',
         metavar='PATH',
-        help='FASTA file (required to include INDELs in the output).'
+        help=
+"""FASTA file (required to include INDELs in the output)."""
     )
     parser.add_argument(
         '--ignore_indels',
         action='store_true',
-        help='Use this flag to exclude INDELs from the output.'
+        help=
+"""Use this flag to exclude INDELs from the output."""
     )
     parser.add_argument(
         '--cols',
         metavar='TEXT',
         nargs='+',
-        help='Column(s) in the MAF file.'
+        help=
+"""Column(s) in the MAF file."""
     )
     parser.add_argument(
         '--names',
         metavar='TEXT',
         nargs='+',
-        help='Name(s) to be displayed in the FORMAT field.'
+        help=
+"""Name(s) to be displayed in the FORMAT field."""
     )
 
 def main(args):

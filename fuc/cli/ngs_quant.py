@@ -6,7 +6,7 @@ from .. import api
 
 import pandas as pd
 
-description = f"""
+description = """
 Pipeline for running RNAseq quantification from FASTQ files with Kallisto.
 
 External dependencies:
@@ -35,58 +35,68 @@ def create_parser(subparsers):
         api.common._script_name(),
         description=description,
         epilog=epilog,
-        help='Pipeline for running RNAseq quantification from FASTQ files \n'
-             'with Kallisto.',
+        help=
+"""Pipeline for running RNAseq quantification from FASTQ files
+with Kallisto."""
     )
     parser.add_argument(
         'manifest',
-        help='Sample manifest CSV file.'
+        help=
+"""Sample manifest CSV file."""
     )
     parser.add_argument(
         'index',
-        help='Kallisto index file.'
+        help=
+"""Kallisto index file."""
     )
     parser.add_argument(
         'output',
         type=os.path.abspath,
-        help='Output directory.'
+        help=
+"""Output directory."""
     )
     parser.add_argument(
         'qsub',
         type=str,
-        help='SGE resoruce to request for qsub.'
+        help=
+"""SGE resoruce to request for qsub."""
     )
     parser.add_argument(
         '--thread',
         metavar='INT',
         type=int,
         default=1,
-        help='Number of threads to use (default: 1).'
+        help=
+"""Number of threads to use (default: 1)."""
     )
     parser.add_argument(
         '--bootstrap',
         metavar='INT',
         type=int,
         default=50,
-        help='Number of bootstrap samples (default: 50).'
+        help=
+"""Number of bootstrap samples (default: 50)."""
     )
     parser.add_argument(
         '--job',
         metavar='TEXT',
         type=str,
-        help='Job submission ID for SGE.'
+        help=
+"""Job submission ID for SGE."""
     )
     parser.add_argument(
         '--force',
         action='store_true',
-        help='Overwrite the output directory if it already exists.'
+        help=
+"""Overwrite the output directory if it already exists."""
     )
     parser.add_argument(
         '--posix',
         action='store_true',
-        help='Set the environment variable HDF5_USE_FILE_LOCKING=FALSE \n'
-             'before running Kallisto. This is required for shared Posix \n'
-             'Filesystems (e.g. NFS, Lustre).'
+        help=
+"""Set the environment variable HDF5_USE_FILE_LOCKING=FALSE
+before running Kallisto. This is required for shared Posix
+Filesystems (e.g. NFS, Lustre)."""
     )
 
 def main(args):

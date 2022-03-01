@@ -3,7 +3,7 @@ from .. import api
 import pysam
 
 description = """
-Index a SAM/BAM/CRAM file.
+Index a BAM file.
 """
 
 epilog = f"""
@@ -17,11 +17,13 @@ def create_parser(subparsers):
         api.common._script_name(),
         description=description,
         epilog=epilog,
-        help='Index a SAM/BAM/CRAM file.',
+        help=
+"""Index a BAM file."""
     )
     parser.add_argument(
         'bam',
-        help='Alignment file.'
+        help=
+"""Input alignment file."""
     )
 
 def main(args):

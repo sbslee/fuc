@@ -50,50 +50,60 @@ def create_parser(subparsers):
     )
     parser.add_argument(
         'manifest',
-        help='Sample manifest CSV file.'
+        help=
+"""Sample manifest CSV file."""
     )
     parser.add_argument(
         'fasta',
-        help='Reference FASTA file.'
+        help=
+"""Reference FASTA file."""
     )
     parser.add_argument(
         'output',
         type=os.path.abspath,
-        help='Output directory.'
+        help=
+"""Output directory."""
     )
     parser.add_argument(
         'pon',
-        help='PoN VCF file.'
+        help=
+"""PoN VCF file."""
     )
     parser.add_argument(
         'germline',
-        help='Germline VCF file.'
+        help=
+"""Germline VCF file."""
     )
     parser.add_argument(
         'qsub',
         type=str,
-        help='SGE resoruce to request for qsub.'
+        help=
+"""SGE resoruce to request for qsub."""
     )
     parser.add_argument(
         'java',
         type=str,
-        help='Java resoruce to request for GATK.'
+        help=
+"""Java resoruce to request for GATK."""
     )
     parser.add_argument(
         '--bed',
         metavar='PATH',
         type=str,
-        help='BED file.'
+        help=
+"""BED file."""
     )
     parser.add_argument(
         '--force',
         action='store_true',
-        help='Overwrite the output directory if it already exists.'
+        help=
+"""Overwrite the output directory if it already exists."""
     )
     parser.add_argument(
         '--keep',
         action='store_true',
-        help='Keep temporary files.'
+        help=
+"""Keep temporary files."""
     )
 
 def main(args):

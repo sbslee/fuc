@@ -1,6 +1,23 @@
 Changelog
 *********
 
+0.31.0 (2022-03-01)
+-------------------
+
+* Fix bug in :meth:`pykallisto.KallistoFrame.compute_fold_change` method.
+* Add new method :meth:`pyvcf.call` and new command :command:`vcf-call`.
+* Combine optional arguments ``bam`` and ``fn`` into single positional argument ``bams`` for :meth:`pycov.CovFrame.from_bam` method. The same goes for :command:`bam-depth` command (combine ``--bam`` and ``--fn`` into ``bams``).
+* Combine optional arguments ``bed`` and ``region`` into single optional argument ``regions`` for :meth:`pycov.CovFrame.from_bam` method. The same goes for :command:`bam-depth` command (combine ``--bed`` and ``--region`` into ``--regions``).
+* Update :meth:`pycov.CovFrame.from_bam` method and :command:`bam-depth` command to automatically handle the 'chr' string.
+* Rename :meth:`pyvcf.VcfFrame.variants` method to :meth:`pyvcf.VcfFrame.to_variants`.
+* Add new optional arguments ``force`` and ``missing`` to :meth:`pyvcf.row_updateinfo` method.
+* Add new method :meth:`pyvcf.gt_ploidy`.
+* Update :meth:`pyvcf.gt_polyp` method to use :meth:`pyvcf.gt_ploidy` method internally.
+* :issue:`53`: Add new methods to compute AC/AN/AF in the INFO column: :meth:`pyvcf.row_computeinfo` and :meth:`pyvcf.VcfFrame.compute_info`.
+* :issue:`54`: Update :meth:`pyvcf.VcfFrame.cfilter_empty` method so that users can control missingness threshold for filtering samples.
+* Rename :meth:`pyvcf.VcfFrame.cfilter_empty` method to :meth:`pyvcf.VcfFrame.empty_samples`.
+* Update :meth:`common.sort_regions` method to support regions containing an ALT contig (e.g. chr16_KI270854v1_alt).
+
 0.30.0 (2022-02-05)
 -------------------
 

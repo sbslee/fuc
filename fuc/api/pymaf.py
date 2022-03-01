@@ -198,7 +198,8 @@ SNV_CLASSES = {
 SNV_CLASS_ORDER = ['C>A', 'C>G', 'C>T', 'T>A', 'T>C', 'T>G']
 
 class MafFrame:
-    """Class for storing MAF data.
+    """
+    Class for storing MAF data.
 
     Parameters
     ----------
@@ -2367,7 +2368,8 @@ class MafFrame:
         legend_fontsize=12
 
     ):
-        """Create a summary figure for MafFrame.
+        """
+        Create a summary figure for MafFrame.
 
         Parameters
         ----------
@@ -2709,7 +2711,8 @@ class MafFrame:
         return ax
 
     def plot_varcls(self, ax=None, figsize=None, **kwargs):
-        """Create a bar plot for the nonsynonymous variant classes.
+        """
+        Create a bar plot for the nonsynonymous variant classes.
 
         Parameters
         ----------
@@ -3350,7 +3353,7 @@ class MafFrame:
         Returns
         -------
         VcfFrame
-            The VcfFrame object.
+            VcfFrame object.
 
         Examples
         --------
@@ -3454,7 +3457,8 @@ class MafFrame:
         return vf
 
     def to_file(self, fn):
-        """Write MafFrame to a MAF file.
+        """
+        Write MafFrame to a MAF file.
 
         Parameters
         ----------
@@ -3465,7 +3469,8 @@ class MafFrame:
             f.write(self.to_string())
 
     def to_string(self):
-        """Render MafFrame to a console-friendly tabular output.
+        """
+        Render MafFrame to a console-friendly tabular output.
 
         Returns
         -------

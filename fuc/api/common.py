@@ -1316,17 +1316,21 @@ def sort_regions(regions):
     --------
 
     >>> from fuc import common
-    >>> regions = ['22:1000-1500', '16:100-200', '22:200-300']
+    >>> regions = ['chr22:1000-1500', 'chr16:100-200', 'chr22:200-300', 'chr16_KI270854v1_alt', 'chr3_GL000221v1_random', 'HLA-A*02:10']
     >>> sorted(regions) # Lexicographic sorting (not what we want)
-    ['16:100-200', '22:1000-1500', '22:200-300']
+    ['HLA-A*02:10', 'chr16:100-200', 'chr16_KI270854v1_alt', 'chr22:1000-1500', 'chr22:200-300', 'chr3_GL000221v1_random']
     >>> common.sort_regions(regions)
-    ['16:100-200', '22:200-300', '22:1000-1500']
+    ['chr16:100-200', 'chr22:200-300', 'chr22:1000-1500', 'chr16_KI270854v1_alt', 'chr3_GL000221v1_random', 'HLA-A*02:10']
     """
     def func(x):
         chrom, start, end = parse_region(x)
         if chrom in pyvcf.CONTIGS:
             chrom = pyvcf.CONTIGS.index(chrom)
-        return (chrom, start, end)
+            alt = ''
+        else:
+            chrom = len(pyvcf.CONTIGS)
+            alt = chrom
+        return (chrom, alt, start, end)
     return sorted(regions, key=func)
 
 def update_chr_prefix(regions, mode='remove'):

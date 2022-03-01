@@ -32,16 +32,19 @@ def create_parser(subparsers):
         api.common._script_name(),
         description=description,
         epilog=epilog,
-        help='Index a GFF/BED/SAM/VCF file with Tabix.',
+        help=
+"""Index a GFF/BED/SAM/VCF file with Tabix."""
     )
     parser.add_argument(
         'file',
-        help='File to be indexed.'
+        help=
+"""File to be indexed."""
     )
     parser.add_argument(
         '--force',
         action='store_true',
-        help='Force to overwrite the index file if it is present.'
+        help=
+"""Force to overwrite the index file if it is present."""
     )
 
 def main(args):

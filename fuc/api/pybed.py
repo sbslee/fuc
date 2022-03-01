@@ -48,7 +48,8 @@ HEADERS = [
 ]
 
 class BedFrame:
-    """Class for storing BED data.
+    """
+    Class for storing BED data.
 
     Parameters
     ----------
@@ -493,9 +494,9 @@ class BedFrame:
         ...     'End': [40, 50, 25, 35, 60, 80]
         ... }
         >>> bf = pybed.BedFrame.from_dict([], data)
-        >>> bf.regions()
+        >>> bf.to_regions()
         ['chr1:10-50', 'chr2:15-35', 'chr3:50-60', 'chr3:61-80']
-        >>> bf.regions(merge=False)
+        >>> bf.to_regions(merge=False)
         ['chr1:10-40', 'chr1:30-50', 'chr2:15-25', 'chr2:25-35', 'chr3:50-60', 'chr3:61-80']
         """
         if merge:

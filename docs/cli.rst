@@ -18,42 +18,45 @@ For getting help on the fuc CLI:
    
    positional arguments:
      COMMAND
-       bam-aldepth  Compute allelic depth from a SAM/BAM/CRAM file.
-       bam-depth    Compute read depth from SAM/BAM/CRAM files.
-       bam-head     Print the header of a SAM/BAM/CRAM file.
-       bam-index    Index a SAM/BAM/CRAM file.
-       bam-rename   Rename the sample in a SAM/BAM/CRAM file.
-       bam-slice    Slice a SAM/BAM/CRAM file.
+       bam-aldepth  Compute allelic depth from a BAM file.
+       bam-depth    Compute per-base read depth from BAM files.
+       bam-head     Print the header of a BAM file.
+       bam-index    Index a BAM file.
+       bam-rename   Rename the sample in a BAM file.
+       bam-slice    Slice a BAM file.
        bed-intxn    Find the intersection of BED files.
        bed-sum      Summarize a BED file.
        cov-concat   Concatenate depth of coverage files.
        cov-rename   Rename the samples in a depth of coverage file.
-       fa-filter    Filter sequence records in a FASTA file
+       fa-filter    Filter sequence records in a FASTA file.
        fq-count     Count sequence reads in FASTQ files.
        fq-sum       Summarize a FASTQ file.
        fuc-bgzip    Write a BGZF compressed file.
        fuc-compf    Compare the contents of two files.
        fuc-demux    Parse the Reports directory from bcl2fastq.
        fuc-exist    Check whether certain files exist.
-       fuc-find     Retrieve absolute paths of files whose name matches a 
+       fuc-find     Retrieve absolute paths of files whose name matches a
                     specified pattern, optionally recursively.
-       fuc-undetm   Compute top unknown barcodes using undertermined FASTQ from bcl2fastq.
+       fuc-undetm   Compute top unknown barcodes using undertermined FASTQ from
+                    bcl2fastq.
        maf-maf2vcf  Convert a MAF file to a VCF file.
        maf-oncoplt  Create an oncoplot with a MAF file.
        maf-sumplt   Create a summary plot with a MAF file.
        maf-vcf2maf  Convert a VCF file to a MAF file.
        ngs-bam2fq   Pipeline for converting BAM files to FASTQ files.
-       ngs-fq2bam   Pipeline for converting FASTQ files to analysis-ready BAM files.
+       ngs-fq2bam   Pipeline for converting FASTQ files to analysis-ready BAM
+                    files.
        ngs-hc       Pipeline for germline short variant discovery.
        ngs-m2       Pipeline for somatic short variant discovery.
        ngs-pon      Pipeline for constructing a panel of normals (PoN).
-       ngs-quant    Pipeline for running RNAseq quantification from FASTQ files 
+       ngs-quant    Pipeline for running RNAseq quantification from FASTQ files
                     with Kallisto.
        ngs-trim     Pipeline for trimming adapters from FASTQ files.
        tabix-index  Index a GFF/BED/SAM/VCF file with Tabix.
        tabix-slice  Slice a GFF/BED/SAM/VCF file with Tabix.
        tbl-merge    Merge two table files.
        tbl-sum      Summarize a table file.
+       vcf-call     Call SNVs and indels from BAM files.
        vcf-filter   Filter a VCF file.
        vcf-index    Index a VCF file.
        vcf-merge    Merge two or more VCF files.
@@ -81,13 +84,13 @@ bam-aldepth
    $ fuc bam-aldepth -h
    usage: fuc bam-aldepth [-h] bam sites
    
-   Count allelic depth from a SAM/BAM/CRAM file.
+   Count allelic depth from a BAM file.
    
    Positional arguments:
-     bam         Alignment file.
-     sites       TSV file containing two columns, chromosome and position. 
-                 This can also be a BED or VCF file (compressed or 
-                 uncompressed) Input type will be detected automatically.
+     bam         Input alignment file.
+     sites       TSV file containing two columns, chromosome and position. This
+                 can also be a BED or VCF file (compressed or uncompressed). 
+                 Input type will be detected automatically.
    
    Optional arguments:
      -h, --help  Show this help message and exit.
@@ -104,36 +107,43 @@ bam-depth
 .. code-block:: text
 
    $ fuc bam-depth -h
-   usage: fuc bam-depth [-h] [--bam PATH [PATH ...]] [--fn PATH] [--bed PATH]
-                        [--region TEXT] [--zero]
+   usage: fuc bam-depth [-h] [-r TEXT [TEXT ...]] [--zero] bams [bams ...]
    
-   Compute read depth from SAM/BAM/CRAM files.
+   Compute per-base read depth from BAM files.
    
-   By default, the command will count all reads within the alignment files. You
-   can specify regions of interest with --bed or --region. When you do this, pay
-   close attention to the 'chr' string in contig names (e.g. 'chr1' vs. '1').
-   Note also that --region requires the input files be indexed.
+   Under the hood, the command computes read depth using the 'samtools depth'
+   command.
+   
+   Positional arguments:
+     bams                  One or more input BAM files. Alternatively, you can
+                           provide a text file (.txt, .tsv, .csv, or .list)
+                           containing one BAM file per line.
    
    Optional arguments:
      -h, --help            Show this help message and exit.
-     --bam PATH [PATH ...]
-                           One or more alignment files. Cannot be used with --fn.
-     --fn PATH             File containing one alignment file per line. Cannot 
-                           be used with --bam.
-     --bed PATH            BED file. Cannot be used with --region.
-     --region TEXT         Target region ('chrom:start-end'). Cannot be used 
-                           with --bed.
+     -r TEXT [TEXT ...], --regions TEXT [TEXT ...]
+                           By default, the command counts all reads in BAM
+                           files, which can be excruciatingly slow for large
+                           files (e.g. whole genome sequencing). Therefore, use
+                           this argument to only output positions in given
+                           regions. Each region must have the format
+                           chrom:start-end and be a half-open interval with
+                           (start, end]. This means, for example, chr1:100-103
+                           will extract positions 101, 102, and 103.
+                           Alternatively, you can provide a BED file (compressed
+                           or uncompressed) to specify regions. Note that the
+                           'chr' prefix in contig names (e.g. 'chr1' vs. '1')
+                           will be automatically added or removed as necessary
+                           to match the input BAM's contig names.
      --zero                Output all positions including those with zero depth.
    
-   [Example] To specify regions with a BED file:
-     $ fuc bam-depth \
-     --bam 1.bam 2.bam \
-     --bed in.bed > out.tsv
+   [Example] Specify regions manually:
+     $ fuc bam-depth 1.bam 2.bam \
+     -r chr1:100-200 chr2:400-500 > out.tsv
    
-   [Example] To specify regions manually:
-     $ fuc bam-depth \
-     --fn bam.list \
-     --region chr1:100-200 > out.tsv
+   [Example] Specify regions with a BED file:
+     $ fuc bam-depth bam.list \
+     -r in.bed > out.tsv
 
 bam-head
 ========
@@ -143,10 +153,10 @@ bam-head
    $ fuc bam-head -h
    usage: fuc bam-head [-h] bam
    
-   Print the header of a SAM/BAM/CRAM file.
+   Print the header of a BAM file.
    
    Positional arguments:
-     bam         Alignment file.
+     bam         Input alignment file.
    
    Optional arguments:
      -h, --help  Show this help message and exit.
@@ -162,10 +172,10 @@ bam-index
    $ fuc bam-index -h
    usage: fuc bam-index [-h] bam
    
-   Index a SAM/BAM/CRAM file.
+   Index a BAM file.
    
    Positional arguments:
-     bam         Alignment file.
+     bam         Input alignment file.
    
    Optional arguments:
      -h, --help  Show this help message and exit.
@@ -181,10 +191,10 @@ bam-rename
    $ fuc bam-rename -h
    usage: fuc bam-rename [-h] bam name
    
-   Rename the sample in a SAM/BAM/CRAM file.
+   Rename the sample in a BAM file.
    
    Positional arguments:
-     bam         Alignment file.
+     bam         Input alignment file.
      name        New sample name.
    
    Optional arguments:
@@ -202,24 +212,24 @@ bam-slice
    usage: fuc bam-slice [-h] [--format TEXT] [--fasta PATH]
                         bam regions [regions ...]
    
-   Slice an alignment file (SAM/BAM/CRAM).
+   Slice a BAM file.
    
    Positional arguments:
-     bam            Input alignment file must be already indexed (.bai) to allow 
-                    random access. You can index an alignment file with the 
+     bam            Input alignment file must be already indexed (.bai) to allow
+                    random access. You can index an alignment file with the
                     bam-index command.
-     regions        One or more regions to be sliced. Each region must have the 
-                    format chrom:start-end and be a half-open interval with 
-                    (start, end]. This means, for example, chr1:100-103 will 
-                    extract positions 101, 102, and 103. Alternatively, you can 
-                    provide a BED file (compressed or uncompressed) to specify 
-                    regions. Note that the 'chr' prefix in contig names (e.g. 
-                    'chr1' vs. '1') will be automatically added or removed as 
+     regions        One or more regions to be sliced. Each region must have the
+                    format chrom:start-end and be a half-open interval with
+                    (start, end]. This means, for example, chr1:100-103 will
+                    extract positions 101, 102, and 103. Alternatively, you can
+                    provide a BED file (compressed or uncompressed) to specify
+                    regions. Note that the 'chr' prefix in contig names (e.g.
+                    'chr1' vs. '1') will be automatically added or removed as
                     necessary to match the input BED's contig names.
    
    Optional arguments:
      -h, --help     Show this help message and exit.
-     --format TEXT  Output format (default: 'BAM') (choices: 'SAM', 'BAM', 
+     --format TEXT  Output format (default: 'BAM') (choices: 'SAM', 'BAM',
                     'CRAM').
      --fasta PATH   FASTA file. Required when --format is 'CRAM'.
    
@@ -243,7 +253,7 @@ bed-intxn
    Find the intersection of BED files.
    
    Positional arguments:
-     bed         BED files.
+     bed         Input BED files.
    
    Optional arguments:
      -h, --help  Show this help message and exit.
@@ -269,7 +279,7 @@ bed-sum
    can, for example, use '--bases 1000' to display in kb.
    
    Positional arguments:
-     bed             BED file.
+     bed             Input BED file.
    
    Optional arguments:
      -h, --help      Show this help message and exit.
@@ -282,16 +292,16 @@ cov-concat
 .. code-block:: text
 
    $ fuc cov-concat -h
-   usage: fuc cov-concat [-h] [--axis INT] PATH [PATH ...]
+   usage: fuc cov-concat [-h] [--axis INT] tsv [tsv ...]
    
    Concatenate depth of coverage files.
    
    Positional arguments:
-     PATH        One or more TSV files.
+     tsv         Input TSV files.
    
    Optional arguments:
      -h, --help  Show this help message and exit.
-     --axis INT  The axis to concatenate along (default: 0) (choices: 
+     --axis INT  The axis to concatenate along (default: 0) (choices:
                  0, 1 where 0 is index and 1 is columns).
    
    [Example] Concatenate vertically:
@@ -327,9 +337,9 @@ cov-rename
      -h, --help       Show this help message and exit.
      --mode TEXT      Renaming mode (default: 'MAP') (choices: 'MAP', 
                       'INDEX', 'RANGE').
-     --range INT INT  Index range to use when renaming the samples. 
+     --range INT INT  Index range to use when renaming the samples.
                       Applicable only with the 'RANGE' mode.
-     --sep TEXT       Delimiter to use when reading the names file 
+     --sep TEXT       Delimiter to use when reading the names file
                       (default: '\t').
    
    [Example] Using the default 'MAP' mode:
@@ -352,13 +362,13 @@ fa-filter
    Filter sequence records in a FASTA file.
    
    Positional arguments:
-     fasta                 FASTA file (compressed or uncompressed).
+     fasta                 Input FASTA file (compressed or uncompressed).
    
    Optional arguments:
      -h, --help            Show this help message and exit.
      --contigs TEXT [TEXT ...]
-                           One or more contigs to be selected. Alternatively, you can 
-                           provide a file containing one contig per line. 
+                           One or more contigs to be selected. Alternatively, you can
+                           provide a file containing one contig per line.
      --exclude             Exclude specified contigs.
    
    [Example] Select certain contigs:
@@ -378,7 +388,7 @@ fq-count
    Count sequence reads in FASTQ files.
    
    Positional arguments:
-     fastq       FASTQ files (compressed or uncompressed) (default: stdin).
+     fastq       Input FASTQ files (compressed or uncompressed) (default: stdin).
    
    Optional arguments:
      -h, --help  Show this help message and exit.
@@ -404,7 +414,7 @@ fq-sum
    lengths, and the numbers of unique and duplicate sequences.
    
    Positional arguments:
-     fastq       FASTQ file (zipped or unqzipped).
+     fastq       Input FASTQ file (compressed or uncompressed).
    
    Optional arguments:
      -h, --help  Show this help message and exit.
@@ -429,7 +439,7 @@ fuc-bgzip
    formats (e.g. FASTA, FASTQ, GenBank, VCF, MAF).
    
    Positional arguments:
-     file        File to be compressed (default: stdin).
+     file        Input file to be compressed (default: stdin).
    
    Optional arguments:
      -h, --help  Show this help message and exit.
@@ -454,8 +464,8 @@ fuc-compf
    are identical and 'False' otherwise.
    
    Positional arguments:
-     left        Left file.
-     right       Right file.
+     left        Input left file.
+     right       Input right file.
    
    Optional arguments:
      -h, --help  Show this help message and exit.
@@ -487,12 +497,12 @@ fuc-demux
    reports.pdf files.
    
    Positional arguments:
-     reports       Reports directory.
+     reports       Input Reports directory.
      output        Output directory (will be created).
    
    Optional arguments:
      -h, --help    Show this help message and exit.
-     --sheet PATH  SampleSheet.csv file. Used for sorting and/or subsetting 
+     --sheet PATH  SampleSheet.csv file. Used for sorting and/or subsetting
                    samples.
 
 fuc-exist
@@ -646,7 +656,7 @@ maf-oncoplt
    determined by the output file's extension.
    
    Positional arguments:
-     maf                   MAF file.
+     maf                   Input MAF file.
      out                   Output image file.
    
    Optional arguments:
@@ -683,19 +693,19 @@ maf-sumplt
    determined by the output file's extension.
    
    Positional arguments:
-     maf                   MAF file.
+     maf                   Input MAF file.
      out                   Output image file.
    
    Optional arguments:
      -h, --help            Show this help message and exit.
      --figsize FLOAT FLOAT
-                           width, height in inches (default: [15, 10])
+                           Width, height in inches (default: [15, 10]).
      --title_fontsize FLOAT
-                           font size of subplot titles (default: 16)
+                           Font size of subplot titles (default: 16).
      --ticklabels_fontsize FLOAT
-                           font size of tick labels (default: 12)
+                           Font size of tick labels (default: 12).
      --legend_fontsize FLOAT
-                           font size of legend texts (default: 12)
+                           Font size of legend texts (default: 12).
    
    [Example] Output a PNG file:
      $ fuc maf-sumplt in.maf out.png
@@ -747,9 +757,9 @@ ngs-bam2fq
    Positional arguments:
      manifest      Sample manifest CSV file.
      output        Output directory.
-     qsub          SGE resoruce to request with qsub for BAM to FASTQ 
-                   conversion. Since this oppoeration supports multithreading, 
-                   it is recommended to speicfy a parallel environment (PE) 
+     qsub          SGE resoruce to request with qsub for BAM to FASTQ
+                   conversion. Since this oppoeration supports multithreading,
+                   it is recommended to speicfy a parallel environment (PE)
                    to speed up the process (also see --thread).
    
    Optional arguments:
@@ -805,7 +815,7 @@ ngs-fq2bam
      output           Output directory.
      qsub             SGE resoruce to request for qsub.
      java             Java resoruce to request for GATK.
-     vcf              One or more reference VCF files containing known variant 
+     vcf              One or more reference VCF files containing known variant
                       sites (e.g. 1000 Genomes Project).
    
    Optional arguments:
@@ -869,20 +879,20 @@ ngs-hc
      --bed PATH    BED file.
      --dbsnp PATH  VCF file from dbSNP.
      --thread INT  Number of threads to use (default: 1).
-     --batch INT   Batch size used for GenomicsDBImport (default: 0). This 
-                   controls the number of samples for which readers are 
-                   open at once and therefore provides a way to minimize 
-                   memory consumption. The size of 0 means no batching (i.e. 
+     --batch INT   Batch size used for GenomicsDBImport (default: 0). This
+                   controls the number of samples for which readers are
+                   open at once and therefore provides a way to minimize
+                   memory consumption. The size of 0 means no batching (i.e.
                    readers for all samples will be opened at once).
      --job TEXT    Job submission ID for SGE.
      --force       Overwrite the output directory if it already exists.
      --keep        Keep temporary files.
-     --posix       Set GenomicsDBImport to allow for optimizations to improve 
-                   the usability and performance for shared Posix Filesystems 
-                   (e.g. NFS, Lustre). If set, file level locking is disabled 
-                   and file system writes are minimized by keeping a higher 
-                   number of file descriptors open for longer periods of time. 
-                   Use with --batch if keeping a large number of file 
+     --posix       Set GenomicsDBImport to allow for optimizations to improve
+                   the usability and performance for shared Posix Filesystems
+                   (e.g. NFS, Lustre). If set, file level locking is disabled
+                   and file system writes are minimized by keeping a higher
+                   number of file descriptors open for longer periods of time.
+                   Use with --batch if keeping a large number of file
                    descriptors open is an issue.
    
    [Example] Specify queue:
@@ -1018,8 +1028,8 @@ ngs-quant
      --bootstrap INT  Number of bootstrap samples (default: 50).
      --job TEXT       Job submission ID for SGE.
      --force          Overwrite the output directory if it already exists.
-     --posix          Set the environment variable HDF5_USE_FILE_LOCKING=FALSE 
-                      before running Kallisto. This is required for shared Posix 
+     --posix          Set the environment variable HDF5_USE_FILE_LOCKING=FALSE
+                      before running Kallisto. This is required for shared Posix
                       Filesystems (e.g. NFS, Lustre).
    
    [Example] Specify queue:
@@ -1144,12 +1154,12 @@ tbl-merge
    method's documentation page.
    
    Positional arguments:
-     left                  Left file.
-     right                 Right file.
+     left                  Input left file.
+     right                 Input right file.
    
    Optional arguments:
      -h, --help            Show this help message and exit.
-     --how TEXT            Type of merge to be performed (default: 'inner') 
+     --how TEXT            Type of merge to be performed (default: 'inner')
                            (choices: 'left', 'right', 'outer', 'inner', 'cross').
      --on TEXT [TEXT ...]  Column names to join on.
      --lsep TEXT           Delimiter to use for the left file (default: '\t').
@@ -1184,31 +1194,79 @@ tbl-sum
    Optional arguments:
      -h, --help            Show this help message and exit.
      --sep TEXT            Delimiter to use (default: '\t').
-     --skiprows TEXT       Comma-separated line numbers to skip (0-indexed) or 
-                           number of lines to skip at the start of the file 
-                           (e.g. `--skiprows 1,` will skip the second line, 
-                           `--skiprows 2,4` will skip the third and fifth lines, 
+     --skiprows TEXT       Comma-separated line numbers to skip (0-indexed) or
+                           number of lines to skip at the start of the file
+                           (e.g. `--skiprows 1,` will skip the second line,
+                           `--skiprows 2,4` will skip the third and fifth lines,
                            and `--skiprows 10` will skip the first 10 lines).
      --na_values TEXT [TEXT ...]
-                           Additional strings to recognize as NA/NaN (by 
-                           default, the following values are interpreted 
-                           as NaN: '', '#N/A', '#N/A N/A', '#NA', '-1.#IND', 
-                           '-1.#QNAN', '-NaN', '-nan', '1.#IND', '1.#QNAN', 
-                           '<NA>', 'N/A', 'NA', 'NULL', 'NaN', 'n/a', 'nan', 
+                           Additional strings to recognize as NA/NaN (by
+                           default, the following values are interpreted
+                           as NaN: '', '#N/A', '#N/A N/A', '#NA', '-1.#IND',
+                           '-1.#QNAN', '-NaN', '-nan', '1.#IND', '1.#QNAN',
+                           '<NA>', 'N/A', 'NA', 'NULL', 'NaN', 'n/a', 'nan',
                            'null').
-     --keep_default_na     Whether or not to include the default NaN values when 
+     --keep_default_na     Whether or not to include the default NaN values when
                            parsing the data (see 'pandas.read_table' for details).
-     --expr TEXT           Query the columns of a pandas.DataFrame with a 
+     --expr TEXT           Query the columns of a pandas.DataFrame with a
                            boolean expression (e.g. `--query "A == 'yes'"`).
      --columns TEXT [TEXT ...]
-                           Columns to be summarized (by default, all columns 
+                           Columns to be summarized (by default, all columns
                            will be included).
-     --dtypes PATH         File of column names and their data types (either 
-                           'categorical' or 'numeric'); one tab-delimited pair of 
+     --dtypes PATH         File of column names and their data types (either
+                           'categorical' or 'numeric'); one tab-delimited pair of
                            column name and data type per line.
    
    [Example] Summarize a table:
      $ fuc tbl-sum table.tsv
+
+vcf-call
+========
+
+.. code-block:: text
+
+   $ fuc vcf-call -h
+   usage: fuc vcf-call [-h] [-r TEXT [TEXT ...]] [--min-mq INT] [--max-depth INT]
+                       fasta bams [bams ...]
+   
+   Call SNVs and indels from BAM files.
+   
+   Under the hood, the command utilizes the bcftool program to call variants.
+   
+   Positional arguments:
+     fasta                 Reference FASTA file.
+     bams                  One or more input BAM files. Alternatively, you can
+                           provide a text file (.txt, .tsv, .csv, or .list)
+                           containing one BAM file per line.
+   
+   Optional arguments:
+     -h, --help            Show this help message and exit.
+     -r TEXT [TEXT ...], --regions TEXT [TEXT ...]
+                           By default, the command looks at each genomic
+                           position with coverage in BAM files, which can be
+                           excruciatingly slow for large files (e.g. whole
+                           genome sequencing). Therefore, use this argument to
+                           only call variants in given regions. Each region must
+                           have the format chrom:start-end and be a half-open
+                           interval with (start, end]. This means, for example,
+                           chr1:100-103 will extract positions 101, 102, and
+                           103. Alternatively, you can provide a BED file
+                           (compressed or uncompressed) to specify regions. Note
+                           that the 'chr' prefix in contig names (e.g. 'chr1'
+                           vs. '1') will be automatically added or removed as
+                           necessary to match the input BAM's contig names.
+     --min-mq INT          Minimum mapping quality for an alignment to be used
+                           (default: 1).
+     --max-depth INT       At a position, read maximally this number of reads
+                           per input file (default: 250).
+   
+   [Example] Specify regions manually:
+     $ fuc vcf-call ref.fa 1.bam 2.bam \
+     -r chr1:100-200 chr2:400-500 > out.vcf
+   
+   [Example] Specify regions with a BED file:
+     $ fuc vcf-call ref.fa bam.list \
+     -r in.bed > out.vcf
 
 vcf-filter
 ==========
@@ -1229,17 +1287,17 @@ vcf-filter
    Optional arguments:
      -h, --help            Show this help message and exit.
      --expr TEXT           Expression to evaluate.
-     --samples PATH        File of sample names to apply the marking (one 
+     --samples PATH        File of sample names to apply the marking (one
                            sample per line).
      --drop_duplicates [TEXT ...]
-                           Only consider certain columns for identifying 
+                           Only consider certain columns for identifying
                            duplicates, by default use all of the columns.
-     --greedy              Use this flag to mark even ambiguous genotypes 
+     --greedy              Use this flag to mark even ambiguous genotypes
                            as missing.
-     --opposite            Use this flag to mark all genotypes that do not 
-                           satisfy the query expression as missing and leave 
+     --opposite            Use this flag to mark all genotypes that do not
+                           satisfy the query expression as missing and leave
                            those that do intact.
-     --filter_empty        Use this flag to remove rows with no genotype 
+     --filter_empty        Use this flag to remove rows with no genotype
                            calls at all.
    
    [Example] Mark genotypes with 0/0 as missing:
@@ -1280,8 +1338,8 @@ vcf-index
    This command will create an index file (.tbi) for the input VCF.
    
    Positional arguments:
-     vcf         Input VCF file to be indexed. When an uncompressed file is 
-                 given, the command will automatically create a BGZF 
+     vcf         Input VCF file to be indexed. When an uncompressed file is
+                 given, the command will automatically create a BGZF
                  compressed copy of the file (.gz) before indexing.
    
    Optional arguments:
@@ -1307,19 +1365,19 @@ vcf-merge
    
    Positional arguments:
      vcf_files      VCF files (compressed or uncompressed). Note that the 'chr'
-                    prefix in contig names (e.g. 'chr1' vs. '1') will be 
-                    automatically added or removed as necessary to match the 
+                    prefix in contig names (e.g. 'chr1' vs. '1') will be
+                    automatically added or removed as necessary to match the
                     contig names of the first VCF.
    
    Optional arguments:
      -h, --help     Show this help message and exit.
-     --how TEXT     Type of merge as defined in pandas.DataFrame.merge 
+     --how TEXT     Type of merge as defined in pandas.DataFrame.merge
                     (default: 'inner').
-     --format TEXT  FORMAT subfields to be retained (e.g. 'GT:AD:DP') 
+     --format TEXT  FORMAT subfields to be retained (e.g. 'GT:AD:DP')
                     (default: 'GT').
-     --sort         Use this flag to turn off sorting of records 
+     --sort         Use this flag to turn off sorting of records
                     (default: True).
-     --collapse     Use this flag to collapse duplicate records 
+     --collapse     Use this flag to collapse duplicate records
                     (default: False).
    
    [Example] Merge multiple VCF files:
@@ -1353,9 +1411,9 @@ vcf-rename
    
    Optional arguments:
      -h, --help       Show this help message and exit.
-     --mode TEXT      Renaming mode (default: 'MAP') (choices: 'MAP', 
+     --mode TEXT      Renaming mode (default: 'MAP') (choices: 'MAP',
                       'INDEX', 'RANGE').
-     --range INT INT  Index range to use when renaming the samples. 
+     --range INT INT  Index range to use when renaming the samples.
                       Applicable only with the 'RANGE' mode.
      --sep TEXT       Delimiter to use for reading the 'names' file 
                       (default: '\t').
@@ -1380,17 +1438,17 @@ vcf-slice
    Slice a VCF file for specified regions.
    
    Positional arguments:
-     vcf         Input VCF file must be already BGZF compressed (.gz) and 
-                 indexed (.tbi) to allow random access. A VCF file can be 
-                 compressed with the fuc-bgzip command and indexed with the 
+     vcf         Input VCF file must be already BGZF compressed (.gz) and
+                 indexed (.tbi) to allow random access. A VCF file can be
+                 compressed with the fuc-bgzip command and indexed with the
                  vcf-index command.
-     regions     One or more regions to be sliced. Each region must have the 
-                 format chrom:start-end and be a half-open interval with 
-                 (start, end]. This means, for example, chr1:100-103 will 
-                 extract positions 101, 102, and 103. Alternatively, you can 
-                 provide a BED file (compressed or uncompressed) to specify 
-                 regions. Note that the 'chr' prefix in contig names (e.g. 
-                 'chr1' vs. '1') will be automatically added or removed as 
+     regions     One or more regions to be sliced. Each region must have the
+                 format chrom:start-end and be a half-open interval with
+                 (start, end]. This means, for example, chr1:100-103 will
+                 extract positions 101, 102, and 103. Alternatively, you can
+                 provide a BED file (compressed or uncompressed) to specify
+                 regions. Note that the 'chr' prefix in contig names (e.g.
+                 'chr1' vs. '1') will be automatically added or removed as
                  necessary to match the input VCF's contig names.
    
    Optional arguments:
@@ -1421,8 +1479,8 @@ vcf-split
    
    Optional arguments:
      -h, --help  Show this help message and exit.
-     --clean     By default, the command will only return variants present in 
-                 each individual. Use the tag to stop this behavior and make 
+     --clean     By default, the command will only return variants present in
+                 each individual. Use the tag to stop this behavior and make
                  sure that all individuals have the same number of variants.
      --force     Overwrite the output directory if it already exists.
    
@@ -1464,7 +1522,7 @@ vcf-vep
    
    Optional arguments:
      -h, --help  Show this help message and exit.
-     --opposite  Use this flag to return only records that don't 
+     --opposite  Use this flag to return only records that don't
                  meet the said criteria.
      --as_zero   Use this flag to treat missing values as zero instead of NaN.
    

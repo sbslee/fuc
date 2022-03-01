@@ -2,7 +2,7 @@ import sys
 
 from .. import api
 
-description = f"""
+description = """
 Filter a VCF file by annotations from Ensembl VEP.
 """
 
@@ -37,26 +37,31 @@ def create_parser(subparsers):
         api.common._script_name(),
         description=description,
         epilog=epilog,
-        help='Filter a VCF file by annotations from Ensembl VEP.',
+        help=
+"""Filter a VCF file by annotations from Ensembl VEP."""
     )
     parser.add_argument(
         'vcf',
-        help='VCF file annotated by Ensembl VEP (compressed or uncompressed).'
+        help=
+"""VCF file annotated by Ensembl VEP (compressed or uncompressed)."""
     )
     parser.add_argument(
         'expr',
-        help='Query expression to evaluate.'
+        help=
+"""Query expression to evaluate."""
     )
     parser.add_argument(
         '--opposite',
         action='store_true',
-        help="Use this flag to return only records that don't \n"
-             "meet the said criteria."
+        help=
+"""Use this flag to return only records that don't
+meet the said criteria."""
     )
     parser.add_argument(
         '--as_zero',
         action='store_true',
-        help='Use this flag to treat missing values as zero instead of NaN.'
+        help=
+"""Use this flag to treat missing values as zero instead of NaN."""
     )
 
 def main(args):

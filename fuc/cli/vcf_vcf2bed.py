@@ -17,11 +17,13 @@ def create_parser(subparsers):
         api.common._script_name(),
         description=description,
         epilog=epilog,
-        help='Convert a VCF file to a BED file.',
+        help=
+"""Convert a VCF file to a BED file."""
     )
     parser.add_argument(
         'vcf',
-        help='VCF file (compressed or uncompressed).'
+        help=
+"""VCF file (compressed or uncompressed)."""
     )
 
 def main(args):

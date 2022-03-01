@@ -28,12 +28,14 @@ def create_parser(subparsers):
         api.common._script_name(),
         description=description,
         epilog=epilog,
-        help='Write a BGZF compressed file.',
+        help=
+"""Write a BGZF compressed file."""
     )
     parser.add_argument(
         'file',
         nargs='*',
-        help='File to be compressed (default: stdin).'
+        help=
+"""Input file to be compressed (default: stdin)."""
     )
 
 def main(args):

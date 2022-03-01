@@ -23,15 +23,18 @@ def create_parser(subparsers):
         api.common._script_name(),
         description=description,
         epilog=epilog,
-        help='Create a summary plot with a MAF file.',
+        help=
+"""Create a summary plot with a MAF file."""
     )
     parser.add_argument(
         'maf',
-        help='MAF file.'
+        help=
+"""Input MAF file."""
     )
     parser.add_argument(
         'out',
-        help='Output image file.'
+        help=
+"""Output image file."""
     )
     parser.add_argument(
         '--figsize',
@@ -39,28 +42,32 @@ def create_parser(subparsers):
         type=float,
         default=[15, 10],
         nargs=2,
-        help='width, height in inches (default: [15, 10])'
+        help=
+"""Width, height in inches (default: [15, 10])."""
     )
     parser.add_argument(
         '--title_fontsize',
         metavar='FLOAT',
         type=float,
         default=16,
-        help='font size of subplot titles (default: 16)'
+        help=
+"""Font size of subplot titles (default: 16)."""
     )
     parser.add_argument(
         '--ticklabels_fontsize',
         metavar='FLOAT',
         type=float,
         default=12,
-        help='font size of tick labels (default: 12)'
+        help=
+"""Font size of tick labels (default: 12)."""
     )
     parser.add_argument(
         '--legend_fontsize',
         metavar='FLOAT',
         type=float,
         default=12,
-        help='font size of legend texts (default: 12)'
+        help=
+"""Font size of legend texts (default: 12)."""
     )
 
 def main(args):

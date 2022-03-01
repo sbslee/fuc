@@ -163,7 +163,7 @@ class KallistoFrame:
         df = getattr(self, f'df_gene_{unit}')
         df = df[df.index.isin(genes)].T
         df = df.merge(self.metadata[group], left_index=True, right_index=True)
-        df = df.groupby('lauren').mean().T
+        df = df.groupby(group).mean().T
         a, b = df.columns
         if flip:
             a, b = b, a

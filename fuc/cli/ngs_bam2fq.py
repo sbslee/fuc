@@ -6,7 +6,7 @@ from .. import api
 
 import pandas as pd
 
-description = f"""
+description = """
 Pipeline for converting BAM files to FASTQ files.
 
 This pipeline will assume input BAM files consist of paired-end reads
@@ -44,36 +44,42 @@ def create_parser(subparsers):
         api.common._script_name(),
         description=description,
         epilog=epilog,
-        help='Pipeline for converting BAM files to FASTQ files.',
+        help=
+"""Pipeline for converting BAM files to FASTQ files."""
     )
     parser.add_argument(
         'manifest',
-        help='Sample manifest CSV file.'
+        help=
+"""Sample manifest CSV file."""
     )
     parser.add_argument(
         'output',
         type=os.path.abspath,
-        help='Output directory.'
+        help=
+"""Output directory."""
     )
     parser.add_argument(
         'qsub',
         type=str,
-        help="SGE resoruce to request with qsub for BAM to FASTQ \n"
-             "conversion. Since this oppoeration supports multithreading, \n"
-             "it is recommended to speicfy a parallel environment (PE) \n"
-             "to speed up the process (also see --thread)."
+        help=
+"""SGE resoruce to request with qsub for BAM to FASTQ
+conversion. Since this oppoeration supports multithreading,
+it is recommended to speicfy a parallel environment (PE)
+to speed up the process (also see --thread)."""
     )
     parser.add_argument(
         '--thread',
         metavar='INT',
         type=int,
         default=1,
-        help='Number of threads to use (default: 1).'
+        help=
+"""Number of threads to use (default: 1)."""
     )
     parser.add_argument(
         '--force',
         action='store_true',
-        help='Overwrite the output directory if it already exists.'
+        help=
+"""Overwrite the output directory if it already exists."""
     )
 
 def main(args):
