@@ -216,7 +216,8 @@ FORMAT_SPECIAL_KEYS = {
 }
 
 def call(
-    fasta, bams, regions=None, path=None, min_mq=1, max_depth=250
+    fasta, bams, regions=None, path=None, min_mq=1, max_depth=250,
+    dir_path=None
 ):
     """
     Call SNVs and indels from BAM files.
@@ -249,6 +250,11 @@ def call(
         Minimum mapping quality for an alignment to be used.
     max_depth : int, default: 250
         At a position, read maximally this number of reads per input file.
+    dir_path : str, optional
+        By default, intermediate files (likelihoods.bcf, calls.bcf, and
+        calls.normalized.bcf) will be stored in a temporary directory, which
+        is automatically deleted after creating final VCF. If you provide a
+        directory path, intermediate files will be stored there.
 
     Returns
     -------
@@ -281,41 +287,48 @@ def call(
             regions = common.sort_regions(regions)
         regions = [chr_prefix + x.replace('chr', '') for x in regions]
 
-    with tempfile.TemporaryDirectory() as t:
-        # Step 1: Get genotype likelihoods.
-        args = ['-Ou', '-a', 'AD']
-        args += ['-q', str(min_mq)]
-        args += ['--max-depth', str(max_depth)]
-        args += ['-f', fasta]
-        if regions is not None:
-            args += ['-r', ','.join(regions)]
-        results = bcftools.mpileup(*(args + bams))
-        with open(f'{t}/likelihoods.bcf', 'wb') as f:
+    if dir_path is None:
+        temp_dir = tempfile.TemporaryDirectory()
+    else:
+        temp_dir = dir_path
+
+    # Step 1: Get genotype likelihoods.
+    args = ['-Ou', '-a', 'AD']
+    args += ['-q', str(min_mq)]
+    args += ['--max-depth', str(max_depth)]
+    args += ['-f', fasta]
+    if regions is not None:
+        args += ['-r', ','.join(regions)]
+    results = bcftools.mpileup(*(args + bams))
+    with open(f'{temp_dir}/likelihoods.bcf', 'wb') as f:
+        f.write(results)
+
+    # Step 2: Call variants.
+    args = [f'{temp_dir}/likelihoods.bcf', '-Oz', '-mv']
+    results = bcftools.call(*args)
+    with open(f'{temp_dir}/calls.bcf', 'wb') as f:
+        f.write(results)
+
+    # Step 3: Normalize indels.
+    args = [f'{temp_dir}/calls.bcf', '-Ob', '-f', fasta]
+    results = bcftools.norm(*args)
+    with open(f'{temp_dir}/calls.normalized.bcf', 'wb') as f:
+        f.write(results)
+
+    # Step 4: Filter variant.
+    args = [f'{temp_dir}/calls.normalized.bcf', '-Ov', '--IndelGap', '5']
+    results = bcftools.filter(*args)
+
+    if path is None:
+        return results
+    elif path == '-':
+        sys.stdout.write(results)
+    else:
+        with open(path, 'w') as f:
             f.write(results)
 
-        # Step 2: Call variants.
-        args = [f'{t}/likelihoods.bcf', '-Oz', '-mv']
-        results = bcftools.call(*args)
-        with open(f'{t}/calls.bcf', 'wb') as f:
-            f.write(results)
-
-        # Step 3: Normalize indels.
-        args = [f'{t}/calls.bcf', '-Ob', '-f', fasta]
-        results = bcftools.norm(*args)
-        with open(f'{t}/calls.normalized.bcf', 'wb') as f:
-            f.write(results)
-
-        # Step 4: Filter variant.
-        args = [f'{t}/calls.normalized.bcf', '-Ov', '--IndelGap', '5']
-        results = bcftools.filter(*args)
-
-        if path is None:
-            return results
-        elif path == '-':
-            sys.stdout.write(results)
-        else:
-            with open(path, 'w') as f:
-                f.write(results)
+    if dir_path is None:
+        temp_dir.cleanup()
 
 def rescue_filtered_variants(vfs, format='GT'):
     """

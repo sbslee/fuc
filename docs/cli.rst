@@ -1227,6 +1227,7 @@ vcf-call
 
    $ fuc vcf-call -h
    usage: fuc vcf-call [-h] [-r TEXT [TEXT ...]] [--min-mq INT] [--max-depth INT]
+                       [--dir-path PATH]
                        fasta bams [bams ...]
    
    Call SNVs and indels from BAM files.
@@ -1259,6 +1260,12 @@ vcf-call
                            (default: 1).
      --max-depth INT       At a position, read maximally this number of reads
                            per input file (default: 250).
+     --dir-path PATH       By default, intermediate files (likelihoods.bcf,
+                           calls.bcf, and calls.normalized.bcf) will be stored
+                           in a temporary directory, which is automatically
+                           deleted after creating final VCF. If you provide a
+                           directory path, intermediate files will be stored
+                           there.
    
    [Example] Specify regions manually:
      $ fuc vcf-call ref.fa 1.bam 2.bam \

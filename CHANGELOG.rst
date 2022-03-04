@@ -4,6 +4,9 @@ Changelog
 0.32.0 (in development)
 -----------------------
 
+* Add new optional argument ``--dir-path`` to :command:`vcf-call` command for storing intermediate files.
+* Add optional argument ``filter_off`` for :class:`pykallisto.KallistoFrame` constructor, which is useful for generating a simple count or tpm matrix.
+
 0.31.0 (2022-03-01)
 -------------------
 

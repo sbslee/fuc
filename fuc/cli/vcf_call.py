@@ -78,9 +78,20 @@ necessary to match the input BAM's contig names."""
 """At a position, read maximally this number of reads
 per input file (default: 250)."""
     )
+    parser.add_argument(
+        '--dir-path',
+        metavar='PATH',
+        help=
+"""By default, intermediate files (likelihoods.bcf,
+calls.bcf, and calls.normalized.bcf) will be stored
+in a temporary directory, which is automatically
+deleted after creating final VCF. If you provide a
+directory path, intermediate files will be stored
+there."""
+    )
 
 def main(args):
     api.pyvcf.call(
         args.fasta, args.bams, regions=args.regions, path='-',
-        min_mq=args.min_mq, max_depth=args.max_depth
+        min_mq=args.min_mq, max_depth=args.max_depth, dir_path=args.dir_path
     )
