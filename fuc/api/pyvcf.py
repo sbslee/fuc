@@ -288,7 +288,8 @@ def call(
         regions = [chr_prefix + x.replace('chr', '') for x in regions]
 
     if dir_path is None:
-        temp_dir = tempfile.TemporaryDirectory()
+        t = tempfile.TemporaryDirectory()
+        temp_dir = t.name
     else:
         temp_dir = dir_path
 
@@ -328,7 +329,7 @@ def call(
             f.write(results)
 
     if dir_path is None:
-        temp_dir.cleanup()
+        t.cleanup()
 
 def rescue_filtered_variants(vfs, format='GT'):
     """
