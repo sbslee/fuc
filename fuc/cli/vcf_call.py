@@ -89,9 +89,19 @@ deleted after creating final VCF. If you provide a
 directory path, intermediate files will be stored
 there."""
     )
+    parser.add_argument(
+        '--gap_frac',
+        metavar='FLOAT',
+        type=float,
+        default=0.002,
+        help=
+"""Minimum fraction of gapped reads for calling indels
+(default: 0.002)."""
+    )
 
 def main(args):
     api.pyvcf.call(
         args.fasta, args.bams, regions=args.regions, path='-',
-        min_mq=args.min_mq, max_depth=args.max_depth, dir_path=args.dir_path
+        min_mq=args.min_mq, max_depth=args.max_depth, dir_path=args.dir_path,
+        gap_frac=args.gap_frac
     )

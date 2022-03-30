@@ -217,7 +217,7 @@ FORMAT_SPECIAL_KEYS = {
 
 def call(
     fasta, bams, regions=None, path=None, min_mq=1, max_depth=250,
-    dir_path=None
+    dir_path=None, gap_frac=0.002
 ):
     """
     Call SNVs and indels from BAM files.
@@ -255,6 +255,8 @@ def call(
         calls.normalized.bcf) will be stored in a temporary directory, which
         is automatically deleted after creating final VCF. If you provide a
         directory path, intermediate files will be stored there.
+    gap_frac : float, default: 0.002
+        Minimum fraction of gapped reads for calling indels.
 
     Returns
     -------
@@ -298,6 +300,7 @@ def call(
     args += ['-q', str(min_mq)]
     args += ['--max-depth', str(max_depth)]
     args += ['-f', fasta]
+    args += ['-F', str(gap_frac)]
     if regions is not None:
         args += ['-r', ','.join(regions)]
     results = bcftools.mpileup(*(args + bams))

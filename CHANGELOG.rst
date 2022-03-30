@@ -5,7 +5,8 @@ Changelog
 -----------------------
 
 * Add new optional argument ``--dir-path`` to :command:`vcf-call` command for storing intermediate files.
-* Add optional argument ``filter_off`` for :class:`pykallisto.KallistoFrame` constructor, which is useful for generating a simple count or tpm matrix.
+* Add new optional argument ``filter_off`` for :class:`pykallisto.KallistoFrame` constructor, which is useful for generating a simple count or tpm matrix.
+* Add new optional argument ``gap_frac`` to :command:`vcf-call` command so that users can control indel calling sensitivity.
 
 0.31.0 (2022-03-01)
 -------------------
