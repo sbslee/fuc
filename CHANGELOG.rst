@@ -4,9 +4,10 @@ Changelog
 0.32.0 (in development)
 -----------------------
 
-* Add new optional argument ``--dir-path`` to :command:`vcf-call` command for storing intermediate files.
 * Add new optional argument ``filter_off`` for :class:`pykallisto.KallistoFrame` constructor, which is useful for generating a simple count or tpm matrix.
-* Add new optional argument ``gap_frac`` to :command:`vcf-call` command so that users can control indel calling sensitivity.
+* Add new optional argument ``--dir-path`` to :command:`vcf-call` command for storing intermediate files.
+* Add new optional argument ``--gap_frac`` to :command:`vcf-call` command so that users can control indel calling sensitivity.
+* Fix minor bug in :meth:`pyvcf.call` method when ``pybed.BedFrame`` object is given as ``regions``.
 
 0.31.0 (2022-03-01)
 -------------------

@@ -279,7 +279,7 @@ def call(
         elif isinstance(regions, list):
             pass
         elif isinstance(regions, pybed.BedFrame):
-            regions = bf.to_regions()
+            regions = regions.to_regions()
         else:
             raise TypeError("Incorrect type of argument 'regions'")
         if '.bed' in regions[0]:
