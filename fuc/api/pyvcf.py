@@ -217,7 +217,7 @@ FORMAT_SPECIAL_KEYS = {
 
 def call(
     fasta, bams, regions=None, path=None, min_mq=1, max_depth=250,
-    dir_path=None, gap_frac=0.002
+    dir_path=None, gap_frac=0.002, group_samples=None
 ):
     """
     Call SNVs and indels from BAM files.
@@ -257,6 +257,15 @@ def call(
         directory path, intermediate files will be stored there.
     gap_frac : float, default: 0.002
         Minimum fraction of gapped reads for calling indels.
+    group_samples : str, optional
+        By default, all samples are assumed to come from a single population.
+        This option allows to group samples into populations and apply the
+        HWE assumption within but not across the populations. To use this
+        option, provide a tab-delimited text file with sample names in the
+        first column and group names in the second column. If '-' is given
+        instead, no HWE assumption is made at all and single-sample calling
+        is performed. Note that in low coverage data this inflates the rate
+        of false positives. Therefore, make sure you know what you are doing.
 
     Returns
     -------
@@ -309,6 +318,8 @@ def call(
 
     # Step 2: Call variants.
     args = [f'{temp_dir}/likelihoods.bcf', '-Oz', '-mv']
+    if group_samples is not None:
+        args += ['-G', group_samples]
     results = bcftools.call(*args)
     with open(f'{temp_dir}/calls.bcf', 'wb') as f:
         f.write(results)
