@@ -317,7 +317,7 @@ def call(
         f.write(results)
 
     # Step 2: Call variants.
-    args = [f'{temp_dir}/likelihoods.bcf', '-Oz', '-mv']
+    args = [f'{temp_dir}/likelihoods.bcf', '-Ou', '-mv']
     if group_samples is not None:
         args += ['-G', group_samples]
     results = bcftools.call(*args)
@@ -325,7 +325,7 @@ def call(
         f.write(results)
 
     # Step 3: Normalize indels.
-    args = [f'{temp_dir}/calls.bcf', '-Ob', '-f', fasta]
+    args = [f'{temp_dir}/calls.bcf', '-Ou', '-f', fasta]
     results = bcftools.norm(*args)
     with open(f'{temp_dir}/calls.normalized.bcf', 'wb') as f:
         f.write(results)
