@@ -108,11 +108,12 @@ samples into populations and apply the HWE assumption
 within but not across the populations. To use this
 option, provide a tab-delimited text file with sample
 names in the first column and group names in the
-second column. If '-' is given instead, no HWE
-assumption is made at all and single-sample calling
-is performed. Note that in low coverage data this
-inflates the rate of false positives. Therefore, make
-sure you know what you are doing."""
+second column. If '--group-samples -' is given
+instead, no HWE assumption is made at all and
+single-sample calling is performed. Note that in low
+coverage data this inflates the rate of false
+positives. Therefore, make sure you know what you are
+doing."""
     )
 
 def main(args):
