@@ -78,9 +78,47 @@ necessary to match the input BAM's contig names."""
 """At a position, read maximally this number of reads
 per input file (default: 250)."""
     )
+    parser.add_argument(
+        '--dir-path',
+        metavar='PATH',
+        help=
+"""By default, intermediate files (likelihoods.bcf,
+calls.bcf, and calls.normalized.bcf) will be stored
+in a temporary directory, which is automatically
+deleted after creating final VCF. If you provide a
+directory path, intermediate files will be stored
+there."""
+    )
+    parser.add_argument(
+        '--gap_frac',
+        metavar='FLOAT',
+        type=float,
+        default=0.002,
+        help=
+"""Minimum fraction of gapped reads for calling indels
+(default: 0.002)."""
+    )
+    parser.add_argument(
+        '--group-samples',
+        metavar='PATH',
+        help=
+"""By default, all samples are assumed to come from a
+single population. This option allows to group
+samples into populations and apply the HWE assumption
+within but not across the populations. To use this
+option, provide a tab-delimited text file with sample
+names in the first column and group names in the
+second column. If '--group-samples -' is given
+instead, no HWE assumption is made at all and
+single-sample calling is performed. Note that in low
+coverage data this inflates the rate of false
+positives. Therefore, make sure you know what you are
+doing."""
+    )
 
 def main(args):
     api.pyvcf.call(
         args.fasta, args.bams, regions=args.regions, path='-',
-        min_mq=args.min_mq, max_depth=args.max_depth
+        min_mq=args.min_mq, max_depth=args.max_depth, dir_path=args.dir_path,
+        gap_frac=args.gap_frac, group_samples=args.group_samples
     )

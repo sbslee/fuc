@@ -1227,6 +1227,8 @@ vcf-call
 
    $ fuc vcf-call -h
    usage: fuc vcf-call [-h] [-r TEXT [TEXT ...]] [--min-mq INT] [--max-depth INT]
+                       [--dir-path PATH] [--gap_frac FLOAT]
+                       [--group-samples PATH]
                        fasta bams [bams ...]
    
    Call SNVs and indels from BAM files.
@@ -1259,6 +1261,26 @@ vcf-call
                            (default: 1).
      --max-depth INT       At a position, read maximally this number of reads
                            per input file (default: 250).
+     --dir-path PATH       By default, intermediate files (likelihoods.bcf,
+                           calls.bcf, and calls.normalized.bcf) will be stored
+                           in a temporary directory, which is automatically
+                           deleted after creating final VCF. If you provide a
+                           directory path, intermediate files will be stored
+                           there.
+     --gap_frac FLOAT      Minimum fraction of gapped reads for calling indels
+                           (default: 0.002).
+     --group-samples PATH  By default, all samples are assumed to come from a
+                           single population. This option allows to group
+                           samples into populations and apply the HWE assumption
+                           within but not across the populations. To use this
+                           option, provide a tab-delimited text file with sample
+                           names in the first column and group names in the
+                           second column. If '--group-samples -' is given
+                           instead, no HWE assumption is made at all and
+                           single-sample calling is performed. Note that in low
+                           coverage data this inflates the rate of false
+                           positives. Therefore, make sure you know what you are
+                           doing.
    
    [Example] Specify regions manually:
      $ fuc vcf-call ref.fa 1.bam 2.bam \
