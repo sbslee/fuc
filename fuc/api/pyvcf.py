@@ -1313,7 +1313,7 @@ def slice(file, regions, path=None):
     Returns
     -------
     None or str
-        If path is None, returns the resulting VCF format as a string.
+        If ``path`` is None, returns the resulting VCF format as a string.
         Otherwise returns None.
     """
     if isinstance(regions, str):

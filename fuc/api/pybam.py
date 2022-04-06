@@ -7,10 +7,88 @@ with depth of coverage data, please check out the pycov submodule which is
 specifically designed for the task.
 """
 
-from . import common
+import sys
+
+from . import common, pybed
 
 import pysam
 import pandas as pd
+
+def slice(bam, regions, format='BAM', path=None, fasta=None):
+    """
+    Slice a BAM file for specified regions.
+
+    Parameters
+    ----------
+    bam : str
+        Input BAM file. It must be already indexed to allow random access.
+        You can index a BAM file with the :meth:`pybam.index` method.
+    regions : str, list, or pybed.BedFrame
+        One or more regions to be sliced. Each region must have the format
+        chrom:start-end and be a half-open interval with (start, end]. This
+        means, for example, chr1:100-103 will extract positions 101, 102, and
+        103. Alternatively, you can provide a BED file (compressed or
+        uncompressed) to specify regions. Note that the 'chr' prefix in
+        contig names (e.g. 'chr1' vs. '1') will be automatically added or
+        removed as necessary to match the input BED's contig names.
+    path : str, optional
+        Output BAM file. Writes to stdout when ``path='-'``. If None is
+        provided the result is returned as a string.
+    format : {'BAM', 'SAM', 'CRAM'}, default: 'BAM'
+        Output file format.
+    fasta
+        FASTA file. Required when ``format`` is 'CRAM'.
+
+    Returns
+    -------
+    None or str
+        If ``path`` is None, returns the resulting BAM format as a string.
+        Otherwise returns None.
+    """
+    formats = ['BAM', 'SAM', 'CRAM']
+
+    if format not in formats:
+        raise ValueError(
+            f"Output format must be BAM, SAM, or CRAM, not {format}"
+        )
+
+    options = ['-h', '--no-PG']
+
+    # Determine the output format.
+    if format == 'BAM':
+        options += ['-b']
+    elif format == 'CRAM':
+        if fasta is None:
+            raise ValueError(
+                "A FASTA file must be specified with '--fasta' "
+                "when '--format' is 'CRAM'."
+            )
+        options += ['-C', '-T', fasta]
+    else:
+        pass
+
+    # Parse the regions.
+    if '.bed' in regions[0]:
+        regions = pybed.BedFrame.from_file(regions[0]).to_regions()
+    else:
+        regions = common.sort_regions(regions)
+
+    # Handle the 'chr' prefix.
+    if has_chr_prefix(bam):
+        regions = common.update_chr_prefix(regions, mode='add')
+    else:
+        regions = common.update_chr_prefix(regions, mode='remove')
+
+    if path is None:
+        data = pysam.view(bam, *regions, *options)
+    else:
+        data = None
+        if path == '-':
+            pysam.view(bam, *regions, *options, catch_stdout=False)
+        else:
+            pysam.view(bam, *regions, *options, '-o', path, catch_stdout=False)
+
+    return data
 
 def index(fn):
     """

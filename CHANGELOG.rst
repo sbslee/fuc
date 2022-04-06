@@ -6,6 +6,8 @@ Changelog
 
 * Add new method :meth:`pybam.index` which simply wraps :meth:`pysam.index` method.
 * Update :command:`bam-index` command to use :meth:`pybam.index` method.
+* Add new method :meth:`pybam.slice`.
+* Update :command:`bam-slice` command to use :meth:`pybam.slice` method.
 
 0.32.0 (2022-04-02)
 -------------------

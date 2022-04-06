@@ -215,9 +215,8 @@ bam-slice
    Slice a BAM file.
    
    Positional arguments:
-     bam            Input alignment file must be already indexed (.bai) to allow
-                    random access. You can index an alignment file with the
-                    bam-index command.
+     bam            Input BAM file. It must be already indexed to allow random
+                    access. You can index a BAM file with the bam-index command.
      regions        One or more regions to be sliced. Each region must have the
                     format chrom:start-end and be a half-open interval with
                     (start, end]. This means, for example, chr1:100-103 will
