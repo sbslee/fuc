@@ -12,6 +12,19 @@ from . import common
 import pysam
 import pandas as pd
 
+def index(fn):
+    """
+    Index a BAM file.
+
+    This simply wraps the :meth:`pysam.index` method.
+
+    Parameters
+    ----------
+    fn : str
+        BAM file.
+    """
+    pysam.index(fn)
+
 def tag_sm(fn):
     """
     Extract SM tags (sample names) from a BAM file.
