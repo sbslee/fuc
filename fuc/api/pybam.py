@@ -68,10 +68,15 @@ def slice(bam, regions, format='BAM', path=None, fasta=None):
         pass
 
     # Parse the regions.
-    if '.bed' in regions[0]:
-        regions = pybed.BedFrame.from_file(regions[0]).to_regions()
+    if isinstance(regions, pybed.BedFrame):
+        regions = regions.to_regions()
+    elif isinstance(regions, list):
+        if '.bed' in regions[0]:
+            regions = pybed.BedFrame.from_file(regions[0]).to_regions()
+        else:
+            regions = common.sort_regions(regions)
     else:
-        regions = common.sort_regions(regions)
+        raise TypeError('Incorrect regions type')
 
     # Handle the 'chr' prefix.
     if has_chr_prefix(bam):
