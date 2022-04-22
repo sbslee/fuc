@@ -8,7 +8,7 @@ Changelog
 * Update :command:`bam-index` command to use :meth:`pybam.index` method.
 * Add new method :meth:`pybam.slice`.
 * Update :command:`bam-slice` command to use :meth:`pybam.slice` method.
-* Update :command:`ngs-bam2fq` command to allow users to run in local environment.
+* Update :command:`ngs-bam2fq` and :command:`ngs-fq2bam` commands to allow users to run in local environment.
 
 0.32.0 (2022-04-02)
 -------------------

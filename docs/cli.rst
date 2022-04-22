@@ -737,48 +737,61 @@ ngs-bam2fq
 .. code-block:: text
 
    $ fuc ngs-bam2fq -h
-   usage: fuc ngs-bam2fq [-h] [--thread INT] [--force] manifest output qsub
+   usage: fuc ngs-bam2fq [-h] [--thread INT] [--qsub TEXT] [--force]
+                         manifest output
    
    Pipeline for converting BAM files to FASTQ files.
    
-   This pipeline will assume input BAM files consist of paired-end reads
-   and output two zipped FASTQ files for each sample (forward and reverse
+   This pipeline assumes that input BAM files consist of paired-end reads, and
+   will output two zipped FASTQ files for each sample (forward and reverse
    reads). That is, SAMPLE.bam will produce SAMPLE_R1.fastq.gz and
    SAMPLE_R2.fastq.gz.
    
+   By default, the pipeline will be run in a local environment. Use --qsub to
+   leverage a parallel environment, in which case SGE is required.
+   
    External dependencies:
-     - SGE: Required for job submission (i.e. qsub).
-     - SAMtools: Required for BAM to FASTQ conversion.
+     - [Required] SAMtools: Required for BAM to FASTQ conversion.
+     - [Optional] SGE: Required for job submission (i.e. qsub).
    
    Manifest columns:
-     - BAM: BAM file.
+     - [Required] BAM: Input BAM file.
    
    Positional arguments:
      manifest      Sample manifest CSV file.
      output        Output directory.
-     qsub          SGE resoruce to request with qsub for BAM to FASTQ
-                   conversion. Since this oppoeration supports multithreading,
-                   it is recommended to speicfy a parallel environment (PE)
-                   to speed up the process (also see --thread).
    
    Optional arguments:
      -h, --help    Show this help message and exit.
      --thread INT  Number of threads to use (default: 1).
+     --qsub TEXT   SGE resoruce to request with qsub for BAM to FASTQ
+                   conversion. Since this oppoeration supports multithreading,
+                   it is recommended to speicfy a parallel environment (PE)
+                   to speed up the process (also see --thread).
      --force       Overwrite the output directory if it already exists.
    
-   [Example] Specify queue:
+   [Example] Run in local environment:
      $ fuc ngs-bam2fq \
      manifest.csv \
      output_dir \
-     "-q queue_name -pe pe_name 10" \
      --thread 10
+     $ sh output_dir/shell/runme.sh
    
-   [Example] Specify nodes:
+   [Example] Run in parallel environment with specific queue:
      $ fuc ngs-bam2fq \
      manifest.csv \
      output_dir \
-     "-l h='node_A|node_B' -pe pe_name 10" \
+     --qsub "-q queue_name -pe pe_name 10" \
      --thread 10
+     $ sh output_dir/shell/runme.sh
+   
+   [Example] Run in parallel environment with specific nodes:
+     $ fuc ngs-bam2fq \
+     manifest.csv \
+     output_dir \
+     --qsub "-l h='node_A|node_B' -pe pe_name 10" \
+     --thread 10
+     $ sh output_dir/shell/runme.sh
 
 ngs-fq2bam
 ==========
@@ -786,9 +799,9 @@ ngs-fq2bam
 .. code-block:: text
 
    $ fuc ngs-fq2bam -h
-   usage: fuc ngs-fq2bam [-h] [--bed PATH] [--thread INT] [--platform TEXT]
-                         [--job TEXT] [--force] [--keep]
-                         manifest fasta output qsub java vcf [vcf ...]
+   usage: fuc ngs-fq2bam [-h] [--qsub TEXT] [--bed PATH] [--thread INT]
+                         [--platform TEXT] [--job TEXT] [--force] [--keep]
+                         manifest fasta output java vcf [vcf ...]
    
    Pipeline for converting FASTQ files to analysis-ready BAM files.
    
@@ -797,11 +810,14 @@ ngs-fq2bam
    reads, 4) recalibrated by BQSR model, and 5) ready for downstream analyses
    such as variant calling.
    
+   By default, the pipeline will be run in a local environment. Use --qsub to
+   leverage a parallel environment, in which case SGE is required.
+   
    External dependencies:
-     - SGE: Required for job submission (i.e. qsub).
-     - BWA: Required for read alignment (i.e. BWA-MEM).
-     - SAMtools: Required for sorting and indexing BAM files.
-     - GATK: Required for marking duplicate reads and recalibrating BAM files.
+     - [Required] BWA: Required for read alignment (i.e. BWA-MEM).
+     - [Required] SAMtools: Required for sorting and indexing BAM files.
+     - [Required] GATK: Required for marking duplicate reads and recalibrating BAM files.
+     - [Optional] SGE: Required for job submission (i.e. qsub).
    
    Manifest columns:
      - Name: Sample name.
@@ -812,13 +828,13 @@ ngs-fq2bam
      manifest         Sample manifest CSV file.
      fasta            Reference FASTA file.
      output           Output directory.
-     qsub             SGE resoruce to request for qsub.
      java             Java resoruce to request for GATK.
      vcf              One or more reference VCF files containing known variant
                       sites (e.g. 1000 Genomes Project).
    
    Optional arguments:
      -h, --help       Show this help message and exit.
+     --qsub TEXT      SGE resoruce to request for qsub.
      --bed PATH       BED file.
      --thread INT     Number of threads to use (default: 1).
      --platform TEXT  Sequencing platform (default: 'Illumina').
@@ -826,25 +842,37 @@ ngs-fq2bam
      --force          Overwrite the output directory if it already exists.
      --keep           Keep temporary files.
    
-   [Example] Specify queue:
+   [Example] Run in local environment:
      $ fuc ngs-fq2bam \
      manifest.csv \
      ref.fa \
      output_dir \
-     "-q queue_name -pe pe_name 10" \
      "-Xmx15g -Xms15g" \
      1.vcf 2.vcf 3.vcf \
      --thread 10
+     $ sh output_dir/shell/runme.sh
    
-   [Example] Specify nodes:
+   [Example] Run in parallel environment with specific queue:
      $ fuc ngs-fq2bam \
      manifest.csv \
      ref.fa \
      output_dir \
-     "-l h='node_A|node_B' -pe pe_name 10" \
      "-Xmx15g -Xms15g" \
      1.vcf 2.vcf 3.vcf \
+     --qsub "-q queue_name -pe pe_name 10" \
      --thread 10
+     $ sh output_dir/shell/runme.sh
+   
+   [Example] Run in parallel environment with specific nodes:
+     $ fuc ngs-fq2bam \
+     manifest.csv \
+     ref.fa \
+     output_dir \
+     "-Xmx15g -Xms15g" \
+     1.vcf 2.vcf 3.vcf \
+     "-l h='node_A|node_B' -pe pe_name 10" \
+     --thread 10
+     $ sh output_dir/shell/runme.sh
 
 ngs-hc
 ======

@@ -14,11 +14,14 @@ reference genome, 2) sorted by genomic coordinate, 3) marked for duplicate
 reads, 4) recalibrated by BQSR model, and 5) ready for downstream analyses
 such as variant calling.
 
+By default, the pipeline will be run in a local environment. Use --qsub to
+leverage a parallel environment, in which case SGE is required.
+
 External dependencies:
-  - SGE: Required for job submission (i.e. qsub).
-  - BWA: Required for read alignment (i.e. BWA-MEM).
-  - SAMtools: Required for sorting and indexing BAM files.
-  - GATK: Required for marking duplicate reads and recalibrating BAM files.
+  - [Required] BWA: Required for read alignment (i.e. BWA-MEM).
+  - [Required] SAMtools: Required for sorting and indexing BAM files.
+  - [Required] GATK: Required for marking duplicate reads and recalibrating BAM files.
+  - [Optional] SGE: Required for job submission (i.e. qsub).
 
 Manifest columns:
   - Name: Sample name.
@@ -27,25 +30,37 @@ Manifest columns:
 """
 
 epilog = f"""
-[Example] Specify queue:
+[Example] Run in local environment:
   $ fuc {api.common._script_name()} \\
   manifest.csv \\
   ref.fa \\
   output_dir \\
-  "-q queue_name -pe pe_name 10" \\
   "-Xmx15g -Xms15g" \\
   1.vcf 2.vcf 3.vcf \\
   --thread 10
+  $ sh output_dir/shell/runme.sh
 
-[Example] Specify nodes:
+[Example] Run in parallel environment with specific queue:
   $ fuc {api.common._script_name()} \\
   manifest.csv \\
   ref.fa \\
   output_dir \\
-  "-l h='node_A|node_B' -pe pe_name 10" \\
   "-Xmx15g -Xms15g" \\
   1.vcf 2.vcf 3.vcf \\
+  --qsub "-q queue_name -pe pe_name 10" \\
   --thread 10
+  $ sh output_dir/shell/runme.sh
+
+[Example] Run in parallel environment with specific nodes:
+  $ fuc {api.common._script_name()} \\
+  manifest.csv \\
+  ref.fa \\
+  output_dir \\
+  "-Xmx15g -Xms15g" \\
+  1.vcf 2.vcf 3.vcf \\
+  "-l h='node_A|node_B' -pe pe_name 10" \\
+  --thread 10
+  $ sh output_dir/shell/runme.sh
 """
 
 def create_parser(subparsers):
@@ -75,12 +90,6 @@ files."""
 """Output directory."""
     )
     parser.add_argument(
-        'qsub',
-        type=str,
-        help=
-"""SGE resoruce to request for qsub."""
-    )
-    parser.add_argument(
         'java',
         help=
 """Java resoruce to request for GATK."""
@@ -92,6 +101,13 @@ files."""
         help=
 """One or more reference VCF files containing known variant
 sites (e.g. 1000 Genomes Project)."""
+    )
+    parser.add_argument(
+        '--qsub',
+        metavar='TEXT',
+        type=str,
+        help=
+"""SGE resoruce to request for qsub."""
     )
     parser.add_argument(
         '--bed',
@@ -157,6 +173,13 @@ def main(args):
 
     java_shared = f'-XX:ParallelGCThreads={args.thread} -XX:ConcGCThreads={args.thread}'
 
+    is_local = args.qsub is None
+
+    if is_local:
+        conda_env = f'# source activate {api.common.conda_env()}'
+    else:
+        conda_env = f'source activate {api.common.conda_env()}'
+
     for i, r in df.iterrows():
         with open(f'{args.output}/shell/S1-{r.Name}.sh', 'w') as f:
 
@@ -212,7 +235,7 @@ def main(args):
 f"""#!/bin/bash
 
 # Activate conda environment.
-source activate {api.common.conda_env()}
+{conda_env}
 
 # Get read group information.
 first=`zcat {r.Read1} | head -1`
@@ -255,7 +278,13 @@ samtools index {args.output}/temp/{r.Name}.sorted.markdup.bam
     else:
         jid = args.job + '-'
 
-    with open(f'{args.output}/shell/qsubme.sh', 'w') as f:
+    with open(f'{args.output}/shell/runme.sh', 'w') as f:
+
+        if is_local:
+            command5 = f'sh $p/shell/S1-$sample.sh > $p/log/S1-$sample.o 2> $p/log/S1-$sample.e'
+        else:
+            command5 = f'qsub {args.qsub} -S /bin/bash -e $p/log -o $p/log -N {jid}S1-$sample $p/shell/S1-$sample.sh'
+
         f.write(
 f"""#!/bin/bash
 
@@ -265,6 +294,6 @@ samples=({" ".join(df.Name)})
 
 for sample in ${{samples[@]}}
 do
-  qsub {args.qsub} -S /bin/bash -e $p/log -o $p/log -N {jid}S1-$sample $p/shell/S1-$sample.sh
+  {command5}
 done
 """)
