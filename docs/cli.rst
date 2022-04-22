@@ -870,7 +870,7 @@ ngs-fq2bam
      output_dir \
      "-Xmx15g -Xms15g" \
      1.vcf 2.vcf 3.vcf \
-     "-l h='node_A|node_B' -pe pe_name 10" \
+     --qsub "-l h='node_A|node_B' -pe pe_name 10" \
      --thread 10
      $ sh output_dir/shell/runme.sh
 
