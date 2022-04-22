@@ -240,11 +240,11 @@ f"""#!/bin/bash
 # Get read group information.
 first=`zcat {r.Read1} | head -1`
 flowcell=`echo "$first" | awk -F " " '{{print $1}}' | awk -F ":" '{{print $3}}'`
-if [ -z "${flowcell}" ]; then
+if [ -z "${{flowcell}}" ]; then
     flowcell=no_flowcell
 fi
 barcode=`echo "$first" | awk -F " " '{{print $2}}' | awk -F ":" '{{print $4}}'`
-if [ -z "${barcode}" ]; then
+if [ -z "${{barcode}}" ]; then
     barcode=no_barcode
 fi
 group="@RG\\tID:$flowcell\\tPU:$flowcell.$barcode\\tSM:{r.Name}\\tPL:{args.platform}\\tLB:{r.Name}"
