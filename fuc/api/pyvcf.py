@@ -311,25 +311,22 @@ def call(
     args += ['--max-depth', str(max_depth)]
     args += ['-f', fasta]
     args += ['-F', str(gap_frac)]
+    args += ['-o', f'{temp_dir}/likelihoods.bcf']
     if regions is not None:
         args += ['-r', ','.join(regions)]
-    results = bcftools.mpileup(*(args + bams))
-    with open(f'{temp_dir}/likelihoods.bcf', 'wb') as f:
-        f.write(results)
+    bcftools.mpileup(*(args + bams), catch_stdout=False)
 
     # Step 2: Call variants.
     args = [f'{temp_dir}/likelihoods.bcf', '-Ou', '-mv']
+    args += ['-o', f'{temp_dir}/calls.bcf']
     if group_samples is not None:
         args += ['-G', group_samples]
-    results = bcftools.call(*args)
-    with open(f'{temp_dir}/calls.bcf', 'wb') as f:
-        f.write(results)
+    bcftools.call(*args, catch_stdout=False)
 
     # Step 3: Normalize indels.
     args = [f'{temp_dir}/calls.bcf', '-Ou', '-f', fasta]
-    results = bcftools.norm(*args)
-    with open(f'{temp_dir}/calls.normalized.bcf', 'wb') as f:
-        f.write(results)
+    args += ['-o', f'{temp_dir}/calls.normalized.bcf']
+    bcftools.norm(*args, catch_stdout=False)
 
     # Step 4: Filter variant.
     args = [f'{temp_dir}/calls.normalized.bcf', '-Ov', '--IndelGap', '5']
