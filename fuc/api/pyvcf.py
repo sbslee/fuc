@@ -311,28 +311,25 @@ def call(
     args += ['--max-depth', str(max_depth)]
     args += ['-f', fasta]
     args += ['-F', str(gap_frac)]
+    args += ['-o', f'{temp_dir}/likelihoods.ubcf']
     if regions is not None:
         args += ['-r', ','.join(regions)]
-    results = bcftools.mpileup(*(args + bams))
-    with open(f'{temp_dir}/likelihoods.bcf', 'wb') as f:
-        f.write(results)
+    bcftools.mpileup(*(args + bams), catch_stdout=False)
 
     # Step 2: Call variants.
-    args = [f'{temp_dir}/likelihoods.bcf', '-Ou', '-mv']
+    args = [f'{temp_dir}/likelihoods.ubcf', '-Ou', '-mv']
+    args += ['-o', f'{temp_dir}/calls.ubcf']
     if group_samples is not None:
         args += ['-G', group_samples]
-    results = bcftools.call(*args)
-    with open(f'{temp_dir}/calls.bcf', 'wb') as f:
-        f.write(results)
+    bcftools.call(*args, catch_stdout=False)
 
     # Step 3: Normalize indels.
-    args = [f'{temp_dir}/calls.bcf', '-Ou', '-f', fasta]
-    results = bcftools.norm(*args)
-    with open(f'{temp_dir}/calls.normalized.bcf', 'wb') as f:
-        f.write(results)
+    args = [f'{temp_dir}/calls.ubcf', '-Ou', '-f', fasta]
+    args += ['-o', f'{temp_dir}/calls.normalized.ubcf']
+    bcftools.norm(*args, catch_stdout=False)
 
     # Step 4: Filter variant.
-    args = [f'{temp_dir}/calls.normalized.bcf', '-Ov', '--IndelGap', '5']
+    args = [f'{temp_dir}/calls.normalized.ubcf', '-Ov', '--IndelGap', '5']
     results = bcftools.filter(*args)
 
     if path is None:
@@ -1313,7 +1310,7 @@ def slice(file, regions, path=None):
     Returns
     -------
     None or str
-        If path is None, returns the resulting VCF format as a string.
+        If ``path`` is None, returns the resulting VCF format as a string.
         Otherwise returns None.
     """
     if isinstance(regions, str):

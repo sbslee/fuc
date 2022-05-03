@@ -2,8 +2,6 @@ import sys
 
 from .. import api
 
-import pysam
-
 description = """
 Slice a BAM file.
 """
@@ -31,9 +29,8 @@ def create_parser(subparsers):
     parser.add_argument(
         'bam',
         help=
-"""Input alignment file must be already indexed (.bai) to allow
-random access. You can index an alignment file with the
-bam-index command."""
+"""Input BAM file. It must be already indexed to allow random
+access. You can index a BAM file with the bam-index command."""
     )
     parser.add_argument(
         'regions',
@@ -65,34 +62,5 @@ necessary to match the input BED's contig names."""
     )
 
 def main(args):
-    options = ['-h', '--no-PG']
-
-    # Determine the output format.
-    if args.format == 'BAM':
-        stdout_method = sys.stdout.buffer.write
-        options += ['-b']
-    elif args.format == 'CRAM':
-        stdout_method = sys.stdout.buffer.write
-        if args.fasta is None:
-            raise ValueError(
-                "A FASTA file must be specified with '--fasta' "
-                "when '--format' is 'CRAM'."
-            )
-        options += ['-C', '-T', args.fasta]
-    else:
-        stdout_method = sys.stdout.write
-
-    # Parse the regions argument.
-    if '.bed' in args.regions[0]:
-        args.regions = api.pybed.BedFrame.from_file(args.regions[0]).to_regions()
-    else:
-        args.regions = api.common.sort_regions(args.regions)
-
-    if api.pybam.has_chr_prefix(args.bam):
-        args.regions = api.common.update_chr_prefix(args.regions, mode='add')
-    else:
-        args.regions = api.common.update_chr_prefix(args.regions, mode='remove')
-
-    alignments = pysam.view(args.bam, *args.regions, *options)
-
-    stdout_method(alignments)
+    api.pybam.slice(args.bam, args.regions, format=args.format,
+        path='-', fasta=args.fasta)

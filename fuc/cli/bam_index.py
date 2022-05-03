@@ -1,7 +1,5 @@
 from .. import api
 
-import pysam
-
 description = """
 Index a BAM file.
 """
@@ -27,4 +25,4 @@ def create_parser(subparsers):
     )
 
 def main(args):
-    pysam.index(args.bam)
+    api.pybam.index(args.bam)

@@ -1,6 +1,17 @@
 Changelog
 *********
 
+0.33.1 (2022-05-03)
+-------------------
+
+* Add new method :meth:`pybam.index` which simply wraps :meth:`pysam.index` method.
+* Update :command:`bam-index` command to use :meth:`pybam.index` method.
+* Add new method :meth:`pybam.slice`.
+* Update :command:`bam-slice` command to use :meth:`pybam.slice` method.
+* Update :command:`ngs-bam2fq` and :command:`ngs-fq2bam` commands to allow users to run in local environment.
+* Update :command:`ngs-fq2bam` command to handle cases where input FASTQ does not have information on flowcell and barcode.
+* Update :meth:`pyvcf.call` method to run more efficiently.
+
 0.32.0 (2022-04-02)
 -------------------
 
