@@ -1,8 +1,8 @@
 Changelog
 *********
 
-0.33.0 (in development)
------------------------
+0.33.0 (2022-05-03)
+-------------------
 
 * Add new method :meth:`pybam.index` which simply wraps :meth:`pysam.index` method.
 * Update :command:`bam-index` command to use :meth:`pybam.index` method.
