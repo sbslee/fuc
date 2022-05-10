@@ -4,6 +4,8 @@ Changelog
 0.34.0 (in development)
 -----------------------
 
+* Add new optional argument ``--stranded`` to :command:`ngs-quant` command.
+
 0.33.1 (2022-05-03)
 -------------------
 
