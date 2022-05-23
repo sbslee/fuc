@@ -83,6 +83,90 @@ def simulate(mode='wgs', loc=30, scale=5, size=1000):
 
     return a
 
+def merge(
+    cfs, how='inner'
+):
+    """
+    Merge CovFrame objects.
+
+    Parameters
+    ----------
+    cfs : list
+        List of CovFrames to be merged. Note that the 'chr' prefix in contig
+        names (e.g. 'chr1' vs. '1') will be automatically added or removed as
+        necessary to match the contig names of the first CovFrame.
+    how : str, default: 'inner'
+        Type of merge as defined in :meth:`pandas.merge`.
+
+    Returns
+    -------
+    CovFrame
+        Merged CovFrame.
+
+    See Also
+    --------
+    CovFrame.merge
+        Merge self with another CovFrame.
+
+    Examples
+    --------
+    Assume we have the following data:
+
+    >>> import numpy as np
+    >>> from fuc import pycov
+    >>> data1 = {
+    ...     'Chromosome': ['chr1'] * 5,
+    ...     'Position': np.arange(100, 105),
+    ...     'A': pycov.simulate(loc=35, scale=5, size=5),
+    ...     'B': pycov.simulate(loc=25, scale=7, size=5),
+    ... }
+    >>> data2 = {
+    ...     'Chromosome': ['1'] * 5,
+    ...     'Position': np.arange(102, 107),
+    ...     'C': pycov.simulate(loc=35, scale=5, size=5),
+    ... }
+    >>> cf1 = pycov.CovFrame.from_dict(data1)
+    >>> cf2 = pycov.CovFrame.from_dict(data2)
+    >>> cf1.df
+      Chromosome  Position   A   B
+    0       chr1       100  33  17
+    1       chr1       101  36  20
+    2       chr1       102  39  39
+    3       chr1       103  31  19
+    4       chr1       104  31  10
+    >>> cf2.df
+      Chromosome  Position   C
+    0          1       102  41
+    1          1       103  37
+    2          1       104  35
+    3          1       105  33
+    4          1       106  39
+
+    We can merge the two VcfFrames with `how='inner'` (default):
+
+    >>> pycov.merge([cf1, cf2]).df
+      Chromosome  Position   A   B   C
+    0       chr1       102  39  39  41
+    1       chr1       103  31  19  37
+    2       chr1       104  31  10  35
+
+    We can also merge with `how='outer'`:
+
+    >>> pycov.merge([cf1, cf2], how='outer').df
+      Chromosome  Position     A     B     C
+    0       chr1       100  33.0  17.0   NaN
+    1       chr1       101  36.0  20.0   NaN
+    2       chr1       102  39.0  39.0  41.0
+    3       chr1       103  31.0  19.0  37.0
+    4       chr1       104  31.0  10.0  35.0
+    5       chr1       105   NaN   NaN  33.0
+    6       chr1       106   NaN   NaN  39.0
+    """
+    merged_cf = cfs[0]
+    for cf in cfs[1:]:
+        merged_cf = merged_cf.merge(cf, how=how)
+    return merged_cf
+
 class CovFrame:
     """
     Class for storing read depth data from one or more SAM/BAM/CRAM files.
@@ -1128,3 +1212,95 @@ class CovFrame:
         cf = self.copy()
         cf.df.columns = columns
         return cf
+
+    def merge(
+        self, other, how='inner'
+    ):
+        """
+        Merge with the other CovFrame.
+
+        Parameters
+        ----------
+        other : CovFrame
+            Other CovFrame. Note that the 'chr' prefix in contig names (e.g.
+            'chr1' vs. '1') will be automatically added or removed as
+            necessary to match the contig names of ``self``.
+        how : str, default: 'inner'
+            Type of merge as defined in :meth:`pandas.DataFrame.merge`.
+
+        Returns
+        -------
+        CovFrame
+            Merged CovFrame.
+
+        See Also
+        --------
+        merge
+            Merge multiple CovFrame objects.
+
+        Examples
+        --------
+        Assume we have the following data:
+
+        >>> import numpy as np
+        >>> from fuc import pycov
+        >>> data1 = {
+        ...     'Chromosome': ['chr1'] * 5,
+        ...     'Position': np.arange(100, 105),
+        ...     'A': pycov.simulate(loc=35, scale=5, size=5),
+        ...     'B': pycov.simulate(loc=25, scale=7, size=5),
+        ... }
+        >>> data2 = {
+        ...     'Chromosome': ['1'] * 5,
+        ...     'Position': np.arange(102, 107),
+        ...     'C': pycov.simulate(loc=35, scale=5, size=5),
+        ... }
+        >>> cf1 = pycov.CovFrame.from_dict(data1)
+        >>> cf2 = pycov.CovFrame.from_dict(data2)
+        >>> cf1.df
+          Chromosome  Position   A   B
+        0       chr1       100  40  27
+        1       chr1       101  32  33
+        2       chr1       102  32  22
+        3       chr1       103  32  29
+        4       chr1       104  37  22
+        >>> cf2.df
+          Chromosome  Position   C
+        0          1       102  33
+        1          1       103  29
+        2          1       104  35
+        3          1       105  27
+        4          1       106  25
+
+        We can merge the two VcfFrames with `how='inner'` (default):
+
+        >>> cf1.merge(cf2).df
+          Chromosome  Position   A   B   C
+        0       chr1       102  32  22  33
+        1       chr1       103  32  29  29
+        2       chr1       104  37  22  35
+
+        We can also merge with `how='outer'`:
+
+        >>> cf1.merge(cf2, how='outer').df
+          Chromosome  Position     A     B     C
+        0       chr1       100  40.0  27.0   NaN
+        1       chr1       101  32.0  33.0   NaN
+        2       chr1       102  32.0  22.0  33.0
+        3       chr1       103  32.0  29.0  29.0
+        4       chr1       104  37.0  22.0  35.0
+        5       chr1       105   NaN   NaN  27.0
+        6       chr1       106   NaN   NaN  25.0
+        """
+        if self.has_chr_prefix and other.has_chr_prefix:
+            pass
+        elif self.has_chr_prefix and not other.has_chr_prefix:
+            other = other.update_chr_prefix('add')
+        elif not self.has_chr_prefix and other.has_chr_prefix:
+            other = other.update_chr_prefix('remove')
+        else:
+            pass
+
+        merged = self.__class__(self.df.merge(other.df, how=how))
+
+        return merged

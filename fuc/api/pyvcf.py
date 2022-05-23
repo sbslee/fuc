@@ -750,7 +750,7 @@ def merge(
         names (e.g. 'chr1' vs. '1') will be automatically added or removed as
         necessary to match the contig names of the first VCF.
     how : str, default: 'inner'
-        Type of merge as defined in pandas.DataFrame.merge.
+        Type of merge as defined in :meth:`pandas.merge`.
     format : str, default: 'GT'
         FORMAT subfields to be retained (e.g. 'GT:AD:DP').
     sort : bool, default: True
@@ -2897,7 +2897,7 @@ class VcfFrame:
             'chr1' vs. '1') will be automatically added or removed as
             necessary to match the contig names of ``self``.
         how : str, default: 'inner'
-            Type of merge as defined in `pandas.DataFrame.merge`.
+            Type of merge as defined in :meth:`pandas.DataFrame.merge`.
         format : str, default: 'GT'
             FORMAT subfields to be retained (e.g. 'GT:AD:DP').
         sort : bool, default: True
@@ -2909,6 +2909,11 @@ class VcfFrame:
         -------
         VcfFrame
             Merged VcfFrame.
+
+        See Also
+        --------
+        merge
+            Merge multiple VcfFrame objects.
 
         Examples
         --------
