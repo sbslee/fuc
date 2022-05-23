@@ -481,7 +481,10 @@ class MafFrame:
                 tumor_seq_allele1 = r.ALT[1:]
                 tumor_seq_allele2 = r.ALT[1:]
 
-            fields = r.INFO.replace('CSQ=', '').split(',')[0].split('|')
+            # Extract annotation fields.
+            if has_annot:
+                csq = [x for x in r.INFO.split(';') if x.startswith('CSQ=')][0]
+                fields = csq.replace('CSQ=', '').split('|')
 
             # Get the Strand data.
             if has_annot:

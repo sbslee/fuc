@@ -7,6 +7,7 @@ Changelog
 * Add new optional argument ``--stranded`` to :command:`ngs-quant` command.
 * Add new method :meth:`pycov.CovFrame.merge`.
 * Add new method :meth:`pycov.merge`.
+* :issue:`61`: Update :meth:`pymaf.MafFrame.from_vcf` method to automatically detect `CSQ` field in `INFO` column (thanks `@lbeltrame <https://github.com/lbeltrame>`__).
 
 0.33.1 (2022-05-03)
 -------------------
