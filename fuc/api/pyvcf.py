@@ -5278,10 +5278,15 @@ class VcfFrame:
         2   chr2  101  .   T   C    .      .    .  GT:DP  0/0:29
         3  chr10  100  .   G   A    .      .    .  GT:DP   ./.:.
         """
-        df = self.df.sort_values(by=['CHROM', 'POS'], ignore_index=True,
-            key=lambda col: [CONTIGS.index(x) if isinstance(x, str)
-                             else x for x in col])
+        def f(col):
+            return [CONTIGS.index(x) if x in CONTIGS
+                else len(CONTIGS) if isinstance(x, str)
+                else x for x in col]
+
+        df = self.df.sort_values(by=['CHROM', 'POS'],
+            ignore_index=True, key=f)
         vf = self.__class__(self.copy_meta(), df)
+
         return vf
 
     def subset(self, samples, exclude=False):
