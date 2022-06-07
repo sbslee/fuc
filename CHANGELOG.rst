@@ -1,6 +1,15 @@
 Changelog
 *********
 
+0.34.0 (2022-06-08)
+-------------------
+
+* Add new optional argument ``--stranded`` to :command:`ngs-quant` command.
+* Add new method :meth:`pycov.CovFrame.merge`.
+* Add new method :meth:`pycov.merge`.
+* :issue:`61`: Update :meth:`pymaf.MafFrame.from_vcf` method to automatically detect CSQ field in INFO column (thanks `@lbeltrame <https://github.com/lbeltrame>`__).
+* :issue:`63`: Update :meth:`pyvcf.VcfFrame.sort` method to handle contigs that are not pre-defined.
+
 0.33.1 (2022-05-03)
 -------------------
 

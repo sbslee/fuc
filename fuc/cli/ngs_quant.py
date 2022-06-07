@@ -98,6 +98,15 @@ with Kallisto."""
 before running Kallisto. This is required for shared Posix
 Filesystems (e.g. NFS, Lustre)."""
     )
+    parser.add_argument(
+        '--stranded',
+        metavar='TEXT',
+        default='none',
+        choices=['none', 'forward', 'reverse'],
+        help=
+"""Strand specific reads (default: 'none') (choices:
+'none', 'forward', 'reverse')."""
+    )
 
 def main(args):
     if os.path.exists(args.output) and args.force:
@@ -129,6 +138,12 @@ def main(args):
             command += f' -o {args.output}/{r.Name}'
             command += f' -b {args.bootstrap}'
             command += f' -t {args.thread}'
+            if args.stranded == 'forward':
+                command += ' --fr-stranded'
+            elif args.stranded == 'reverse':
+                command += ' --rf-stranded'
+            else:
+                pass
             command += f' {r.Read1}'
             command += f' {r.Read2}'
 

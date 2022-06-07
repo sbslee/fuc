@@ -750,7 +750,7 @@ def merge(
         names (e.g. 'chr1' vs. '1') will be automatically added or removed as
         necessary to match the contig names of the first VCF.
     how : str, default: 'inner'
-        Type of merge as defined in pandas.DataFrame.merge.
+        Type of merge as defined in :meth:`pandas.merge`.
     format : str, default: 'GT'
         FORMAT subfields to be retained (e.g. 'GT:AD:DP').
     sort : bool, default: True
@@ -2897,7 +2897,7 @@ class VcfFrame:
             'chr1' vs. '1') will be automatically added or removed as
             necessary to match the contig names of ``self``.
         how : str, default: 'inner'
-            Type of merge as defined in `pandas.DataFrame.merge`.
+            Type of merge as defined in :meth:`pandas.DataFrame.merge`.
         format : str, default: 'GT'
             FORMAT subfields to be retained (e.g. 'GT:AD:DP').
         sort : bool, default: True
@@ -2909,6 +2909,11 @@ class VcfFrame:
         -------
         VcfFrame
             Merged VcfFrame.
+
+        See Also
+        --------
+        merge
+            Merge multiple VcfFrame objects.
 
         Examples
         --------
@@ -5273,10 +5278,15 @@ class VcfFrame:
         2   chr2  101  .   T   C    .      .    .  GT:DP  0/0:29
         3  chr10  100  .   G   A    .      .    .  GT:DP   ./.:.
         """
-        df = self.df.sort_values(by=['CHROM', 'POS'], ignore_index=True,
-            key=lambda col: [CONTIGS.index(x) if isinstance(x, str)
-                             else x for x in col])
+        def f(col):
+            return [CONTIGS.index(x) if x in CONTIGS
+                else len(CONTIGS) if isinstance(x, str)
+                else x for x in col]
+
+        df = self.df.sort_values(by=['CHROM', 'POS'],
+            ignore_index=True, key=f)
         vf = self.__class__(self.copy_meta(), df)
+
         return vf
 
     def subset(self, samples, exclude=False):
