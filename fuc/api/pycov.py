@@ -1301,6 +1301,8 @@ class CovFrame:
         else:
             pass
 
-        merged = self.__class__(self.df.merge(other.df, how=how))
+        df = self.df.merge(other.df, on=['Chromosome', 'Position'], how=how)
+
+        merged = self.__class__(df)
 
         return merged

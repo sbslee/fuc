@@ -1,8 +1,8 @@
 Changelog
 *********
 
-0.34.0 (in development)
------------------------
+0.34.0 (2022-06-08)
+-------------------
 
 * Add new optional argument ``--stranded`` to :command:`ngs-quant` command.
 * Add new method :meth:`pycov.CovFrame.merge`.
