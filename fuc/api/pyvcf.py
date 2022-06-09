@@ -447,6 +447,54 @@ def rescue_filtered_variants(vfs, format='GT'):
     merged_vf = merge(filtered_vfs, how='outer', format=format)
     return merged_vf
 
+def gt_diploidize(g):
+    """
+    For given genotype, return its diploid form.
+
+    This method will ignore diploid genotypes (e.g. 0/1) and is therefore
+    only effective for haploid genotypes (e.g. genotypes from the X
+    chromosome for males).
+
+    Parameters
+    ----------
+    g : str
+        Sample genotype.
+
+    Returns
+    -------
+    bool
+        Diploid genotype.
+
+    See Also
+    --------
+    VcfFrame.diploidize
+        Diploidize VcfFrame.
+
+    Examples
+    --------
+
+    >>> from fuc import pyvcf
+    >>> pyvcf.gt_diploidize('0')
+    '0/0'
+    >>> pyvcf.gt_diploidize('1')
+    '0/1'
+    >>> pyvcf.gt_diploidize('.')
+    './.'
+    >>> pyvcf.gt_diploidize('1:34')
+    '0/1:34'
+    >>> pyvcf.gt_diploidize('0/1:34')
+    '0/1:34'
+    >>> pyvcf.gt_diploidize('./.')
+    './.'
+    """
+    if gt_ploidy(g) != 1:
+        return g
+    gt = g.split(':')[0]
+    if gt == '.':
+        return './' + g
+    else:
+        return '0/' + g
+
 def gt_miss(g):
     """
     For given genotype, return True if it has missing value.
@@ -6377,6 +6425,53 @@ class VcfFrame:
         df.columns = ['Locus', 'Sample', 'Other', 'Self']
         df = df[['Locus', 'Sample', 'Self', 'Other']]
         return df
+
+    def diploidize(self):
+        """
+        Diploidize VcfFrame.
+
+        Returns
+        -------
+        VcfFrame
+            Diploidized VcfFrame.
+
+        See Also
+        --------
+        gt_diploidize
+            For given genotype, return its diploid form.
+
+        Examples
+        --------
+
+        >>> from fuc import pyvcf
+        >>> data = {
+        ...     'CHROM': ['chrX', 'chrX'],
+        ...     'POS': [100, 101],
+        ...     'ID': ['.', '.'],
+        ...     'REF': ['G', 'T'],
+        ...     'ALT': ['A', 'C'],
+        ...     'QUAL': ['.', '.'],
+        ...     'FILTER': ['.', '.'],
+        ...     'INFO': ['.', '.'],
+        ...     'FORMAT': ['GT', 'GT'],
+        ...     'Male': ['0', '1'],
+        ...     'Female': ['0/0', '0/1'],
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Male Female
+        0  chrX  100  .   G   A    .      .    .     GT    0    0/0
+        1  chrX  101  .   T   C    .      .    .     GT    1    0/1
+        >>> vf.diploidize().df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Male Female
+        0  chrX  100  .   G   A    .      .    .     GT  0/0    0/0
+        1  chrX  101  .   T   C    .      .    .     GT  0/1    0/1
+        """
+        def one_row(r):
+            r[9:] = r[9:].apply(gt_diploidize)
+            return r
+        df = self.df.apply(one_row, axis=1)
+        return self.__class__(self.copy_meta(), df)
 
     def fetch(self, variant):
         """
