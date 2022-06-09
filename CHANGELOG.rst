@@ -4,6 +4,8 @@ Changelog
 0.35.0 (in development)
 -----------------------
 
+* Fix bug in :meth:`api.pyvcf.VcfFrame.pseudophase` method.
+
 0.34.0 (2022-06-08)
 -------------------
 

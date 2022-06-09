@@ -700,9 +700,9 @@ def gt_pseudophase(g):
     --------
 
     >>> from fuc import pyvcf
-    >>> pyvcf.pseudophase('0/1')
+    >>> pyvcf.gt_pseudophase('0/1')
     '0|1'
-    >>> pyvcf.pseudophase('0/0:34:10,24')
+    >>> pyvcf.gt_pseudophase('0/0:34:10,24')
     '0|0:34:10,24'
     """
     l = g.split(':')
@@ -6463,7 +6463,7 @@ class VcfFrame:
         1  chr2  101  .   T   C    .      .    .     GT  1|1
         """
         def one_row(r):
-            r[9:] = r[9:].apply(pseudophase)
+            r[9:] = r[9:].apply(gt_pseudophase)
             return r
         df = self.df.apply(one_row, axis=1)
         return self.__class__(self.copy_meta(), df)
