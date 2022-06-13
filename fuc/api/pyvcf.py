@@ -6611,7 +6611,9 @@ class VcfFrame:
         nan
         """
         chrom, pos, ref, alt = common.parse_variant(variant)
-        r = self.df[(self.df.CHROM == chrom) & (self.df.POS == pos) & (self.df.REF == ref)]
+
+        r = self.df[(self.df.CHROM == chrom) & (self.df.POS == pos) &
+            (self.df.REF == ref)]
 
         try:
             i = r.FORMAT.values[0].split(':').index('AF')
@@ -6623,7 +6625,9 @@ class VcfFrame:
         if alt in alts:
             j = r.ALT.values[0].split(',').index(alt)
         else:
-            raise ValueError(f'ALT allele not found, possible choices: {alts}')
+            message = (f"Position {chrom}-{pos}-{ref} does not have '{alt}' "
+                f"as ALT allele, possible choices: {alts}")
+            raise ValueError(message)
 
         field = r[sample].values[0].split(':')[i]
 
