@@ -4,9 +4,9 @@ Changelog
 0.35.0 (in development)
 -----------------------
 
-* Fix bug in :meth:`api.pyvcf.VcfFrame.pseudophase` method.
+* Fix bug in :meth:`pyvcf.VcfFrame.pseudophase` method.
 * Add new methods :meth:`pyvcf.VcfFrame.diploidize` and :meth:`pyvcf.gt_diploidize`.
-* Update :meth:`api.pyvcf.VcfFrame.get_af` method to handle situations where there are multiple records with the same ``REF`` allele.
+* Update :meth:`pyvcf.VcfFrame.get_af` method to handle situations where there are multiple records with the same ``REF`` allele.
 
 0.34.0 (2022-06-08)
 -------------------
