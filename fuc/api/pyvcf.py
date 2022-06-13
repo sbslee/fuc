@@ -6567,7 +6567,10 @@ class VcfFrame:
         """
         Get allele fraction for a pair of sample and variant.
 
-        The method will return ``numpy.nan`` if the value is missing.
+        The method will return ``numpy.nan`` when:
+
+        1. variant is absent, or
+        2. variant is present but there is no ``AF`` in the ``FORMAT`` column
 
         Parameters
         ----------
@@ -6586,34 +6589,48 @@ class VcfFrame:
 
         >>> from fuc import pyvcf, common
         >>> data = {
-        ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1'],
-        ...     'POS': [100, 101, 102, 103],
-        ...     'ID': ['.', '.', '.', '.'],
-        ...     'REF': ['A', 'G', 'A', 'C'],
-        ...     'ALT': ['C', 'T', 'G', 'G,A'],
-        ...     'QUAL': ['.', '.', '.', '.'],
-        ...     'FILTER': ['.', '.', '.', '.'],
-        ...     'INFO': ['.', '.', '.', '.'],
-        ...     'FORMAT': ['GT:AD:AF', 'GT:AD:AF', 'GT:AF', 'GT:AD:AF'],
-        ...     'A': ['0/1:12,15:0.444,0.556', '0/0:32,1:0.970,0.030', '0/1:.', './.:.:.'],
-        ...     'B': ['0/1:13,17:0.433,0.567', '0/1:14,15:0.483,0.517', './.:.', '1/2:0,11,17:0.000,0.393,0.607'],
+        ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 100, 101, 102, 103],
+        ...     'ID': ['.', '.', '.', '.', '.'],
+        ...     'REF': ['A', 'A', 'G', 'A', 'C'],
+        ...     'ALT': ['C', 'T', 'T', 'G', 'G,A'],
+        ...     'QUAL': ['.', '.', '.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.', '.', '.'],
+        ...     'INFO': ['.', '.', '.', '.', '.'],
+        ...     'FORMAT': ['GT:AD:AF', 'GT:AD:AF', 'GT:AD:AF', 'GT:AF', 'GT:AD:AF'],
+        ...     'A': ['0/1:12,15:0.444,0.556', '0/0:31,0:1.000,0.000', '0/0:32,1:0.970,0.030', '0/1:.', './.:.:.'],
+        ...     'B': ['0/0:29,0:1.000,0.000', '0/1:13,17:0.433,0.567', '0/1:14,15:0.483,0.517', './.:.', '1/2:0,11,17:0.000,0.393,0.607'],
         ... }
         >>> vf = pyvcf.VcfFrame.from_dict([], data)
         >>> vf.df
           CHROM  POS ID REF  ALT QUAL FILTER INFO    FORMAT                      A                              B
-        0  chr1  100  .   A    C    .      .    .  GT:AD:AF  0/1:12,15:0.444,0.556          0/1:13,17:0.433,0.567
-        1  chr1  101  .   G    T    .      .    .  GT:AD:AF   0/0:32,1:0.970,0.030          0/1:14,15:0.483,0.517
-        2  chr1  102  .   A    G    .      .    .     GT:AF                  0/1:.                          ./.:.
-        3  chr1  103  .   C  G,A    .      .    .  GT:AD:AF                ./.:.:.  1/2:0,11,17:0.000,0.393,0.607
+        0  chr1  100  .   A    C    .      .    .  GT:AD:AF  0/1:12,15:0.444,0.556           0/0:29,0:1.000,0.000
+        1  chr1  100  .   A    T    .      .    .  GT:AD:AF   0/0:31,0:1.000,0.000          0/1:13,17:0.433,0.567
+        2  chr1  101  .   G    T    .      .    .  GT:AD:AF   0/0:32,1:0.970,0.030          0/1:14,15:0.483,0.517
+        3  chr1  102  .   A    G    .      .    .     GT:AF                  0/1:.                          ./.:.
+        4  chr1  103  .   C  G,A    .      .    .  GT:AD:AF                ./.:.:.  1/2:0,11,17:0.000,0.393,0.607
         >>> vf.get_af('A', 'chr1-100-A-C')
         0.556
-        >>> vf.get_af('B', 'chr1-102-A-G')
+        >>> vf.get_af('A', 'chr1-100-A-T')
+        0.0
+        >>> vf.get_af('B', 'chr1-100-A-T')
+        0.567
+        >>> vf.get_af('B', 'chr1-100-A-G') # does not exist
         nan
+        >>> vf.get_af('B', 'chr1-102-A-G') # missing AF data
+        nan
+        >>> vf.get_af('B', 'chr1-103-C-A') # multiallelic locus
+        0.607
         """
         chrom, pos, ref, alt = common.parse_variant(variant)
 
-        r = self.df[(self.df.CHROM == chrom) & (self.df.POS == pos) &
-            (self.df.REF == ref)]
+        i = self.df.apply(lambda r: ((r.CHROM == chrom) & (r.POS == pos) &
+                (r.REF == ref) & (alt in r.ALT.split(','))), axis=1)
+
+        if i.any():
+            r = self.df[i]
+        else:
+            return np.nan
 
         try:
             i = r.FORMAT.values[0].split(':').index('AF')
@@ -6622,12 +6639,7 @@ class VcfFrame:
 
         alts = r.ALT.values[0].split(',')
 
-        if alt in alts:
-            j = r.ALT.values[0].split(',').index(alt)
-        else:
-            message = (f"Position {chrom}-{pos}-{ref} does not have '{alt}' "
-                f"as ALT allele, possible choices: {alts}")
-            raise ValueError(message)
+        j = r.ALT.values[0].split(',').index(alt)
 
         field = r[sample].values[0].split(':')[i]
 
