@@ -3520,7 +3520,9 @@ class VcfFrame:
 
         return ax
 
-    def plot_regplot(self, a, b, ax=None, figsize=None, **kwargs):
+    def plot_regplot_tmb(
+        self, a, b, ax=None, figsize=None, **kwargs
+    ):
         """
         Create a scatter plot with a linear regression model fit visualizing
         correlation between TMB in two sample groups.
@@ -3545,6 +3547,11 @@ class VcfFrame:
         matplotlib.axes.Axes
             The matplotlib axes containing the plot.
 
+        See Also
+        --------
+        fuc.api.pymaf.MafFrame.plot_regplot_tmb
+            Similar method for the :meth:`fuc.api.pymaf.MafFrame` class.
+
         Examples
         --------
 
@@ -3560,7 +3567,7 @@ class VcfFrame:
             >>> normal.name = 'Normal'
             >>> tumor = af.df[af.df.Tissue == 'Tumor'].index
             >>> tumor.name = 'Tumor'
-            >>> vf.plot_regplot(normal, tumor)
+            >>> vf.plot_regplot_tmb(normal, tumor)
             Results for B ~ A:
             R^2 = 0.01
             P = 7.17e-01
