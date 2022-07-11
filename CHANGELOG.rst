@@ -1,8 +1,8 @@
 Changelog
 *********
 
-0.35.0 (in development)
------------------------
+0.35.0 (2022-07-12)
+-------------------
 
 * Fix bug in :meth:`pyvcf.VcfFrame.pseudophase` method.
 * Add new methods :meth:`pyvcf.VcfFrame.diploidize` and :meth:`pyvcf.gt_diploidize`.
