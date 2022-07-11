@@ -1,6 +1,15 @@
 Changelog
 *********
 
+0.35.0 (2022-07-12)
+-------------------
+
+* Fix bug in :meth:`pyvcf.VcfFrame.pseudophase` method.
+* Add new methods :meth:`pyvcf.VcfFrame.diploidize` and :meth:`pyvcf.gt_diploidize`.
+* Update :meth:`pyvcf.VcfFrame.get_af` method to handle situations where there are multiple records with the same ``REF`` allele.
+* Add new method :meth:`pymaf.MafFrame.plot_regplot_tmb`.
+* Rename :meth:`pyvcf.VcfFrame.plot_regplot` method to :meth:`pyvcf.VcfFrame.plot_regplot_tmb` and :meth:`pymaf.MafFrame.plot_regplot` method to :meth:`pymaf.MafFrame.plot_regplot_gene`.
+
 0.34.0 (2022-06-08)
 -------------------
 

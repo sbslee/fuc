@@ -447,6 +447,54 @@ def rescue_filtered_variants(vfs, format='GT'):
     merged_vf = merge(filtered_vfs, how='outer', format=format)
     return merged_vf
 
+def gt_diploidize(g):
+    """
+    For given genotype, return its diploid form.
+
+    This method will ignore diploid genotypes (e.g. 0/1) and is therefore
+    only effective for haploid genotypes (e.g. genotypes from the X
+    chromosome for males).
+
+    Parameters
+    ----------
+    g : str
+        Sample genotype.
+
+    Returns
+    -------
+    bool
+        Diploid genotype.
+
+    See Also
+    --------
+    VcfFrame.diploidize
+        Diploidize VcfFrame.
+
+    Examples
+    --------
+
+    >>> from fuc import pyvcf
+    >>> pyvcf.gt_diploidize('0')
+    '0/0'
+    >>> pyvcf.gt_diploidize('1')
+    '0/1'
+    >>> pyvcf.gt_diploidize('.')
+    './.'
+    >>> pyvcf.gt_diploidize('1:34')
+    '0/1:34'
+    >>> pyvcf.gt_diploidize('0/1:34')
+    '0/1:34'
+    >>> pyvcf.gt_diploidize('./.')
+    './.'
+    """
+    if gt_ploidy(g) != 1:
+        return g
+    gt = g.split(':')[0]
+    if gt == '.':
+        return './' + g
+    else:
+        return '0/' + g
+
 def gt_miss(g):
     """
     For given genotype, return True if it has missing value.
@@ -700,9 +748,9 @@ def gt_pseudophase(g):
     --------
 
     >>> from fuc import pyvcf
-    >>> pyvcf.pseudophase('0/1')
+    >>> pyvcf.gt_pseudophase('0/1')
     '0|1'
-    >>> pyvcf.pseudophase('0/0:34:10,24')
+    >>> pyvcf.gt_pseudophase('0/0:34:10,24')
     '0|0:34:10,24'
     """
     l = g.split(':')
@@ -3472,7 +3520,9 @@ class VcfFrame:
 
         return ax
 
-    def plot_regplot(self, a, b, ax=None, figsize=None, **kwargs):
+    def plot_regplot_tmb(
+        self, a, b, ax=None, figsize=None, **kwargs
+    ):
         """
         Create a scatter plot with a linear regression model fit visualizing
         correlation between TMB in two sample groups.
@@ -3497,6 +3547,11 @@ class VcfFrame:
         matplotlib.axes.Axes
             The matplotlib axes containing the plot.
 
+        See Also
+        --------
+        fuc.api.pymaf.MafFrame.plot_regplot_tmb
+            Similar method for the :meth:`fuc.api.pymaf.MafFrame` class.
+
         Examples
         --------
 
@@ -3512,7 +3567,7 @@ class VcfFrame:
             >>> normal.name = 'Normal'
             >>> tumor = af.df[af.df.Tissue == 'Tumor'].index
             >>> tumor.name = 'Tumor'
-            >>> vf.plot_regplot(normal, tumor)
+            >>> vf.plot_regplot_tmb(normal, tumor)
             Results for B ~ A:
             R^2 = 0.01
             P = 7.17e-01
@@ -6378,6 +6433,53 @@ class VcfFrame:
         df = df[['Locus', 'Sample', 'Self', 'Other']]
         return df
 
+    def diploidize(self):
+        """
+        Diploidize VcfFrame.
+
+        Returns
+        -------
+        VcfFrame
+            Diploidized VcfFrame.
+
+        See Also
+        --------
+        gt_diploidize
+            For given genotype, return its diploid form.
+
+        Examples
+        --------
+
+        >>> from fuc import pyvcf
+        >>> data = {
+        ...     'CHROM': ['chrX', 'chrX'],
+        ...     'POS': [100, 101],
+        ...     'ID': ['.', '.'],
+        ...     'REF': ['G', 'T'],
+        ...     'ALT': ['A', 'C'],
+        ...     'QUAL': ['.', '.'],
+        ...     'FILTER': ['.', '.'],
+        ...     'INFO': ['.', '.'],
+        ...     'FORMAT': ['GT', 'GT'],
+        ...     'Male': ['0', '1'],
+        ...     'Female': ['0/0', '0/1'],
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Male Female
+        0  chrX  100  .   G   A    .      .    .     GT    0    0/0
+        1  chrX  101  .   T   C    .      .    .     GT    1    0/1
+        >>> vf.diploidize().df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Male Female
+        0  chrX  100  .   G   A    .      .    .     GT  0/0    0/0
+        1  chrX  101  .   T   C    .      .    .     GT  0/1    0/1
+        """
+        def one_row(r):
+            r[9:] = r[9:].apply(gt_diploidize)
+            return r
+        df = self.df.apply(one_row, axis=1)
+        return self.__class__(self.copy_meta(), df)
+
     def fetch(self, variant):
         """
         Fetch the VCF row that matches specified variant.
@@ -6463,7 +6565,7 @@ class VcfFrame:
         1  chr2  101  .   T   C    .      .    .     GT  1|1
         """
         def one_row(r):
-            r[9:] = r[9:].apply(pseudophase)
+            r[9:] = r[9:].apply(gt_pseudophase)
             return r
         df = self.df.apply(one_row, axis=1)
         return self.__class__(self.copy_meta(), df)
@@ -6472,7 +6574,10 @@ class VcfFrame:
         """
         Get allele fraction for a pair of sample and variant.
 
-        The method will return ``numpy.nan`` if the value is missing.
+        The method will return ``numpy.nan`` when:
+
+        1. variant is absent, or
+        2. variant is present but there is no ``AF`` in the ``FORMAT`` column
 
         Parameters
         ----------
@@ -6491,32 +6596,48 @@ class VcfFrame:
 
         >>> from fuc import pyvcf, common
         >>> data = {
-        ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1'],
-        ...     'POS': [100, 101, 102, 103],
-        ...     'ID': ['.', '.', '.', '.'],
-        ...     'REF': ['A', 'G', 'A', 'C'],
-        ...     'ALT': ['C', 'T', 'G', 'G,A'],
-        ...     'QUAL': ['.', '.', '.', '.'],
-        ...     'FILTER': ['.', '.', '.', '.'],
-        ...     'INFO': ['.', '.', '.', '.'],
-        ...     'FORMAT': ['GT:AD:AF', 'GT:AD:AF', 'GT:AF', 'GT:AD:AF'],
-        ...     'A': ['0/1:12,15:0.444,0.556', '0/0:32,1:0.970,0.030', '0/1:.', './.:.:.'],
-        ...     'B': ['0/1:13,17:0.433,0.567', '0/1:14,15:0.483,0.517', './.:.', '1/2:0,11,17:0.000,0.393,0.607'],
+        ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 100, 101, 102, 103],
+        ...     'ID': ['.', '.', '.', '.', '.'],
+        ...     'REF': ['A', 'A', 'G', 'A', 'C'],
+        ...     'ALT': ['C', 'T', 'T', 'G', 'G,A'],
+        ...     'QUAL': ['.', '.', '.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.', '.', '.'],
+        ...     'INFO': ['.', '.', '.', '.', '.'],
+        ...     'FORMAT': ['GT:AD:AF', 'GT:AD:AF', 'GT:AD:AF', 'GT:AF', 'GT:AD:AF'],
+        ...     'A': ['0/1:12,15:0.444,0.556', '0/0:31,0:1.000,0.000', '0/0:32,1:0.970,0.030', '0/1:.', './.:.:.'],
+        ...     'B': ['0/0:29,0:1.000,0.000', '0/1:13,17:0.433,0.567', '0/1:14,15:0.483,0.517', './.:.', '1/2:0,11,17:0.000,0.393,0.607'],
         ... }
         >>> vf = pyvcf.VcfFrame.from_dict([], data)
         >>> vf.df
           CHROM  POS ID REF  ALT QUAL FILTER INFO    FORMAT                      A                              B
-        0  chr1  100  .   A    C    .      .    .  GT:AD:AF  0/1:12,15:0.444,0.556          0/1:13,17:0.433,0.567
-        1  chr1  101  .   G    T    .      .    .  GT:AD:AF   0/0:32,1:0.970,0.030          0/1:14,15:0.483,0.517
-        2  chr1  102  .   A    G    .      .    .     GT:AF                  0/1:.                          ./.:.
-        3  chr1  103  .   C  G,A    .      .    .  GT:AD:AF                ./.:.:.  1/2:0,11,17:0.000,0.393,0.607
+        0  chr1  100  .   A    C    .      .    .  GT:AD:AF  0/1:12,15:0.444,0.556           0/0:29,0:1.000,0.000
+        1  chr1  100  .   A    T    .      .    .  GT:AD:AF   0/0:31,0:1.000,0.000          0/1:13,17:0.433,0.567
+        2  chr1  101  .   G    T    .      .    .  GT:AD:AF   0/0:32,1:0.970,0.030          0/1:14,15:0.483,0.517
+        3  chr1  102  .   A    G    .      .    .     GT:AF                  0/1:.                          ./.:.
+        4  chr1  103  .   C  G,A    .      .    .  GT:AD:AF                ./.:.:.  1/2:0,11,17:0.000,0.393,0.607
         >>> vf.get_af('A', 'chr1-100-A-C')
         0.556
-        >>> vf.get_af('B', 'chr1-102-A-G')
+        >>> vf.get_af('A', 'chr1-100-A-T')
+        0.0
+        >>> vf.get_af('B', 'chr1-100-A-T')
+        0.567
+        >>> vf.get_af('B', 'chr1-100-A-G') # does not exist
         nan
+        >>> vf.get_af('B', 'chr1-102-A-G') # missing AF data
+        nan
+        >>> vf.get_af('B', 'chr1-103-C-A') # multiallelic locus
+        0.607
         """
         chrom, pos, ref, alt = common.parse_variant(variant)
-        r = self.df[(self.df.CHROM == chrom) & (self.df.POS == pos) & (self.df.REF == ref)]
+
+        i = self.df.apply(lambda r: ((r.CHROM == chrom) & (r.POS == pos) &
+                (r.REF == ref) & (alt in r.ALT.split(','))), axis=1)
+
+        if i.any():
+            r = self.df[i]
+        else:
+            return np.nan
 
         try:
             i = r.FORMAT.values[0].split(':').index('AF')
@@ -6525,10 +6646,7 @@ class VcfFrame:
 
         alts = r.ALT.values[0].split(',')
 
-        if alt in alts:
-            j = r.ALT.values[0].split(',').index(alt)
-        else:
-            raise ValueError(f'ALT allele not found, possible choices: {alts}')
+        j = r.ALT.values[0].split(',').index(alt)
 
         field = r[sample].values[0].split(':')[i]
 

@@ -1295,7 +1295,7 @@ class MafFrame:
 
         return ax
 
-    def plot_regplot(
+    def plot_regplot_gene(
         self, af, group_col, a, b, a_size=None, b_size=None, genes=None,
         count=10, to_csv=None, ax=None, figsize=None, **kwargs
     ):
@@ -1353,7 +1353,7 @@ class MafFrame:
             >>> annot_file = '~/fuc-data/tcga-laml/tcga_laml_annot.tsv'
             >>> mf = pymaf.MafFrame.from_file(maf_file)
             >>> af = common.AnnFrame.from_file(annot_file, sample_col=0)
-            >>> mf.plot_regplot(af, 'FAB_classification', 'M1', 'M2')
+            >>> mf.plot_regplot_gene(af, 'FAB_classification', 'M1', 'M2')
             Results for M2 ~ M1:
             R^2 = 0.43
               P = 3.96e-02
@@ -1393,6 +1393,93 @@ class MafFrame:
         # Print summary statistics including R-squared and p-value.
         results = smf.ols(f'{b} ~ {a}', data=df3).fit()
         print(f'Results for {b} ~ {a}:')
+        print(f'R^2 = {results.rsquared:.2f}')
+        print(f'  P = {results.f_pvalue:.2e}')
+
+        return ax
+
+    def plot_regplot_tmb(
+        self, af, subject_col, group_col, a, b, ax=None, figsize=None,
+        **kwargs
+    ):
+        """
+        Create a scatter plot with a linear regression model fit visualizing
+        correlation between TMB in two sample groups.
+
+        The method will automatically calculate and print summary statistics
+        including R-squared and p-value.
+
+        Parameters
+        ----------
+        af : AnnFrame
+            AnnFrame containing sample annotation data.
+        subject_col : str
+            AnnFrame column containing sample subject information.
+        group_col : str
+            AnnFrame column containing sample group information.
+        a, b : str
+            Sample group names.
+        ax : matplotlib.axes.Axes, optional
+            Pre-existing axes for the plot. Otherwise, crete a new one.
+        figsize : tuple, optional
+            Width, height in inches. Format: (float, float).
+        kwargs
+            Other keyword arguments will be passed down to
+            :meth:`seaborn.regplot`.
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            The matplotlib axes containing the plot.
+
+        See Also
+        --------
+        fuc.api.pyvcf.VcfFrame.plot_regplot_tmb
+            Similar method for the :meth:`fuc.api.pyvcf.VcfFrame` class.
+
+        Examples
+        --------
+
+        .. plot::
+
+            >>> import matplotlib.pyplot as plt
+            >>> from fuc import common, pymaf, pyvcf
+            >>> common.load_dataset('pyvcf')
+            >>> vcf_file = '~/fuc-data/pyvcf/normal-tumor.vcf'
+            >>> annot_file = '~/fuc-data/pyvcf/normal-tumor-annot.tsv'
+            >>> vf = pyvcf.VcfFrame.from_file(vcf_file)
+            >>> af = common.AnnFrame.from_file(annot_file, sample_col='Sample')
+            >>> mf = pymaf.MafFrame.from_vcf(vf)
+            >>> mf.plot_regplot_tmb(af, 'Patient', 'Tissue', 'Normal', 'Tumor')
+            Results for Tumor ~ Normal:
+            R^2 = 0.01
+              P = 7.17e-01
+            >>> plt.tight_layout()
+        """
+        d = self.df.value_counts('Tumor_Sample_Barcode').to_dict()
+
+        df = af.df[af.df[group_col].isin([a, b])][[group_col, subject_col]]
+        df = df.reset_index().pivot(index=subject_col, columns=group_col,
+            values=af.df.index.name)
+
+        def one_row(r):
+            for col in [a, b]:
+                if r[col] in d:
+                    r[col] = d[r[col]]
+                else:
+                    r[col] = 0
+            return r
+
+        df = df.apply(one_row, axis=1)
+
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+
+        sns.regplot(x=a, y=b, data=df, ax=ax, **kwargs)
+
+        # Print summary statistics including R-squared and p-value.
+        results = smf.ols(f'{b} ~ {a}', data=df).fit()
+        print(f"Results for {b} ~ {a}:")
         print(f'R^2 = {results.rsquared:.2f}')
         print(f'  P = {results.f_pvalue:.2e}')
 
