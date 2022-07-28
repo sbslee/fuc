@@ -86,7 +86,8 @@ You will sometimes come across VCF files that have only eight columns, and
 do not contain the FORMAT column or sample-specific information. These are
 called "sites-only" VCF files, and normally represent genetic variation that
 has been observed in a large population. Generally, information about the
-population of origin should be included in the header.
+population of origin should be included in the header. Note that the pyvcf
+submodule supports these sites-only VCF files as well.
 
 There are several reserved keywords in the INFO and FORMAT columns that are
 standards across the community. Popular keywords are listed below:
@@ -1577,6 +1578,8 @@ class VcfFrame:
     """
     Class for storing VCF data.
 
+    Sites-only VCF files are supported.
+
     Parameters
     ----------
     meta : list
@@ -1624,7 +1627,16 @@ class VcfFrame:
 
     def _check_df(self, df):
         df = df.reset_index(drop=True)
-        df = df.astype(HEADERS)
+        headers = HEADERS.copy()
+        # Handle "sites-only" VCF.
+        if 'FORMAT' not in df.columns:
+            del headers['FORMAT']
+            if set(df.columns) != set(headers):
+                raise ValueError("The input appears to be a sites-only VCF "
+                                 "because it's missing the FORMAT column; "
+                                 "however, it contains one or more incorrect "
+                                 f"columns: {df.columns.to_list()}.")
+        df = df.astype(headers)
         return df
 
     def __init__(self, meta, df):

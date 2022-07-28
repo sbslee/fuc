@@ -51,6 +51,10 @@ class TestPyvcf(unittest.TestCase):
         vf = vf.subset(['Sarah', 'John'])
         self.assertEqual(len(vf.samples), 2)
 
+    def test_sites_only(self):
+        vf = pyvcf.VcfFrame.from_file(vcf_file3)
+        self.assertEqual(vf.shape, (5, 0))
+
 class TestPybed(unittest.TestCase):
 
     def test_intersect(self):

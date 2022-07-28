@@ -4,6 +4,8 @@ Changelog
 0.36.0 (in development)
 -----------------------
 
+* Update ``pyvcf`` submodule to accept "sites-only" VCF.
+
 0.35.0 (2022-07-12)
 -------------------
 
