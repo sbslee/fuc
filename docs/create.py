@@ -85,6 +85,14 @@ Your contributions (e.g. feature ideas, pull requests) are most welcome.
 | Email: sbstevenlee@gmail.com
 | License: MIT License
 
+Citation
+========
+
+If you use fuc in a published analysis, please report the program version
+and cite the following article:
+
+Lee et al., 2022. `ClinPharmSeq: A targeted sequencing panel for clinical pharmacogenetics implementation <https://doi.org/10.1371/journal.pone.0272129>`__. PLOS ONE.
+
 Installation
 ============
 
