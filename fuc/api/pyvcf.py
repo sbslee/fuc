@@ -4368,6 +4368,87 @@ class VcfFrame:
             return self.__class__(self.copy_meta(), self.copy_df())
         return self.__class__(self.copy_meta(), self.df[i])
 
+    def filter_gsa(self, opposite=False, as_index=False):
+        """
+        Filter rows specific to Illumina's GSA array.
+
+        This function will remove variants that are specific to Illimina's
+        Infinium Global Screening (GSA) array. More specifically, variants
+        are removed if they contain one of the characters {'I', 'D', 'N',
+        ','} as either REF or ALT.
+
+        Parameters
+        ----------
+        opposite : bool, default: False
+            If True, return rows that don't meet the said criteria.
+        as_index : bool, default: False
+            If True, return boolean index array instead of VcfFrame.
+
+        Returns
+        -------
+        VcfFrame or pandas.Series
+            Filtered VcfFrame or boolean index array.
+
+        Examples
+        --------
+        Assume we have the following data:
+
+        >>> from fuc import pyvcf
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102, 103],
+        ...     'ID': ['.', '.', '.', '.'],
+        ...     'REF': ['D', 'N', 'A', 'C'],
+        ...     'ALT': ['I', '.', '.', 'A'],
+        ...     'QUAL': ['.', '.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.', '.'],
+        ...     'INFO': ['.', '.', '.', '.'],
+        ...     'FORMAT': ['GT', 'GT', 'GT', 'GT'],
+        ...     'Steven': ['0/1', '0/0', './.', '0/1'],
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
+        0  chr1  100  .   D   I    .      .    .     GT    0/1
+        1  chr1  101  .   N   .    .      .    .     GT    0/0
+        2  chr1  102  .   A   .    .      .    .     GT    ./.
+        3  chr1  103  .   C   A    .      .    .     GT    0/1
+
+        We can remove rows that are GSA-specific:
+
+        >>> vf.filter_gsa().df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
+        0  chr1  103  .   C   A    .      .    .     GT    0/1
+
+        We can also select those rows:
+
+        >>> vf.filter_gsa(opposite=True).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
+        0  chr1  100  .   D   I    .      .    .     GT    0/1
+        1  chr1  101  .   N   .    .      .    .     GT    0/0
+        2  chr1  102  .   A   .    .      .    .     GT    ./.
+
+        Finally, we can return boolean index array from the filtering:
+
+        >>> vf.filter_gsa(as_index=True)
+        0    False
+        1    False
+        2    False
+        3     True
+        dtype: bool
+        """
+        def one_row(r):
+            alleles = ['I', 'D', '.', 'N']
+            return r.REF in alleles or r.ALT in alleles
+        i = ~self.df.apply(one_row, axis=1)
+        if opposite:
+            i = ~i
+        if as_index:
+            return i
+        if i.empty:
+            return self.__class__(self.copy_meta(), self.copy_df())
+        return self.__class__(self.copy_meta(), self.df[i])
+
     def filter_indel(self, opposite=False, as_index=False):
         """
         Filter rows with indel.
