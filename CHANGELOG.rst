@@ -4,6 +4,7 @@ Changelog
 0.36.0 (in development)
 -----------------------
 
+* ``fuc`` now has a citation! Please refer to the publication “`ClinPharmSeq: A targeted sequencing panel for clinical pharmacogenetics implementation <https://doi.org/10.1371/journal.pone.0272129>`__” by Lee et al., 2022 (Steven is the first author). Fore more details, see the Citation section in README.
 * Update ``pyvcf`` submodule to accept "sites-only" VCF.
 * Add new method :meth:`pyvcf.VcfFrame.filter_gsa`.
 * Add new method :meth:`pyvcf.VcfFrame.duplicated`.
