@@ -6,6 +6,7 @@ Changelog
 
 * Update ``pyvcf`` submodule to accept "sites-only" VCF.
 * Add new method :meth:`pyvcf.VcfFrame.filter_gsa`.
+* Add new method :meth:`pyvcf.VcfFrame.duplicated`.
 
 0.35.0 (2022-07-12)
 -------------------

@@ -5945,6 +5945,73 @@ class VcfFrame:
         vf.df.columns = columns
         return vf
 
+    def duplicated(self, subset=None, keep='first'):
+        """
+        Return boolean Series denoting duplicate rows in VcfFrame.
+
+        This method essentially wraps the :meth:`pandas.DataFrame.duplicated`
+        method.
+
+        Considering certain columns is optional.
+
+        Parameters
+        ----------
+        subset : column label or sequence of labels, optional
+            Only consider certain columns for identifying duplicates, by
+            default use all of the columns.
+        keep : {'first', 'last', False}, default 'first'
+            Determines which duplicates (if any) to keep.
+
+            - ``first`` : Mark duplicates as ``True`` except for the first
+              occurrence.
+            - ``last`` : Mark duplicates as ``True`` except for the last
+              occurrence.
+            - False : Mark all duplicates as ``True``.
+
+        Returns
+        -------
+        Series
+            Boolean series for each duplicated rows.
+
+        Examples
+        --------
+
+        >>> from fuc import pyvcf
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr2', 'chr2'],
+        ...     'POS': [100, 100, 200, 200],
+        ...     'ID': ['.', '.', '.', '.'],
+        ...     'REF': ['A', 'A', 'C', 'C'],
+        ...     'ALT': ['C', 'T', 'G', 'G,A'],
+        ...     'QUAL': ['.', '.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.', '.'],
+        ...     'INFO': ['.', '.', '.', '.'],
+        ...     'FORMAT': ['GT', 'GT', 'GT', 'GT'],
+        ...     'A': ['0/1', './.', '0/1', './.'],
+        ...     'B': ['./.', '0/1', './.', '1/2'],
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF  ALT QUAL FILTER INFO FORMAT    A    B
+        0  chr1  100  .   A    C    .      .    .     GT  0/1  ./.
+        1  chr1  100  .   A    T    .      .    .     GT  ./.  0/1
+        2  chr2  200  .   C    G    .      .    .     GT  0/1  ./.
+        3  chr2  200  .   C  G,A    .      .    .     GT  ./.  1/2
+        >>> vf.duplicated(['CHROM', 'POS', 'REF'])
+        0    False
+        1     True
+        2    False
+        3     True
+        dtype: bool
+        >>> vf.duplicated(['CHROM', 'POS', 'REF'], keep='last')
+        0     True
+        1    False
+        2     True
+        3    False
+        dtype: bool
+        """
+        return self.df.duplicated(subset=subset, keep=keep)
+
     def drop_duplicates(self, subset=None, keep='first'):
         """
         Return VcfFrame with duplicate rows removed.
