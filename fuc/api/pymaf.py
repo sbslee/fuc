@@ -1400,7 +1400,7 @@ class MafFrame:
 
     def plot_regplot_tmb(
         self, af, subject_col, group_col, a, b, ax=None, figsize=None,
-        **kwargs
+        to_csv=None, **kwargs
     ):
         """
         Create a scatter plot with a linear regression model fit visualizing
@@ -1419,6 +1419,8 @@ class MafFrame:
             AnnFrame column containing sample group information.
         a, b : str
             Sample group names.
+        to_csv : str, optional
+            Write the plot's data to a CSV file.
         ax : matplotlib.axes.Axes, optional
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
@@ -1482,6 +1484,10 @@ class MafFrame:
         print(f"Results for {b} ~ {a}:")
         print(f'R^2 = {results.rsquared:.2f}')
         print(f'  P = {results.f_pvalue:.2e}')
+
+        # Write the DataFrame to a CSV file.
+        if to_csv is not None:
+            df.to_csv(to_csv)
 
         return ax
 
