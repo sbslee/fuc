@@ -9,6 +9,7 @@ Changelog
 * Add new method :meth:`pyvcf.VcfFrame.filter_gsa`.
 * Add new method :meth:`pyvcf.VcfFrame.duplicated`.
 * Add new optional argument ``to_csv`` to :meth:`pymaf.MafFrame.plot_regplot_tmb` method.
+* Add new optional argument ``count`` to :meth:`pymaf.MafFrame.plot_mutated_matched` method.
 
 0.35.0 (2022-07-12)
 -------------------
