@@ -1400,7 +1400,7 @@ class MafFrame:
 
     def plot_regplot_tmb(
         self, af, subject_col, group_col, a, b, ax=None, figsize=None,
-        **kwargs
+        to_csv=None, **kwargs
     ):
         """
         Create a scatter plot with a linear regression model fit visualizing
@@ -1419,6 +1419,8 @@ class MafFrame:
             AnnFrame column containing sample group information.
         a, b : str
             Sample group names.
+        to_csv : str, optional
+            Write the plot's data to a CSV file.
         ax : matplotlib.axes.Axes, optional
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
@@ -1482,6 +1484,10 @@ class MafFrame:
         print(f"Results for {b} ~ {a}:")
         print(f'R^2 = {results.rsquared:.2f}')
         print(f'  P = {results.f_pvalue:.2e}')
+
+        # Write the DataFrame to a CSV file.
+        if to_csv is not None:
+            df.to_csv(to_csv)
 
         return ax
 
@@ -1805,8 +1811,8 @@ class MafFrame:
         return ax
 
     def plot_mutated_matched(
-        self, af, patient_col, group_col, group_order, ax=None, figsize=None,
-        **kwargs
+        self, af, patient_col, group_col, group_order, count=10, ax=None,
+        figsize=None, **kwargs
     ):
         """
         Create a bar plot visualizing the mutation prevalence of top
@@ -1822,6 +1828,8 @@ class MafFrame:
             AnnFrame column containing sample group information.
         group_order : list
             List of sample group names.
+        count : int, defualt: 10
+            Number of top mutated genes to display.
         ax : matplotlib.axes.Axes, optional
             Pre-existing axes for the plot. Otherwise, crete a new one.
         figsize : tuple, optional
@@ -1835,7 +1843,7 @@ class MafFrame:
         matplotlib.axes.Axes
             The matplotlib axes containing the plot.
         """
-        df = self.matrix_waterfall_matched(af, patient_col, group_col, group_order)
+        df = self.matrix_waterfall_matched(af, patient_col, group_col, group_order, count=count)
         df = df.applymap(lambda x: 0 if x == 'None' else 1)
         s = df.sum(axis=1) / len(df.columns) * 100
         s.name = 'Count'

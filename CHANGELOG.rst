@@ -1,6 +1,16 @@
 Changelog
 *********
 
+0.36.0 (2022-08-12)
+-------------------
+
+* ``fuc`` now has a citation! Please refer to the publication “`ClinPharmSeq: A targeted sequencing panel for clinical pharmacogenetics implementation <https://doi.org/10.1371/journal.pone.0272129>`__” by Lee et al., 2022 (Steven is the first author). Fore more details, see the Citation section in README.
+* Update ``pyvcf`` submodule to accept "sites-only" VCF.
+* Add new method :meth:`pyvcf.VcfFrame.filter_gsa`.
+* Add new method :meth:`pyvcf.VcfFrame.duplicated`.
+* Add new optional argument ``to_csv`` to :meth:`pymaf.MafFrame.plot_regplot_tmb` method.
+* Add new optional argument ``count`` to :meth:`pymaf.MafFrame.plot_mutated_matched` method.
+
 0.35.0 (2022-07-12)
 -------------------
 
@@ -33,7 +43,7 @@ Changelog
 0.32.0 (2022-04-02)
 -------------------
 
-* Add new optional argument ``filter_off`` for :class:`pykallisto.KallistoFrame` constructor, which is useful for generating a simple count or tpm matrix.
+* Add new optional argument ``filter_off`` to :class:`pykallisto.KallistoFrame` constructor, which is useful for generating a simple count or tpm matrix.
 * Add new optional argument ``--dir-path`` to :command:`vcf-call` command for storing intermediate files.
 * Add new optional argument ``--gap_frac`` to :command:`vcf-call` command so that users can control indel calling sensitivity.
 * Add new optional argument ``--group-samples`` to :command:`vcf-call` command so that users can group samples into populations and apply the HWE assumption within but not across the populations.

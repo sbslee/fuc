@@ -86,7 +86,8 @@ You will sometimes come across VCF files that have only eight columns, and
 do not contain the FORMAT column or sample-specific information. These are
 called "sites-only" VCF files, and normally represent genetic variation that
 has been observed in a large population. Generally, information about the
-population of origin should be included in the header.
+population of origin should be included in the header. Note that the pyvcf
+submodule supports these sites-only VCF files as well.
 
 There are several reserved keywords in the INFO and FORMAT columns that are
 standards across the community. Popular keywords are listed below:
@@ -1577,6 +1578,8 @@ class VcfFrame:
     """
     Class for storing VCF data.
 
+    Sites-only VCF files are supported.
+
     Parameters
     ----------
     meta : list
@@ -1624,7 +1627,16 @@ class VcfFrame:
 
     def _check_df(self, df):
         df = df.reset_index(drop=True)
-        df = df.astype(HEADERS)
+        headers = HEADERS.copy()
+        # Handle "sites-only" VCF.
+        if 'FORMAT' not in df.columns:
+            del headers['FORMAT']
+            if set(df.columns) != set(headers):
+                raise ValueError("The input appears to be a sites-only VCF "
+                                 "because it's missing the FORMAT column; "
+                                 "however, it contains one or more incorrect "
+                                 f"columns: {df.columns.to_list()}.")
+        df = df.astype(headers)
         return df
 
     def __init__(self, meta, df):
@@ -4356,6 +4368,87 @@ class VcfFrame:
             return self.__class__(self.copy_meta(), self.copy_df())
         return self.__class__(self.copy_meta(), self.df[i])
 
+    def filter_gsa(self, opposite=False, as_index=False):
+        """
+        Filter rows specific to Illumina's GSA array.
+
+        This function will remove variants that are specific to Illimina's
+        Infinium Global Screening (GSA) array. More specifically, variants
+        are removed if they contain one of the characters {'I', 'D', 'N',
+        ','} as either REF or ALT.
+
+        Parameters
+        ----------
+        opposite : bool, default: False
+            If True, return rows that don't meet the said criteria.
+        as_index : bool, default: False
+            If True, return boolean index array instead of VcfFrame.
+
+        Returns
+        -------
+        VcfFrame or pandas.Series
+            Filtered VcfFrame or boolean index array.
+
+        Examples
+        --------
+        Assume we have the following data:
+
+        >>> from fuc import pyvcf
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr1', 'chr1'],
+        ...     'POS': [100, 101, 102, 103],
+        ...     'ID': ['.', '.', '.', '.'],
+        ...     'REF': ['D', 'N', 'A', 'C'],
+        ...     'ALT': ['I', '.', '.', 'A'],
+        ...     'QUAL': ['.', '.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.', '.'],
+        ...     'INFO': ['.', '.', '.', '.'],
+        ...     'FORMAT': ['GT', 'GT', 'GT', 'GT'],
+        ...     'Steven': ['0/1', '0/0', './.', '0/1'],
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
+        0  chr1  100  .   D   I    .      .    .     GT    0/1
+        1  chr1  101  .   N   .    .      .    .     GT    0/0
+        2  chr1  102  .   A   .    .      .    .     GT    ./.
+        3  chr1  103  .   C   A    .      .    .     GT    0/1
+
+        We can remove rows that are GSA-specific:
+
+        >>> vf.filter_gsa().df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
+        0  chr1  103  .   C   A    .      .    .     GT    0/1
+
+        We can also select those rows:
+
+        >>> vf.filter_gsa(opposite=True).df
+          CHROM  POS ID REF ALT QUAL FILTER INFO FORMAT Steven
+        0  chr1  100  .   D   I    .      .    .     GT    0/1
+        1  chr1  101  .   N   .    .      .    .     GT    0/0
+        2  chr1  102  .   A   .    .      .    .     GT    ./.
+
+        Finally, we can return boolean index array from the filtering:
+
+        >>> vf.filter_gsa(as_index=True)
+        0    False
+        1    False
+        2    False
+        3     True
+        dtype: bool
+        """
+        def one_row(r):
+            alleles = ['I', 'D', '.', 'N']
+            return r.REF in alleles or r.ALT in alleles
+        i = ~self.df.apply(one_row, axis=1)
+        if opposite:
+            i = ~i
+        if as_index:
+            return i
+        if i.empty:
+            return self.__class__(self.copy_meta(), self.copy_df())
+        return self.__class__(self.copy_meta(), self.df[i])
+
     def filter_indel(self, opposite=False, as_index=False):
         """
         Filter rows with indel.
@@ -5851,6 +5944,73 @@ class VcfFrame:
         vf = self.copy()
         vf.df.columns = columns
         return vf
+
+    def duplicated(self, subset=None, keep='first'):
+        """
+        Return boolean Series denoting duplicate rows in VcfFrame.
+
+        This method essentially wraps the :meth:`pandas.DataFrame.duplicated`
+        method.
+
+        Considering certain columns is optional.
+
+        Parameters
+        ----------
+        subset : column label or sequence of labels, optional
+            Only consider certain columns for identifying duplicates, by
+            default use all of the columns.
+        keep : {'first', 'last', False}, default 'first'
+            Determines which duplicates (if any) to keep.
+
+            - ``first`` : Mark duplicates as ``True`` except for the first
+              occurrence.
+            - ``last`` : Mark duplicates as ``True`` except for the last
+              occurrence.
+            - False : Mark all duplicates as ``True``.
+
+        Returns
+        -------
+        Series
+            Boolean series for each duplicated rows.
+
+        Examples
+        --------
+
+        >>> from fuc import pyvcf
+        >>> data = {
+        ...     'CHROM': ['chr1', 'chr1', 'chr2', 'chr2'],
+        ...     'POS': [100, 100, 200, 200],
+        ...     'ID': ['.', '.', '.', '.'],
+        ...     'REF': ['A', 'A', 'C', 'C'],
+        ...     'ALT': ['C', 'T', 'G', 'G,A'],
+        ...     'QUAL': ['.', '.', '.', '.'],
+        ...     'FILTER': ['.', '.', '.', '.'],
+        ...     'INFO': ['.', '.', '.', '.'],
+        ...     'FORMAT': ['GT', 'GT', 'GT', 'GT'],
+        ...     'A': ['0/1', './.', '0/1', './.'],
+        ...     'B': ['./.', '0/1', './.', '1/2'],
+        ... }
+        >>> vf = pyvcf.VcfFrame.from_dict([], data)
+        >>> vf.df
+          CHROM  POS ID REF  ALT QUAL FILTER INFO FORMAT    A    B
+        0  chr1  100  .   A    C    .      .    .     GT  0/1  ./.
+        1  chr1  100  .   A    T    .      .    .     GT  ./.  0/1
+        2  chr2  200  .   C    G    .      .    .     GT  0/1  ./.
+        3  chr2  200  .   C  G,A    .      .    .     GT  ./.  1/2
+        >>> vf.duplicated(['CHROM', 'POS', 'REF'])
+        0    False
+        1     True
+        2    False
+        3     True
+        dtype: bool
+        >>> vf.duplicated(['CHROM', 'POS', 'REF'], keep='last')
+        0     True
+        1    False
+        2     True
+        3    False
+        dtype: bool
+        """
+        return self.df.duplicated(subset=subset, keep=keep)
 
     def drop_duplicates(self, subset=None, keep='first'):
         """
