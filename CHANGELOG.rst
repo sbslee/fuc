@@ -4,6 +4,8 @@ Changelog
 0.37.0 (in development)
 -----------------------
 
+* :issue:`67`: Fix bug in :meth:`pymaf.MafFrame.plot_waterfall` method where ``count=1`` was causing color mismatch.
+
 0.36.0 (2022-08-12)
 -------------------
 

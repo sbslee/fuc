@@ -3263,7 +3263,7 @@ class MafFrame:
         colors = list(reversed(NONSYN_COLORS + ['k', 'lightgray']))
 
         sns.heatmap(df, cmap=colors, ax=ax, xticklabels=False,
-            cbar=False, **kwargs)
+            cbar=False, vmin=0, vmax=len(colors), **kwargs)
 
         ax.set_xlabel('Samples')
         ax.set_ylabel('')
