@@ -20,9 +20,6 @@ README
 .. image:: https://anaconda.org/bioconda/fuc/badges/downloads.svg
    :target: https://anaconda.org/bioconda/fuc/files
 
-.. image:: https://anaconda.org/bioconda/fuc/badges/installer/conda.svg
-   :target: https://conda.anaconda.org/bioconda
-
 Introduction
 ============
 
