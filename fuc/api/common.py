@@ -804,7 +804,12 @@ def parse_variant(variant):
 
 def extract_sequence(fasta, region):
     """
-    Extract the region's DNA sequence from the FASTA file.
+    Extract the DNA sequence corresponding to a selected region from a FASTA
+    file.
+
+    The method also allows users to retrieve the reference allele of a
+    variant in a genomic coordinate format, instead of providing a genomic
+    region.
 
     Parameters
     ----------
@@ -817,6 +822,17 @@ def extract_sequence(fasta, region):
     -------
     str
         DNA sequence. Empty string if there is no matching sequence.
+
+    Examples
+    --------
+
+    >>> from fuc import common
+    >>> fasta_file = 'resources_broad_hg38_v0_Homo_sapiens_assembly38.fasta'
+    >>> common.extract_sequence(fasta_file, 'chr1:15000-15005')
+    'GATCCG'
+    >>> # rs1423852 is chr16-80874864-C-T
+    >>> common.extract_sequence(fasta_file, 'chr16:80874864-80874864')
+    'C'
     """
     try:
         sequence = pysam.faidx(fasta, region).split('\n')[1]
