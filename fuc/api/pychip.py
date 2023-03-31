@@ -7,6 +7,8 @@ array platforms.
 import re
 import pandas as pd
 
+from . import common
+
 class AxiomFrame:
     """
     Class for storing Axiom annotation data.
@@ -190,7 +192,7 @@ class InfiniumFrame:
 
         return cls(df)
 
-    def to_vep(self):
+    def to_vep(self, fasta):
         """
         Convert InfiniumFrame to the Ensembl VEP format.
 
@@ -198,15 +200,65 @@ class InfiniumFrame:
         -------
         pandas.DataFrame
             Variants in Ensembl VEP format.
+
+        Parameters
+        ----------
+        region : str
+            Region ('chrom:start-end').
         """
+        nucleotides = ['A', 'C', 'G', 'T']
+        n = 15
         df = self.df[(self.df.Chr != 'XY') & (self.df.Chr != '0')]
+        df.MapInfo = df.MapInfo.astype(int)
+        df = df.head(1000)
         def one_row(r):
+            if r.Chr == 'MT':
+                chrom = 'chrM'
+            else:
+                chrom = f'chr{r.Chr}'
             pos = r.MapInfo
             matches = re.findall(r'\[([^\]]+)\]', r.SourceSeq)
             if not matches:
                 raise ValueError(f'Something went wrong: {r}')
             a1, a2 = matches[0].split('/')
-            data = pd.Series([r.Chr, r.MapInfo, a1, a2])
+            left_seq = r.SourceSeq.split('[')[0]
+            right_seq = r.SourceSeq.split(']')[1]
+            locus  = f'{chrom}:{pos}-{pos}'
+            if a1 in nucleotides and a2 in nucleotides: # SNV
+                ref = common.extract_sequence(fasta, locus)
+                if ref == a1:
+                    pass
+                elif ref == a2:
+                    a1, a2 = a2, a1
+                else:
+                    raise ValueError(f'Reference allele not found: {locus}')
+            elif a1 == '-' or a2 == '-':
+                affected = a1 if a2 == '-' else a2
+                c = len(affected)
+                if c == 1:
+                    left_query = common.extract_sequence(fasta, f'{chrom}:{pos-n}-{pos-1}')
+                    right_query = common.extract_sequence(fasta, f'{chrom}:{pos+1}-{pos+n}')
+                    print(locus, left_seq[-n:], left_query, left_seq[-n:] == left_query, 'DEL I')
+                    print(locus, right_seq[:n], right_query, right_seq[:n] == right_query, 'DEL I')
+                    print()
+                else:
+                    left_query = common.extract_sequence(fasta, f'{chrom}:{pos-n}-{pos}') # -1
+                    right_query = common.extract_sequence(fasta, f'{chrom}:{pos+c}-{pos+c+n-1}')
+                    if left_seq[-n:] == left_query[:-1] and right_seq[:n] == right_query: # DEL I
+                        print(locus, left_seq[-n:], left_query[:-1], left_seq[-n:] == left_query[:-1], 'DEL II')
+                        print(locus, right_seq[:n], right_query, right_seq[:n] == right_query, 'DEL II')
+                        print()
+                    else:
+                        #left_query = common.extract_sequence(fasta, f'{chrom}:{pos-n}-{pos}')
+                        #left_query = left_query[len(affected):] + affected
+                        print(locus, left_seq[-n:], left_query, left_seq[-n:] == left_query, 'Other')
+                        print(locus, right_seq[:n], right_query, right_seq[:n] == right_query, 'Other')
+                        print()
+            else:
+                raise ValueError(f'Unsupported format: {locus}')
+            data = pd.Series([r.Chr, r.MapInfo, r.MapInfo, f'{a1}/{a2}', '+'])
             return data
         df = df.apply(one_row, axis=1)
+        df = df.sort_values(by=[0, 1])
+        df = df.drop_duplicates()
         return df
