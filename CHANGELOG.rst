@@ -7,6 +7,7 @@ Changelog
 * :issue:`67`: Fix bug in :meth:`pymaf.MafFrame.plot_waterfall` method where ``count=1`` was causing color mismatch.
 * Add new submodule ``pychip``.
 * Add new method :meth:`common.reverse_complement`.
+* Fix bug in :meth:`common.extract_sequence` where a long DNA sequence output was truncated.
 
 0.36.0 (2022-08-12)
 -------------------

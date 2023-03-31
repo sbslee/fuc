@@ -835,7 +835,7 @@ def extract_sequence(fasta, region):
     'C'
     """
     try:
-        sequence = pysam.faidx(fasta, region).split('\n')[1]
+        sequence = ''.join(pysam.faidx(fasta, region).split('\n')[1:])
     except pysam.SamtoolsError as e:
         warnings.warn(str(e))
         sequence = ''
