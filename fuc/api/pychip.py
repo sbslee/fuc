@@ -84,9 +84,9 @@ class AxiomFrame:
         pandas.DataFrame
             Variants in Ensembl VEP format.
         """
-        print(self.df.shape)
         df = self.df[self.df.Chromosome != '---']
-        print(df.shape)
+        df['Physical Position'] = df['Physical Position'].astype(int)
+        df['Position End'] = df['Position End'].astype(int)
         def one_row(r):
             result = []
             nucleotides = ['A', 'C', 'G', 'T']
