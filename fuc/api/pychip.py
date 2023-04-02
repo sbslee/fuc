@@ -207,10 +207,23 @@ class InfiniumFrame:
             Region ('chrom:start-end').
         """
         nucleotides = ['A', 'C', 'G', 'T']
-        n = 15
+        n = 20
+        k = 100
         df = self.df[(self.df.Chr != 'XY') & (self.df.Chr != '0')]
         df.MapInfo = df.MapInfo.astype(int)
-        df = df.head(1000)
+        df = df.head(5000)
+
+        def compare_seq(seq1, seq2):
+            if len(seq1) != len(seq2):
+                return False
+            for i in range(len(seq1)):
+                if seq1[i] != seq2[i]:
+                    if seq1[i] == 'N' or seq2[i] == 'N':
+                        continue
+                    else:
+                        return False
+            return True
+
         def one_row(r):
             if r.Chr == 'MT':
                 chrom = 'chrM'
@@ -221,8 +234,8 @@ class InfiniumFrame:
             if not matches:
                 raise ValueError(f'Something went wrong: {r}')
             a1, a2 = matches[0].split('/')
-            left_seq = r.SourceSeq.split('[')[0]
-            right_seq = r.SourceSeq.split(']')[1]
+            left_seq = r.SourceSeq.split('[')[0][-n:].upper()
+            right_seq = r.SourceSeq.split(']')[1][:n].upper()
             locus  = f'{chrom}:{pos}-{pos}'
             if a1 in nucleotides and a2 in nucleotides: # SNV
                 ref = common.extract_sequence(fasta, locus)
@@ -230,30 +243,39 @@ class InfiniumFrame:
                     pass
                 elif ref == a2:
                     a1, a2 = a2, a1
+                elif ref == common.reverse_complement(a1):
+                    a1, a2 = ref, common.reverse_complement(a2)
+                elif ref == common.reverse_complement(a2):
+                    a1, a2 = ref, common.reverse_complement(a1)
                 else:
-                    raise ValueError(f'Reference allele not found: {locus}')
+                    raise ValueError(f'Reference allele not found: {[locus, a1, a2, ref]}')
             elif a1 == '-' or a2 == '-':
                 affected = a1 if a2 == '-' else a2
                 c = len(affected)
-                if c == 1:
-                    left_query = common.extract_sequence(fasta, f'{chrom}:{pos-n}-{pos-1}')
-                    right_query = common.extract_sequence(fasta, f'{chrom}:{pos+1}-{pos+n}')
-                    print(locus, left_seq[-n:], left_query, left_seq[-n:] == left_query, 'DEL I')
-                    print(locus, right_seq[:n], right_query, right_seq[:n] == right_query, 'DEL I')
-                    print()
+                ref_seq = common.extract_sequence(fasta, f'{chrom}:{pos-k}-{pos+k}')
+                left_query = ref_seq[:k][-n:]
+                right_query = ref_seq[k+c:][:n]
+                if compare_seq(left_seq, left_query) and compare_seq(right_seq, right_query):
+                    print(locus, left_seq, 'DEL I')
                 else:
-                    left_query = common.extract_sequence(fasta, f'{chrom}:{pos-n}-{pos}') # -1
-                    right_query = common.extract_sequence(fasta, f'{chrom}:{pos+c}-{pos+c+n-1}')
-                    if left_seq[-n:] == left_query[:-1] and right_seq[:n] == right_query: # DEL I
-                        print(locus, left_seq[-n:], left_query[:-1], left_seq[-n:] == left_query[:-1], 'DEL II')
-                        print(locus, right_seq[:n], right_query, right_seq[:n] == right_query, 'DEL II')
-                        print()
+                    left_query = ref_seq[:k+c+1][-n:]
+                    right_query = ref_seq[k+c+1:][:n]
+                    if compare_seq(left_seq, left_query) and compare_seq(right_seq, right_query):
+                        print(locus, left_seq, 'INS')
                     else:
-                        #left_query = common.extract_sequence(fasta, f'{chrom}:{pos-n}-{pos}')
-                        #left_query = left_query[len(affected):] + affected
-                        print(locus, left_seq[-n:], left_query, left_seq[-n:] == left_query, 'Other')
-                        print(locus, right_seq[:n], right_query, right_seq[:n] == right_query, 'Other')
-                        print()
+                        left_query = ref_seq[:k][-n:]
+                        right_query = ref_seq[k+c+1:][:n]
+                        if left_query in r.SourceSeq.split('[')[0]:
+                            repeats = r.SourceSeq.split('[')[0].split(left_query)[1]
+                            left_query += repeats
+                            left_query = left_query[len(repeats):]
+                            right_query = ref_seq[k+c+len(repeats):][:n]
+                            if compare_seq(left_seq, left_query) and compare_seq(right_seq, right_query):
+                                print(locus, left_seq, 'DEL II')
+                        else:
+                            print(locus, left_seq, left_query, left_seq == left_query)
+                            print(locus, right_seq, right_query, right_seq == right_query)
+                            print()
             else:
                 raise ValueError(f'Unsupported format: {locus}')
             data = pd.Series([r.Chr, r.MapInfo, r.MapInfo, f'{a1}/{a2}', '+'])
