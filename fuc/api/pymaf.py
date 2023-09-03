@@ -97,7 +97,7 @@ COMMON_COLUMNS = [
 
 # Below is the list of calculated variant consequences from Ensembl VEP:
 # https://m.ensembl.org/info/genome/variation/prediction/predicted_data.html
-# (accessed on 2021-05-31)
+# (accessed on 2023-09-03)
 #
 # Note that both frameshift_variant and protein_altering_variant require
 # additional information to find their correct Variant_Classification.
@@ -139,6 +139,11 @@ VEP_CONSEQUENCES = {
     'regulatory_region_variant':          'IGR',
     'feature_truncation':                 'Targeted_Region',
     'intergenic_variant':                 'IGR',
+    'splice_donor_5th_base_variant':       'AMBIGUOUS',
+    'splice_donor_region_variant':         'AMBIGUOUS',
+    'splice_polypyrimidine_tract_variant': 'AMBIGUOUS',
+    'coding_transcript_variant':           'AMBIGUOUS',
+    'sequence_variant':                    'AMBIGUOUS',
 }
 
 VARCLS_LIST = [

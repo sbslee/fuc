@@ -8,6 +8,7 @@ Changelog
 * Add new submodule ``pychip``.
 * Add new method :meth:`common.reverse_complement`.
 * Fix bug in :meth:`common.extract_sequence` where a long DNA sequence output was truncated.
+* :issue:`68`: Refresh the variant consequences database from Ensembl VEP. The database's latest update was on May 31, 2021.
 
 0.36.0 (2022-08-12)
 -------------------
