@@ -1,8 +1,8 @@
 Changelog
 *********
 
-0.37.0 (in development)
------------------------
+0.37.0 (2023-09-09)
+-------------------
 
 * :issue:`67`: Fix bug in :meth:`pymaf.MafFrame.plot_waterfall` method where ``count=1`` was causing color mismatch.
 * Add new submodule ``pychip``.
