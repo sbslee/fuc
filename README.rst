@@ -20,9 +20,6 @@ README
 .. image:: https://anaconda.org/bioconda/fuc/badges/downloads.svg
    :target: https://anaconda.org/bioconda/fuc/files
 
-.. image:: https://anaconda.org/bioconda/fuc/badges/installer/conda.svg
-   :target: https://conda.anaconda.org/bioconda
-
 Introduction
 ============
 
@@ -64,6 +61,11 @@ If you use fuc in a published analysis, please report the program version
 and cite the following article:
 
 Lee et al., 2022. `ClinPharmSeq: A targeted sequencing panel for clinical pharmacogenetics implementation <https://doi.org/10.1371/journal.pone.0272129>`__. PLOS ONE.
+
+Support fuc
+===========
+
+If you find my work useful, please consider becoming a `sponsor <https://github.com/sponsors/sbslee>`__.
 
 Installation
 ============
@@ -183,6 +185,7 @@ Below is the list of submodules available in the fuc API:
 - **common** : The common submodule is used by other fuc submodules such as pyvcf and pybed. It also provides many day-to-day actions used in the field of bioinformatics.
 - **pybam** : The pybam submodule is designed for working with sequence alignment files (SAM/BAM/CRAM). It essentially wraps the `pysam <https://pysam.readthedocs.io/en/latest/api.html>`_ package to allow fast computation and easy manipulation. If you are mainly interested in working with depth of coverage data, please check out the pycov submodule which is specifically designed for the task.
 - **pybed** : The pybed submodule is designed for working with BED files. It implements ``pybed.BedFrame`` which stores BED data as ``pandas.DataFrame`` via the `pyranges <https://github.com/biocore-ntnu/pyranges>`_ package to allow fast computation and easy manipulation. The submodule strictly adheres to the standard `BED specification <https://genome.ucsc.edu/FAQ/FAQformat.html>`_.
+- **pychip** : The pychip submodule is designed for working with annotation or manifest files from the Axiom (Thermo Fisher Scientific) and Infinium (Illumina) array platforms.
 - **pycov** : The pycov submodule is designed for working with depth of coverage data from sequence alingment files (SAM/BAM/CRAM). It implements ``pycov.CovFrame`` which stores read depth data as ``pandas.DataFrame`` via the `pysam <https://pysam.readthedocs.io/en/latest/api.html>`_ package to allow fast computation and easy manipulation. The ``pycov.CovFrame`` class also contains many useful plotting methods such as ``CovFrame.plot_region`` and ``CovFrame.plot_uniformity``.
 - **pyfq** : The pyfq submodule is designed for working with FASTQ files. It implements ``pyfq.FqFrame`` which stores FASTQ data as ``pandas.DataFrame`` to allow fast computation and easy manipulation.
 - **pygff** : The pygff submodule is designed for working with GFF/GTF files. It implements ``pygff.GffFrame`` which stores GFF/GTF data as ``pandas.DataFrame`` to allow fast computation and easy manipulation. The submodule strictly adheres to the standard `GFF specification <https://github.com/The-Sequence-Ontology/Specifications/blob/master/gff3.md>`_.

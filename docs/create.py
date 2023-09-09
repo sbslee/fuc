@@ -48,9 +48,6 @@ README
 .. image:: https://anaconda.org/bioconda/fuc/badges/downloads.svg
    :target: https://anaconda.org/bioconda/fuc/files
 
-.. image:: https://anaconda.org/bioconda/fuc/badges/installer/conda.svg
-   :target: https://conda.anaconda.org/bioconda
-
 Introduction
 ============
 
@@ -92,6 +89,11 @@ If you use fuc in a published analysis, please report the program version
 and cite the following article:
 
 Lee et al., 2022. `ClinPharmSeq: A targeted sequencing panel for clinical pharmacogenetics implementation <https://doi.org/10.1371/journal.pone.0272129>`__. PLOS ONE.
+
+Support fuc
+===========
+
+If you find my work useful, please consider becoming a `sponsor <https://github.com/sponsors/sbslee>`__.
 
 Installation
 ============

@@ -97,48 +97,53 @@ COMMON_COLUMNS = [
 
 # Below is the list of calculated variant consequences from Ensembl VEP:
 # https://m.ensembl.org/info/genome/variation/prediction/predicted_data.html
-# (accessed on 2021-05-31)
+# (accessed on 2023-09-03)
 #
 # Note that both frameshift_variant and protein_altering_variant require
 # additional information to find their correct Variant_Classification.
 
 VEP_CONSEQUENCES = {
-    'transcript_ablation':                'Splice_Site',
-    'splice_acceptor_variant':            'Splice_Site',
-    'splice_donor_variant':               'Splice_Site',
-    'stop_gained':                        'Nonsense_Mutation',
-    'frameshift_variant':                 'AMBIGUOUS',
-    'stop_lost':                          'Nonstop_Mutation',
-    'start_lost':                         'Translation_Start_Site',
-    'transcript_amplification':           'Intron',
-    'inframe_insertion':                  'In_Frame_Ins',
-    'inframe_deletion':                   'In_Frame_Del',
-    'missense_variant':                   'Missense_Mutation',
-    'protein_altering_variant':           'AMBIGUOUS',
-    'splice_region_variant':              'Splice_Region',
-    'incomplete_terminal_codon_variant':  'Silent',
-    'start_retained_variant':             'Silent',
-    'stop_retained_variant':              'Silent',
-    'synonymous_variant':                 'Silent',
-    'coding_sequence_variant':            'Missense_Mutation',
-    'mature_miRNA_variant':               'RNA',
-    '5_prime_UTR_variant':                "5'UTR",
-    '3_prime_UTR_variant':                "3'UTR",
-    'non_coding_transcript_exon_variant': 'RNA',
-    'intron_variant':                     'Intron',
-    'NMD_transcript_variant':             'Silent',
-    'non_coding_transcript_variant':      'RNA',
-    'upstream_gene_variant':              "5'Flank",
-    'downstream_gene_variant':            "3'Flank",
-    'TFBS_ablation':                      'Targeted_Region',
-    'TFBS_amplification':                 'Targeted_Region',
-    'TF_binding_site_variant':            'IGR',
-    'regulatory_region_ablation':         'Targeted_Region',
-    'regulatory_region_amplification':    'Targeted_Region',
-    'feature_elongation':                 'Targeted_Region',
-    'regulatory_region_variant':          'IGR',
-    'feature_truncation':                 'Targeted_Region',
-    'intergenic_variant':                 'IGR',
+    'transcript_ablation':                 'Splice_Site',
+    'splice_acceptor_variant':             'Splice_Site',
+    'splice_donor_variant':                'Splice_Site',
+    'stop_gained':                         'Nonsense_Mutation',
+    'frameshift_variant':                  'AMBIGUOUS',
+    'stop_lost':                           'Nonstop_Mutation',
+    'start_lost':                          'Translation_Start_Site',
+    'transcript_amplification':            'Intron',
+    'inframe_insertion':                   'In_Frame_Ins',
+    'inframe_deletion':                    'In_Frame_Del',
+    'missense_variant':                    'Missense_Mutation',
+    'protein_altering_variant':            'AMBIGUOUS',
+    'splice_region_variant':               'Splice_Region',
+    'incomplete_terminal_codon_variant':   'Silent',
+    'start_retained_variant':              'Silent',
+    'stop_retained_variant':               'Silent',
+    'synonymous_variant':                  'Silent',
+    'coding_sequence_variant':             'Missense_Mutation',
+    'mature_miRNA_variant':                'RNA',
+    '5_prime_UTR_variant':                 "5'UTR",
+    '3_prime_UTR_variant':                 "3'UTR",
+    'non_coding_transcript_exon_variant':  'RNA',
+    'intron_variant':                      'Intron',
+    'NMD_transcript_variant':              'Silent',
+    'non_coding_transcript_variant':       'RNA',
+    'upstream_gene_variant':               "5'Flank",
+    'downstream_gene_variant':             "3'Flank",
+    'TFBS_ablation':                       'Targeted_Region',
+    'TFBS_amplification':                  'Targeted_Region',
+    'TF_binding_site_variant':             'IGR',
+    'regulatory_region_ablation':          'Targeted_Region',
+    'regulatory_region_amplification':     'Targeted_Region',
+    'feature_elongation':                  'Targeted_Region',
+    'regulatory_region_variant':           'IGR',
+    'feature_truncation':                  'Targeted_Region',
+    'intergenic_variant':                  'IGR',
+    'splice_donor_5th_base_variant':       'AMBIGUOUS',
+    'splice_donor_region_variant':         'AMBIGUOUS',
+    'splice_polypyrimidine_tract_variant': 'AMBIGUOUS',
+    'coding_transcript_variant':           'AMBIGUOUS',
+    'sequence_variant':                    'AMBIGUOUS',
 }
 
 VARCLS_LIST = [
@@ -3263,7 +3268,7 @@ class MafFrame:
         colors = list(reversed(NONSYN_COLORS + ['k', 'lightgray']))
 
         sns.heatmap(df, cmap=colors, ax=ax, xticklabels=False,
-            cbar=False, **kwargs)
+            cbar=False, vmin=0, vmax=len(colors), **kwargs)
 
         ax.set_xlabel('Samples')
         ax.set_ylabel('')

@@ -804,7 +804,12 @@ def parse_variant(variant):
 
 def extract_sequence(fasta, region):
     """
-    Extract the region's DNA sequence from the FASTA file.
+    Extract the DNA sequence corresponding to a selected region from a FASTA
+    file.
+
+    The method also allows users to retrieve the reference allele of a
+    variant in a genomic coordinate format, instead of providing a genomic
+    region.
 
     Parameters
     ----------
@@ -817,9 +822,20 @@ def extract_sequence(fasta, region):
     -------
     str
         DNA sequence. Empty string if there is no matching sequence.
+
+    Examples
+    --------
+
+    >>> from fuc import common
+    >>> fasta = 'resources_broad_hg38_v0_Homo_sapiens_assembly38.fasta'
+    >>> common.extract_sequence(fasta, 'chr1:15000-15005')
+    'GATCCG'
+    >>> # rs1423852 is chr16-80874864-C-T
+    >>> common.extract_sequence(fasta, 'chr16:80874864-80874864')
+    'C'
     """
     try:
-        sequence = pysam.faidx(fasta, region).split('\n')[1]
+        sequence = ''.join(pysam.faidx(fasta, region).split('\n')[1:])
     except pysam.SamtoolsError as e:
         warnings.warn(str(e))
         sequence = ''
@@ -1434,3 +1450,44 @@ def parse_list_or_file(obj, extensions=['txt', 'tsv', 'csv', 'list']):
             return convert_file2list(obj[0])
 
     return obj
+
+def reverse_complement(seq, complement=True, reverse=False):
+    """
+    Given a DNA sequence, generate its reverse, complement, or
+    reverse-complement.
+
+    Parameters
+    ----------
+    seq : str
+        DNA sequence.
+    complement : bool, default: True
+        Whether to return the complment.
+    reverse : bool, default: False
+        Whether to return the reverse.
+
+    Returns
+    -------
+    str
+        Updated sequence.
+
+    Examples
+    --------
+
+    >>> from fuc import common
+    >>> common.reverse_complement('AGC')
+    'TCG'
+    >>> common.reverse_complement('AGC', reverse=True)
+    'GCT'
+    >>> common.reverse_complement('AGC', reverse=True, complement=False)
+    'GCT'
+    >>> common.reverse_complement('agC', reverse=True)
+    'Gct'
+    """
+    new_seq = seq[:]
+    complement = {'A': 'T', 'C': 'G', 'G': 'C', 'T': 'A',
+                  'a': 't', 'c': 'g', 'g': 'c', 't': 'a'}
+    if complement:
+        new_seq = ''.join([complement[x] for x in new_seq])
+    if reverse:
+        new_seq = new_seq[::-1]
+    return new_seq
