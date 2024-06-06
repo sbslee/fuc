@@ -4,6 +4,8 @@ Changelog
 0.38.0 (in development)
 -----------------------
 
+* Update :meth:`pyvcf.has_chr_prefix` method to ignore the HLA contigs for GRCh38.
+
 0.37.0 (2023-09-09)
 -------------------
 
