@@ -1,8 +1,8 @@
 Changelog
 *********
 
-0.38.0 (in development)
------------------------
+0.38.0 (2024-06-16)
+-------------------
 
 * Update :meth:`pyvcf.has_chr_prefix` method to ignore the HLA contigs for GRCh38.
 * :issue:`71`: Deprecate :meth:`common.plot_cytobands` method.
