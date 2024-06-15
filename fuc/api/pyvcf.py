@@ -763,6 +763,8 @@ def has_chr_prefix(file, size=1000):
     Return True if all of the sampled contigs from a VCF file have the
     (annoying) 'chr' string.
 
+    For GRCh38, the HLA contigs will be ignored.
+
     Parameters
     ----------
     file : str
@@ -779,6 +781,8 @@ def has_chr_prefix(file, size=1000):
     vcf = VariantFile(file)
     for record in vcf.fetch():
         n += 1
+        if record.chrom.startswith('HLA'):
+            continue
         if 'chr' not in record.chrom:
             return False
         if n > size:
