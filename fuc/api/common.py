@@ -446,19 +446,29 @@ class AnnFrame:
 
         return ax, handles
 
-    def sorted_samples(self, by, mf=None, keep_empty=False, nonsyn=False):
+    def sorted_samples(
+            self, by, nonsyn=False, mf=None, keep_empty=False, count=10
+    ):
         """
         Return a sorted list of sample names.
 
         Parameters
         ----------
-        df : str or list
+        by : str or list
             Column or list of columns to sort by.
+        nonsyn : bool, default: False
+            If True, filter and sort samples based on a MafFrame object. Under the hood, this will call :meth:`pymaf.MafFrame.plot_waterfall`.
+        mf : MafFrame, optional
+            MafFrame object. Required if ``nonsyn=True``. Ignored if ``nonsyn=False``.
+        keep_empty : bool, default: False
+            If True, keep samples with all ``NaN``'s. Ignored if ``nonsyn=False``.
+        count : int, default: 10
+            Number of top mutated genes to include. Ignored if ``nonsyn=False``.
         """
         df = self.df.copy()
 
         if nonsyn:
-            samples = mf.matrix_waterfall(keep_empty=keep_empty).columns
+            samples = mf.matrix_waterfall(keep_empty=keep_empty, count=count).columns
             df = df.loc[samples]
 
         df = df.sort_values(by=by)

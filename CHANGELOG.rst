@@ -4,6 +4,8 @@ Changelog
 0.39.0 (in development)
 -----------------------
 
+* :issue:`74`: Add new optional argument ``count`` to :meth:`common.AnnFrame.sorted_samples` method.
+
 0.38.0 (2024-06-16)
 -------------------
 
