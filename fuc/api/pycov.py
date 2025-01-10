@@ -367,10 +367,27 @@ class CovFrame:
             headers.append(name)
             dtype[name] = int
 
+        # Preprocess headers to remove duplicates by appending suffixes
+        def update_duplicates(input_list):
+            name_count = {}
+            updated_list = []
+
+            for name in input_list:
+                if name in name_count:
+                    name_count[name] += 1
+                    updated_list.append(f"{name}_{name_count[name]}")
+                else:
+                    name_count[name] = 0
+                    updated_list.append(name)
+            return updated_list
+
+        headers = update_duplicates(headers)
+
         df = pd.read_csv(
             StringIO(results), sep='\t', header=None,
             names=headers, dtype=dtype
         )
+
 
         return cls(df)
 

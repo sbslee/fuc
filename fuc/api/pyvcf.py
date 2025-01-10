@@ -208,12 +208,19 @@ INFO_SPECIAL_KEYS = {
     '#AF': ['AF', lambda x: sum([float(x) for x in x.split(',')]), True],
 }
 
+#FORMAT_SPECIAL_KEYS = {
+#    '#DP': ['DP', lambda x: int(x), True],
+#    '#AD_REF': ['AD', lambda x: float(x.split(',')[0]), True],
+#    '#AD_ALT': ['AD', lambda x: sum([int(y) for y in x.split(',')[1:]]), True],
+#    '#AD_FRAC_REF': ['AD', lambda x: np.nan if sum([int(y) for y in x.split(',')]) == 0 else int(x.split(',')[0]) / sum([int(y) for y in x.split(',')]), True],
+#    '#AD_FRAC_ALT': ['AD', lambda x: np.nan if sum([int(y) for y in x.split(',')]) == 0 else sum([int(y) for y in x.split(',')[1:]]) / sum([int(y) for y in x.split(',')]), True],
+#}
 FORMAT_SPECIAL_KEYS = {
     '#DP': ['DP', lambda x: int(x), True],
-    '#AD_REF': ['AD', lambda x: float(x.split(',')[0]), True],
-    '#AD_ALT': ['AD', lambda x: sum([int(y) for y in x.split(',')[1:]]), True],
-    '#AD_FRAC_REF': ['AD', lambda x: np.nan if sum([int(y) for y in x.split(',')]) == 0 else int(x.split(',')[0]) / sum([int(y) for y in x.split(',')]), True],
-    '#AD_FRAC_ALT': ['AD', lambda x: np.nan if sum([int(y) for y in x.split(',')]) == 0 else sum([int(y) for y in x.split(',')[1:]]) / sum([int(y) for y in x.split(',')]), True],
+    '#AD_REF': ['AD', lambda x: float(x.replace('.', '0').split(',')[0]), True],
+    '#AD_ALT': ['AD', lambda x: sum([int(y.replace('.', '0')) for y in x.split(',')[1:]]), True],
+    '#AD_FRAC_REF': ['AD', lambda x: np.nan if sum([int(y.replace('.', '0')) for y in x.split(',')]) == 0 else int(x.replace('.', '0').split(',')[0]) / sum([int(y.replace('.', '0')) for y in x.split(',')]), True],
+    '#AD_FRAC_ALT': ['AD', lambda x: np.nan if sum([int(y.replace('.', '0')) for y in x.split(',')]) == 0 else sum([int(y.replace('.', '0')) for y in x.split(',')[1:]]) / sum([int(y.replace('.', '0')) for y in x.split(',')]), True],
 }
 
 def call(
@@ -1860,7 +1867,8 @@ class VcfFrame:
                 if ad is None or ad == '.':
                     af = '.'
                 else:
-                    depths = [int(x) for x in ad.split(',')]
+                    #depths = [int(x) for x in ad.split(',')]
+                    depths = [int(x) for x in ad.replace('.', '0').split(',')]
                     total = sum(depths)
                     if total == 0:
                         af = '.'
